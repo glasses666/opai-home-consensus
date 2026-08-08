@@ -250,11 +250,25 @@ export function validateScene(scene) {
   const surfaceMap = mapById(surfaces);
   const materialMap = mapById(materials);
   const ruleMap = mapById(rules);
+  const objectMap = mapById(objects);
   const cameraPresetMap = mapById(cameraPresets);
 
   for (const [index, preset] of cameraPresets.entries()) {
-    if (isObject(preset) && !roomMap.has(preset.roomId)) {
+    if (isObject(preset) && preset.kind !== 'whole_home' && !roomMap.has(preset.roomId)) {
       addError(errors, 'ROOM_REF_DANGLING', `cameraPresets[${index}].roomId`, `Camera preset room "${preset.roomId}" does not exist.`);
+    }
+    if (
+      isObject(preset) &&
+      (!isObject(preset.position) || !isObject(preset.target) ||
+        ['x', 'y', 'z'].some((axis) => !isNumber(preset.position[axis]) || !isNumber(preset.target[axis])))
+    ) {
+      addError(errors, 'CAMERA_PRESET_TRANSFORM_INVALID', `cameraPresets[${index}]`, 'Camera presets need numeric position and target vectors.');
+    }
+    if (isObject(preset) && preset.surfaceId && !surfaceMap.has(preset.surfaceId)) {
+      addError(errors, 'SURFACE_REF_DANGLING', `cameraPresets[${index}].surfaceId`, `Camera preset surface "${preset.surfaceId}" does not exist.`);
+    }
+    if (isObject(preset) && preset.objectId && !objectMap.has(preset.objectId)) {
+      addError(errors, 'OBJECT_REF_DANGLING', `cameraPresets[${index}].objectId`, `Camera preset object "${preset.objectId}" does not exist.`);
     }
   }
 
@@ -377,6 +391,14 @@ export function validateScene(scene) {
     if (!materialMap.has(object.materialId)) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Object material "${object.materialId}" does not exist.`);
     }
+    if (object.preferredCameraPresetId) {
+      const preset = cameraPresetMap.get(object.preferredCameraPresetId);
+      if (!preset) {
+        addError(errors, 'CAMERA_PRESET_REF_DANGLING', `${path}.preferredCameraPresetId`, `Camera preset "${object.preferredCameraPresetId}" does not exist.`);
+      } else if (preset.roomId !== object.roomId) {
+        addError(errors, 'CAMERA_PRESET_ROOM_MISMATCH', `${path}.preferredCameraPresetId`, `Camera preset "${object.preferredCameraPresetId}" must belong to object room "${object.roomId}".`);
+      }
+    }
     for (const ruleId of object.ruleIds ?? []) {
       if (!ruleMap.has(ruleId)) {
         addError(errors, 'RULE_REF_DANGLING', `${path}.ruleIds`, `Rule "${ruleId}" does not exist.`);
@@ -414,6 +436,21 @@ export function validateScene(scene) {
         'OBJECT_MEDIA2D_INVALID',
         `${path}.media2D`,
         'Object media2D must reference a generated orthographic-top asset under /assets/.',
+      );
+    }
+    if (
+      !isObject(object.model3D) ||
+      typeof object.model3D.src !== 'string' ||
+      !object.model3D.src.startsWith('/assets/models/') ||
+      object.model3D.format !== 'glb' ||
+      object.model3D.source !== 'generated' ||
+      object.model3D.generator !== 'scripts/build_demo_assets.py'
+    ) {
+      addError(
+        errors,
+        'OBJECT_MODEL3D_INVALID',
+        `${path}.model3D`,
+        'Object model3D must reference a generated GLB and its checked-in Blender generator.',
       );
     }
     if (room?.polygon && object.dimensions && object.transform) {

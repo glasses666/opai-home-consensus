@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import {
+  cameraTransitionDuration,
+  createCameraOrbit,
+  sampleCameraOrbit,
+  smoothCameraProgress,
+  surfaceProximityOpacity,
+} from '../src/domain/camera-transition.js';
 import { projectScene2D } from '../src/domain/projection.js';
 import {
   assertValidScene,
@@ -14,10 +22,43 @@ import {
 
 const cloneScene = (scene = createDemoScene()) => JSON.parse(JSON.stringify(scene));
 
+test('large camera turns follow a shortest orbit without collapsing into the target', () => {
+  const orbit = createCameraOrbit(
+    { x: 2.2, y: 1.45, z: 4.75 },
+    { x: 2.2, y: 0.82, z: 7.85 },
+    { x: 9.3, y: 1.55, z: 5.25 },
+    { x: 9.3, y: 0.82, z: 3.65 },
+  );
+  const endpointRadius = Math.min(orbit.from.radius, orbit.to.radius);
+
+  for (let step = 0; step <= 100; step += 1) {
+    const pose = sampleCameraOrbit(orbit, step / 100);
+    assert.ok(Math.hypot(
+      pose.position.x - pose.target.x,
+      pose.position.y - pose.target.y,
+      pose.position.z - pose.target.z,
+    ) >= endpointRadius - 1e-9);
+  }
+  assert.ok(Math.abs(orbit.thetaDelta) <= Math.PI);
+
+  const diningToSofaAngle = 154.3 * Math.PI / 180;
+  const duration = cameraTransitionDuration(diningToSofaAngle);
+  assert.ok(duration > 1400);
+  assert.ok(diningToSofaAngle * smoothCameraProgress(16.67 / duration) < 0.1 * Math.PI / 180);
+  assert.equal(smoothCameraProgress(0), 0);
+  assert.equal(smoothCameraProgress(1), 1);
+  assert.equal(cameraTransitionDuration(diningToSofaAngle, 1), 1);
+  assert.equal(surfaceProximityOpacity(0), 0.28);
+  assert.ok(surfaceProximityOpacity(0.275) > 0.28);
+  assert.equal(surfaceProximityOpacity(0.55), 1);
+});
+
 test('demo fixture is a valid seven-room whole-home plan with reciprocal adjacency', () => {
   const scene = createDemoScene();
   assert.deepEqual(validateScene(scene), { ok: true, errors: [] });
   assert.equal(scene.rooms.length, 7);
+  assert.equal(scene.floorPlan.bounds.height, 2800);
+  assert.equal(scene.surfaces.filter((surface) => surface.kind === 'wall').every((wall) => wall.height === scene.floorPlan.bounds.height), true);
   for (const room of scene.rooms) {
     for (const adjacentId of room.adjacentRoomIds) {
       assert.equal(scene.rooms.find((candidate) => candidate.id === adjacentId).adjacentRoomIds.includes(room.id), true);
@@ -34,6 +75,83 @@ test('scene round trip is byte-identical and deserialized scenes are frozen', ()
   assert.throws(() => {
     deserialized.rooms[0].name = 'Mutated';
   }, TypeError);
+});
+
+test('camera presets provide whole-home, room-overhead, entry, and feature views', () => {
+  const scene = createDemoScene();
+  const wholeHome = scene.cameraPresets.find((preset) => preset.kind === 'whole_home');
+  assert.equal(wholeHome.id, 'camera-home-overview');
+  for (const room of scene.rooms) {
+    const overhead = scene.cameraPresets.find((preset) => preset.id === room.cameraPresetIds[0]);
+    assert.equal(overhead.roomId, room.id);
+    assert.equal(overhead.kind, 'room_overhead');
+    assert.equal(Number.isFinite(overhead.position.y), true);
+  }
+  assert.deepEqual(
+    scene.rooms.find((room) => room.id === 'room-living-dining').cameraPresetIds,
+    ['camera-living-overhead', 'camera-living-entry', 'camera-living-feature'],
+  );
+  const livingOverhead = scene.cameraPresets.find((preset) => preset.id === 'camera-living-overhead');
+  const livingEntry = scene.cameraPresets.find((preset) => preset.id === 'camera-living-entry');
+  const overheadHeading = {
+    x: livingOverhead.position.x - livingOverhead.target.x,
+    z: livingOverhead.position.z - livingOverhead.target.z,
+  };
+  const entryHeading = {
+    x: livingEntry.position.x - livingEntry.target.x,
+    z: livingEntry.position.z - livingEntry.target.z,
+  };
+  assert.ok((overheadHeading.x * entryHeading.x + overheadHeading.z * entryHeading.z) /
+    (Math.hypot(overheadHeading.x, overheadHeading.z) * Math.hypot(entryHeading.x, entryHeading.z)) > 0.999);
+  for (const object of scene.objects) {
+    const preset = scene.cameraPresets.find((candidate) => candidate.id === object.preferredCameraPresetId);
+    assert.equal(preset.roomId, object.roomId);
+  }
+  assert.equal(scene.objects.find((object) => object.id === 'object-primary-bed').preferredCameraPresetId, 'camera-primary-overhead');
+  assert.equal(scene.objects.find((object) => object.id === 'object-tv-console').preferredCameraPresetId, 'camera-living-feature');
+  assert.equal(scene.objects.find((object) => object.id === 'object-primary-wardrobe').preferredCameraPresetId, 'camera-primary-wardrobe');
+  for (const [objectId, presetId] of [['object-sofa', 'camera-living-sofa'], ['object-dining-table', 'camera-living-dining']]) {
+    const object = scene.objects.find((candidate) => candidate.id === objectId);
+    const preset = scene.cameraPresets.find((candidate) => candidate.id === presetId);
+    assert.equal(object.preferredCameraPresetId, preset.id);
+    assert.equal(preset.objectId, object.id);
+    assert.equal(preset.target.x, object.transform.x);
+    assert.equal(preset.target.z, object.transform.z);
+  }
+});
+
+test('every 3D model is a checked-in generated GLB within the Gate 2 asset budget', async () => {
+  const scene = createDemoScene();
+  for (const object of scene.objects) {
+    const bytes = await readFile(new URL(`../public${object.model3D.src}`, import.meta.url));
+    assert.equal(bytes.subarray(0, 4).toString(), 'glTF');
+    assert.equal(bytes.length < 450_000, true, `${object.model3D.src} exceeds 450 KB`);
+    assert.equal(object.model3D.source, 'generated');
+    assert.equal(object.model3D.generator, 'scripts/build_demo_assets.py');
+  }
+});
+
+test('validation rejects invalid 3D asset metadata and camera transforms', () => {
+  const badAsset = cloneScene();
+  badAsset.objects[0].model3D.source = 'downloaded';
+  const badCamera = cloneScene();
+  delete badCamera.cameraPresets[0].position.y;
+
+  assert.equal(validateScene(badAsset).errors.some((error) => error.code === 'OBJECT_MODEL3D_INVALID'), true);
+  assert.equal(validateScene(badCamera).errors.some((error) => error.code === 'CAMERA_PRESET_TRANSFORM_INVALID'), true);
+});
+
+test('validation rejects dangling or cross-room object camera references', () => {
+  const dangling = cloneScene();
+  dangling.objects[0].preferredCameraPresetId = 'camera-missing';
+  const crossRoom = cloneScene();
+  crossRoom.objects[0].preferredCameraPresetId = 'camera-flex-overhead';
+  const danglingObject = cloneScene();
+  danglingObject.cameraPresets.find((preset) => preset.objectId).objectId = 'object-missing';
+
+  assert.equal(validateScene(dangling).errors.some((error) => error.code === 'CAMERA_PRESET_REF_DANGLING'), true);
+  assert.equal(validateScene(crossRoom).errors.some((error) => error.code === 'CAMERA_PRESET_ROOM_MISMATCH'), true);
+  assert.equal(validateScene(danglingObject).errors.some((error) => error.code === 'OBJECT_REF_DANGLING'), true);
 });
 
 test('validation catches duplicate ids across entity types', () => {

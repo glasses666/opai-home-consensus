@@ -7,13 +7,14 @@
 - Gate 0 已于 2026-08-08 通过。
 - 旧六空间 / 静态效果图 / 方块 3D 原型已移出工作区，不再作为实现基线。
 - Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
-- Gate 2 已获准开始；当前仍只有 `/lab/scene` 技术检验页，没有已验收的 3D、拖拽、Agent 或产品工作台。
+- Gate 2 已完成实现并等待验收：`/lab/scene` 已有同源实时 3D、原创 GLB、整屋 / 房间镜头和真实对象点选；仍没有家具编辑、Agent 或产品工作台。
 
 ## 项目入口
 
 - [实施计划](./PLAN.md)
 - [Gate 0 产品合同](./GATE-0-PRODUCT-CONTRACT.md)
 - [Gate 1 审阅包](./GATE-1-REVIEW.md)
+- [Gate 2 审阅包](./GATE-2-REVIEW.md)
 - [历史飞书能力证据](./FEISHU_EVIDENCE.md)
 
 ## 本地审阅

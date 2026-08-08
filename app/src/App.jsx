@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Armchair, HouseLine, StackSimple } from '@phosphor-icons/react';
+import { Armchair, Cube, HouseLine, MapTrifold, StackSimple } from '@phosphor-icons/react';
+import Scene3D from './Scene3D.jsx';
 import { createDemoScene } from './domain/demo-scene.js';
 import { projectScene2D } from './domain/projection.js';
 import { createSceneStore, deserializeScene, serializeScene, validateScene } from './domain/scene.js';
@@ -247,13 +248,23 @@ function entityName(kind, entity) {
   return entity.kind ?? entity.id;
 }
 
-function Inspector({ selection, onSelect, mode }) {
+function Inspector({ selection, onNavigate, mode, workspaceMode, renderStats }) {
   const selected = findEntity(selection);
-  const list = [...scene.rooms.map((entity) => ({ kind: 'room', entity })), ...scene.objects.map((entity) => ({ kind: 'object', entity }))];
+  const cameraPresets = new Map(scene.cameraPresets.map((preset) => [preset.id, preset]));
   return <aside className="panel inspector" aria-label="Canonical entity inspector">
-    <div className="panel__header"><div><p className="panel__kicker">Selection map</p><h2 className="panel__title">对象与房间</h2></div><span className="panel__meta">{modeOptions.find((item) => item.id === mode)?.label}</span></div>
+    <div className="panel__header"><div><p className="panel__kicker">Selection map</p><h2 className="panel__title">对象与房间</h2></div><span className="panel__meta">{workspaceMode === '3d' ? '实时 3D' : modeOptions.find((item) => item.id === mode)?.label}</span></div>
     <div className="inspector__content">
-      <ul className="entity-list">{list.map(({ kind, entity }) => <li key={`${kind}-${entity.id}`}><button type="button" aria-pressed={selection?.kind === kind && selection.id === entity.id} onClick={() => onSelect({ kind, id: entity.id })}><span>{entityName(kind, entity)}</span><span className="entity-list__type">{entityKinds[kind]}</span></button></li>)}</ul>
+      {workspaceMode === '3d' && <dl className="render-stats" aria-label="3D rendering statistics"><div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div><div><dt>Draw calls</dt><dd>{renderStats.calls || '—'}</dd></div><div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div><div><dt>GLB</dt><dd>{renderStats.assets || scene.objects.length}</dd></div></dl>}
+      <ul className="entity-list">{scene.rooms.map((room) => {
+        const objects = scene.objects.filter((object) => object.roomId === room.id);
+        return <li className="entity-list__room" key={room.id}>
+          <button className="entity-list__room-button" type="button" aria-pressed={selection?.kind === 'room' && selection.id === room.id} onClick={() => onNavigate({ kind: 'room', id: room.id }, room.cameraPresetIds[0])}><span>{entityName('room', room)}</span><span className="entity-list__type">俯视</span></button>
+          {objects.length > 0 && <ul className="entity-list__objects">{objects.map((object) => {
+            const preset = cameraPresets.get(object.preferredCameraPresetId);
+            return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, object.preferredCameraPresetId)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
+          })}</ul>}
+        </li>;
+      })}</ul>
       {selected ? <dl className="inspector__details"><div className="inspector__row"><dt>类型</dt><dd>{entityKinds[selected.kind]}</dd></div>{Object.entries(selected.entity).map(([key, value]) => <div className="inspector__row" key={key}><dt>{key}</dt><dd>{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>)}</dl> : <div className="empty">点击房间或家具，检查它对应的唯一 scene ID。</div>}
     </div>
   </aside>;
@@ -261,7 +272,11 @@ function Inspector({ selection, onSelect, mode }) {
 
 export default function App() {
   const [mode, setMode] = useState('overlay');
+  const [workspaceMode, setWorkspaceMode] = useState('3d');
   const [selection, setSelection] = useState({ kind: 'room', id: 'room-living-dining' });
+  const [activeRoomId, setActiveRoomId] = useState('room-living-dining');
+  const [viewRequest, setViewRequest] = useState(null);
+  const [renderStats, setRenderStats] = useState({ fps: 0, calls: 0, triangles: 0, assets: 0 });
   const [copyStatus, setCopyStatus] = useState('复制 JSON');
   const validation = useMemo(() => validateScene(scene), []);
 
@@ -277,9 +292,23 @@ export default function App() {
     window.setTimeout(() => setCopyStatus('复制 JSON'), 1200);
   };
 
+  const selectEntity = (nextSelection) => {
+    setSelection(nextSelection);
+    const selected = findEntity(nextSelection);
+    const roomId = selected?.kind === 'room' ? selected.entity.id : selected?.entity.roomId;
+    if (roomId) setActiveRoomId(roomId);
+  };
+
+  const navigateEntity = (nextSelection, presetId) => {
+    selectEntity(nextSelection);
+    if (workspaceMode === '3d' && presetId) {
+      setViewRequest((current) => ({ id: presetId, sequence: (current?.sequence ?? 0) + 1 }));
+    }
+  };
+
   return <main className="lab">
-    <header className="lab__header"><div><p className="eyebrow">Gate 1 · CAD-first canonical scene</p><h1>整屋 CAD 与家具俯视图</h1><p className="lab__lede">先按建筑逻辑建立墙体、门窗、面积与尺寸链，再把原创家具俯视资产放到同一毫米坐标。三种已确认模式通过画布右侧胶囊切换。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
-    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Read-only · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">一层建筑平面</h2></div><span className="panel__meta">外墙 180 · 内墙 120 · 合成样板</span></div><ScenePlan mode={mode} onModeChange={setMode} selection={selection} onSelect={setSelection} /></section><Inspector selection={selection} onSelect={setSelection} mode={mode} /></div>
-    <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects</dt><dd>{scene.objects.length}</dd><dt>Rules</dt><dd>{scene.rules.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
+    <header className="lab__header"><div><p className="eyebrow">Gate 2 · same-source spatial proof</p><h1>2D 户型与真实 3D 同源场景</h1><p className="lab__lede">九件原创 GLB、墙体开洞、PBR 材质和可复现镜头全部读取 Gate 1 的同一份毫米级 scene。点击房间地面会先飞到三维俯视，再选入口、主功能面或自由视角。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
+    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
+    <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
   </main>;
 }
