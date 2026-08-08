@@ -1,0 +1,176 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { createAppServer } from '../server/index.mjs';
+import { callAily, getFeishuHealth, syncActivity } from '../server/feishu.mjs';
+import { LarkCliError, runLarkCli } from '../server/lark-cli.mjs';
+
+const listen = (server) => new Promise((resolve) => {
+  server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`));
+});
+const close = (server) => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+
+test('lark-cli adapter parses envelopes and never forwards raw secret errors', async () => {
+  const ok = await runLarkCli(['fake'], { runner: async () => ({ stdout: '{"ok":true,"data":{"value":1}}' }) });
+  assert.equal(ok.data.value, 1);
+
+  await assert.rejects(
+    runLarkCli(['fake'], {
+      runner: async () => ({
+        stdout: JSON.stringify({ ok: false, error: { type: 'authorization', subtype: 'missing_scope', message: 'secret=abc' } }),
+      }),
+    }),
+    (error) => error instanceof LarkCliError && error.message === 'MISSING_SCOPE' && !error.message.includes('abc'),
+  );
+});
+
+test('Aily adapter performs the official session-message-run-message chain', async () => {
+  const paths = [];
+  const fakeRun = async (args) => {
+    paths.push(`${args[1]} ${args[2]}`);
+    const path = args[2];
+    if (path === '/open-apis/aily/v1/sessions') return { data: { session: { id: 'session_test' } } };
+    if (path.endsWith('/messages') && args[1] === 'POST') return { data: { message: { id: 'message_test' } } };
+    if (path.endsWith('/runs') && args[1] === 'POST') return { data: { run: { id: 'run_test' } } };
+    if (path.endsWith('/runs/run_test')) return { data: { run: { status: 'COMPLETED' } } };
+    if (path.endsWith('/messages') && args[1] === 'GET') {
+      return { data: { items: [{ plain_text: '{"toolCalls":[{"tool":"inspect_room","args":{"roomId":"room-living-dining"}}]}' }] } };
+    }
+    throw new Error(`unexpected ${path}`);
+  };
+
+  const result = await callAily({ input: '检查客餐厅', scene: {}, selectedObjectId: null, tools: [] }, {
+    appId: 'spring_test__c',
+    run: fakeRun,
+    id: () => 'idempotent-test',
+    pollMs: 0,
+  });
+
+  assert.equal(result.toolCalls[0].tool, 'inspect_room');
+  assert.deepEqual(paths, [
+    'POST /open-apis/aily/v1/sessions',
+    'POST /open-apis/aily/v1/sessions/session_test/messages',
+    'POST /open-apis/aily/v1/sessions/session_test/runs',
+    'GET /open-apis/aily/v1/sessions/session_test/runs/run_test',
+    'GET /open-apis/aily/v1/sessions/session_test/messages',
+  ]);
+});
+
+test('Aily adapter prefers the official team-agent chat chain when agent ID is available', async () => {
+  const paths = [];
+  const fakeRun = async (args) => {
+    paths.push(`${args[1]} ${args[2]}`);
+    if (args[1] === 'POST') return { data: { agent_chat_id: 'chat_test', session_id: 'conversation_test' } };
+    return {
+      data: {
+        content: [{ type: 'text', text: '{"toolCalls":[{"tool":"inspect_room","args":{"roomId":"room-living-dining"}}]}' }],
+        finish_reason: 'stop',
+        status: 'Completed',
+      },
+    };
+  };
+
+  const result = await callAily({ input: '检查客餐厅', scene: {}, selectedObjectId: null, tools: [] }, {
+    agentId: 'agent_test',
+    run: fakeRun,
+    pollMs: 0,
+  });
+  assert.equal(result.toolCalls[0].tool, 'inspect_room');
+  assert.deepEqual(paths, [
+    'POST /open-apis/aily/v1/agents/agent_test/chats',
+    'GET /open-apis/aily/v1/agents/agent_test/chats/chat_test',
+  ]);
+});
+
+test('health reports only verified capabilities as ready', async () => {
+  const scopes = [
+    'aily:message:read', 'aily:message:write', 'aily:run:read',
+    'aily:run:write', 'aily:session:read', 'aily:session:write',
+    'base:app:read', 'base:record:create', 'base:record:read', 'base:record:update',
+  ].join(' ');
+  const fakeRun = async (args) => {
+    if (args[0] === 'auth') {
+      return { verified: true, identities: { user: { status: 'ready', tokenStatus: 'valid', scope: scopes } } };
+    }
+    return { data: { fields: [{ name: 'Event ID' }] } };
+  };
+
+  const unverified = await getFeishuHealth({ run: fakeRun, env: { AILY_APP_ID: 'spring_test__c' }, ailyVerifiedAt: null });
+  assert.equal(unverified.aily.status, 'api_unavailable');
+  assert.equal(unverified.base.status, 'api_unavailable');
+
+  const verified = await getFeishuHealth({
+    run: fakeRun,
+    env: { AILY_APP_ID: 'spring_test__c' },
+    ailyVerifiedAt: '2026-08-09T01:00:00.000Z',
+    baseVerifiedAt: '2026-08-09T01:00:00.000Z',
+  });
+  assert.equal(verified.aily.status, 'ready');
+  assert.equal(verified.base.status, 'ready');
+});
+
+test('Base activity sync updates the same record for a repeated Event ID', async () => {
+  const calls = [];
+  const fakeRun = async (args) => {
+    calls.push(args);
+    if (args.includes('+record-search')) return { data: { record_id_list: ['rec_existing'] } };
+    return { data: { record: { record_id: 'rec_existing' } } };
+  };
+  const event = {
+    eventId: 'evt-test',
+    input: '沙发向右移动20厘米',
+    provider: 'local',
+    trace: { source: 'local', toolCalls: [] },
+  };
+
+  const result = await syncActivity(event, { run: fakeRun, env: {} });
+  assert.equal(result.recordId, 'rec_existing');
+  assert.equal(calls[1].includes('--record-id'), true);
+  assert.equal(calls[1][calls[1].indexOf('--record-id') + 1], 'rec_existing');
+  assert.equal(calls.length, 3);
+});
+
+test('Base activity sync obtains a created record ID from read-back', async () => {
+  let searches = 0;
+  const fakeRun = async (args) => {
+    if (args.includes('+record-search')) {
+      searches += 1;
+      return { data: { record_id_list: searches === 1 ? [] : ['rec_created'] } };
+    }
+    return { data: { record: { create: { 'Event ID': 'evt-created' } } } };
+  };
+  const result = await syncActivity({
+    eventId: 'evt-created',
+    input: '沙发向右移动20厘米',
+    provider: 'local',
+    trace: { source: 'local', toolCalls: [] },
+  }, { run: fakeRun, env: {} });
+
+  assert.equal(result.recordId, 'rec_created');
+  assert.equal(searches, 2);
+});
+
+test('BFF applies an Agent turn and keeps Base failure as pending', async () => {
+  const server = createAppServer({
+    health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'ready' } }),
+    sync: async () => { throw new Error('offline'); },
+    id: () => 'test',
+  });
+  const origin = await listen(server);
+  try {
+    const response = await fetch(`${origin}/api/agent/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-http-test' }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.scene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+    assert.equal(body.sync, 'pending');
+
+    const health = await (await fetch(`${origin}/api/health`)).json();
+    assert.equal(health.pendingBaseEvents, 1);
+  } finally {
+    await close(server);
+  }
+});

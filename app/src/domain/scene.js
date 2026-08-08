@@ -7,6 +7,7 @@ import {
   rotatedFootprint,
   segmentOnSegment,
 } from './geometry.js';
+import { assertDesignRules } from './design-rules.js';
 
 const ADDRESSABLE_ARRAY_KEYS = new Set([
   'rooms',
@@ -502,27 +503,30 @@ export function assertValidScene(scene) {
  * @returns {Readonly<{currentScene:unknown,commands:unknown[]}>}
  */
 export function createSceneStore(initialScene) {
+  const canonicalScene = deserializeScene(serializeScene(initialScene));
+  assertDesignRules(canonicalScene);
   return deepFreeze({
-    currentScene: deserializeScene(serializeScene(initialScene)),
+    initialScene: canonicalScene,
+    currentScene: canonicalScene,
     commands: [],
+    cursor: 0,
   });
 }
 
 /**
- * @param {Readonly<{currentScene:unknown,commands:unknown[]}>} store
+ * @param {unknown} scene
  * @param {unknown} command
- * @returns {Readonly<{currentScene:unknown,commands:unknown[]}>}
+ * @returns {Readonly<unknown>}
  */
-export function dispatchSceneCommand(store, command) {
-  if (!isObject(store) || !isObject(command) || typeof command.type !== 'string') {
+function applySceneCommand(scene, command) {
+  if (!isObject(command) || typeof command.type !== 'string') {
     throw new Error('Invalid scene command.');
   }
 
-  const scene = jsonClone(store.currentScene);
-  const canonicalCommand = stableClone(command);
+  const nextScene = jsonClone(scene);
 
   if (command.type === 'object.setTransform') {
-    const object = scene.objects?.find((candidate) => candidate.id === command.objectId);
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
     if (!object.capabilities.movable) throw new Error(`OBJECT_NOT_MOVABLE: Object "${command.objectId}" cannot move.`);
     if (!isObject(command.transform)) throw new Error('TRANSFORM_INVALID: transform is required.');
@@ -532,18 +536,18 @@ export function dispatchSceneCommand(store, command) {
     }
     object.transform = { ...object.transform, ...command.transform };
   } else if (command.type === 'object.setMaterial') {
-    const object = scene.objects?.find((candidate) => candidate.id === command.objectId);
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
     if (!object.capabilities.materialEditable) throw new Error(`OBJECT_MATERIAL_LOCKED: Object "${command.objectId}" material is locked.`);
-    if (!scene.materials?.some((material) => material.id === command.materialId)) {
+    if (!nextScene.materials?.some((material) => material.id === command.materialId)) {
       throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     }
     object.materialId = command.materialId;
   } else if (command.type === 'surface.setMaterial') {
-    const surface = scene.surfaces?.find((candidate) => candidate.id === command.surfaceId);
+    const surface = nextScene.surfaces?.find((candidate) => candidate.id === command.surfaceId);
     if (!surface) throw new Error(`SURFACE_NOT_FOUND: Surface "${command.surfaceId}" does not exist.`);
     if (!surface.capabilities?.materialEditable) throw new Error(`SURFACE_MATERIAL_LOCKED: Surface "${command.surfaceId}" material is locked.`);
-    if (!scene.materials?.some((material) => material.id === command.materialId)) {
+    if (!nextScene.materials?.some((material) => material.id === command.materialId)) {
       throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     }
     surface.materialId = command.materialId;
@@ -551,9 +555,60 @@ export function dispatchSceneCommand(store, command) {
     throw new Error(`COMMAND_UNSUPPORTED: ${command.type}`);
   }
 
-  assertValidScene(scene);
+  assertValidScene(nextScene);
+  assertDesignRules(nextScene);
+  return deserializeScene(serializeScene(nextScene));
+}
+
+/**
+ * @param {unknown} initialScene
+ * @param {unknown[]} commands
+ * @returns {Readonly<unknown>}
+ */
+export function replaySceneCommands(initialScene, commands) {
+  return commands.reduce((scene, command) => applySceneCommand(scene, command), deserializeScene(serializeScene(initialScene)));
+}
+
+/**
+ * @param {Readonly<{initialScene:unknown,currentScene:unknown,commands:unknown[],cursor:number}>} store
+ * @param {unknown} command
+ * @returns {Readonly<{initialScene:unknown,currentScene:unknown,commands:unknown[],cursor:number}>}
+ */
+export function dispatchSceneCommand(store, command) {
+  if (!isObject(store) || !Array.isArray(store.commands) || !Number.isInteger(store.cursor)) {
+    throw new Error('Invalid scene store.');
+  }
+  const canonicalCommand = stableClone(command);
+  const commands = [...store.commands.slice(0, store.cursor), canonicalCommand];
+  const currentScene = applySceneCommand(store.currentScene, canonicalCommand);
   return deepFreeze({
-    currentScene: deserializeScene(serializeScene(scene)),
-    commands: [...store.commands, canonicalCommand],
+    initialScene: store.initialScene,
+    currentScene,
+    commands,
+    cursor: commands.length,
+  });
+}
+
+/** @param {Readonly<{initialScene:unknown,currentScene:unknown,commands:unknown[],cursor:number}>} store */
+export function undoSceneCommand(store) {
+  if (store.cursor <= 0) throw new Error('UNDO_UNAVAILABLE');
+  const cursor = store.cursor - 1;
+  return deepFreeze({
+    initialScene: store.initialScene,
+    currentScene: replaySceneCommands(store.initialScene, store.commands.slice(0, cursor)),
+    commands: store.commands,
+    cursor,
+  });
+}
+
+/** @param {Readonly<{initialScene:unknown,currentScene:unknown,commands:unknown[],cursor:number}>} store */
+export function redoSceneCommand(store) {
+  if (store.cursor >= store.commands.length) throw new Error('REDO_UNAVAILABLE');
+  const cursor = store.cursor + 1;
+  return deepFreeze({
+    initialScene: store.initialScene,
+    currentScene: applySceneCommand(store.currentScene, store.commands[store.cursor]),
+    commands: store.commands,
+    cursor,
   });
 }

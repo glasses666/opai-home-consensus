@@ -167,6 +167,29 @@ export function rotatedFootprint(transform, dimensions) {
 }
 
 /**
+ * Positive-area overlap test for convex plan polygons. Edge contact is allowed.
+ * Furniture footprints and clearance zones in the canonical scene are convex.
+ *
+ * @param {PlanPoint[]} first
+ * @param {PlanPoint[]} second
+ * @returns {boolean}
+ */
+export function convexPolygonsOverlap(first, second) {
+  const axes = [...polygonEdges(first), ...polygonEdges(second)].map((edge) => ({
+    x: -(edge.end.z - edge.start.z),
+    z: edge.end.x - edge.start.x,
+  }));
+
+  return axes.every((axis) => {
+    const project = (polygon) => polygon.map((point) => point.x * axis.x + point.z * axis.z);
+    const a = project(first);
+    const b = project(second);
+    const overlap = Math.min(Math.max(...a), Math.max(...b)) - Math.max(Math.min(...a), Math.min(...b));
+    return overlap > EPSILON;
+  });
+}
+
+/**
  * @param {PlanSegment} segment
  * @param {number} offset
  * @param {number} length
