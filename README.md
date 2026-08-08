@@ -6,14 +6,25 @@
 
 - Gate 0 已于 2026-08-08 通过。
 - 旧六空间 / 静态效果图 / 方块 3D 原型已移出工作区，不再作为实现基线。
-- Gate 1 将从 canonical scene 与只读 2D 户型投影开始。
-- 当前没有可运行产品页面；这是刻意的干净基线，不是功能缺失被伪装成完成。
+- Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
+- Gate 2 已获准开始；当前仍只有 `/lab/scene` 技术检验页，没有已验收的 3D、拖拽、Agent 或产品工作台。
 
 ## 项目入口
 
 - [实施计划](./PLAN.md)
 - [Gate 0 产品合同](./GATE-0-PRODUCT-CONTRACT.md)
+- [Gate 1 审阅包](./GATE-1-REVIEW.md)
 - [历史飞书能力证据](./FEISHU_EVIDENCE.md)
+
+## 本地审阅
+
+```bash
+cd app
+npm install
+npm run dev -- --port 5173
+```
+
+打开 `http://127.0.0.1:5173/lab/scene`。验证命令为 `npm test` 和 `npm run build`。
 
 ## Git 规则
 
