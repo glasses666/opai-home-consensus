@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, X } from '@phosphor-icons/react';
+import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
@@ -14,6 +14,16 @@ import {
   serializeVersionHistory,
 } from './domain/design-version.js';
 import { evaluateDesignRules } from './domain/design-rules.js';
+import {
+  addHouseholdOpinion,
+  chooseConsensusDirection,
+  confirmConsensusVersion,
+  createDemoHouseholdConsensus,
+  deserializeHouseholdConsensus,
+  detectHouseholdConflicts,
+  serializeHouseholdConsensus,
+  setConflictDirections,
+} from './domain/household-consensus.js';
 import { projectScene2D } from './domain/projection.js';
 import {
   createSceneStore,
@@ -124,6 +134,14 @@ const newReviewChecks = (before, after, objectIds) => {
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
 const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v1';
+const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v1';
+const opinionStanceLabels = {
+  support: '支持',
+  oppose: '反对',
+  supplement: '补充',
+  non_negotiable: '不可妥协',
+};
+const memberRoleLabels = { owner: '主决策人', co_decider: '共同决策', resident: '长期居住' };
 const agentWriteTools = new Set(TOOL_REGISTRY.filter((tool) => tool.writes).map((tool) => tool.name));
 const agentToolLabels = {
   apply_catalog_item: '应用组件',
@@ -175,6 +193,30 @@ const createInitialVersionProject = () => {
     return { history, store: sceneStoreForVersion(history) };
   } catch {
     window.localStorage.removeItem(VERSION_STORAGE_KEY);
+    return fallback;
+  }
+};
+
+const createInitialHouseholdProject = (history) => {
+  const fallback = createDemoHouseholdConsensus(history.currentVersionId);
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const serialized = window.localStorage.getItem(CONSENSUS_STORAGE_KEY);
+    if (!serialized) return fallback;
+    const restored = deserializeHouseholdConsensus(serialized);
+    const versionIds = new Set(history.versions.map((version) => version.id));
+    const referenced = [
+      restored.currentVersionId,
+      ...restored.opinions.map((opinion) => opinion.versionId),
+      ...restored.directions.map((direction) => direction.versionId),
+      restored.finalDecision?.versionId,
+      restored.finalDecision?.baseVersionId,
+      ...restored.confirmations.map((confirmation) => confirmation.versionId),
+    ].filter(Boolean);
+    if (referenced.some((versionId) => !versionIds.has(versionId))) throw new Error('CONSENSUS_VERSION_NOT_FOUND');
+    return restored;
+  } catch {
+    window.localStorage.removeItem(CONSENSUS_STORAGE_KEY);
     return fallback;
   }
 };
@@ -485,6 +527,7 @@ function ProjectDemoPage() {
   const [initialVersionProject] = useState(createInitialVersionProject);
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
+  const [householdConsensus, setHouseholdConsensus] = useState(() => createInitialHouseholdProject(initialVersionProject.history));
   const sceneStoreRef = useRef(sceneStore);
   const versionHistoryRef = useRef(versionHistory);
   sceneStoreRef.current = sceneStore;
@@ -516,6 +559,10 @@ function ProjectDemoPage() {
     source: 'local',
     tools: [],
   }]);
+  const [activeMemberId, setActiveMemberId] = useState(householdConsensus.members[0].id);
+  const [opinionStance, setOpinionStance] = useState('support');
+  const [opinionText, setOpinionText] = useState('');
+  const [consensusFeedback, setConsensusFeedback] = useState('三位成员依次表达；所有意见都写入同一共享版本。');
   const agentMessageListRef = useRef(null);
   const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
@@ -524,6 +571,9 @@ function ProjectDemoPage() {
   const selectedEntity = findEntity(currentScene, selection);
   const displaySelectedEntity = findEntity(currentScene, displaySelection);
   const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
+  const activeRoomId = navigation.roomId;
+  const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
+  const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
   const designEvaluation = useMemo(() => evaluateDesignRules(currentScene), [currentScene]);
   const versions = versionHistory.versions;
   const currentVersion = versions.find((version) => version.id === versionHistory.currentVersionId) ?? versions.at(-1);
@@ -539,6 +589,71 @@ function ProjectDemoPage() {
   const currentVersionStatus = hasUnsavedChanges && versionHistory.confirmedVersionId
     ? 'changed_after_confirm'
     : currentVersion.status;
+  const activeMember = householdConsensus.members.find((member) => member.id === activeMemberId) ?? householdConsensus.members[0];
+  const opinionTarget = selectedObject
+    ? { type: 'object', id: selectedObject.id }
+    : currentRoom
+      ? { type: 'room', id: currentRoom.id }
+      : { type: 'version', id: currentVersion.id };
+  const opinionTargetLabel = opinionTarget.type === 'object'
+    ? entityName('object', selectedObject)
+    : opinionTarget.type === 'room'
+      ? currentRoomLabel
+      : currentVersion.label;
+  const householdConflicts = useMemo(() => detectHouseholdConflicts(householdConsensus), [householdConsensus]);
+  const activeConflict = householdConflicts.find((conflict) => conflict.versionId === currentVersion.id) ?? householdConflicts.at(-1) ?? null;
+  const conflictDirections = activeConflict
+    ? householdConsensus.directions.filter((direction) => direction.conflictId === activeConflict.id)
+    : [];
+  const consensusDirectionOptions = useMemo(() => {
+    if (!activeConflict || activeConflict.target.type !== 'object' || householdConsensus.finalDecision) return [];
+    const object = currentScene.objects.find((candidate) => candidate.id === activeConflict.target.id);
+    if (!object?.capabilities?.movable) return [];
+    const candidates = [
+      { key: 'east', label: '向东', dx: 200, dz: 0 },
+      { key: 'north', label: '向北', dx: 0, dz: -200 },
+      { key: 'west', label: '向西', dx: -200, dz: 0 },
+      { key: 'south', label: '向南', dx: 0, dz: 200 },
+    ];
+    return candidates.flatMap((candidate) => {
+      const command = {
+        type: 'object.setTransform',
+        objectId: object.id,
+        transform: { x: object.transform.x + candidate.dx, z: object.transform.z + candidate.dz },
+      };
+      try {
+        const beforeRules = evaluateDesignRules(sceneStore.currentScene);
+        const preview = dispatchSceneCommand(sceneStore, command);
+        const rules = evaluateDesignRules(preview.currentScene);
+        if (newReviewChecks(beforeRules, rules, [object.id]).length) return [];
+        return [{
+          id: `direction-${activeConflict.id}-${candidate.key}`,
+          title: `${candidate.label} 200 mm`,
+          summary: `保留当前尺寸与材质；本方向未新增规则提醒，全屋 demo 状态：${ruleStatusLabels[rules.status] ?? rules.status}。`,
+          feasible: true,
+          command,
+        }];
+      } catch {
+        return [];
+      }
+    }).slice(0, 2);
+  }, [activeConflict, currentScene.objects, householdConsensus.finalDecision, sceneStore]);
+  const chosenDirection = householdConsensus.finalDecision
+    ? householdConsensus.directions.find((direction) => direction.id === householdConsensus.finalDecision.directionId) ?? null
+    : null;
+  const confirmedMemberIds = new Set(householdConsensus.confirmations
+    .filter((confirmation) => confirmation.versionId === householdConsensus.finalDecision?.versionId)
+    .map((confirmation) => confirmation.memberId));
+  const householdTargetName = (target) => {
+    if (target.type === 'version') return versions.find((version) => version.id === target.id)?.label ?? target.id;
+    if (target.type === 'room') {
+      const room = currentScene.rooms.find((candidate) => candidate.id === target.id);
+      return room ? (roomLabels[room.id] ?? room.name) : target.id;
+    }
+    const object = currentScene.objects.find((candidate) => candidate.id === target.id)
+      ?? versions.flatMap((version) => version.scene.objects).find((candidate) => candidate.id === target.id);
+    return object ? entityName('object', object) : target.id;
+  };
   const visibleRuleChecks = useMemo(() => {
     const relevant = selectedObject
       ? designEvaluation.checks.filter((check) => check.objectIds.includes(selectedObject.id))
@@ -547,9 +662,6 @@ function ProjectDemoPage() {
       .sort((a, b) => ['blocked', 'warning', 'recommendation', 'passed'].indexOf(a.status) - ['blocked', 'warning', 'recommendation', 'passed'].indexOf(b.status))
       .slice(0, 4);
   }, [designEvaluation, selectedObject]);
-  const activeRoomId = navigation.roomId;
-  const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
-  const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
   const currentViewLabel = displayViewId === 'free'
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
@@ -969,7 +1081,7 @@ function ProjectDemoPage() {
       setEditFeedback({ tone: 'warning', message: '请先保留或撤销规范预览，再保存版本。' });
       return;
     }
-    const nextHistory = saveSceneVersion(versionHistory, sceneStoreRef.current, { source: 'manual' });
+    const nextHistory = saveSceneVersion(versionHistory, sceneStoreRef.current, { source: `manual:${activeMember.id}` });
     if (nextHistory === versionHistory) {
       setEditFeedback({ tone: 'neutral', message: `${currentVersion.label} 已包含当前场景，无需重复保存。` });
       return;
@@ -1008,6 +1120,101 @@ function ProjectDemoPage() {
       : `已从 ${compareFromVersion.label} 创建 ${restoredVersion.label}，原版本链保持不变。` });
   };
 
+  const submitHouseholdOpinion = (event) => {
+    event.preventDefault();
+    const note = opinionText.trim();
+    if (!note) {
+      setConsensusFeedback('先写下这一位成员的真实理由。');
+      return;
+    }
+    if (hasUnsavedChanges || pendingReview) {
+      setConsensusFeedback(hasUnsavedChanges ? '先把当前修改保存为版本，再让意见绑定到它。' : '先处理当前规则预览。');
+      return;
+    }
+    try {
+      const next = addHouseholdOpinion(householdConsensus, {
+        memberId: activeMember.id,
+        stance: opinionStance,
+        target: opinionTarget,
+        versionId: currentVersion.id,
+        note,
+      });
+      const conflictCount = detectHouseholdConflicts(next).length;
+      setHouseholdConsensus(next);
+      setOpinionText('');
+      setConsensusFeedback(conflictCount > householdConflicts.length
+        ? '共识助手识别到同一对象上的相反立场，可以生成两套真实可行方向。'
+        : `${activeMember.name}的意见已绑定到 ${currentVersion.label} · ${opinionTargetLabel}。`);
+    } catch {
+      setConsensusFeedback('这条意见没有保存，请检查成员、对象和版本是否仍有效。');
+    }
+  };
+
+  const generateConsensusDirections = () => {
+    if (!activeConflict || consensusDirectionOptions.length < 2) {
+      setConsensusFeedback('当前目标无法生成两套无新增规则提醒的位移方向，请先选择可移动家具。');
+      return;
+    }
+    const next = setConflictDirections(householdConsensus, {
+      conflictId: activeConflict.id,
+      versionId: activeConflict.versionId,
+      directions: consensusDirectionOptions.map(({ command: _command, ...direction }) => direction),
+    });
+    setHouseholdConsensus(next);
+    setConsensusFeedback('已用同一 scene 校验两套方向；二者都没有新增规则提醒。');
+  };
+
+  const applyConsensusDirection = (direction) => {
+    if (hasUnsavedChanges || pendingReview || direction.versionId !== currentVersion.id) {
+      setConsensusFeedback('方案基准已经变化，请先保存或回到它对应的版本。');
+      return;
+    }
+    const option = consensusDirectionOptions.find((candidate) => candidate.id === direction.id);
+    if (!option) {
+      setConsensusFeedback('当前 scene 已变化，需要重新生成方向。');
+      return;
+    }
+    try {
+      const beforeHistory = versionHistoryRef.current;
+      const nextStore = dispatchSceneCommand(sceneStoreRef.current, option.command);
+      const nextHistory = saveSceneVersion(beforeHistory, nextStore, { source: `household:${activeMember.id}` });
+      if (nextHistory === beforeHistory) throw new Error('CONSENSUS_DIRECTION_NO_CHANGE');
+      const outcomeVersion = nextHistory.versions.at(-1);
+      const nextConsensus = chooseConsensusDirection(householdConsensus, {
+        directionId: direction.id,
+        versionId: outcomeVersion.id,
+        memberId: activeMember.id,
+      });
+      sceneStoreRef.current = nextStore;
+      versionHistoryRef.current = nextHistory;
+      setSceneStore(nextStore);
+      setVersionHistory(nextHistory);
+      setCompareFromVersionId(beforeHistory.currentVersionId);
+      setHouseholdConsensus(nextConsensus);
+      setConsensusFeedback(`${activeMember.name}选择了“${direction.title}”，已形成 ${outcomeVersion.label}；现在请三位成员分别确认。`);
+    } catch (error) {
+      setConsensusFeedback(`没有应用：${normalizeEditError(error)}`);
+    }
+  };
+
+  const confirmHouseholdDecision = () => {
+    const decision = householdConsensus.finalDecision;
+    if (!decision || decision.versionId !== currentVersion.id || hasUnsavedChanges || pendingReview) {
+      setConsensusFeedback('只能确认当前已保存、没有待处理预览的共同方向。');
+      return;
+    }
+    const nextConsensus = confirmConsensusVersion(householdConsensus, { memberId: activeMember.id, versionId: decision.versionId });
+    setHouseholdConsensus(nextConsensus);
+    if (nextConsensus.confirmations.length === nextConsensus.members.length) {
+      const nextHistory = confirmSceneVersion(versionHistoryRef.current, decision.versionId, { actor: 'household' });
+      versionHistoryRef.current = nextHistory;
+      setVersionHistory(nextHistory);
+      setConsensusFeedback(`${currentVersion.label} 已得到三位成员共同确认；每次确认都可追溯到成员和版本。`);
+    } else {
+      setConsensusFeedback(`${activeMember.name}已确认；还差 ${nextConsensus.members.length - nextConsensus.confirmations.length} 位。`);
+    }
+  };
+
   useEffect(() => {
     if (!selectedObject) return;
     if (editMode === 'move' && !selectedObject.capabilities.movable) setEditMode(selectedObject.capabilities.rotatable ? 'rotate' : null);
@@ -1028,6 +1235,11 @@ function ProjectDemoPage() {
     try { window.localStorage.setItem(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory)); }
     catch { /* Offline cache failure must not block the live editing session. */ }
   }, [versionHistory]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(CONSENSUS_STORAGE_KEY, serializeHouseholdConsensus(householdConsensus)); }
+    catch { /* Offline cache failure must not block the shared demo session. */ }
+  }, [householdConsensus]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1143,6 +1355,7 @@ function ProjectDemoPage() {
         <nav className="project-sidebar__switch" aria-label="右侧工作区">
           <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />空间</button>
           <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
+          <button type="button" aria-pressed={sidecarMode === 'household'} onClick={() => setSidecarMode('household')}><UsersThree size={15} />家庭</button>
         </nav>
         {sidecarMode === 'space' ? <>
         <article className="panel project-panel project-panel--overview">
@@ -1235,7 +1448,7 @@ function ProjectDemoPage() {
             ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
             : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
-        </> : <article className="panel agent-sidecar" data-testid="agent-sidecar">
+        </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
           <header className="agent-sidecar__header">
             <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>AI 设计协同</strong><small>{agentCapability.provider === 'local' ? '本地规划器' : agentCapability.provider}</small></div></div>
             <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? 'Aily 可用' : '本地降级'}</div>
@@ -1271,6 +1484,63 @@ function ProjectDemoPage() {
             <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
           </form>
           <footer className="agent-sidecar__footer">工具调用 → 确定性规则 → SceneCommand → 版本；Agent 不直接写 geometry JSON，也不会代你确认。</footer>
+        </article> : <article className="panel household-sidecar" data-testid="household-sidecar">
+          <header className="household-sidecar__header">
+            <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>一个共享方案 · 无私有版本</small></div></div>
+            <em>顺序切换 · Demo</em>
+          </header>
+
+          <div className="household-members" role="tablist" aria-label="当前表达成员">
+            {householdConsensus.members.map((member) => <button key={member.id} type="button" role="tab" aria-selected={activeMember.id === member.id} onClick={() => setActiveMemberId(member.id)}>
+              <span>{member.name.slice(0, 1)}</span><strong>{member.name}</strong>
+            </button>)}
+          </div>
+
+          <section className="household-member-card" aria-label="当前成员偏好">
+            <div><span>当前身份</span><strong>{activeMember.name} · {memberRoleLabels[activeMember.role] ?? activeMember.role}</strong></div>
+            <p>{activeMember.preferences.map((preference) => `#${preference}`).join('  ')}</p>
+          </section>
+
+          <form className="household-opinion" onSubmit={submitHouseholdOpinion}>
+            <div className="household-opinion__target"><span>意见对象</span><strong>{opinionTargetLabel}</strong><small>{currentVersion.label}</small></div>
+            <div className="household-stances" aria-label="意见立场">
+              {Object.entries(opinionStanceLabels).map(([stance, label]) => <button key={stance} type="button" aria-pressed={opinionStance === stance} onClick={() => setOpinionStance(stance)}>{label}</button>)}
+            </div>
+            <textarea rows="3" maxLength="500" aria-label={`${activeMember.name}的意见`} placeholder="写清楚想要什么，以及为什么…" value={opinionText} onChange={(event) => setOpinionText(event.currentTarget.value)} />
+            <button type="submit" disabled={hasUnsavedChanges || Boolean(pendingReview) || !opinionText.trim()}>记录到共享版本</button>
+            <p aria-live="polite">{consensusFeedback}</p>
+          </form>
+
+          <section className="household-conflict" data-status={activeConflict ? 'conflict' : 'clear'}>
+            <div className="household-section-title"><span>共识助手</span><strong>{activeConflict ? '发现意见冲突' : '等待完整意见'}</strong></div>
+            {activeConflict ? <>
+              <p>{activeConflict.memberIds.length} 位成员对 {householdTargetName(activeConflict.target)} 存在支持与{activeConflict.severity === 'non_negotiable' ? '不可妥协' : '反对'}立场，基准为 {versions.find((version) => version.id === activeConflict.versionId)?.label ?? activeConflict.versionId}。</p>
+              {!householdConsensus.finalDecision && conflictDirections.length === 0 && <button className="household-primary" type="button" onClick={generateConsensusDirections}>生成两套可行方向</button>}
+              {!householdConsensus.finalDecision && conflictDirections.length > 0 && <div className="household-directions">
+                {conflictDirections.map((direction) => <article key={direction.id}><div><strong>{direction.title}</strong><span>已校验</span></div><p>{direction.summary}</p><button type="button" onClick={() => applyConsensusDirection(direction)}>应用并创建新版本</button></article>)}
+              </div>}
+              {householdConsensus.finalDecision && chosenDirection && <div className="household-decision">
+                <span>共同方向</span><strong>{chosenDirection.title}</strong><p>{chosenDirection.summary}</p>
+                <button type="button" onClick={() => setVersionDrawerOpen(true)}>查看真实差异与影响</button>
+              </div>}
+            </> : <p>{householdConsensus.opinions.length < 2 ? '请至少让两位成员针对同一对象表达立场。' : '已记录的意见没有形成同一对象上的相反立场。'}</p>}
+          </section>
+
+          {householdConsensus.finalDecision && <section className="household-confirmations" data-testid="household-confirmations">
+            <div className="household-section-title"><span>共同确认</span><strong>{confirmedMemberIds.size} / {householdConsensus.members.length}</strong></div>
+            <div>{householdConsensus.members.map((member) => <span key={member.id} data-confirmed={confirmedMemberIds.has(member.id)}>{confirmedMemberIds.has(member.id) ? <Check size={11} /> : null}{member.name}</span>)}</div>
+            <button className="household-primary" type="button" onClick={confirmHouseholdDecision} disabled={confirmedMemberIds.has(activeMember.id) || householdConsensus.finalDecision.versionId !== currentVersion.id}>{confirmedMemberIds.has(activeMember.id) ? `${activeMember.name}已确认` : `由${activeMember.name}确认当前方向`}</button>
+          </section>}
+
+          <section className="household-activity" aria-label="家庭活动记录">
+            <div className="household-section-title"><span>共享活动</span><strong>{householdConsensus.opinions.length} 条意见</strong></div>
+            <ol>{[...householdConsensus.opinions].reverse().slice(0, 6).map((opinion) => {
+              const member = householdConsensus.members.find((candidate) => candidate.id === opinion.memberId);
+              const version = versions.find((candidate) => candidate.id === opinion.versionId);
+              return <li key={opinion.id}><span>{member?.name ?? opinion.memberId} · {opinionStanceLabels[opinion.stance]}</span><p>{opinion.note}</p><small>{householdTargetName(opinion.target)} · {version?.label ?? opinion.versionId}</small></li>;
+            })}</ol>
+          </section>
+          <footer>演示边界：当前用顺序身份切换模拟共创，不代表已完成账号权限或实时多人同步。</footer>
         </article>}
       </aside>
     </section>
