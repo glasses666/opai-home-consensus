@@ -17,8 +17,8 @@ import {
 
 const MM = 0.001;
 const MAX_OCCLUDING_SURFACES = 2;
-const assetCache = new Map();
 const safeScale = (target, source) => (Number.isFinite(source) && source > 0.0001 ? target / source : 1);
+const assetTemplateCache = new Map();
 function entityFromHit(object) {
   let current = object;
   while (current) {
@@ -44,6 +44,71 @@ function setEntity(root, kind, id, roomId) {
   root.userData.entityKind = kind;
   root.userData.entityId = id;
   root.userData.roomId = roomId;
+  return root;
+}
+
+function buildObjectAsset(templateScene, object, scene) {
+  const asset = templateScene.clone(true);
+  asset.updateWorldMatrix(true, true);
+  const canonicalMeshes = [];
+  asset.traverse((child) => {
+    if (child.isMesh && (child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical')) canonicalMeshes.push(child);
+  });
+  if (!canonicalMeshes.length) throw new Error('ASSET_CANONICAL_MESH_MISSING');
+  const sourceBounds = canonicalMeshes.reduce((bounds, mesh) => bounds.expandByObject(mesh), new THREE.Box3());
+  const sourceSize = sourceBounds.getSize(new THREE.Vector3());
+  const targetWidth = object.dimensions.width * MM;
+  const targetDepth = object.dimensions.depth * MM;
+  const targetHeight = object.dimensions.height * MM;
+  asset.scale.set(
+    safeScale(targetWidth, sourceSize.x),
+    safeScale(targetHeight, sourceSize.y),
+    safeScale(targetDepth, sourceSize.z),
+  );
+  asset.updateWorldMatrix(true, true);
+  const scaledBounds = new THREE.Box3().setFromObject(asset);
+  const scaledCenter = scaledBounds.getCenter(new THREE.Vector3());
+  asset.position.x -= scaledCenter.x;
+  asset.position.z -= scaledCenter.z;
+  asset.position.y -= scaledBounds.min.y;
+  asset.traverse((child) => {
+    if (!child.isMesh) return;
+    child.castShadow = true;
+    child.receiveShadow = true;
+    child.userData.sourceObjectId = object.id;
+    if (Array.isArray(child.material)) {
+      child.material = child.material.map((material) => material.clone());
+      for (const material of child.material) material.envMapIntensity = 0.32;
+    } else if (child.material) {
+      child.material = child.material.clone();
+      child.material.envMapIntensity = 0.32;
+    }
+    const material = scene.materials.find((candidate) => candidate.id === object.materialId);
+    const canonical = child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical';
+    if (material?.color && canonical) {
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      for (const value of materials) {
+        if (value?.color) value.color.set(material.color);
+      }
+    }
+  });
+  return { asset, sourceSize };
+}
+
+function createObjectRoot(templateScene, object, scene, entityRoots) {
+  const { asset, sourceSize } = buildObjectAsset(templateScene, object, scene);
+  const root = setEntity(new THREE.Group(), 'object', object.id, object.roomId);
+  root.name = object.id;
+  root.userData.materialId = object.materialId;
+  root.userData.assetSource = object.model3D.source;
+  root.userData.modelSrc = object.model3D.src;
+  root.userData.sourceSize = sourceSize;
+  root.userData.baseDimensions = { ...object.dimensions };
+  root.userData.assetRoot = asset;
+  root.add(asset);
+  syncObjectRoot(root, object);
+  applyObjectMaterial(root, object, scene);
+  entityRoots.set(object.id, root);
   return root;
 }
 
@@ -195,7 +260,41 @@ async function loadTextures(renderer) {
   return { oak, tile };
 }
 
-function addAssetPlaceholder(world, object, entityRoots) {
+function materialList(material) {
+  if (!material) return [];
+  return Array.isArray(material) ? material : [material];
+}
+
+function isCanonicalMesh(mesh) {
+  return mesh.name.startsWith('CANONICAL') || mesh.userData.material_role === 'canonical';
+}
+
+function applyObjectMaterial(root, object, scene) {
+  const material = scene.materials.find((candidate) => candidate.id === object.materialId);
+  root.userData.materialId = object.materialId;
+  root.traverse((child) => {
+    if (!child.isMesh) return;
+    for (const childMaterial of materialList(child.material)) {
+      childMaterial.envMapIntensity = 0.32;
+      if (material?.color && childMaterial.color && isCanonicalMesh(child)) childMaterial.color.set(material.color);
+    }
+  });
+}
+
+function syncObjectRoot(root, object) {
+  const base = root.userData.baseDimensions ?? object.dimensions;
+  root.visible = true;
+  root.userData.roomId = object.roomId;
+  root.position.set(object.transform.x * MM, object.transform.y * MM, object.transform.z * MM);
+  root.rotation.y = -object.transform.rotationY;
+  root.scale.set(
+    safeScale(object.dimensions.width, base.width),
+    safeScale(object.dimensions.height, base.height),
+    safeScale(object.dimensions.depth, base.depth),
+  );
+}
+
+function addAssetPlaceholder(object) {
   const root = setEntity(new THREE.Group(), 'object', object.id, object.roomId);
   const material = new THREE.MeshStandardMaterial({ color: '#9a4051', roughness: 0.8, transparent: true, opacity: 0.42, wireframe: true });
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(
@@ -206,11 +305,10 @@ function addAssetPlaceholder(world, object, entityRoots) {
   mesh.position.y = object.dimensions.height * MM / 2;
   root.name = object.id;
   root.userData.assetSource = 'placeholder';
-  root.position.set(object.transform.x * MM, object.transform.y * MM, object.transform.z * MM);
-  root.rotation.y = -object.transform.rotationY;
+  root.userData.baseDimensions = { ...object.dimensions };
   root.add(mesh);
-  world.add(root);
-  entityRoots.set(object.id, root);
+  syncObjectRoot(root, object);
+  return root;
 }
 
 async function buildFurniture(world, scene, entityRoots, callbacks) {
@@ -220,58 +318,16 @@ async function buildFurniture(world, scene, entityRoots, callbacks) {
   callbacks.onLoadState?.({ completed, failed, total: scene.objects.length });
   await Promise.all(scene.objects.map(async (object) => {
     try {
-      if (!assetCache.has(object.model3D.src)) assetCache.set(object.model3D.src, loader.loadAsync(object.model3D.src));
-      const gltf = await assetCache.get(object.model3D.src);
-      const asset = gltf.scene.clone(true);
-      asset.updateWorldMatrix(true, true);
-      const canonicalMeshes = [];
-      asset.traverse((child) => {
-        if (child.isMesh && (child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical')) canonicalMeshes.push(child);
-      });
-      if (!canonicalMeshes.length) throw new Error('ASSET_CANONICAL_MESH_MISSING');
-      const sourceBounds = canonicalMeshes.reduce((bounds, mesh) => bounds.expandByObject(mesh), new THREE.Box3());
-      const sourceSize = sourceBounds.getSize(new THREE.Vector3());
-      const targetWidth = object.dimensions.width * MM;
-      const targetDepth = object.dimensions.depth * MM;
-      const targetHeight = object.dimensions.height * MM;
-      asset.scale.set(safeScale(targetWidth, sourceSize.x), safeScale(targetHeight, sourceSize.y), safeScale(targetDepth, sourceSize.z));
-      asset.updateWorldMatrix(true, true);
-      const scaledBounds = new THREE.Box3().setFromObject(asset);
-      const scaledCenter = scaledBounds.getCenter(new THREE.Vector3());
-      asset.position.x -= scaledCenter.x;
-      asset.position.z -= scaledCenter.z;
-      asset.position.y -= scaledBounds.min.y;
-
-      const root = setEntity(new THREE.Group(), 'object', object.id, object.roomId);
-      root.name = object.id;
-      root.userData.materialId = object.materialId;
-      root.userData.assetSource = object.model3D.source;
-      root.position.set(object.transform.x * MM, object.transform.y * MM, object.transform.z * MM);
-      root.rotation.y = -object.transform.rotationY;
-      asset.traverse((child) => {
-        if (!child.isMesh) return;
-        child.castShadow = true;
-        child.receiveShadow = true;
-        child.userData.sourceObjectId = object.id;
-        const childMaterials = child.material ? (Array.isArray(child.material) ? child.material : [child.material]) : [];
-        if (childMaterials.length) {
-          child.material = Array.isArray(child.material) ? child.material.map((material) => material.clone()) : child.material.clone();
-          const material = scene.materials.find((candidate) => candidate.id === object.materialId);
-          for (const childMaterial of (Array.isArray(child.material) ? child.material : [child.material])) {
-            childMaterial.envMapIntensity = 0.32;
-            if (material?.color && childMaterial.color && (child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical')) {
-              childMaterial.color.set(material.color);
-            }
-          }
-        }
-      });
-      root.add(asset);
+      if (!assetTemplateCache.has(object.model3D.src)) assetTemplateCache.set(object.model3D.src, loader.loadAsync(object.model3D.src).then((gltf) => gltf.scene));
+      const templateScene = await assetTemplateCache.get(object.model3D.src);
+      const root = createObjectRoot(templateScene, object, scene, entityRoots);
+      world.add(root);
+    } catch (error) {
+      assetTemplateCache.delete(object.model3D.src);
+      failed += 1;
+      const root = addAssetPlaceholder(object);
       world.add(root);
       entityRoots.set(object.id, root);
-    } catch (error) {
-      assetCache.delete(object.model3D.src);
-      failed += 1;
-      addAssetPlaceholder(world, object, entityRoots);
       callbacks.onAssetError?.({ objectId: object.id, message: error instanceof Error ? error.message : 'ASSET_LOAD_FAILED' });
     } finally {
       completed += 1;
@@ -335,12 +391,14 @@ async function createController(container, scene, callbacks) {
   transformControls.setRotationSnap(Math.PI / 12);
   world.add(transformHelper);
 
-  const presets = new Map(scene.cameraPresets.map((preset) => [preset.id, preset]));
-  const objects = new Map(scene.objects.map((object) => [object.id, object]));
+  let currentScene = scene;
+  let presets = new Map(currentScene.cameraPresets.map((preset) => [preset.id, preset]));
+  let objects = new Map(currentScene.objects.map((object) => [object.id, object]));
   const entityRoots = new Map();
+  const objectLoader = new GLTFLoader();
   const textures = await loadTextures(renderer);
-  const wallSurfaces = buildArchitecture(world, scene, textures, entityRoots);
-  await buildFurniture(world, scene, entityRoots, callbacks);
+  const wallSurfaces = buildArchitecture(world, currentScene, textures, entityRoots);
+  await buildFurniture(world, currentScene, entityRoots, callbacks);
 
   const home = presets.get('camera-home-overview');
   camera.position.set(home.position.x * MM, home.position.y * MM, home.position.z * MM);
@@ -362,6 +420,7 @@ async function createController(container, scene, callbacks) {
   let editMode = 'select';
   let editStart = null;
   let ignoreCanvasPointerUp = false;
+  let sceneUpdateRevision = 0;
   const sightRay = new THREE.Ray();
   const sightDirection = new THREE.Vector3();
   const sightHit = new THREE.Vector3();
@@ -512,7 +571,7 @@ async function createController(container, scene, callbacks) {
     const preset = presets.get(viewId);
     if (!preset) return false;
     activeViewId = viewId;
-    const room = scene.rooms.find((candidate) => candidate.id === preset.roomId);
+    const room = currentScene.rooms.find((candidate) => candidate.id === preset.roomId);
     const roomSpan = room
       ? Math.max(
         Math.max(...room.polygon.map((point) => point.x)) - Math.min(...room.polygon.map((point) => point.x)),
@@ -579,7 +638,7 @@ async function createController(container, scene, callbacks) {
     const entity = hit ? entityFromHit(hit.object) : null;
     if (!entity) return;
     if (activeViewId === 'camera-home-overview' && entity.entityKind === 'surface' && entity.roomId) {
-      const room = scene.rooms.find((candidate) => candidate.id === entity.roomId);
+      const room = currentScene.rooms.find((candidate) => candidate.id === entity.roomId);
       if (room) {
         const selection = { kind: 'room', id: room.id };
         if (callbacks.onNavigate) callbacks.onNavigate({ selection, presetId: room.cameraPresetIds[0], reason: 'room' });
@@ -591,7 +650,7 @@ async function createController(container, scene, callbacks) {
       }
     }
     if (entity.entityKind === 'room') {
-      const room = scene.rooms.find((candidate) => candidate.id === entity.entityId);
+      const room = currentScene.rooms.find((candidate) => candidate.id === entity.entityId);
       if (room) {
         const selection = { kind: 'room', id: room.id };
         if (callbacks.onNavigate) callbacks.onNavigate({ selection, presetId: room.cameraPresetIds[0], reason: 'room' });
@@ -657,7 +716,7 @@ async function createController(container, scene, callbacks) {
         fps: Math.round((frameCount * 1000) / (now - statsStart)),
         calls: renderer.info.render.calls,
         triangles: renderer.info.render.triangles,
-        assets: scene.objects.length,
+        assets: currentScene.objects.length,
       });
       statsStart = now;
       frameCount = 0;
@@ -675,6 +734,47 @@ async function createController(container, scene, callbacks) {
     setEditMode(nextMode) {
       editMode = ['select', 'move', 'rotate'].includes(nextMode) ? nextMode : 'select';
       syncEditControl();
+    },
+    async updateScene(nextScene) {
+      if (nextScene.id !== currentScene.id) return false;
+      const revision = ++sceneUpdateRevision;
+      currentScene = nextScene;
+      presets = new Map(currentScene.cameraPresets.map((preset) => [preset.id, preset]));
+      objects = new Map(currentScene.objects.map((object) => [object.id, object]));
+      for (const [id, root] of entityRoots.entries()) {
+        if (root.userData.entityKind === 'object' && !objects.has(id)) root.visible = false;
+      }
+      for (const object of currentScene.objects) {
+        if (revision !== sceneUpdateRevision) return false;
+        let root = entityRoots.get(object.id);
+        if (!root) {
+          try {
+            if (!assetTemplateCache.has(object.model3D.src)) assetTemplateCache.set(object.model3D.src, objectLoader.loadAsync(object.model3D.src).then((gltf) => gltf.scene));
+            const templateScene = await assetTemplateCache.get(object.model3D.src);
+            if (revision !== sceneUpdateRevision) return false;
+            root = createObjectRoot(templateScene, object, currentScene, entityRoots);
+          } catch (error) {
+            assetTemplateCache.delete(object.model3D.src);
+            if (revision !== sceneUpdateRevision || !objects.has(object.id)) return false;
+            root = addAssetPlaceholder(object);
+            callbacks.onAssetError?.({ objectId: object.id, message: error instanceof Error ? error.message : 'ASSET_LOAD_FAILED' });
+          }
+          if (!entityRoots.has(object.id)) entityRoots.set(object.id, root);
+          world.add(root);
+        }
+        if (revision !== sceneUpdateRevision) return false;
+        syncObjectRoot(root, object);
+        applyObjectMaterial(root, object, currentScene);
+      }
+      if (revision !== sceneUpdateRevision) return false;
+      const failed = [...entityRoots.values()].filter((root) => (
+        root.visible && root.userData.entityKind === 'object' && root.userData.assetSource === 'placeholder'
+      )).length;
+      callbacks.onLoadState?.({ completed: currentScene.objects.length, failed, total: currentScene.objects.length });
+      if (selectedEntityId && !objects.has(selectedEntityId)) setSelection(null);
+      else if (selectedEntityId) setSelection({ kind: 'object', id: selectedEntityId });
+      else syncEditControl();
+      return true;
     },
     setSelection,
     dispose() {
@@ -732,6 +832,8 @@ export default function Scene3D({
 }) {
   const mountRef = useRef(null);
   const controllerRef = useRef(null);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
   const viewRequestRef = useRef(viewRequest);
   viewRequestRef.current = viewRequest;
   const wallOcclusionRef = useRef(true);
@@ -753,8 +855,8 @@ export default function Scene3D({
   useEffect(() => {
     let cancelled = false;
     setStatus('loading');
-    setAssetLoadState({ completed: 0, failed: 0, total: scene.objects.length });
-    createController(mountRef.current, scene, {
+    setAssetLoadState({ completed: 0, failed: 0, total: sceneRef.current.objects.length });
+    createController(mountRef.current, sceneRef.current, {
       onSelect: (...args) => callbacksRef.current.onSelect?.(...args),
       onNavigate: (...args) => callbacksRef.current.onNavigate?.(...args),
       onStats: (...args) => callbacksRef.current.onStats?.(...args),
@@ -786,7 +888,16 @@ export default function Scene3D({
       controllerRef.current?.dispose();
       controllerRef.current = null;
     };
-  }, [scene]);
+  }, [scene.id]);
+
+  useEffect(() => {
+    const controller = controllerRef.current;
+    if (!controller || status !== 'ready') return;
+    controller.updateScene(scene).catch((error) => {
+      console.error('Gate 5 3D scene failed to update incrementally', error);
+      setStatus('error');
+    });
+  }, [scene, status]);
 
   useEffect(() => { controllerRef.current?.setSelection(selection); }, [selection]);
   useEffect(() => { controllerRef.current?.setEditMode(editMode); }, [editMode]);
