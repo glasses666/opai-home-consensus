@@ -9,6 +9,7 @@
 - Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
 - Gate 2 已于 2026-08-09 验收并以 `080a3b2` 提交：`/lab/scene` 已有同源实时 3D、原创 GLB、整屋 / 房间镜头和真实对象点选。
 - 夜间后端包 N1 已完成：命令事务、最小规则裁决、Agent Harness、真实 Aily OpenAPI、Base 留痕与薄 BFF 已通过完整闭环；Gate 3 产品页面尚未开始。
+- 夜间后端包 N2 已实现、尚未 commit：15 项合成装修组件目录、Prompt v2.1、相关上下文裁剪与回复安全降级已可审阅；未发送 Coach 消息。
 
 ## 项目入口
 
@@ -17,6 +18,7 @@
 - [Gate 1 审阅包](./GATE-1-REVIEW.md)
 - [Gate 2 审阅包](./GATE-2-REVIEW.md)
 - [夜间后端包 N1 审阅](./BACKEND-N1-REVIEW.md)
+- [夜间后端包 N2 审阅](./BACKEND-N2-REVIEW.md)
 - [历史飞书能力证据](./FEISHU_EVIDENCE.md)
 
 ## 本地审阅

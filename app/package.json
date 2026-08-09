@@ -8,7 +8,8 @@
     "server": "node --env-file-if-exists=.env.local server/index.mjs",
     "build": "vite build",
     "test": "node --test",
-    "test:backend": "node --test tests/backend-domain.test.mjs tests/agent-harness.test.mjs tests/server.test.mjs"
+    "test:backend": "node --test tests/backend-domain.test.mjs tests/agent-harness.test.mjs tests/catalog-prompt.test.mjs tests/server.test.mjs",
+    "eval:agent:live": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",

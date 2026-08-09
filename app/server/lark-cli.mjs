@@ -19,6 +19,19 @@ const safeCode = (error) => {
   return SECRET_PATTERN.test(value) ? 'API_FAILED' : value.toUpperCase();
 };
 
+const parseEnvelope = (value) => {
+  try {
+    return JSON.parse(String(value ?? ''));
+  } catch {
+    return null;
+  }
+};
+
+const fromErrorEnvelope = (envelope) => new LarkCliError(safeCode(envelope), {
+  retryable: /network|timeout|rate|server|unavailable|unknown/i.test(`${envelope?.error?.type}:${envelope?.error?.subtype}`),
+  missingScopes: envelope?.error?.missing_scopes ?? [],
+});
+
 export async function runLarkCli(args, {
   runner = execFileAsync,
   timeoutMs = 12_000,
@@ -32,6 +45,8 @@ export async function runLarkCli(args, {
     });
     stdout = typeof result === 'string' ? result : result.stdout;
   } catch (error) {
+    const envelope = [error?.stderr, error?.stdout].map(parseEnvelope).find((value) => value?.ok === false);
+    if (envelope) throw fromErrorEnvelope(envelope);
     const timedOut = error?.killed || error?.code === 'ETIMEDOUT';
     throw new LarkCliError(timedOut ? 'CLI_TIMEOUT' : 'CLI_UNAVAILABLE', { retryable: true });
   }
@@ -44,13 +59,7 @@ export async function runLarkCli(args, {
   }
 
   if (envelope?.ok === false) {
-    const subtype = String(envelope.error?.subtype ?? '');
-    const type = String(envelope.error?.type ?? '');
-    const retryable = /network|timeout|rate|server|unavailable|unknown/i.test(`${type}:${subtype}`);
-    throw new LarkCliError(safeCode(envelope), {
-      retryable,
-      missingScopes: envelope.error?.missing_scopes ?? [],
-    });
+    throw fromErrorEnvelope(envelope);
   }
   return envelope;
 }

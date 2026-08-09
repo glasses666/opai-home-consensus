@@ -268,6 +268,8 @@ export function createDemoScene() {
       { id: 'mat-floor-light-oak', kind: 'wood', source: 'demo', color: '#d6b98c' },
       { id: 'mat-floor-tile-warm', kind: 'porcelain-tile', source: 'demo', color: '#ddd4c5' },
       { id: 'mat-oak-veneer', kind: 'wood', source: 'demo', color: '#c79f68' },
+      { id: 'mat-wall-greige', kind: 'microcement', source: 'demo', color: '#b9afa2' },
+      { id: 'mat-wall-oak-panel', kind: 'wood-wall-panel', source: 'demo', color: '#c8a577' },
       { id: 'mat-wall-warm-white', kind: 'paint', source: 'demo', color: '#f6f1e8' },
     ],
     rules: [

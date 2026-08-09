@@ -25,11 +25,11 @@ test('local parser moves, rotates, and recolors real scene objects', async () =>
   assert.equal(material.store.commands.length, 3);
 });
 
-test('provider can inspect and change surfaces through the registry', async () => {
+test('provider can inspect and change surfaces allowed for the current turn', async () => {
   const before = freshStore();
   const result = await runAgentTurn({
     store: before,
-    input: 'provider-driven',
+    input: '检查客餐厅并把地面换成瓷砖',
     provider: () => ({
       toolCalls: [
         { tool: 'inspect_room', args: { roomId: 'room-living-dining' } },
@@ -66,7 +66,7 @@ test('illegal tool execution leaves the scene unchanged', async () => {
   const beforeScene = serializeScene(before.currentScene);
   const result = await runAgentTurn({
     store: before,
-    input: 'provider-driven',
+    input: '把沙发向左移动10000毫米',
     provider: () => ({
       toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: -10000 } }],
     }),
@@ -84,7 +84,7 @@ test('a failed multi-tool turn rolls back earlier writes', async () => {
   const beforeScene = serializeScene(before.currentScene);
   const result = await runAgentTurn({
     store: before,
-    input: 'provider-driven',
+    input: '把沙发改成橡木色并向左移动10000毫米',
     provider: () => ({
       toolCalls: [
         { tool: 'set_object_material', args: { objectId: 'object-sofa', materialId: 'mat-oak-veneer' } },
@@ -102,7 +102,7 @@ test('provider receives a scene summary, not the live raw scene', async () => {
   const before = freshStore();
   const result = await runAgentTurn({
     store: before,
-    input: 'provider-driven',
+    input: '看看沙发',
     provider: ({ scene }) => {
       scene.objects.find((object) => object.id === 'object-sofa').transform.x = 9999;
       return { toolCalls: [] };
@@ -110,6 +110,24 @@ test('provider receives a scene summary, not the live raw scene', async () => {
   });
 
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2200);
+});
+
+test('provider tool calls are limited to the current turn allowlist', async () => {
+  const before = freshStore();
+  const result = await runAgentTurn({
+    store: before,
+    input: '把沙发向右移动20厘米',
+    provider: ({ tools }) => {
+      assert.equal(tools.some((tool) => tool.name === 'move_object'), true);
+      assert.equal(tools.some((tool) => tool.name === 'rotate_object'), false);
+      return { toolCalls: [{ tool: 'rotate_object', args: { objectId: 'object-sofa', degrees: 90 } }] };
+    },
+  });
+
+  assert.equal(result.trace.source, 'local');
+  assert.equal(result.trace.fallbackReason, 'TOOL_NOT_ALLOWED');
+  assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
+  assert.equal(objectById(result.store, 'object-sofa').transform.rotationY, 0);
 });
 
 test('deterministic replay returns stable commands and traces', async () => {

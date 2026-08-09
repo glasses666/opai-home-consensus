@@ -22,6 +22,18 @@ test('lark-cli adapter parses envelopes and never forwards raw secret errors', a
     }),
     (error) => error instanceof LarkCliError && error.message === 'MISSING_SCOPE' && !error.message.includes('abc'),
   );
+
+  await assert.rejects(
+    runLarkCli(['fake'], {
+      runner: async () => {
+        const error = new Error('exit 1');
+        error.code = 1;
+        error.stderr = JSON.stringify({ ok: false, error: { type: 'api', subtype: 'invalid_parameters', message: 'private upstream detail' } });
+        throw error;
+      },
+    }),
+    (error) => error instanceof LarkCliError && error.message === 'INVALID_PARAMETERS' && !error.message.includes('private'),
+  );
 });
 
 test('Aily adapter performs the official session-message-run-message chain', async () => {
@@ -58,9 +70,14 @@ test('Aily adapter performs the official session-message-run-message chain', asy
 
 test('Aily adapter prefers the official team-agent chat chain when agent ID is available', async () => {
   const paths = [];
+  let sentPrompt;
   const fakeRun = async (args) => {
     paths.push(`${args[1]} ${args[2]}`);
-    if (args[1] === 'POST') return { data: { agent_chat_id: 'chat_test', session_id: 'conversation_test' } };
+    if (args[1] === 'POST') {
+      const data = JSON.parse(args[args.indexOf('--data') + 1]);
+      sentPrompt = JSON.parse(data.user_message.content[0].text);
+      return { data: { agent_chat_id: 'chat_test', session_id: 'conversation_test' } };
+    }
     return {
       data: {
         content: [{ type: 'text', text: '{"toolCalls":[{"tool":"inspect_room","args":{"roomId":"room-living-dining"}}]}' }],
@@ -76,6 +93,8 @@ test('Aily adapter prefers the official team-agent chat chain when agent ID is a
     pollMs: 0,
   });
   assert.equal(result.toolCalls[0].tool, 'inspect_room');
+  assert.equal(sentPrompt.promptVersion, 'oppein-harness-v2.1');
+  assert.equal(sentPrompt.rules.some((rule) => rule.includes('层板')), true);
   assert.deepEqual(paths, [
     'POST /open-apis/aily/v1/agents/agent_test/chats',
     'GET /open-apis/aily/v1/agents/agent_test/chats/chat_test',
@@ -170,6 +189,36 @@ test('BFF applies an Agent turn and keeps Base failure as pending', async () => 
 
     const health = await (await fetch(`${origin}/api/health`)).json();
     assert.equal(health.pendingBaseEvents, 1);
+  } finally {
+    await close(server);
+  }
+});
+
+test('BFF exposes the replaceable demo catalog without claiming real SKUs', async () => {
+  const server = createAppServer({
+    health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+  });
+  const origin = await listen(server);
+  try {
+    const response = await fetch(`${origin}/api/catalog/components?q=%E5%B1%82%E6%9D%BF&category=shelving`);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.catalog.source, 'demo');
+    assert.equal(body.items.length, 1);
+    assert.equal(body.items[0].id, 'demo-shelf-floating-900');
+    assert.equal(body.items[0].commercial.price.source, 'estimate');
+
+    const itemResponse = await fetch(`${origin}/api/catalog/components/demo-wall-panel-light-oak`);
+    const itemBody = await itemResponse.json();
+    assert.equal(itemResponse.status, 200);
+    assert.equal(itemBody.item.operation.type, 'surface.setMaterial');
+
+    const health = await (await fetch(`${origin}/api/health`)).json();
+    assert.equal(health.catalog.status, 'ready');
+    assert.equal(health.catalog.reason, 'demo_catalog');
+
+    const invalid = await fetch(`${origin}/api/catalog/components?limit=100`);
+    assert.equal(invalid.status, 400);
   } finally {
     await close(server);
   }

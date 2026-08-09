@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
 import { runAgentTurn } from '../src/agent/harness.js';
+import { demoCatalogPlugin } from '../src/catalog/demo-catalog.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createSceneStore } from '../src/domain/scene.js';
 import { callAily, getFeishuHealth, syncActivity } from './feishu.mjs';
@@ -29,13 +30,15 @@ async function readJson(request) {
 
 export function createAppServer({
   initialStore = createSceneStore(createDemoScene()),
+  catalogPlugin = demoCatalogPlugin,
   health = getFeishuHealth,
   sync = syncActivity,
   agentProvider = process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
     ? (context) => callAily(context, {
         agentId: process.env.AILY_AGENT_ID,
         appId: process.env.AILY_APP_ID,
-        timeoutMs: 25_000,
+        timeoutMs: 35_000,
+        maxAttempts: 1,
       })
     : null,
   id = randomUUID,
@@ -56,13 +59,39 @@ export function createAppServer({
 
   return createServer(async (request, response) => {
     try {
-      if (request.method === 'GET' && request.url === '/api/health') {
+      const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+
+      if (request.method === 'GET' && url.pathname === '/api/health') {
         const capabilities = await health();
-        sendJson(response, 200, { ...capabilities, pendingBaseEvents: pendingEvents.size });
+        sendJson(response, 200, {
+          ...capabilities,
+          catalog: { status: 'ready', reason: 'demo_catalog', ...(await Promise.resolve(catalogPlugin.describe())) },
+          pendingBaseEvents: pendingEvents.size,
+        });
         return;
       }
 
-      if (request.method === 'POST' && request.url === '/api/agent/turn') {
+      if (request.method === 'GET' && url.pathname === '/api/catalog/components') {
+        const limit = url.searchParams.has('limit') ? Number(url.searchParams.get('limit')) : undefined;
+        const items = await Promise.resolve(catalogPlugin.search({
+          query: url.searchParams.get('q') ?? undefined,
+          category: url.searchParams.get('category') ?? undefined,
+          kind: url.searchParams.get('kind') ?? undefined,
+          appliesTo: url.searchParams.get('appliesTo') ?? undefined,
+          ...(limit === undefined ? {} : { limit }),
+        }));
+        sendJson(response, 200, { catalog: await Promise.resolve(catalogPlugin.describe()), items });
+        return;
+      }
+
+      if (request.method === 'GET' && url.pathname.startsWith('/api/catalog/components/')) {
+        const itemId = decodeURIComponent(url.pathname.slice('/api/catalog/components/'.length));
+        const item = await Promise.resolve(catalogPlugin.get(itemId));
+        sendJson(response, item ? 200 : 404, item ? { item } : { error: 'CATALOG_ITEM_NOT_FOUND' });
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/agent/turn') {
         const body = await readJson(request);
         if (typeof body.input !== 'string' || !body.input.trim() || body.input.length > 4000) {
           sendJson(response, 400, { error: 'INPUT_INVALID' });
@@ -87,7 +116,8 @@ export function createAppServer({
           input: body.input,
           selectedObjectId: body.selectedObjectId ?? null,
           provider: agentProvider,
-          timeoutMs: 30_000,
+          catalogPlugin,
+          timeoutMs: 40_000,
         });
         store = result.store;
 
@@ -115,7 +145,7 @@ export function createAppServer({
 
       sendJson(response, 404, { error: 'NOT_FOUND' });
     } catch (error) {
-      const clientError = ['REQUEST_TOO_LARGE', 'REQUEST_JSON_INVALID'].includes(error?.message);
+      const clientError = ['REQUEST_TOO_LARGE', 'REQUEST_JSON_INVALID'].includes(error?.message) || /^CATALOG_/.test(error?.message ?? '');
       sendJson(response, clientError ? 400 : 500, { error: clientError ? error.message : 'INTERNAL_ERROR' });
     }
   });

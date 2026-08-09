@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { buildAgentPrompt } from '../src/agent/prompt.js';
 import { runLarkCli } from './lark-cli.mjs';
 
 export const DEFAULT_BASE_TOKEN = 'S1GObxwLNaqZI9sRaZKcNZWPnRc';
@@ -55,7 +56,7 @@ function apiArgs(method, path, { data, params } = {}) {
   return args;
 }
 
-async function callAilyOnce({ input, scene, selectedObjectId, tools }, {
+async function callAilyOnce({ input, scene, selectedObjectId, tools, catalog }, {
   appId,
   run = runLarkCli,
   id = randomUUID,
@@ -71,13 +72,7 @@ async function callAilyOnce({ input, scene, selectedObjectId, tools }, {
   const sessionId = firstString(session.id, session.session_id);
   if (!sessionId) throw new Error('AILY_SESSION_INVALID');
 
-  const prompt = JSON.stringify({
-    instruction: 'Return JSON only: {"toolCalls":[{"tool":"...","args":{}}]}. Use only listed tools; do not write scene JSON directly.',
-    input,
-    scene,
-    selectedObjectId,
-    tools,
-  });
+  const prompt = buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog });
   await run(apiArgs('POST', `/open-apis/aily/v1/sessions/${sessionId}/messages`, {
     data: { idempotent_id: id(), content_type: 'TEXT', content: prompt },
   }));
@@ -122,7 +117,7 @@ async function callAilyOnce({ input, scene, selectedObjectId, tools }, {
   return parseToolCalls(content);
 }
 
-async function callTeamAgentOnce({ input, scene, selectedObjectId, tools }, {
+async function callTeamAgentOnce({ input, scene, selectedObjectId, tools, catalog }, {
   agentId,
   run = runLarkCli,
   pollMs = 250,
@@ -130,13 +125,7 @@ async function callTeamAgentOnce({ input, scene, selectedObjectId, tools }, {
 } = {}) {
   if (!/^agent_[A-Za-z0-9_-]{1,59}$/.test(agentId ?? '')) throw new Error('AILY_AGENT_ID_INVALID');
   const safeAgentId = encodeURIComponent(agentId);
-  const prompt = JSON.stringify({
-    instruction: 'Return JSON only: {"toolCalls":[{"tool":"...","args":{}}]}. Use only listed tools; do not write scene JSON directly.',
-    input,
-    scene,
-    selectedObjectId,
-    tools,
-  });
+  const prompt = buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog });
   const created = await run(apiArgs('POST', `/open-apis/aily/v1/agents/${safeAgentId}/chats`, {
     data: {
       stream: false,
@@ -168,13 +157,15 @@ async function callTeamAgentOnce({ input, scene, selectedObjectId, tools }, {
 }
 
 export async function callAily(context, options = {}) {
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  const maxAttempts = options.maxAttempts ?? 2;
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 2) throw new Error('AILY_ATTEMPTS_INVALID');
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       return options.agentId
         ? await callTeamAgentOnce(context, options)
         : await callAilyOnce(context, options);
     } catch (error) {
-      if (attempt === 1 || !error?.retryable) throw error;
+      if (attempt === maxAttempts - 1 || !error?.retryable) throw error;
     }
   }
   throw new Error('AILY_UNAVAILABLE');
