@@ -177,8 +177,8 @@ const cameraPresets = [
     roomId: 'room-primary-bedroom',
     kind: 'room_entry',
     label: '入口',
-    position: { x: 3400, y: 1650, z: 2700 },
-    target: { x: 1800, y: 720, z: 1500 },
+    position: { x: 3200, y: 1650, z: 3000 },
+    target: { x: 1900, y: 720, z: 1500 },
     fov: 52,
   },
   {
@@ -188,7 +188,7 @@ const cameraPresets = [
     kind: 'surface_feature',
     label: '主功能面',
     position: { x: 800, y: 1500, z: 1600 },
-    target: { x: 3980, y: 1200, z: 1600 },
+    target: { x: 3300, y: 1200, z: 1600 },
     fov: 44,
   },
   {
@@ -207,7 +207,7 @@ const cameraPresets = [
     kind: 'surface_feature',
     label: '主功能面',
     position: { x: 8000, y: 1450, z: 1600 },
-    target: { x: 10980, y: 850, z: 1600 },
+    target: { x: 10300, y: 850, z: 1600 },
     fov: 44,
   },
   {

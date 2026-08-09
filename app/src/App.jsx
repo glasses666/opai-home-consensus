@@ -419,9 +419,24 @@ function ProjectDemoPage() {
     commitNavigation({ ...navigation, viewId: preset.id });
   };
 
+  const jumpToObject = (object) => {
+    const preset = scene.cameraPresets.find((candidate) => candidate.id === object.preferredCameraPresetId);
+    const fallback = getRoomViewPresets(object.roomId)[0];
+    if (!preset && !fallback) return;
+    commitNavigation({
+      roomId: object.roomId,
+      viewId: preset?.id ?? fallback.id,
+      selectedId: object.id,
+    }, { replace: object.roomId === activeRoomId });
+  };
+
   const selectEntity = (nextSelection) => {
     const entity = findEntity(nextSelection);
     if (!entity) return;
+    if (entity.kind === 'object') {
+      jumpToObject(entity.entity);
+      return;
+    }
     commitNavigation({
       roomId: activeRoomId,
       viewId: navigation.viewId,
@@ -433,7 +448,8 @@ function ProjectDemoPage() {
     const entity = findEntity(nextSelection);
     if (!entity) return;
     const roomId = entity.kind === 'room' ? entity.entity.id : entity.entity.roomId;
-    if (roomId === activeRoomId) selectEntity(nextSelection);
+    if (entity.kind === 'object') jumpToObject(entity.entity);
+    else if (roomId === activeRoomId) selectEntity(nextSelection);
     else if (roomId) jumpToRoom(roomId, entity.entity.id);
   };
 
@@ -497,7 +513,9 @@ function ProjectDemoPage() {
         <article className="panel project-panel project-context" aria-label="当前位置摘要">
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
-          <p>{activeRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。'}</p>
+          <p>{selectedEntity?.kind === 'object'
+            ? '已定位到所选家具；当前仅查看，编辑能力将在后续 Gate 开放。切换房间视角不会丢失选择。'
+            : (activeRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
       </aside>
     </section>

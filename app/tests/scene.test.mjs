@@ -4,12 +4,15 @@ import test from 'node:test';
 
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import {
+  cameraDistanceLimit,
   cameraTransitionDuration,
   createCameraOrbit,
   sampleCameraOrbit,
   smoothCameraProgress,
-  surfaceProximityOpacity,
+  surfaceFadeProgress,
+  surfaceOcclusionOpacity,
 } from '../src/domain/camera-transition.js';
+import { pointInPolygon, rotatedFootprint } from '../src/domain/geometry.js';
 import { projectScene2D } from '../src/domain/projection.js';
 import {
   assertValidScene,
@@ -48,9 +51,17 @@ test('large camera turns follow a shortest orbit without collapsing into the tar
   assert.equal(smoothCameraProgress(0), 0);
   assert.equal(smoothCameraProgress(1), 1);
   assert.equal(cameraTransitionDuration(diningToSofaAngle, 1), 1);
-  assert.equal(surfaceProximityOpacity(0), 0.28);
-  assert.ok(surfaceProximityOpacity(0.275) > 0.28);
-  assert.equal(surfaceProximityOpacity(0.55), 1);
+  assert.equal(surfaceOcclusionOpacity(0), 1);
+  assert.equal(surfaceOcclusionOpacity(0.5), 0.5);
+  assert.equal(surfaceOcclusionOpacity(1), 0);
+  const fadeOut = surfaceFadeProgress(0, 1, 16);
+  assert.ok(fadeOut > 0 && fadeOut < 1);
+  assert.ok(surfaceFadeProgress(fadeOut, 1, 16) > fadeOut);
+  const fadeIn = surfaceFadeProgress(1, 0, 16);
+  assert.ok(fadeIn > 0 && fadeIn < 1);
+  assert.equal(cameraDistanceLimit('whole_home'), 28);
+  assert.equal(cameraDistanceLimit('room_overhead', 4), 8);
+  assert.equal(cameraDistanceLimit('room_overhead', 7.6), 15.2);
 });
 
 test('demo fixture is a valid seven-room whole-home plan with reciprocal adjacency', () => {
@@ -117,6 +128,30 @@ test('camera presets provide whole-home, room-overhead, entry, and feature views
     assert.equal(preset.objectId, object.id);
     assert.equal(preset.target.x, object.transform.x);
     assert.equal(preset.target.z, object.transform.z);
+  }
+});
+
+test('room entry cameras never start inside furniture footprints', () => {
+  const scene = createDemoScene();
+
+  for (const preset of scene.cameraPresets.filter((candidate) => candidate.kind === 'room_entry')) {
+    const furnitureAtCamera = scene.objects
+      .filter((object) => object.roomId === preset.roomId)
+      .filter((object) => pointInPolygon(preset.position, rotatedFootprint(object.transform, object.dimensions)))
+      .map((object) => object.id);
+    assert.deepEqual(furnitureAtCamera, [], `${preset.id} starts inside ${furnitureAtCamera.join(', ')}`);
+  }
+});
+
+test('surface feature camera targets stay on the room side of their walls', () => {
+  const scene = createDemoScene();
+
+  for (const preset of scene.cameraPresets.filter((candidate) => candidate.kind === 'surface_feature')) {
+    const wall = scene.surfaces.find((surface) => surface.id === preset.surfaceId);
+    const axisDistance = wall.edge.start.x === wall.edge.end.x
+      ? Math.abs(preset.target.x - wall.edge.start.x)
+      : Math.abs(preset.target.z - wall.edge.start.z);
+    assert.ok(axisDistance > wall.thickness / 2, `${preset.id} target sits inside ${wall.id}`);
   }
 });
 

@@ -20,15 +20,15 @@ export function sanitizeViewState(state, scene) {
   const presets = scene?.cameraPresets ?? [];
   const defaultHome = presets.find((preset) => preset.kind === 'whole_home') ?? null;
   const room = findById(scene?.rooms, state?.roomId);
+  const entity = selectedEntity(scene, state?.selectedId);
+  const roomPresetIds = new Set(room?.cameraPresetIds ?? []);
   const allowedPresets = room
-    ? (room.cameraPresetIds ?? []).map((id) => findById(presets, id)).filter((preset) => preset?.roomId === room.id)
+    ? presets.filter((preset) => preset.roomId === room.id && (roomPresetIds.has(preset.id) || preset.objectId === entity?.id))
     : presets.filter((preset) => preset.kind === 'whole_home');
   const requestedPreset = findById(allowedPresets, state?.viewId);
   const preset = requestedPreset ?? (room
     ? allowedPresets.find((candidate) => candidate.kind === 'room_overhead') ?? allowedPresets[0]
     : defaultHome);
-  const entity = selectedEntity(scene, state?.selectedId);
-
   return {
     roomId: room?.id ?? null,
     viewId: preset?.id ?? defaultHome?.id ?? null,

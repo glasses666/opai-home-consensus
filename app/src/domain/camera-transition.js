@@ -3,7 +3,14 @@ const lerp = (from, to, progress) => from + (to - from) * progress;
 
 export const smoothCameraProgress = (progress) => progress ** 3 * (progress * (progress * 6 - 15) + 10);
 export const cameraTransitionDuration = (angle, requested) => requested ?? Math.max(920, Math.min(1500, 760 + angle * 260));
-export const surfaceProximityOpacity = (distance) => 0.28 + 0.72 * smoothCameraProgress(clamp(distance / 0.55, 0, 1));
+export const surfaceFadeProgress = (current, target, deltaMs) => {
+  const next = lerp(current, target, 1 - Math.exp(-Math.max(0, deltaMs) / 110));
+  return Math.abs(target - next) < 0.002 ? target : next;
+};
+export const surfaceOcclusionOpacity = (progress) => 1 - smoothCameraProgress(clamp(progress, 0, 1));
+export const cameraDistanceLimit = (viewKind, roomSpan = 8) => viewKind === 'whole_home'
+  ? 28
+  : Math.max(8, Math.min(16, roomSpan * 2));
 
 const spherical = ({ x, y, z }) => {
   const radius = Math.hypot(x, y, z);

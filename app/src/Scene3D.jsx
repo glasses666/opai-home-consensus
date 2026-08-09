@@ -5,11 +5,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
+  cameraDistanceLimit,
   cameraTransitionDuration,
   createCameraOrbit,
   sampleCameraOrbit,
   smoothCameraProgress,
-  surfaceProximityOpacity,
+  surfaceFadeProgress,
+  surfaceOcclusionOpacity,
 } from './domain/camera-transition.js';
 
 const MM = 0.001;
@@ -146,7 +148,17 @@ function buildArchitecture(world, scene, textures, entityRoots) {
     addWallBox(root, wall, metrics, cursor, metrics.length - cursor, 0, wall.height, materials.wall);
     wallsGroup.add(root);
     root.updateWorldMatrix(true, true);
-    wallSurfaces.push({ bounds: new THREE.Box3().setFromObject(root), materials: Object.values(materials) });
+    const occlusionBounds = [];
+    root.traverse((child) => {
+      if (child.isMesh && child.material !== materials.glass) {
+        occlusionBounds.push(new THREE.Box3().setFromObject(child));
+      }
+    });
+    wallSurfaces.push({
+      occlusionBounds,
+      materials: Object.values(materials),
+      occlusionProgress: 0,
+    });
     entityRoots.set(wall.id, root);
   }
 
@@ -265,7 +277,7 @@ async function createController(container, scene, callbacks) {
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
   controls.minDistance = 1.3;
-  controls.maxDistance = 28;
+  controls.maxDistance = cameraDistanceLimit('whole_home');
   controls.maxPolarAngle = Math.PI * 0.485;
   controls.screenSpacePanning = true;
 
@@ -290,14 +302,43 @@ async function createController(container, scene, callbacks) {
   let frameCount = 0;
   let statsStart = performance.now();
   let pointerStart = null;
+  const sightRay = new THREE.Ray();
+  const sightDirection = new THREE.Vector3();
+  const sightHit = new THREE.Vector3();
+  let lastOcclusionUpdateAt = performance.now();
 
-  function updateWallOcclusion() {
+  function updateWallOcclusion(now) {
+    const deltaMs = Math.min(32, Math.max(0, now - lastOcclusionUpdateAt));
+    lastOcclusionUpdateAt = now;
+    sightDirection.subVectors(controls.target, camera.position);
+    const sightLength = sightDirection.length();
+    if (sightLength > 0) sightRay.set(camera.position, sightDirection.normalize());
+    let occludingSurface = null;
+    let nearestHitDistance = Infinity;
     for (const surface of wallSurfaces) {
-      const opacity = surfaceProximityOpacity(surface.bounds.distanceToPoint(camera.position));
-      const faded = opacity < 0.999;
+      if (sightLength > 0) {
+        for (const bounds of surface.occlusionBounds) {
+          const hit = sightRay.intersectBox(bounds, sightHit);
+          if (!hit) continue;
+          const hitDistance = camera.position.distanceTo(hit);
+          if (hitDistance < sightLength - 0.03 && hitDistance < nearestHitDistance) {
+            nearestHitDistance = hitDistance;
+            occludingSurface = surface;
+          }
+        }
+      }
+    }
+    for (const surface of wallSurfaces) {
+      surface.occlusionProgress = surfaceFadeProgress(
+        surface.occlusionProgress,
+        surface === occludingSurface ? 1 : 0,
+        deltaMs,
+      );
+      const opacity = surfaceOcclusionOpacity(surface.occlusionProgress);
       for (const material of surface.materials) {
         const baseOpacity = material.userData.baseOpacity;
-        material.opacity = faded ? baseOpacity * opacity : baseOpacity;
+        material.opacity = baseOpacity * opacity;
+        const faded = material.opacity < baseOpacity - 0.001;
         const transparent = baseOpacity < 1 || faded;
         const depthWrite = baseOpacity === 1 && !faded;
         if (material.transparent !== transparent || material.depthWrite !== depthWrite) {
@@ -331,6 +372,14 @@ async function createController(container, scene, callbacks) {
     const preset = presets.get(viewId);
     if (!preset) return false;
     activeViewId = viewId;
+    const room = scene.rooms.find((candidate) => candidate.id === preset.roomId);
+    const roomSpan = room
+      ? Math.max(
+        Math.max(...room.polygon.map((point) => point.x)) - Math.min(...room.polygon.map((point) => point.x)),
+        Math.max(...room.polygon.map((point) => point.z)) - Math.min(...room.polygon.map((point) => point.z)),
+      ) * MM
+      : undefined;
+    controls.maxDistance = cameraDistanceLimit(preset.kind, roomSpan);
     callbacks.onViewEvent?.({ phase: 'started', preset });
     controls.enabled = false;
     const presetTarget = new THREE.Vector3(preset.target.x * MM, preset.target.y * MM, preset.target.z * MM);
@@ -378,7 +427,9 @@ async function createController(container, scene, callbacks) {
     const bounds = renderer.domElement.getBoundingClientRect();
     pointer.set(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -((event.clientY - bounds.top) / bounds.height) * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(world.children, true).find((entry) => !entry.object.userData.skipPick);
+    const hit = raycaster.intersectObjects(world.children, true).find((entry) => (
+      !entry.object.userData.skipPick && (entry.object.material?.opacity ?? 1) > 0.02
+    ));
     const entity = hit ? entityFromHit(hit.object) : null;
     if (!entity) return;
     if (activeViewId === 'camera-home-overview' && entity.entityKind === 'surface' && entity.roomId) {
@@ -452,7 +503,7 @@ async function createController(container, scene, callbacks) {
       }
     }
     if (!transition) controls.update();
-    updateWallOcclusion();
+    updateWallOcclusion(now);
     renderer.render(world, camera);
     frameCount += 1;
     if (now - statsStart >= 1000) {
@@ -590,6 +641,8 @@ export default function Scene3D({
       })}
       <button type="button" aria-pressed={viewState.id === 'free'} onClick={chooseFree}><ArrowsOutSimple size={16} /><span>自由</span></button>
     </nav>}
-    <p className="scene3d__hint">{activeRoomId ? '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。' : '点击房间地面，镜头会先飞到该房间的三维俯视。'}</p>
+    <p className="scene3d__hint">{activeRoomId
+      ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。')
+      : '点击房间地面，镜头会先飞到该房间的三维俯视。'}</p>
   </div>;
 }

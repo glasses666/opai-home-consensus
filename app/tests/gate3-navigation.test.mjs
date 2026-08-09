@@ -43,6 +43,21 @@ test('Gate 3 view state round-trips through a native URL query', () => {
   assert.equal(serializeViewState(parseViewState('', scene), scene), '');
 });
 
+test('object camera views survive Gate 3 URL sanitization', () => {
+  const scene = createDemoScene();
+  const state = {
+    roomId: 'room-living-dining',
+    viewId: 'camera-living-sofa',
+    selectedId: 'object-sofa',
+  };
+
+  assert.deepEqual(sanitizeViewState(state, scene), state);
+  assert.equal(
+    serializeViewState(state, scene),
+    '?room=room-living-dining&view=camera-living-sofa&select=object-sofa',
+  );
+});
+
 test('invalid and cross-room URL values fall back to compatible scene state', () => {
   const scene = createDemoScene();
 
