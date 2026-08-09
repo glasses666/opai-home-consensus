@@ -353,11 +353,14 @@ function ProjectDemoPage() {
   const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
   const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
   const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
+  const [renderStats, setRenderStats] = useState({ fps: 0, calls: 0, triangles: 0, assets: 0 });
+  const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: scene.objects.length });
   const [pathname] = usePathname();
   const homePreset = scene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
   const displaySelection = selectionFromId(displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
   const displaySelectedEntity = findEntity(displaySelection);
+  const selectedObject = displaySelectedEntity?.kind === 'object' ? displaySelectedEntity.entity : null;
   const activeRoomId = navigation.roomId;
   const currentRoom = scene.rooms.find((room) => room.id === displayRoomId) ?? null;
   const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
@@ -491,7 +494,8 @@ function ProjectDemoPage() {
           }}
           activeRoomId={displayRoomId}
           roomLabels={roomLabels}
-          onStats={() => {}}
+          onStats={setRenderStats}
+          onLoadState={setAssetLoadState}
           viewRequest={viewRequest}
           onViewEvent={({ phase, preset }) => {
             if (phase !== 'done') return;
@@ -520,6 +524,19 @@ function ProjectDemoPage() {
         <article className="panel project-panel project-context" aria-label="当前位置摘要">
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
+          {selectedObject && <div className="project-object" data-testid="selected-object-details">
+            <div><span>{selectedObject.externalId}</span><strong>{selectedObject.source === 'demo' ? '演示对象' : '企业对象'}</strong></div>
+            <dl>
+              <div><dt>尺寸</dt><dd>{selectedObject.dimensions.width} × {selectedObject.dimensions.depth} × {selectedObject.dimensions.height} mm</dd></div>
+              <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
+            </dl>
+          </div>}
+          <dl className="project-metrics" aria-label="三维运行实测">
+            <div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div>
+            <div><dt>Draw</dt><dd>{renderStats.calls || '—'}</dd></div>
+            <div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div>
+            <div><dt>GLB</dt><dd>{assetLoadState.completed}/{assetLoadState.total}{assetLoadState.failed ? ` · ${assetLoadState.failed} 占位` : ''}</dd></div>
+          </dl>
           <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具；当前仅查看，编辑能力将在后续 Gate 开放。切换房间视角不会丢失选择。'
             : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>

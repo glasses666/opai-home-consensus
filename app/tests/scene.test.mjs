@@ -77,6 +77,24 @@ test('demo fixture is a valid seven-room whole-home plan with reciprocal adjacen
   }
 });
 
+test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
+  const scene = createDemoScene();
+  const livingObjects = scene.objects.filter((object) => object.roomId === 'room-living-dining');
+
+  assert.deepEqual(livingObjects.map((object) => object.id).sort(), [
+    'object-dining-table',
+    'object-sofa',
+    'object-tv-console',
+  ]);
+  for (const object of livingObjects) {
+    assert.equal(object.source, 'demo');
+    assert.match(object.externalId, /^DEMO-/);
+    assert.equal(object.capabilities.selectable, true);
+    assert.equal(object.model3D.source, 'generated');
+    assert.ok(object.dimensions.width > 0 && object.dimensions.depth > 0 && object.dimensions.height > 0);
+  }
+});
+
 test('scene round trip is byte-identical and deserialized scenes are frozen', () => {
   const scene = createDemoScene();
   const serialized = serializeScene(scene);

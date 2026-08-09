@@ -171,6 +171,20 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .project-context__facts dt, .project-context__facts dd { margin: 0; }
 .project-context__facts dt { color: var(--muted); font-size: 10px; }
 .project-context__facts dd { margin-top: 3px; overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.project-object { display: grid; gap: 8px; padding: 10px 0 0; }
+.project-object > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.project-object > div span { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; }
+.project-object > div strong { font-size: 10px; }
+.project-object dl, .project-object dl div, .project-object dt, .project-object dd { margin: 0; }
+.project-object dl { display: grid; gap: 5px; }
+.project-object dl div { display: grid; grid-template-columns: 46px 1fr; gap: 8px; }
+.project-object dt { color: var(--muted); font-size: 10px; }
+.project-object dd { overflow: hidden; font-size: 10px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.project-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 10px 0 0; padding-top: 9px; border-top: 1px solid var(--line); }
+.project-metrics div { min-width: 0; }
+.project-metrics dt, .project-metrics dd { margin: 0; }
+.project-metrics dt { color: var(--muted); font-size: 8px; letter-spacing: .05em; text-transform: uppercase; }
+.project-metrics dd { margin-top: 2px; overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .project-context p { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .utility-button--strong { border-color: rgb(141 92 70 / 28%); background: rgb(255 252 246 / 72%); }
 .utility-button:disabled { cursor: default; opacity: .42; }

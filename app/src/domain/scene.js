@@ -392,6 +392,9 @@ export function validateScene(scene) {
     if (!materialMap.has(object.materialId)) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Object material "${object.materialId}" does not exist.`);
     }
+    if (typeof object.externalId !== 'string' || !object.externalId || !['demo', 'enterprise'].includes(object.source)) {
+      addError(errors, 'OBJECT_PROVENANCE_INVALID', path, 'Object must declare an externalId and demo or enterprise source.');
+    }
     if (object.preferredCameraPresetId) {
       const preset = cameraPresetMap.get(object.preferredCameraPresetId);
       if (!preset) {
