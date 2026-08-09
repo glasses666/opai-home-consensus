@@ -3,7 +3,7 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-09
-当前状态：**Gate 1、Gate 2 已验收；夜间后端包 N1 已完成**
+当前状态：**Gate 1、Gate 2 已验收；夜间后端包 N1 已完成，真实 Aily + Base 闭环已通过**
 当前 Gate：**Gate 3 尚未开始；N1 只构建命令、规则、Agent Harness 与飞书适配，不改页面**
 
 ## 0. 为什么重开计划
@@ -184,7 +184,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### 夜间后端包 N1：命令事务、Agent Harness 与飞书能力门
 
-**状态：已完成（2026-08-09）；审阅包见 [BACKEND-N1-REVIEW.md](./BACKEND-N1-REVIEW.md)，Gate 3 尚未开始。**
+**状态：已完成并完成真实 Aily / Base 验收（2026-08-09）；审阅包见 [BACKEND-N1-REVIEW.md](./BACKEND-N1-REVIEW.md)，Gate 3 尚未开始。**
 
 **目的**
 
@@ -197,7 +197,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 - 建立工具注册表与 Agent Harness：模型只提出结构化工具调用，本地 planner 校验并执行，禁止模型直接写 scene JSON。
 - 提供确定性本地 provider、Aily provider 边界、一次重试后降级、脱敏 trace 和固定输入回放。
 - 使用 Node 标准库提供薄 BFF；浏览器不读取飞书 token，项目不新增运行时依赖。
-- 验证当前用户的 Aily 全量项目 scope 和 Base 读写能力；真实 API 可用时留一条脱敏证据，不可用时准确记录阻塞边界。
+- 验证当前用户的 Aily 项目 scope 和 Base 读写能力；创建并发布开发后台自定义智能体，开启 OpenAPI 渠道，留下真实 turn 与 Base 回读证据。
 
 **验收证据**
 
@@ -205,6 +205,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 - 合法移动能落盘，越界、对象碰撞和侵占硬净距不能提交；所有结果返回稳定错误码和家庭可读解释。
 - 至少三种自然语言输入通过 Harness 产生真实 `SceneCommand`；provider 返回非法结构或超时时自动降级且不污染场景。
 - `/api/health` 只返回真实 capability 状态；Aily / Base 未经真实调用不得标记 `ready`。
+- 已验证一次 `provider → SceneCommand → 规则引擎 → Base` 完整链路，health 为 `Aily ready / real_turn_verified` 与 `Base ready / write_read_verified`。
 - `npm test` 与 `npm run build` 通过，Gate 2 技术页无视觉回归。
 
 **明确不做**

@@ -7,24 +7,27 @@
 - `/api/health` 在进程尚未完成真实写入时返回 `api_unavailable / real_write_not_verified`，不会只凭 scope 或字段读取标记 `ready`。
 - `evt-n1-live-capability-20260809` 已写入 Activity 并回读为 `local / synced`，record `recvrJ4UFcFsPX`。
 - `evt-n1-live-readback-20260809` 在修复创建响应不返回 record ID 的边界后，按 `Event ID` 搜索回读并更新同一记录，record `recvrJ7pFAdHkq`。
+- `evt-n1-aily-live-20260809-0916` 已由真实 Aily provider 生成合法 `move_object`，经本地规则执行后写入并回读，record `recvrL3in2XEYy`。
 - 当前进程完成写入与回读后，`/api/health` 返回 `base: ready / write_read_verified`；浏览器仍不接触 token。
 
-### Aily：接口已接，真实智能体仍未验收
+### Aily：真实 turn 已通过
 
 - 首选 2026-07-08 更新的团队智能体链路：
   1. `POST /open-apis/aily/v1/agents/:agent_id/chats`
   2. `GET /open-apis/aily/v1/agents/:agent_id/chats/:agent_chat_id`
   3. `POST /open-apis/aily/v1/agents/:agent_id/agent_visibility/check`
 - 保留旧 Aily Session → Message → Run → Message 链路作为兼容路径。
-- 当前 user token 已具备 `aily:agent_chat:write`、`aily:agent_visibility:read` 及旧链路的 session / message / run scopes；仍缺团队结果读取 scope `aily:agent_chat:read`。
-- 当前没有可验证的 `agent_id` 或旧 `spring_xxx__c` app ID；Aily 网页后台另有独立扫码登录，补充 OAuth device flow 未完成。
-- 因此当前 `/api/health` 返回 `aily: api_unavailable / missing_agent_or_app_id`，Agent 请求由确定性本地 planner 完成；没有宣称真实 Aily 已接通。
+- 当前 user token 已具备团队链路所需的 `aily:agent_chat:read`、`aily:agent_chat:write` 与 `aily:agent_visibility:read`。
+- Workbench 中的个人智能伙伴与团队智能伙伴没有暴露开发后台的渠道管理；直接调用均返回 `10006 / openapi channel is not enabled`。最终在 Aily 开发后台创建并发布 `欧派 AI 家装规划 Harness`，agent ID 为 `agent_4kt39w75byxw5cf`，并显式开启 OpenAPI 渠道。
+- 首轮完整 scene 请求在旧 15 秒总窗口内安全降级为 local；同一请求实测约 19 秒完成，因此 BFF 调整为 25 秒 provider 窗口、30 秒 Harness 总窗口。
+- `evt-n1-aily-live-20260809-0916` 的 trace 为 `source: provider`、`fallbackReason: null`，将沙发从 `x=2200` 合法移动到 `x=2400`，随后 Base 同步成功。
+- 同一进程的 `/api/health` 返回 `aily: ready / real_turn_verified` 与 `base: ready / write_read_verified`，`pendingBaseEvents: 0`。
 
 ### 安全与行为边界
 
 - 模型只能返回结构化工具调用，本地 planner 通过 `SceneCommand` 与规则引擎落盘，不能直接改 scene JSON。
 - Aily 429 / 5xx / timeout 只重试一次；格式错误或持续失败自动降级，trace 不含 token、Authorization 或密钥字段。
-- 今晚未发送消息、未联系 Coach、未部署、未公开分享，也未修改 Gate 2 页面。
+- 未发送消息、未联系 Coach、未部署、未公开分享，也未修改 Gate 2 页面或开始 Gate 3。
 
 # 飞书能力门与回查证据（历史 V1）
 

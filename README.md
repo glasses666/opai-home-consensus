@@ -8,7 +8,7 @@
 - 旧六空间 / 静态效果图 / 方块 3D 原型已移出工作区，不再作为实现基线。
 - Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
 - Gate 2 已于 2026-08-09 验收并以 `080a3b2` 提交：`/lab/scene` 已有同源实时 3D、原创 GLB、整屋 / 房间镜头和真实对象点选。
-- 夜间后端包 N1 已完成：命令事务、最小规则裁决、Agent Harness、团队智能体 / 旧 Aily 双路径、Base 留痕与薄 BFF 已建立；Gate 3 产品页面尚未开始。
+- 夜间后端包 N1 已完成：命令事务、最小规则裁决、Agent Harness、真实 Aily OpenAPI、Base 留痕与薄 BFF 已通过完整闭环；Gate 3 产品页面尚未开始。
 
 ## 项目入口
 
@@ -37,7 +37,7 @@ npm run server
 npm run test:backend
 ```
 
-团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
+团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。本机 `app/.env.local` 已配置已发布的项目智能体且被 Git 忽略；两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
 
 ## Git 规则
 

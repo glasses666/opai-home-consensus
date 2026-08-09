@@ -35,6 +35,7 @@ export function createAppServer({
     ? (context) => callAily(context, {
         agentId: process.env.AILY_AGENT_ID,
         appId: process.env.AILY_APP_ID,
+        timeoutMs: 25_000,
       })
     : null,
   id = randomUUID,
@@ -86,7 +87,7 @@ export function createAppServer({
           input: body.input,
           selectedObjectId: body.selectedObjectId ?? null,
           provider: agentProvider,
-          timeoutMs: 15_000,
+          timeoutMs: 30_000,
         });
         store = result.store;
 
