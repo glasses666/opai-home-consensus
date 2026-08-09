@@ -384,16 +384,28 @@ async function createController(container, scene, callbacks) {
     if (activeViewId === 'camera-home-overview' && entity.entityKind === 'surface' && entity.roomId) {
       const room = scene.rooms.find((candidate) => candidate.id === entity.roomId);
       if (room) {
-        callbacks.onSelect?.({ kind: 'room', id: room.id });
-        switchView(room.cameraPresetIds[0]);
+        const selection = { kind: 'room', id: room.id };
+        if (callbacks.onNavigate) callbacks.onNavigate({ selection, presetId: room.cameraPresetIds[0], reason: 'room' });
+        else {
+          callbacks.onSelect?.(selection);
+          switchView(room.cameraPresetIds[0]);
+        }
+        return;
+      }
+    }
+    if (entity.entityKind === 'room') {
+      const room = scene.rooms.find((candidate) => candidate.id === entity.entityId);
+      if (room) {
+        const selection = { kind: 'room', id: room.id };
+        if (callbacks.onNavigate) callbacks.onNavigate({ selection, presetId: room.cameraPresetIds[0], reason: 'room' });
+        else {
+          callbacks.onSelect?.(selection);
+          switchView(room.cameraPresetIds[0]);
+        }
         return;
       }
     }
     callbacks.onSelect?.({ kind: entity.entityKind, id: entity.entityId });
-    if (entity.entityKind === 'room') {
-      const room = scene.rooms.find((candidate) => candidate.id === entity.entityId);
-      if (room) switchView(room.cameraPresetIds[0]);
-    }
   };
   const onWheel = () => {
     if (!transition && activeViewId !== 'free') enterFreeView();
@@ -492,26 +504,43 @@ const viewIcon = (kind) => {
 
 const viewOrder = { room_overhead: 0, room_entry: 1, surface_feature: 2 };
 
-export default function Scene3D({ scene, selection, onSelect, activeRoomId, roomLabels, onStats, viewRequest }) {
+export default function Scene3D({
+  scene,
+  selection,
+  onSelect,
+  onNavigate,
+  activeRoomId,
+  roomLabels,
+  onStats,
+  viewRequest,
+  onViewEvent,
+  showHomeView = true,
+}) {
   const mountRef = useRef(null);
   const controllerRef = useRef(null);
   const viewRequestRef = useRef(viewRequest);
   viewRequestRef.current = viewRequest;
+  const callbacksRef = useRef({ onSelect, onNavigate, onStats, onViewEvent });
+  callbacksRef.current = { onSelect, onNavigate, onStats, onViewEvent };
   const [status, setStatus] = useState('loading');
   const [viewState, setViewState] = useState({ id: 'camera-home-overview', label: '整屋', phase: 'started' });
   const presets = useMemo(() => [
-    scene.cameraPresets.find((preset) => preset.kind === 'whole_home'),
+    showHomeView ? scene.cameraPresets.find((preset) => preset.kind === 'whole_home') : null,
     ...scene.cameraPresets
       .filter((preset) => preset.roomId === activeRoomId && !preset.objectId)
       .sort((a, b) => (viewOrder[a.kind] ?? 99) - (viewOrder[b.kind] ?? 99)),
-  ].filter(Boolean), [scene, activeRoomId]);
+  ].filter(Boolean), [scene, activeRoomId, showHomeView]);
 
   useEffect(() => {
     let cancelled = false;
     createController(mountRef.current, scene, {
-      onSelect,
-      onStats,
-      onViewEvent: ({ phase, preset }) => setViewState({ id: preset.id, label: preset.label, phase }),
+      onSelect: (...args) => callbacksRef.current.onSelect?.(...args),
+      onNavigate: (...args) => callbacksRef.current.onNavigate?.(...args),
+      onStats: (...args) => callbacksRef.current.onStats?.(...args),
+      onViewEvent: ({ phase, preset }) => {
+        setViewState({ id: preset.id, label: preset.label, phase });
+        callbacksRef.current.onViewEvent?.({ phase, preset });
+      },
     }).then((controller) => {
       if (cancelled) controller.dispose();
       else {
@@ -536,11 +565,14 @@ export default function Scene3D({ scene, selection, onSelect, activeRoomId, room
     if (viewRequest?.id) controllerRef.current?.switchView(viewRequest.id);
   }, [viewRequest]);
 
-  const chooseView = (preset) => controllerRef.current?.switchView(preset.id);
+  const chooseView = (preset) => {
+    if (onNavigate) onNavigate({ selection, presetId: preset.id, reason: 'preset' });
+    else controllerRef.current?.switchView(preset.id);
+  };
   const chooseFree = () => controllerRef.current?.enterFreeView();
   const activeRoom = scene.rooms.find((room) => room.id === activeRoomId);
 
-  return <div className="scene3d-shell">
+  return <div className="scene3d-shell" data-testid="scene-3d" data-room-id={activeRoomId ?? ''} data-selected-id={selection?.id ?? ''}>
     <div className="scene3d" ref={mountRef} data-status={status} />
     <div className="scene3d__status" aria-live="polite">
       {status === 'loading' && <><SpinnerGap className="spin" size={15} /> 载入 9 件原创 GLB…</>}
@@ -551,13 +583,13 @@ export default function Scene3D({ scene, selection, onSelect, activeRoomId, room
       <span>{activeRoom ? roomLabels[activeRoom.id] : '整屋'}</span>
       <small>{activeRoom?.id ?? scene.id}</small>
     </div>
-    <nav className="camera-dock" aria-label="三维视角">
+    {activeRoomId && <nav className="camera-dock" aria-label="三维视角" data-testid="camera-dock">
       {presets.map((preset) => {
         const Icon = viewIcon(preset.kind);
-        return <button key={preset.id} type="button" aria-pressed={viewState.id === preset.id} onClick={() => chooseView(preset)}><Icon size={16} /><span>{preset.label}</span></button>;
+        return <button key={preset.id} type="button" data-preset-id={preset.id} aria-pressed={viewState.id === preset.id} onClick={() => chooseView(preset)}><Icon size={16} /><span>{preset.label}</span></button>;
       })}
       <button type="button" aria-pressed={viewState.id === 'free'} onClick={chooseFree}><ArrowsOutSimple size={16} /><span>自由</span></button>
-    </nav>
-    <p className="scene3d__hint">点击地面先飞到房间俯视；再切换入口或主功能面。拖动旋转，滚轮缩放。</p>
+    </nav>}
+    <p className="scene3d__hint">{activeRoomId ? '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。' : '点击房间地面，镜头会先飞到该房间的三维俯视。'}</p>
   </div>;
 }

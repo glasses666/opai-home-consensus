@@ -4,6 +4,7 @@ import Scene3D from './Scene3D.jsx';
 import { createDemoScene } from './domain/demo-scene.js';
 import { projectScene2D } from './domain/projection.js';
 import { createSceneStore, deserializeScene, serializeScene, validateScene } from './domain/scene.js';
+import { parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 
 const scene = createSceneStore(createDemoScene()).currentScene;
 const projection = projectScene2D(scene);
@@ -150,7 +151,7 @@ function OpeningSymbol({ opening, subtle }) {
   </>;
 }
 
-function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations = true, showTexture = false, subtle = false }) {
+function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations = true, showDimensions = true, showTexture = false, subtle = false }) {
   const cad = projection.layers.cad;
   return (
     <g data-layer="cad" data-subtle={subtle}>
@@ -187,10 +188,8 @@ function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations =
           <text className="cad-object-meta" x={center.x} y={center.y + 64}>{object.dimensions.width} × {object.dimensions.depth}</text>
         </g>;
       })}
-      {showAnnotations && <>
-        <PlanDimensions />
-        <g className="north-arrow" aria-label="北向"><text x="-430" y="420">N</text><line x1="-390" y1="620" x2="-390" y2="470" /><path d="M -390 430 L -440 510 L -390 485 L -340 510 Z" /></g>
-      </>}
+      {showDimensions && <PlanDimensions />}
+      {showAnnotations && <g className="north-arrow" aria-label="北向"><text x="-430" y="420">N</text><line x1="-390" y1="620" x2="-390" y2="470" /><path d="M -390 430 L -440 510 L -390 485 L -340 510 Z" /></g>}
     </g>
   );
 }
@@ -210,10 +209,10 @@ function MediaLayer({ selection, onSelect }) {
   </g>;
 }
 
-function ScenePlan({ mode, onModeChange, selection, onSelect }) {
-  const padding = 850;
+function ScenePlan({ mode, onModeChange, selection, onSelect, showModeRail = true, compact = false }) {
+  const padding = compact ? 240 : 850;
   const viewBox = `${projection.viewBox.x - padding} ${projection.viewBox.y - padding} ${projection.viewBox.width + padding * 2.45} ${projection.viewBox.height + padding * 2}`;
-  return <div className="plan">
+  return <div className={`plan${compact ? ' plan--compact' : ''}`}>
     <svg viewBox={viewBox} aria-label="整屋 CAD 与家具俯视图" role="group">
       <defs>
         <pattern id="floor-oak" width="1800" height="1800" patternUnits="userSpaceOnUse">
@@ -225,13 +224,13 @@ function ScenePlan({ mode, onModeChange, selection, onSelect }) {
       </defs>
       <rect className="drawing-sheet" x={projection.viewBox.x - padding} y={projection.viewBox.y - padding} width={projection.viewBox.width + padding * 2.45} height={projection.viewBox.height + padding * 2} />
       {mode === 'cad' && <CadLayer selection={selection} onSelect={onSelect} />}
-      {mode === 'furniture' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showAnnotations={false} showTexture subtle /><MediaLayer selection={selection} onSelect={onSelect} /></>}
-      {mode === 'overlay' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showTexture /><MediaLayer selection={selection} onSelect={onSelect} /></>}
+      {mode === 'furniture' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showAnnotations={false} showDimensions={false} showTexture subtle /><MediaLayer selection={selection} onSelect={onSelect} /></>}
+      {mode === 'overlay' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showDimensions={!compact} showTexture /><MediaLayer selection={selection} onSelect={onSelect} /></>}
     </svg>
-    <nav className="mode-rail" aria-label="二维显示模式">
+    {showModeRail && <nav className="mode-rail" aria-label="二维显示模式">
       {modeOptions.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={mode === id} onClick={() => onModeChange(id)}><Icon size={19} weight={mode === id ? 'bold' : 'regular'} aria-hidden="true" /><span className="mode-rail__tooltip" aria-hidden="true">{label}</span></button>)}
-    </nav>
-    <div className="plan__scale" aria-hidden="true"><span>1:50</span><span>单位：mm</span></div>
+    </nav>}
+    {!compact && <div className="plan__scale" aria-hidden="true"><span>1:50</span><span>单位：mm</span></div>}
   </div>;
 }
 
@@ -270,7 +269,41 @@ function Inspector({ selection, onNavigate, mode, workspaceMode, renderStats }) 
   </aside>;
 }
 
-export default function App() {
+function getRoomViewPresets(roomId) {
+  const room = scene.rooms.find((candidate) => candidate.id === roomId);
+  return (room?.cameraPresetIds ?? [])
+    .map((id) => scene.cameraPresets.find((preset) => preset.id === id))
+    .filter((preset) => preset && !preset.objectId);
+}
+
+function selectionFromId(id) {
+  if (typeof id !== 'string' || !id) return null;
+  for (const [kind, collection] of Object.entries({ room: scene.rooms, surface: scene.surfaces, opening: scene.openings, object: scene.objects })) {
+    if (collection.some((entity) => entity.id === id)) return { kind, id };
+  }
+  return null;
+}
+
+function usePathname() {
+  const [pathname, setPathname] = useState(() => (typeof window === 'undefined' ? '/project/demo' : window.location.pathname));
+
+  useEffect(() => {
+    const handlePopState = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (nextPathname) => {
+    if (typeof window === 'undefined' || window.location.pathname === nextPathname) return;
+    window.history.pushState({}, '', nextPathname);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    setPathname(nextPathname);
+  };
+
+  return [pathname, navigate];
+}
+
+function LabScenePage() {
   const [mode, setMode] = useState('overlay');
   const [workspaceMode, setWorkspaceMode] = useState('3d');
   const [selection, setSelection] = useState({ kind: 'room', id: 'room-living-dining' });
@@ -311,4 +344,174 @@ export default function App() {
     <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
     <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
   </main>;
+}
+
+function ProjectDemoPage() {
+  const initialNavigation = useMemo(() => parseViewState(typeof window === 'undefined' ? '' : window.location.search, scene), []);
+  const [navigation, setNavigation] = useState(initialNavigation);
+  const [viewSequence, setViewSequence] = useState(1);
+  const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
+  const [pathname] = usePathname();
+  const homePreset = scene.cameraPresets.find((preset) => preset.kind === 'whole_home');
+  const selection = selectionFromId(navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
+  const selectedEntity = findEntity(selection);
+  const activeRoomId = navigation.roomId;
+  const currentRoom = scene.rooms.find((room) => room.id === activeRoomId) ?? null;
+  const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
+  const currentViewLabel = displayViewId === 'free'
+    ? '自由视角'
+    : scene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
+  const selectedLabel = selectedEntity ? entityName(selectedEntity.kind, selectedEntity.entity) : '未选择对象';
+  const viewRequest = useMemo(
+    () => ({ id: navigation.viewId, sequence: viewSequence }),
+    [navigation.viewId, viewSequence],
+  );
+
+  useEffect(() => {
+    document.title = pathname.startsWith('/lab/scene')
+      ? '欧派 AI 家装共识层 · 技术页'
+      : '家庭共创设计器 · 数字住宅';
+  }, [pathname]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const restored = parseViewState(window.location.search, scene);
+      setNavigation(restored);
+      setDisplayViewId(restored.viewId);
+      setViewSequence((value) => value + 1);
+    };
+    const canonicalQuery = serializeViewState(initialNavigation, scene);
+    if (window.location.search !== canonicalQuery) {
+      window.history.replaceState({}, '', `${window.location.pathname}${canonicalQuery}`);
+    }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [initialNavigation]);
+
+  const commitNavigation = (nextState, { replace = false, moveCamera = true } = {}) => {
+    const safe = sanitizeViewState(nextState, scene);
+    const query = serializeViewState(safe, scene);
+    const nextUrl = `${window.location.pathname}${query}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl || replace) {
+      window.history[replace ? 'replaceState' : 'pushState']({}, '', nextUrl);
+    }
+    setNavigation(safe);
+    setDisplayViewId(safe.viewId);
+    if (moveCamera) setViewSequence((value) => value + 1);
+  };
+
+  const jumpToHome = () => {
+    if (!homePreset) return;
+    commitNavigation({ roomId: null, viewId: homePreset.id, selectedId: null });
+  };
+
+  const jumpToRoom = (roomId, selectedId = roomId) => {
+    const room = scene.rooms.find((candidate) => candidate.id === roomId);
+    const preset = getRoomViewPresets(roomId)[0];
+    if (!room || !preset) return;
+    commitNavigation({ roomId: room.id, viewId: preset.id, selectedId });
+  };
+
+  const jumpToRoomView = (presetId) => {
+    const preset = scene.cameraPresets.find((candidate) => candidate.id === presetId && candidate.roomId === activeRoomId);
+    if (!preset) return;
+    commitNavigation({ ...navigation, viewId: preset.id });
+  };
+
+  const selectEntity = (nextSelection) => {
+    const entity = findEntity(nextSelection);
+    if (!entity) return;
+    commitNavigation({
+      roomId: activeRoomId,
+      viewId: navigation.viewId,
+      selectedId: entity.entity.id,
+    }, { replace: true, moveCamera: false });
+  };
+
+  const navigateFromPlan = (nextSelection) => {
+    const entity = findEntity(nextSelection);
+    if (!entity) return;
+    const roomId = entity.kind === 'room' ? entity.entity.id : entity.entity.roomId;
+    if (roomId === activeRoomId) selectEntity(nextSelection);
+    else if (roomId) jumpToRoom(roomId, entity.entity.id);
+  };
+
+  return <main className="product-shell project-demo" data-room-id={activeRoomId ?? ''} data-selected-id={navigation.selectedId ?? ''}>
+    <header className="product-hero">
+      <div className="product-brand">
+        <span className="product-brand__mark" aria-hidden="true">元</span>
+        <div>
+          <p className="eyebrow">家庭共创设计器</p>
+          <h1>一层数字住宅</h1>
+        </div>
+      </div>
+      <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
+      <div className="product-hero__meta">
+        <span className="status">实时 2D / 3D 同源</span>
+        <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome} disabled={!activeRoomId && navigation.viewId === homePreset?.id}>返回整屋</button>
+      </div>
+    </header>
+
+    <section className="product-grid">
+      <section className="panel project-stage" aria-labelledby="project-stage-title">
+        <div className="panel__header panel__header--project">
+          <div>
+            <p className="panel__kicker">实时 3D · 同一场景</p>
+            <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
+          </div>
+          <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
+        </div>
+        <Scene3D
+          key="project-demo-scene"
+          scene={scene}
+          selection={selection}
+          onSelect={selectEntity}
+          onNavigate={({ selection: nextSelection, presetId, reason }) => {
+            if (reason === 'room' && nextSelection?.kind === 'room') jumpToRoom(nextSelection.id);
+            else jumpToRoomView(presetId);
+          }}
+          activeRoomId={activeRoomId}
+          roomLabels={roomLabels}
+          onStats={() => {}}
+          viewRequest={viewRequest}
+          onViewEvent={({ phase, preset }) => { if (phase === 'done') setDisplayViewId(preset.id); }}
+          showHomeView={false}
+        />
+      </section>
+
+      <aside className="project-sidebar">
+        <article className="panel project-panel project-panel--overview">
+          <div className="panel__header">
+            <div>
+              <p className="panel__kicker">2D 同步总览</p>
+              <h2 className="panel__title">当前户型与布置</h2>
+            </div>
+            <span className="panel__meta">点击空间进入俯视</span>
+          </div>
+          <div className="project-overview" data-testid="overview-2d">
+            <ScenePlan mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
+          </div>
+        </article>
+
+        <article className="panel project-panel project-context" aria-label="当前位置摘要">
+          <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
+          <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
+          <p>{activeRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。'}</p>
+        </article>
+      </aside>
+    </section>
+  </main>;
+}
+
+export default function App() {
+  const [pathname, navigate] = usePathname();
+  const demoRoute = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/project/demo');
+  const page = demoRoute ? <ProjectDemoPage /> : <LabScenePage />;
+
+  useEffect(() => {
+    if (pathname === '/' || pathname === '/index.html') navigate('/project/demo');
+  }, [navigate, pathname]);
+
+  return page;
 }
