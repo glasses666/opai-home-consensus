@@ -3,11 +3,17 @@ import test from 'node:test';
 
 import { runAgentTurn } from '../src/agent/harness.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
-import { createSceneStore, serializeScene } from '../src/domain/scene.js';
+import { createVersionHistory, saveSceneVersion } from '../src/domain/design-version.js';
+import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 
 const freshStore = () => createSceneStore(createDemoScene());
 const objectById = (store, id) => store.currentScene.objects.find((object) => object.id === id);
 const surfaceById = (store, id) => store.currentScene.surfaces.find((surface) => surface.id === id);
+const movedHistory = () => {
+  const initial = freshStore();
+  const moved = dispatchSceneCommand(initial, { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } });
+  return { history: saveSceneVersion(createVersionHistory(initial), moved, { id: 'version-moved' }), store: moved };
+};
 
 test('local parser moves, rotates, and recolors real scene objects', async () => {
   let store = freshStore();
@@ -128,6 +134,63 @@ test('provider tool calls are limited to the current turn allowlist', async () =
   assert.equal(result.trace.fallbackReason, 'TOOL_NOT_ALLOWED');
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
   assert.equal(objectById(result.store, 'object-sofa').transform.rotationY, 0);
+});
+
+test('delete_object is a write tool and no-write intent blocks it', async () => {
+  const deleted = await runAgentTurn({ store: freshStore(), input: '删除沙发' });
+  assert.equal(objectById(deleted.store, 'object-sofa'), undefined);
+  assert.equal(deleted.store.commands.at(-1).type, 'object.delete');
+
+  const before = freshStore();
+  const beforeScene = serializeScene(before.currentScene);
+  const blocked = await runAgentTurn({ store: before, input: '删除沙发，先给方案不要直接改' });
+  assert.equal(serializeScene(blocked.store.currentScene), beforeScene);
+  assert.equal(blocked.trace.toolCalls.some((call) => call.tool === 'delete_object'), false);
+});
+
+test('rules and version comparison are read-only harness tools', async () => {
+  const { history, store } = movedHistory();
+  const rules = await runAgentTurn({ store, input: '检查沙发规则', selectedObjectId: 'object-sofa' });
+  assert.equal(rules.store, store);
+  assert.equal(rules.trace.steps[0].tool, 'check_rules');
+  assert.equal(rules.trace.steps[0].result.source, 'demo');
+
+  const compared = await runAgentTurn({ store, input: '对比上一版变化', versionHistory: history });
+  assert.equal(compared.store, store);
+  assert.equal(compared.trace.steps[0].tool, 'compare_versions');
+  assert.equal(compared.trace.steps[0].result.fromVersionId, 'version-demo-initial');
+  assert.equal(compared.trace.steps[0].result.toVersionId, 'version-moved');
+  assert.equal(compared.trace.steps[0].result.objectDiffs.some((diff) => diff.objectId === 'object-sofa'), true);
+});
+
+test('request_confirmation never confirms a version for the resident', async () => {
+  const { history, store } = movedHistory();
+  const result = await runAgentTurn({ store, input: '就这版确认', versionHistory: history });
+
+  assert.equal(result.store, store);
+  assert.equal(result.trace.steps[0].tool, 'request_confirmation');
+  assert.equal(result.trace.steps[0].result.versionId, 'version-moved');
+  assert.equal(history.confirmedVersionId, null);
+});
+
+test('provider receives sanitized version summaries, not raw snapshots', async () => {
+  const { history, store } = movedHistory();
+  const result = await runAgentTurn({
+    store,
+    input: '对比上一版变化',
+    versionHistory: history,
+    provider: ({ versions }) => {
+      assert.equal(versions.currentVersionId, 'version-moved');
+      assert.equal(versions.versions.length, 2);
+      assert.equal(versions.versions[1].summary.commandCount, 1);
+      assert.equal('scene' in versions.versions[1], false);
+      assert.equal('commands' in versions.versions[1], false);
+      return { assistantReply: '已读取版本变化。', toolCalls: [{ tool: 'compare_versions', args: { beforeVersionId: 'version-demo-initial' } }] };
+    },
+  });
+
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.steps[0].result.sceneChanged, true);
 });
 
 test('deterministic replay returns stable commands and traces', async () => {

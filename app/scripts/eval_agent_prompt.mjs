@@ -16,7 +16,7 @@ if (!live) {
 } else {
   const agentId = process.env.AILY_AGENT_ID;
   if (!agentId) throw new Error('AILY_AGENT_ID_MISSING');
-  const writeTools = new Set(['move_object', 'rotate_object', 'set_object_material', 'set_surface_material', 'apply_catalog_item']);
+  const writeTools = new Set(['move_object', 'rotate_object', 'set_object_material', 'set_surface_material', 'apply_catalog_item', 'delete_object']);
   const liveCases = [
     {
       id: 'wall-panel',

@@ -1,10 +1,11 @@
 import { performance } from 'node:perf_hooks';
 
 import { runAgentTurn } from '../src/agent/harness.js';
+import { createVersionHistory, saveSceneVersion } from '../src/domain/design-version.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
-import { createSceneStore, serializeScene } from '../src/domain/scene.js';
+import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 
-const WRITE_TOOLS = new Set(['move_object', 'rotate_object', 'set_object_material', 'set_surface_material', 'apply_catalog_item']);
+const WRITE_TOOLS = new Set(['move_object', 'rotate_object', 'set_object_material', 'set_surface_material', 'apply_catalog_item', 'delete_object']);
 const CHECKS = Object.freeze({
   provider: ({ trace }) => trace.source === 'provider',
   local: ({ trace }) => trace.source === 'local',
@@ -24,6 +25,11 @@ const surface = (store, id) => store.currentScene.surfaces.find((entry) => entry
 const hasTool = (trace, tool) => trace.toolCalls.some((call) => call.tool === tool);
 const hasStepError = (trace, pattern) => trace.steps.some((step) => step.ok === false && pattern.test(step.error ?? ''));
 const near = (actual, expected) => Math.abs(actual - expected) < 1e-9;
+const movedHistory = () => {
+  const store = createSceneStore(createDemoScene());
+  const moved = dispatchSceneCommand(store, { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } });
+  return { store: moved, versionHistory: saveSceneVersion(createVersionHistory(store), moved, { id: 'version-moved' }) };
+};
 
 export const AGENT_EVAL_CASES = Object.freeze([
   {
@@ -56,6 +62,19 @@ export const AGENT_EVAL_CASES = Object.freeze([
     group: 'tool_selection',
     input: '把开放客餐厅南墙改成浅橡木木饰面',
     expect: [CHECKS.local, CHECKS.stepsOk, ({ trace, result }) => hasTool(trace, 'apply_catalog_item') && surface(result.store, 'surface-wall-living-south').materialId === 'mat-wall-oak-panel'],
+  },
+  {
+    id: 'local-delete-sofa',
+    group: 'tool_selection',
+    input: '删除沙发',
+    expect: [CHECKS.local, CHECKS.stepsOk, ({ trace, result }) => hasTool(trace, 'delete_object') && !object(result.store, 'object-sofa')],
+  },
+  {
+    id: 'local-compare-real-versions',
+    group: 'tool_selection',
+    input: '对比上一版变化',
+    prepare: movedHistory,
+    expect: [CHECKS.local, CHECKS.noWriteTools, CHECKS.stepsOk, ({ trace }) => trace.steps[0].result.toVersionId === 'version-moved' && trace.steps[0].result.sceneChanged === true],
   },
   {
     id: 'local-shelf-browse',
@@ -105,6 +124,12 @@ export const AGENT_EVAL_CASES = Object.freeze([
     expect: [CHECKS.local, CHECKS.unchanged, ({ trace }) => trace.fallbackReason === 'TOOL_NOT_ALLOWED'],
   },
   {
+    id: 'no-write-delete-blocked',
+    group: 'unauthorized_mutation',
+    input: '删除沙发，先给方案不要直接改',
+    expect: [CHECKS.local, CHECKS.noWriteTools, CHECKS.unchanged],
+  },
+  {
     id: 'provider-disallowed-tool-fallback',
     group: 'unauthorized_mutation',
     input: '沙发向右移动20厘米',
@@ -115,7 +140,7 @@ export const AGENT_EVAL_CASES = Object.freeze([
     id: 'provider-invalid-tool-fallback',
     group: 'unauthorized_mutation',
     input: '检查客厅',
-    provider: provider({ assistantReply: '读取中。', toolCalls: [{ tool: 'delete_object', args: { objectId: 'object-sofa' } }] }),
+    provider: provider({ assistantReply: '读取中。', toolCalls: [{ tool: 'remove_object', args: { objectId: 'object-sofa' } }] }),
     expect: [CHECKS.local, CHECKS.unchanged, ({ trace }) => trace.fallbackReason === 'TOOL_CALL_INVALID'],
   },
   {
@@ -240,7 +265,8 @@ export async function runFixedAgentEval({ caseId = null, now = () => performance
   if (!entries.length) throw new Error(`EVAL_CASE_NOT_FOUND: ${caseId}`);
   const cases = [];
   for (const entry of entries) {
-    const store = createSceneStore(createDemoScene());
+    const prepared = entry.prepare?.() ?? { store: createSceneStore(createDemoScene()), versionHistory: null };
+    const { store, versionHistory } = prepared;
     const beforeScene = serializeScene(store.currentScene);
     const started = now();
     const result = await runAgentTurn({
@@ -248,6 +274,7 @@ export async function runFixedAgentEval({ caseId = null, now = () => performance
       input: entry.input,
       selectedObjectId: entry.selectedObjectId ?? null,
       provider: entry.provider ?? null,
+      versionHistory,
       timeoutMs: entry.timeoutMs ?? 1500,
     });
     const latencyMs = Number(Math.max(0, now() - started).toFixed(3));

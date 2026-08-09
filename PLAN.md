@@ -3,8 +3,8 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-10
-当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4、Gate 5、Gate 6、Gate 7 已实现并验证，等待用户验收；夜间后端包 N1、N2 与 B1–B4 已完成**
-当前 Gate：**Gate 7：版本、真实差异、渲染、影响与确认**
+当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4–Gate 8 已实现并验证，等待用户验收；夜间后端包 N1、N2 与 B1–B4 已完成**
+当前 Gate：**Gate 9：家庭共享、意见冲突与共识**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
 ## 0. 为什么重开计划
@@ -467,6 +467,8 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 8：真实 Agent 工具调用与 Designer Skill
 
+**状态：已实现并验证，等待用户验收；当前 capability gate 为 Aily `missing_scope` / Base `ready`，页面明确使用本地降级。审阅证据见 [GATE-8-REVIEW.md](./GATE-8-REVIEW.md)。**
+
 **目的**
 
 在手动编辑和规则已可信后，让轻量 Agent 使用同一套能力操作真实房间。
@@ -627,7 +629,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. Gate 7 已完成可重建版本、真实对象 diff、影响 / 未决摘要、客户确认、确认后修改和旧版恢复；验收证据见 [GATE-7-REVIEW.md](./GATE-7-REVIEW.md)，等待用户最终验收后再进入 Gate 8。
-2. Gate 8 只能把 Agent 接到现有 `SceneCommand`、规则、catalog、版本和影响能力上；不得让 Agent 直接改 geometry JSON。
+1. Gate 8 已完成右侧 Agent sidecar、按意图工具 allowlist、真实 scene 修改、规则拒绝、版本证据和确认请求；验收证据见 [GATE-8-REVIEW.md](./GATE-8-REVIEW.md)。
+2. Gate 9 只在同一个共享版本链上增加成员意见、冲突和共识状态；不得创建成员私有 scene 或让 Agent 代替成员确认。
 3. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
 4. 镜头与墙体体验回归继续使用后台录屏和抽帧检查，不抢占用户前台浏览器。

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Armchair, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, StackSimple, X } from '@phosphor-icons/react';
+import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, X } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
+import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
 import {
   compareSceneVersions,
@@ -123,6 +124,44 @@ const newReviewChecks = (before, after, objectIds) => {
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
 const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v1';
+const agentWriteTools = new Set(TOOL_REGISTRY.filter((tool) => tool.writes).map((tool) => tool.name));
+const agentToolLabels = {
+  apply_catalog_item: '应用组件',
+  check_rules: '检查规则',
+  compare_versions: '比较版本',
+  delete_object: '删除对象',
+  inspect_catalog_item: '读取组件',
+  inspect_object: '读取对象',
+  inspect_room: '读取房间',
+  move_object: '移动对象',
+  request_clarification: '澄清需求',
+  request_confirmation: '请求确认',
+  rotate_object: '旋转对象',
+  search_catalog: '检索组件',
+  set_object_material: '修改家具材质',
+  set_surface_material: '修改表面材质',
+};
+
+const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {}) => {
+  const failed = trace.steps.find((step) => !step.ok);
+  if (trace.rolledBack || failed) {
+    const reason = normalizeEditError(new Error(failed?.error ?? '规则未通过')).replace(/[。！？!?]+$/, '');
+    return `这次没有写入场景：${reason}。你可以换一个距离或方向再试。`;
+  }
+  const clarification = trace.steps.find((step) => step.tool === 'request_clarification' && step.ok)?.result;
+  if (clarification?.question) return clarification.question;
+  const confirmation = trace.steps.find((step) => step.tool === 'request_confirmation' && step.ok)?.result;
+  if (confirmation?.message) return confirmation.message;
+  const comparison = trace.steps.find((step) => step.tool === 'compare_versions' && step.ok)?.result;
+  if (comparison) return `已按真实版本数据比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项仍待确认。`;
+  const writes = trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
+  if (writes.length) {
+    const actions = [...new Set(writes.map((step) => agentToolLabels[step.tool] ?? step.tool))].join('、');
+    if (pending) return `已生成${actions}预览；有 demo 规范提醒，请先保留或撤销，再进入版本链。`;
+    return `已完成${actions}，确定性规则已检查${savedLabel ? `，并保存为 ${savedLabel}` : ''}。`;
+  }
+  return trace.assistantReply || '已读取当前场景，没有修改 2D / 3D。';
+};
 
 const createInitialVersionProject = () => {
   const fallbackStore = createSceneStore(createDemoScene());
@@ -447,7 +486,9 @@ function ProjectDemoPage() {
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
   const sceneStoreRef = useRef(sceneStore);
+  const versionHistoryRef = useRef(versionHistory);
   sceneStoreRef.current = sceneStore;
+  versionHistoryRef.current = versionHistory;
   const currentScene = sceneStore.currentScene;
   const initialNavigation = useMemo(() => parseViewState(typeof window === 'undefined' ? '' : window.location.search, scene), []);
   const [navigation, setNavigation] = useState(initialNavigation);
@@ -464,6 +505,18 @@ function ProjectDemoPage() {
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
   const [compareFromVersionId, setCompareFromVersionId] = useState(initialVersionProject.history.versions[0].id);
+  const [sidecarMode, setSidecarMode] = useState('space');
+  const [agentInput, setAgentInput] = useState('');
+  const [agentBusy, setAgentBusy] = useState(false);
+  const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
+  const [agentMessages, setAgentMessages] = useState([{
+    id: 'agent-welcome',
+    role: 'assistant',
+    text: '我会读取当前选择和最新版本，只通过受约束工具修改场景。需要真实欧派数据的部分会明确留作未决项。',
+    source: 'local',
+    tools: [],
+  }]);
+  const agentMessageListRef = useRef(null);
   const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
@@ -501,6 +554,8 @@ function ProjectDemoPage() {
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
+  const agentTargetLabel = selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发';
+  const agentQuickPrompts = [`${agentTargetLabel}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
   const namedDiffs = useMemo(() => versionDiff.objectDiffs.map((diff) => ({
     ...diff,
     label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
@@ -612,6 +667,7 @@ function ProjectDemoPage() {
       return null;
     }
     try {
+      const startCursor = sceneStoreRef.current.cursor;
       const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
       const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
       const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
@@ -626,6 +682,7 @@ function ProjectDemoPage() {
       if (reviewChecks.length) {
         setPendingReview({
           checks: reviewChecks.slice(0, 3),
+          startCursor,
           status: topRuleStatus(reviewChecks),
         });
         setEditFeedback({ tone: 'warning', message: '已生成待确认预览：有规范提醒，保留前请确认代价。' });
@@ -708,6 +765,7 @@ function ProjectDemoPage() {
       setEditFeedback({ tone: 'error', message: '该对象不允许复制' });
       return;
     }
+    const startCursor = sceneStoreRef.current.cursor;
     const suffix = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36)).slice(0, 8);
     const newObjectId = `${selectedObject.id}-copy-${suffix}`;
     const gap = 900;
@@ -745,7 +803,7 @@ function ProjectDemoPage() {
         setLastRejected(null);
         commitNavigation({ ...navigation, selectedId: newObjectId }, { replace: true, moveCamera: false });
         if (reviewChecks.length) {
-          setPendingReview({ checks: reviewChecks.slice(0, 3), status: topRuleStatus(reviewChecks) });
+          setPendingReview({ checks: reviewChecks.slice(0, 3), startCursor, status: topRuleStatus(reviewChecks) });
           setEditFeedback({ tone: 'warning', message: '已生成复制预览：有规范提醒，保留前请确认代价。' });
         } else {
           setPendingReview(null);
@@ -774,8 +832,136 @@ function ProjectDemoPage() {
   };
 
   const keepPendingReview = () => {
+    if (pendingReview?.saveOnKeep) {
+      const beforeHistory = versionHistoryRef.current;
+      const nextHistory = saveSceneVersion(beforeHistory, sceneStoreRef.current, { source: pendingReview.versionSource ?? 'agent-local' });
+      versionHistoryRef.current = nextHistory;
+      setCompareFromVersionId(beforeHistory.currentVersionId);
+      setVersionHistory(nextHistory);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-saved-${nextHistory.currentVersionId}`,
+        role: 'assistant',
+        text: `规范提醒已由你保留，当前 Agent 预览已保存为 ${nextHistory.versions.at(-1).label}。`,
+        source: pendingReview.versionSource ?? 'agent-local',
+        tools: [],
+      }]);
+    }
     setPendingReview(null);
     setEditFeedback({ tone: 'success', message: '已保留预览；这些提醒会作为 demo 规则边界继续显示。' });
+  };
+
+  const discardPendingReview = () => {
+    if (!pendingReview) return;
+    let nextStore = sceneStoreRef.current;
+    const targetCursor = Math.max(0, Math.min(pendingReview.startCursor ?? nextStore.cursor - 1, nextStore.cursor));
+    while (nextStore.cursor > targetCursor) nextStore = undoSceneCommand(nextStore);
+    sceneStoreRef.current = nextStore;
+    setSceneStore(nextStore);
+    setPendingReview(null);
+    setLastRejected(null);
+    if (!selectionFromId(nextStore.currentScene, navigation.selectedId)) {
+      commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
+    }
+    setEditFeedback({ tone: 'success', message: '已撤销整次预览' });
+  };
+
+  const runAgentPrompt = async (rawInput) => {
+    const input = String(rawInput ?? '').trim();
+    if (!input || agentBusy) return;
+    if (pendingReview) {
+      setSidecarMode('agent');
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-review-${Date.now()}`,
+        role: 'assistant',
+        text: '先保留或撤销当前规范预览，我再继续修改，避免把未确认状态叠在一起。',
+        source: 'local',
+        tools: [],
+      }]);
+      return;
+    }
+
+    const turnId = globalThis.crypto?.randomUUID?.() ?? `turn-${Date.now()}`;
+    setSidecarMode('agent');
+    setAgentInput('');
+    setAgentBusy(true);
+    setAgentMessages((messages) => [...messages, { id: `${turnId}-user`, role: 'user', text: input, source: 'resident', tools: [] }]);
+    const beforeStore = sceneStoreRef.current;
+    const beforeHistory = versionHistoryRef.current;
+
+    try {
+      const result = await runAgentTurn({
+        store: beforeStore,
+        input,
+        selectedObjectId: navigation.selectedId,
+        versionHistory: beforeHistory,
+      });
+      const sceneChanged = serializeScene(result.store.currentScene) !== serializeScene(beforeStore.currentScene);
+      const successfulWrites = result.trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
+      let savedLabel = null;
+      let needsReview = false;
+
+      if (sceneChanged) {
+        const beforeEvaluation = evaluateDesignRules(beforeStore.currentScene);
+        const afterEvaluation = evaluateDesignRules(result.store.currentScene);
+        const affectedObjectIds = result.trace.toolCalls.map((call) => call.args?.objectId).filter(Boolean);
+        const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, affectedObjectIds);
+        sceneStoreRef.current = result.store;
+        setSceneStore(result.store);
+        setLastRejected(null);
+
+        if (reviewChecks.length) {
+          needsReview = true;
+          setPendingReview({
+            checks: reviewChecks.slice(0, 3),
+            saveOnKeep: true,
+            startCursor: beforeStore.cursor,
+            status: topRuleStatus(reviewChecks),
+            versionSource: result.trace.source === 'provider' ? 'aily' : 'agent-local',
+          });
+          setEditFeedback({ tone: 'warning', message: 'Agent 已生成待确认预览；保留后才写入版本链。' });
+        } else {
+          const nextHistory = saveSceneVersion(beforeHistory, result.store, { source: result.trace.source === 'provider' ? 'aily' : 'agent-local' });
+          versionHistoryRef.current = nextHistory;
+          setCompareFromVersionId(beforeHistory.currentVersionId);
+          setVersionHistory(nextHistory);
+          savedLabel = nextHistory.versions.at(-1).label;
+          setEditFeedback({ tone: 'success', message: `Agent 修改已保存为 ${savedLabel}` });
+        }
+
+        const deletedSelected = successfulWrites.some((step) => step.tool === 'delete_object' && step.args?.objectId === navigation.selectedId);
+        if (deletedSelected) commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
+      } else if (result.trace.rolledBack) {
+        const failed = result.trace.steps.find((step) => !step.ok);
+        const message = normalizeEditError(new Error(failed?.error ?? '规则未通过'));
+        setLastRejected({ message, source: 'demo' });
+        setEditFeedback({ tone: 'error', message: `Agent 未写入：${message}` });
+      }
+
+      setAgentMessages((messages) => [...messages, {
+        id: `${turnId}-assistant`,
+        role: 'assistant',
+        text: agentReplyFromTrace(result.trace, { savedLabel, pending: needsReview }),
+        source: result.trace.source,
+        fallbackReason: result.trace.fallbackReason,
+        tools: result.trace.toolCalls.map((call) => call.tool),
+        confirmationRequested: result.trace.steps.some((step) => step.ok && step.tool === 'request_confirmation'),
+      }]);
+    } catch {
+      setAgentMessages((messages) => [...messages, {
+        id: `${turnId}-assistant`,
+        role: 'assistant',
+        text: 'Agent 本轮没有完成，场景保持原样。你可以重试，或继续用右侧手动工具编辑。',
+        source: 'local',
+        tools: [],
+      }]);
+    } finally {
+      setAgentBusy(false);
+    }
+  };
+
+  const submitAgentPrompt = (event) => {
+    event.preventDefault();
+    runAgentPrompt(agentInput);
   };
 
   const saveCurrentVersion = () => {
@@ -842,6 +1028,29 @@ function ProjectDemoPage() {
     try { window.localStorage.setItem(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory)); }
     catch { /* Offline cache failure must not block the live editing session. */ }
   }, [versionHistory]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/health', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('HEALTH_UNAVAILABLE');
+        return response.json();
+      })
+      .then((health) => setAgentCapability({
+        aily: health.aily?.status ?? health.aily ?? 'api_unavailable',
+        base: health.base?.status ?? health.base ?? 'api_unavailable',
+        provider: health.provider ?? 'local',
+      }))
+      .catch((error) => {
+        if (error.name !== 'AbortError') setAgentCapability({ aily: 'api_unavailable', base: 'api_unavailable', provider: 'local' });
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const list = agentMessageListRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [agentBusy, agentMessages]);
 
   useEffect(() => {
     if (!versionDrawerOpen) return undefined;
@@ -930,7 +1139,12 @@ function ProjectDemoPage() {
         />
       </section>
 
-      <aside className="project-sidebar">
+      <aside className="project-sidebar" data-mode={sidecarMode}>
+        <nav className="project-sidebar__switch" aria-label="右侧工作区">
+          <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />空间</button>
+          <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
+        </nav>
+        {sidecarMode === 'space' ? <>
         <article className="panel project-panel project-panel--overview">
           <div className="panel__header">
             <div>
@@ -962,7 +1176,7 @@ function ProjectDemoPage() {
             </ul>
             <div>
               <button type="button" onClick={keepPendingReview}>保留此预览</button>
-              <button type="button" onClick={undo}>撤销预览</button>
+              <button type="button" onClick={discardPendingReview}>撤销预览</button>
             </div>
           </div>}
           {selectedObject && <div className="project-object" data-testid="selected-object-details">
@@ -1021,6 +1235,43 @@ function ProjectDemoPage() {
             ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
             : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
+        </> : <article className="panel agent-sidecar" data-testid="agent-sidecar">
+          <header className="agent-sidecar__header">
+            <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>AI 设计协同</strong><small>{agentCapability.provider === 'local' ? '本地规划器' : agentCapability.provider}</small></div></div>
+            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? 'Aily 可用' : '本地降级'}</div>
+          </header>
+
+          <div className="agent-sidecar__scope">
+            <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
+            <small>Aily: {agentCapability.aily} · Base: {agentCapability.base}</small>
+          </div>
+
+          <div className="agent-quick" aria-label="快速真实任务">
+            {agentQuickPrompts.map((prompt) => <button key={prompt} type="button" onClick={() => runAgentPrompt(prompt)} disabled={agentBusy || Boolean(pendingReview)}>{prompt}</button>)}
+          </div>
+
+          <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
+            {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' ? 'AILY' : 'LOCAL'}{message.fallbackReason ? ` · ${message.fallbackReason}` : ''}</small>}</div>
+              <p>{message.text}</p>
+              {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
+              {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={() => setVersionDrawerOpen(true)}>查看版本并由我确认</button>}
+            </article>)}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>LOCAL</small></div><p>正在读取当前 scene、版本和规则…</p></article>}
+          </div>
+
+          {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
+            <strong>{pendingReview.status === 'warning' ? '规范提醒待确认' : '舒适建议待确认'}</strong>
+            <p>{pendingReview.checks[0]?.message}</p>
+            <div><button type="button" onClick={keepPendingReview}>保留并保存</button><button type="button" onClick={discardPendingReview}>撤销预览</button></div>
+          </div>}
+
+          <form className="agent-composer" onSubmit={submitAgentPrompt}>
+            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentTargetLabel}向右移动20厘米`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
+            <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
+          </form>
+          <footer className="agent-sidecar__footer">工具调用 → 确定性规则 → SceneCommand → 版本；Agent 不直接写 geometry JSON，也不会代你确认。</footer>
+        </article>}
       </aside>
     </section>
     {versionDrawerOpen && <div className="version-layer">

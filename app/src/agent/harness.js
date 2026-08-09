@@ -1,5 +1,7 @@
 import { dispatchSceneCommand } from '../domain/scene.js';
 import { demoCatalogPlugin } from '../catalog/demo-catalog.js';
+import { compareVersionHistory } from '../domain/design-version.js';
+import { evaluateDesignRules } from '../domain/design-rules.js';
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
@@ -50,11 +52,15 @@ export const TOOL_REGISTRY = [
   { name: 'search_catalog', writes: false, requiredArgs: [], optionalArgs: ['query', 'category', 'kind', 'appliesTo', 'limit'], description: '搜索合成组件目录；价格和工期均为 estimate。' },
   { name: 'inspect_catalog_item', writes: false, requiredArgs: ['catalogItemId'], description: '读取目录项、约束、来源与 sceneReady 状态。' },
   { name: 'request_clarification', writes: false, requiredArgs: ['question'], optionalArgs: ['reason', 'options'], description: '信息不足时只追问一个关键问题。' },
+  { name: 'check_rules', writes: false, requiredArgs: [], optionalArgs: ['objectId'], description: '读取当前场景的确定性规则状态。' },
+  { name: 'compare_versions', writes: false, requiredArgs: ['beforeVersionId'], optionalArgs: ['afterVersionId'], description: '比较两个已保存版本的真实对象差异与影响。' },
+  { name: 'request_confirmation', writes: false, requiredArgs: [], optionalArgs: ['versionId', 'message'], description: '请求住户确认当前版本；工具不直接代替住户确认。' },
   { name: 'move_object', writes: true, requiredArgs: ['objectId'], optionalArgs: ['x', 'z', 'dx', 'dz'], description: '移动已有可移动对象，单位为整数毫米。' },
   { name: 'rotate_object', writes: true, requiredArgs: ['objectId', 'degrees'], optionalArgs: ['mode'], description: '旋转已有可旋转对象。' },
   { name: 'set_object_material', writes: true, requiredArgs: ['objectId', 'materialId'], description: '修改已有对象材质。' },
   { name: 'set_surface_material', writes: true, requiredArgs: ['surfaceId', 'materialId'], description: '直接修改已有表面材质。' },
   { name: 'apply_catalog_item', writes: true, requiredArgs: ['catalogItemId', 'surfaceId'], description: '只把 sceneReady 的目录表面系统应用到兼容表面。' },
+  { name: 'delete_object', writes: true, requiredArgs: ['objectId'], description: '删除允许删除的可移动家具。' },
 ];
 const TOOL_NAMES = new Set(TOOL_REGISTRY.map((tool) => tool.name));
 
@@ -150,7 +156,11 @@ function toolsForInput(input) {
   if (objectIntent) names.add('inspect_object');
   if (/(移动|挪|移)/.test(input)) names.add('move_object');
   if (input.includes('旋转')) names.add('rotate_object');
+  if (/(删除|移除|不要了)/.test(input)) names.add('delete_object');
   if (objectIntent && /(改成|换成|设为|设置为)/.test(input)) names.add('set_object_material');
+  if (/(规则|是否合法|能不能|会不会挡|检查)/.test(input)) names.add('check_rules');
+  if (/(对比|上一版|版本|变化|差异|影响)/.test(input)) names.add('compare_versions');
+  if (/(确认|定稿|认可|就这版)/.test(input)) names.add('request_confirmation');
   if (names.size === 1) {
     names.add('inspect_room');
     names.add('search_catalog');
@@ -166,6 +176,13 @@ function selectedOrNamedObjectId(input, selectedObjectId) {
 function selectedOrNamedSurfaceId(input, selectedObjectId) {
   const selected = typeof selectedObjectId === 'string' && selectedObjectId.startsWith('surface-') ? selectedObjectId : null;
   return SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? selected;
+}
+
+function previousVersionId(versionHistory) {
+  if (!versionHistory?.versions?.length) return null;
+  const currentIndex = versionHistory.versions.findIndex((version) => version.id === versionHistory.currentVersionId);
+  const index = currentIndex > 0 ? currentIndex - 1 : 0;
+  return versionHistory.versions[index]?.id ?? null;
 }
 
 function namedMaterialId(input) {
@@ -188,7 +205,7 @@ function degrees(input) {
   return match ? Number(match[1]) : null;
 }
 
-export function parseLocalToolCalls({ input, selectedObjectId = null }) {
+export function parseLocalToolCalls({ input, selectedObjectId = null, versionHistory = null }) {
   const text = String(input ?? '').trim();
   if (!text) return [];
   const objectId = selectedOrNamedObjectId(text, selectedObjectId);
@@ -206,6 +223,19 @@ export function parseLocalToolCalls({ input, selectedObjectId = null }) {
     ];
   }
 
+  if (/(对比|上一版|版本|变化|差异|影响)/.test(text)) {
+    const beforeVersionId = previousVersionId(versionHistory);
+    return beforeVersionId ? [{ tool: 'compare_versions', args: { beforeVersionId } }] : [];
+  }
+
+  if (/(确认|定稿|认可|就这版)/.test(text)) {
+    return [{ tool: 'request_confirmation', args: { message: '我已准备好把当前版本交给你确认。' } }];
+  }
+
+  if (/(规则|是否合法|能不能|会不会挡|检查)/.test(text)) {
+    return [{ tool: 'check_rules', args: objectId ? { objectId } : {} }];
+  }
+
   if (!objectId) return [];
 
   if (/(移动|挪|移)/.test(text)) {
@@ -220,6 +250,10 @@ export function parseLocalToolCalls({ input, selectedObjectId = null }) {
   if (text.includes('旋转')) {
     const value = degrees(text);
     if (Number.isFinite(value)) return [{ tool: 'rotate_object', args: { objectId, degrees: value, mode: 'delta' } }];
+  }
+
+  if (/(删除|移除|不要了)/.test(text)) {
+    return [{ tool: 'delete_object', args: { objectId } }];
   }
 
   if (/(改成|换成|设为|设置为)/.test(text)) {
@@ -346,7 +380,7 @@ function inspectObject(scene, objectId) {
   return stableJsonValue(object);
 }
 
-async function executeTool(store, call, catalogPlugin) {
+async function executeTool(store, call, { catalogPlugin, versionHistory }) {
   const { args, tool } = call;
   if (tool === 'inspect_room') {
     return { store, result: inspectRoom(store.currentScene, requireString(args, 'roomId')) };
@@ -378,6 +412,34 @@ async function executeTool(store, call, catalogPlugin) {
         question: requireString(args, 'question'),
         reason: optionalString(args, 'reason') ?? null,
         options: optionalStringArray(args, 'options') ?? [],
+      }),
+    };
+  }
+  if (tool === 'check_rules') {
+    const objectId = optionalString(args, 'objectId');
+    const evaluation = evaluateDesignRules(store.currentScene);
+    return {
+      store,
+      result: stableJsonValue({
+        status: evaluation.status,
+        checks: (objectId ? evaluation.checks.filter((check) => check.objectIds.includes(objectId)) : evaluation.violations).slice(0, 6),
+        source: 'demo',
+      }),
+    };
+  }
+  if (tool === 'compare_versions') {
+    if (!versionHistory) throw new Error('VERSION_HISTORY_REQUIRED');
+    const beforeVersionId = requireString(args, 'beforeVersionId');
+    const afterVersionId = optionalString(args, 'afterVersionId') ?? versionHistory.currentVersionId;
+    return { store, result: stableJsonValue(compareVersionHistory(versionHistory, beforeVersionId, afterVersionId)) };
+  }
+  if (tool === 'request_confirmation') {
+    return {
+      store,
+      result: stableJsonValue({
+        versionId: optionalString(args, 'versionId') ?? versionHistory?.currentVersionId ?? null,
+        message: optionalString(args, 'message') ?? '请确认当前版本；Agent 不会代替住户点击确认。',
+        source: 'demo',
       }),
     };
   }
@@ -424,6 +486,13 @@ async function executeTool(store, call, catalogPlugin) {
       result: { surfaceId, materialId },
     };
   }
+  if (tool === 'delete_object') {
+    const objectId = requireString(args, 'objectId');
+    return {
+      store: dispatchSceneCommand(store, { type: 'object.delete', objectId }),
+      result: { objectId, deleted: true },
+    };
+  }
   if (tool === 'apply_catalog_item') {
     const catalogItemId = requireString(args, 'catalogItemId');
     const surfaceId = requireString(args, 'surfaceId');
@@ -448,6 +517,7 @@ export async function runAgentTurn({
   selectedObjectId = null,
   provider = null,
   catalogPlugin = demoCatalogPlugin,
+  versionHistory = null,
   timeoutMs = 1500,
 } = {}) {
   if (!isRecord(store) || !isRecord(store.currentScene)) throw new Error('STORE_INVALID');
@@ -462,7 +532,7 @@ export async function runAgentTurn({
   const inputText = String(input ?? '');
   const turnTools = toolsForInput(inputText);
   const allowedToolNames = new Set(turnTools.map((tool) => tool.name));
-  const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId })
+  const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory })
     .filter((call) => allowedToolNames.has(call.tool));
   const catalogSummary = stableJsonValue(await Promise.resolve(catalogPlugin.summary({ input: inputText })));
   const catalogDescription = stableJsonValue(await Promise.resolve(catalogPlugin.describe()));
@@ -473,6 +543,11 @@ export async function runAgentTurn({
       scene: summarizeScene(store.currentScene, String(input ?? ''), selectedObjectId),
       catalog: catalogSummary,
       tools: stableJsonValue(turnTools),
+      versions: versionHistory ? stableJsonValue({
+        currentVersionId: versionHistory.currentVersionId,
+        confirmedVersionId: versionHistory.confirmedVersionId,
+        versions: versionHistory.versions.map(({ id, label, status, parentVersionId, source, summary }) => ({ id, label, status, parentVersionId, source, summary })),
+      }) : null,
     };
     try {
       const providerResult = await withTimeout(
@@ -495,7 +570,7 @@ export async function runAgentTurn({
   let rolledBack = false;
   for (const call of toolCalls) {
     try {
-      const executed = await executeTool(nextStore, call, catalogPlugin);
+      const executed = await executeTool(nextStore, call, { catalogPlugin, versionHistory });
       nextStore = executed.store;
       steps.push({ ok: true, tool: call.tool, args: call.args, result: executed.result });
     } catch (error) {
