@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowsOutSimple, Crosshair, DoorOpen, HouseLine, SpinnerGap } from '@phosphor-icons/react';
+import { ArrowsOutSimple, Crosshair, DoorOpen, HouseLine, SpinnerGap, Wall } from '@phosphor-icons/react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -15,6 +15,7 @@ import {
 } from './domain/camera-transition.js';
 
 const MM = 0.001;
+const MAX_OCCLUDING_SURFACES = 2;
 function entityFromHit(object) {
   let current = object;
   while (current) {
@@ -94,6 +95,7 @@ function addOpeningFrame(parent, wall, metrics, opening, materials) {
   if (opening.kind === 'window') {
     const glass = new THREE.Mesh(new THREE.BoxGeometry(width - frameWidth * 2, height - frameWidth * 2, 0.012), materials.glass);
     glass.position.set(0, sill + height / 2, 0);
+    glass.userData.skipOcclusion = true;
     frame.add(glass);
   }
   parent.add(frame);
@@ -150,7 +152,7 @@ function buildArchitecture(world, scene, textures, entityRoots) {
     root.updateWorldMatrix(true, true);
     const occlusionBounds = [];
     root.traverse((child) => {
-      if (child.isMesh && child.material !== materials.glass) {
+      if (child.isMesh && !child.userData.skipOcclusion) {
         occlusionBounds.push(new THREE.Box3().setFromObject(child));
       }
     });
@@ -302,6 +304,7 @@ async function createController(container, scene, callbacks) {
   let frameCount = 0;
   let statsStart = performance.now();
   let pointerStart = null;
+  let wallOcclusionEnabled = true;
   const sightRay = new THREE.Ray();
   const sightDirection = new THREE.Vector3();
   const sightHit = new THREE.Vector3();
@@ -313,9 +316,9 @@ async function createController(container, scene, callbacks) {
     sightDirection.subVectors(controls.target, camera.position);
     const sightLength = sightDirection.length();
     if (sightLength > 0) sightRay.set(camera.position, sightDirection.normalize());
-    let occludingSurface = null;
-    let nearestHitDistance = Infinity;
+    const occlusionHits = [];
     for (const surface of wallSurfaces) {
+      let nearestHitDistance = Infinity;
       if (sightLength > 0) {
         for (const bounds of surface.occlusionBounds) {
           const hit = sightRay.intersectBox(bounds, sightHit);
@@ -323,15 +326,21 @@ async function createController(container, scene, callbacks) {
           const hitDistance = camera.position.distanceTo(hit);
           if (hitDistance < sightLength - 0.03 && hitDistance < nearestHitDistance) {
             nearestHitDistance = hitDistance;
-            occludingSurface = surface;
           }
         }
       }
+      if (nearestHitDistance < Infinity) occlusionHits.push({ surface, distance: nearestHitDistance });
     }
+    const occludingSurfaces = new Set(
+      occlusionHits
+        .sort((left, right) => left.distance - right.distance)
+        .slice(0, MAX_OCCLUDING_SURFACES)
+        .map(({ surface }) => surface),
+    );
     for (const surface of wallSurfaces) {
       surface.occlusionProgress = surfaceFadeProgress(
         surface.occlusionProgress,
-        surface === occludingSurface ? 1 : 0,
+        wallOcclusionEnabled && occludingSurfaces.has(surface) ? 1 : 0,
         deltaMs,
       );
       const opacity = surfaceOcclusionOpacity(surface.occlusionProgress);
@@ -523,6 +532,9 @@ async function createController(container, scene, callbacks) {
   return {
     switchView,
     enterFreeView,
+    setWallOcclusionEnabled(enabled) {
+      wallOcclusionEnabled = enabled;
+    },
     setSelection,
     dispose() {
       disposed = true;
@@ -571,9 +583,11 @@ export default function Scene3D({
   const controllerRef = useRef(null);
   const viewRequestRef = useRef(viewRequest);
   viewRequestRef.current = viewRequest;
+  const wallOcclusionRef = useRef(true);
   const callbacksRef = useRef({ onSelect, onNavigate, onStats, onViewEvent });
   callbacksRef.current = { onSelect, onNavigate, onStats, onViewEvent };
   const [status, setStatus] = useState('loading');
+  const [wallOcclusionEnabled, setWallOcclusionEnabled] = useState(true);
   const [viewState, setViewState] = useState({ id: 'camera-home-overview', label: '整屋', phase: 'started' });
   const presets = useMemo(() => [
     showHomeView ? scene.cameraPresets.find((preset) => preset.kind === 'whole_home') : null,
@@ -597,6 +611,7 @@ export default function Scene3D({
       else {
         controllerRef.current = controller;
         controller.setSelection(selection);
+        controller.setWallOcclusionEnabled(wallOcclusionRef.current);
         if (viewRequestRef.current?.id) controller.switchView(viewRequestRef.current.id);
         setStatus('ready');
       }
@@ -621,6 +636,14 @@ export default function Scene3D({
     else controllerRef.current?.switchView(preset.id);
   };
   const chooseFree = () => controllerRef.current?.enterFreeView();
+  const toggleWallOcclusion = () => {
+    setWallOcclusionEnabled((enabled) => {
+      const next = !enabled;
+      wallOcclusionRef.current = next;
+      controllerRef.current?.setWallOcclusionEnabled(next);
+      return next;
+    });
+  };
   const activeRoom = scene.rooms.find((room) => room.id === activeRoomId);
 
   return <div className="scene3d-shell" data-testid="scene-3d" data-room-id={activeRoomId ?? ''} data-selected-id={selection?.id ?? ''}>
@@ -640,6 +663,7 @@ export default function Scene3D({
         return <button key={preset.id} type="button" data-preset-id={preset.id} aria-pressed={viewState.id === preset.id} onClick={() => chooseView(preset)}><Icon size={16} /><span>{preset.label}</span></button>;
       })}
       <button type="button" aria-pressed={viewState.id === 'free'} onClick={chooseFree}><ArrowsOutSimple size={16} /><span>自由</span></button>
+      <button type="button" aria-label="观察时自动关闭遮挡墙壁" aria-pressed={wallOcclusionEnabled} onClick={toggleWallOcclusion}><Wall size={16} /><span>自动剖切</span></button>
     </nav>}
     <p className="scene3d__hint">{activeRoomId
       ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。')

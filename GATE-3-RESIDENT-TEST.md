@@ -2,7 +2,7 @@
 
 日期：2026-08-09  
 页面：`/project/demo`  
-结论：**核心浏览路径可用；两处 P1 镜头问题与用户补充的对象定位问题均已修复并复验，Gate 3 仍等待用户明确验收。**
+结论：**核心浏览路径可用；两轮模拟住户测试的 P1、对象定位、双墙剖切与玻璃归属均已修复并复验，Gate 3 已于 2026-08-10 验收。**
 
 ## 测试方法
 
@@ -26,9 +26,19 @@
 - 点击家具现在会进入该对象配置的最佳镜头，而不是被 URL 校验回退到房间俯视；2D 与 3D 的对象点击共用同一导航路径，浏览器前进 / 后退可恢复对象、房间和镜头。
 - 镜头类型仍遵循对象语义：餐桌适合俯视，沙发使用入口视角，柜体使用主功能面；不把所有家具强制改成俯视。
 - 主卧入口镜头已移出衣柜占地，床、入口与通行区可同时辨识。
-- 自由视角按当前房间尺度限制最远距离；只有视线遇到的最近墙面会按独立 S 型曲线完全关闭并恢复，其余墙面保持实体。完全隐藏的墙面不再拦截点选，因此可直接选择墙后的房间或家具。连续两次普通缩小后仍保留整体空间边界。
+- 自由视角按当前房间尺度限制最远距离；视线遇到的最近两块不同实体墙面会各自按 S 型曲线完全关闭并恢复，其余墙面保持实体。玻璃不作为独立遮挡面也不占用两个名额；宿主墙面退让时，窗框与玻璃随该墙整体退让。完全隐藏的墙面不拦截点选，连续缩小后仍保留整体空间边界。
+- 视角胶囊新增“自动剖切”开关；关闭时墙面平滑恢复，开启时继续使用双墙面与宿主玻璃规则。
 
-证据：[沙发对象定位](./.omx/audits/gate3/resident-test/fix-clean-sofa-focus.png) · [主卧入口](./.omx/audits/gate3/resident-test/fix-clean-primary-entry.png) · [主卧连续缩放](./.omx/audits/gate3/resident-test/fix-clean-primary-free-zoom2.png) · [单表面关闭后的整屋](./.omx/audits/gate3/resident-test/fix-single-surface-off-verified.png) · [穿透点选沙发](./.omx/audits/gate3/resident-test/fix-single-surface-click-through-verified.png)
+证据：[沙发对象定位](./.omx/audits/gate3/resident-test/fix-clean-sofa-focus.png) · [主卧入口](./.omx/audits/gate3/resident-test/fix-clean-primary-entry.png) · [主卧连续缩放](./.omx/audits/gate3/resident-test/fix-clean-primary-free-zoom2.png) · [玻璃不触发墙面退让](./.omx/audits/gate3/two-surface-occlusion/04-low-angle.png) · [拐角双墙面退让](./.omx/audits/gate3/two-surface-occlusion/05-corner.png) · [自动剖切开启](./.omx/audits/gate3/cutaway-toggle/03-free-enabled.png) · [自动剖切关闭](./.omx/audits/gate3/cutaway-toggle/04-free-disabled.png) · [穿透点选沙发](./.omx/audits/gate3/resident-test/fix-single-surface-click-through-verified.png)
+
+## 第二轮 P1 修复复验
+
+- 桌面双栏重新使用确定视口高度，不再被内容撑到视口之外；小于等于 840 px 的窄屏仍改为纵向堆叠和正常滚动。
+- 1024×768、1366×768 与 1440×900 实际视口的页面宽高均与视口一致，3D、2D 和位置卡无裁切；1024 宽下 2D 房间名实测约为 10 px，主要按钮热区不小于 44 px。
+- 导航状态拆成“请求状态”与“镜头已到达状态”。进入开放客餐厅时，即时截图仍显示整屋标签和“镜头飞行中 · 俯视”；镜头完成后，面包屑、标题、位置卡和 3D 状态一起切换为开放客餐厅。
+- 返回整屋时同样保留开放客餐厅标签并显示“镜头飞行中 · 整屋”；镜头完成后才统一切换为整屋，不再出现文字先于画面抵达。
+
+证据：[1024 一屏与可读 2D](./.omx/audits/gate3/p1-fix-qa/1024x768-home-readable.png) · [进入飞行中](./.omx/audits/gate3/p1-fix-qa/1024x768-enter-immediate.png) · [进入已到达](./.omx/audits/gate3/p1-fix-qa/1024x768-enter-done.png) · [返回整屋飞行中](./.omx/audits/gate3/p1-fix-qa/1024x768-home-return-immediate.png) · [返回整屋已到达](./.omx/audits/gate3/p1-fix-qa/1024x768-home-return-done.png) · [1366×768](./.omx/audits/gate3/p1-fix-qa/1366x768-home.png) · [1440×900](./.omx/audits/gate3/p1-fix-qa/1440x900-home.png)
 
 ## 已确认可用的部分
 
@@ -64,8 +74,8 @@
 ## Gate 3 判定
 
 - P0：0。
-- P1：0 个未解决；原 2 个主卧相机可靠性问题均已修复并独立复验。
+- P1：0 个未解决；第一轮 2 个主卧相机可靠性问题与第二轮 2 个小屏 / 过渡状态问题均已修复并复验。
 - P2：尺度信息仍待后续补齐；自由视角反馈与只读状态说明已缓解，等待用户体验确认。
-- 当前建议：**保持“待验收”，由用户在强制刷新后的 `/project/demo` 复核对象定位、主卧入口和自由缩放；用户明确验收后再进入 Gate 4。家具编辑仍留在后续 Gate。**
+- 当前判定：**用户已于 2026-08-10 授权提交并进入 Gate 4；家具编辑仍按计划从 Gate 5 开放。**
 
 原始结果与全部截图位于：`.omx/audits/gate3/resident-test/`。

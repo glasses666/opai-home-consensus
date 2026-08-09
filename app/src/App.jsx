@@ -351,17 +351,20 @@ function ProjectDemoPage() {
   const [navigation, setNavigation] = useState(initialNavigation);
   const [viewSequence, setViewSequence] = useState(1);
   const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
+  const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
+  const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
   const [pathname] = usePathname();
   const homePreset = scene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
-  const selectedEntity = findEntity(selection);
+  const displaySelection = selectionFromId(displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
+  const displaySelectedEntity = findEntity(displaySelection);
   const activeRoomId = navigation.roomId;
-  const currentRoom = scene.rooms.find((room) => room.id === activeRoomId) ?? null;
+  const currentRoom = scene.rooms.find((room) => room.id === displayRoomId) ?? null;
   const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
   const currentViewLabel = displayViewId === 'free'
     ? '自由视角'
     : scene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
-  const selectedLabel = selectedEntity ? entityName(selectedEntity.kind, selectedEntity.entity) : '未选择对象';
+  const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
   const viewRequest = useMemo(
     () => ({ id: navigation.viewId, sequence: viewSequence }),
     [navigation.viewId, viewSequence],
@@ -377,7 +380,6 @@ function ProjectDemoPage() {
     const handlePopState = () => {
       const restored = parseViewState(window.location.search, scene);
       setNavigation(restored);
-      setDisplayViewId(restored.viewId);
       setViewSequence((value) => value + 1);
     };
     const canonicalQuery = serializeViewState(initialNavigation, scene);
@@ -397,7 +399,7 @@ function ProjectDemoPage() {
       window.history[replace ? 'replaceState' : 'pushState']({}, '', nextUrl);
     }
     setNavigation(safe);
-    setDisplayViewId(safe.viewId);
+    if (!moveCamera) setDisplaySelectedId(safe.selectedId);
     if (moveCamera) setViewSequence((value) => value + 1);
   };
 
@@ -453,7 +455,7 @@ function ProjectDemoPage() {
     else if (roomId) jumpToRoom(roomId, entity.entity.id);
   };
 
-  return <main className="product-shell project-demo" data-room-id={activeRoomId ?? ''} data-selected-id={navigation.selectedId ?? ''}>
+  return <main className="product-shell project-demo" data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
     <header className="product-hero">
       <div className="product-brand">
         <span className="product-brand__mark" aria-hidden="true">元</span>
@@ -487,11 +489,16 @@ function ProjectDemoPage() {
             if (reason === 'room' && nextSelection?.kind === 'room') jumpToRoom(nextSelection.id);
             else jumpToRoomView(presetId);
           }}
-          activeRoomId={activeRoomId}
+          activeRoomId={displayRoomId}
           roomLabels={roomLabels}
           onStats={() => {}}
           viewRequest={viewRequest}
-          onViewEvent={({ phase, preset }) => { if (phase === 'done') setDisplayViewId(preset.id); }}
+          onViewEvent={({ phase, preset }) => {
+            if (phase !== 'done') return;
+            setDisplayViewId(preset.id);
+            setDisplaySelectedId(navigation.selectedId);
+            if (preset.kind !== 'free') setDisplayRoomId(preset.roomId ?? null);
+          }}
           showHomeView={false}
         />
       </section>
@@ -513,9 +520,9 @@ function ProjectDemoPage() {
         <article className="panel project-panel project-context" aria-label="当前位置摘要">
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
-          <p>{selectedEntity?.kind === 'object'
+          <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具；当前仅查看，编辑能力将在后续 Gate 开放。切换房间视角不会丢失选择。'
-            : (activeRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
+            : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
       </aside>
     </section>
