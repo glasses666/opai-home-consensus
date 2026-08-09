@@ -15,6 +15,16 @@ const selectionBelongsToRoom = (scene, entity, roomId) => {
   return findById(scene?.surfaces, entity.hostSurfaceId)?.roomId === roomId;
 };
 
+export function objectNavigationPreset(scene, object) {
+  if (!scene || !object?.id || !object?.roomId) return null;
+  const presets = scene.cameraPresets ?? [];
+  const preferred = presets.find((preset) => preset.id === object.preferredCameraPresetId) ?? null;
+  if (!object.capabilities?.movable) return preferred;
+  return presets.find((preset) => preset.roomId === object.roomId && preset.objectId === object.id && preset.kind === 'object_overhead')
+    ?? presets.find((preset) => preset.roomId === object.roomId && preset.kind === 'room_overhead')
+    ?? preferred;
+}
+
 /** Return a canonical, scene-compatible navigation state. */
 export function sanitizeViewState(state, scene) {
   const presets = scene?.cameraPresets ?? [];

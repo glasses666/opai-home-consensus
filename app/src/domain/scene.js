@@ -546,6 +546,41 @@ function applySceneCommand(scene, command) {
       throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     }
     object.materialId = command.materialId;
+  } else if (command.type === 'object.setDimensions') {
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
+    if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
+    if (!object.capabilities.parameterEditable) throw new Error(`OBJECT_PARAMETERS_LOCKED: Object "${command.objectId}" dimensions are locked.`);
+    if (!isObject(command.dimensions)) throw new Error('DIMENSIONS_INVALID: dimensions are required.');
+    const dimensions = { ...object.dimensions, ...command.dimensions };
+    if (![dimensions.width, dimensions.depth, dimensions.height].every(isPositiveInteger)) {
+      throw new Error('DIMENSIONS_INVALID: dimensions must be positive integer millimeters.');
+    }
+    object.dimensions = dimensions;
+  } else if (command.type === 'object.duplicate') {
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
+    if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
+    if (!object.capabilities.duplicable) throw new Error(`OBJECT_NOT_DUPLICABLE: Object "${command.objectId}" cannot be duplicated.`);
+    if (typeof command.newObjectId !== 'string' || !command.newObjectId || nextScene.objects.some((candidate) => candidate.id === command.newObjectId)) {
+      throw new Error('OBJECT_ID_INVALID: duplicate needs a unique newObjectId.');
+    }
+    if (typeof command.externalId !== 'string' || !command.externalId) throw new Error('OBJECT_PROVENANCE_INVALID: duplicate needs an externalId.');
+    if (!isObject(command.transform)) throw new Error('TRANSFORM_INVALID: duplicate needs a transform.');
+    const room = nextScene.rooms.find((candidate) => candidate.id === object.roomId);
+    nextScene.objects.push({
+      ...object,
+      id: command.newObjectId,
+      externalId: command.externalId,
+      name: `${object.name} Copy`,
+      preferredCameraPresetId: room?.cameraPresetIds?.[0] ?? null,
+      transform: { ...object.transform, ...command.transform },
+    });
+  } else if (command.type === 'object.delete') {
+    const index = nextScene.objects?.findIndex((candidate) => candidate.id === command.objectId) ?? -1;
+    if (index < 0) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
+    const object = nextScene.objects[index];
+    if (!object.capabilities.deletable) throw new Error(`OBJECT_NOT_DELETABLE: Object "${command.objectId}" cannot be deleted.`);
+    nextScene.objects.splice(index, 1);
+    nextScene.cameraPresets = nextScene.cameraPresets.filter((preset) => preset.objectId !== object.id);
   } else if (command.type === 'surface.setMaterial') {
     const surface = nextScene.surfaces?.find((candidate) => candidate.id === command.surfaceId);
     if (!surface) throw new Error(`SURFACE_NOT_FOUND: Surface "${command.surfaceId}" does not exist.`);

@@ -1,13 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, Cube, HouseLine, MapTrifold, StackSimple } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
 import { createDemoScene } from './domain/demo-scene.js';
 import { projectScene2D } from './domain/projection.js';
-import { createSceneStore, deserializeScene, serializeScene, validateScene } from './domain/scene.js';
-import { parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+import {
+  createSceneStore,
+  deserializeScene,
+  dispatchSceneCommand,
+  redoSceneCommand,
+  serializeScene,
+  undoSceneCommand,
+  validateScene,
+} from './domain/scene.js';
+import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 
 const scene = createSceneStore(createDemoScene()).currentScene;
-const projection = projectScene2D(scene);
 const serialized = serializeScene(scene);
 const serializedBytes = new TextEncoder().encode(serialized).length;
 const roundTripMatches = serializeScene(deserializeScene(serialized)) === serialized;
@@ -42,6 +49,12 @@ const objectLabels = {
   'object-dining-table': '餐桌',
   'object-kitchen-counter': '橱柜',
   'object-shoe-cabinet': '鞋柜',
+};
+
+const materialLabels = {
+  'mat-door-warm-white': '暖白',
+  'mat-fabric-warm-gray': '暖灰织物',
+  'mat-oak-veneer': '浅橡木',
 };
 
 const entityKinds = { room: '房间', object: '家具', opening: '门窗', surface: '表面' };
@@ -151,7 +164,7 @@ function OpeningSymbol({ opening, subtle }) {
   </>;
 }
 
-function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations = true, showDimensions = true, showTexture = false, subtle = false }) {
+function CadLayer({ sceneModel, projection, selection, onSelect, showFurniture = true, showAnnotations = true, showDimensions = true, showTexture = false, subtle = false }) {
   const cad = projection.layers.cad;
   return (
     <g data-layer="cad" data-subtle={subtle}>
@@ -179,7 +192,7 @@ function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations =
         <OpeningSymbol opening={opening} subtle={subtle} />
       </g>)}
       {showFurniture && cad.objectFootprints.map((footprint) => {
-        const object = scene.objects.find((candidate) => candidate.id === footprint.sourceObjectId);
+        const object = sceneModel.objects.find((candidate) => candidate.id === footprint.sourceObjectId);
         const center = polygonCenter(footprint.polygon);
         const selected = selection?.kind === 'object' && selection.id === footprint.sourceObjectId;
         return <g key={footprint.id} className="selectable-group" role="button" tabIndex="0" aria-label={`选择${objectLabels[object.id] ?? object.name}`} onClick={() => onSelect({ kind: 'object', id: footprint.sourceObjectId })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'object', id: footprint.sourceObjectId }, onSelect)}>
@@ -194,10 +207,10 @@ function CadLayer({ selection, onSelect, showFurniture = true, showAnnotations =
   );
 }
 
-function MediaLayer({ selection, onSelect }) {
+function MediaLayer({ sceneModel, projection, selection, onSelect }) {
   return <g data-layer="media">
     {projection.layers.media.assets.map((asset) => {
-      const object = scene.objects.find((candidate) => candidate.id === asset.sourceObjectId);
+      const object = sceneModel.objects.find((candidate) => candidate.id === asset.sourceObjectId);
       const selected = selection?.kind === 'object' && selection.id === asset.sourceObjectId;
       const rotation = (asset.rotationY * 180) / Math.PI;
       return <g key={asset.id} className="media-object selectable-group" role="button" tabIndex="0" aria-label={`选择${objectLabels[object.id] ?? object.name}`} onClick={() => onSelect({ kind: 'object', id: asset.sourceObjectId })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'object', id: asset.sourceObjectId }, onSelect)}>
@@ -209,9 +222,10 @@ function MediaLayer({ selection, onSelect }) {
   </g>;
 }
 
-function ScenePlan({ mode, onModeChange, selection, onSelect, showModeRail = true, compact = false }) {
+function ScenePlan({ sceneModel = scene, mode, onModeChange, selection, onSelect, showModeRail = true, compact = false }) {
+  const currentProjection = useMemo(() => projectScene2D(sceneModel), [sceneModel]);
   const padding = compact ? 240 : 850;
-  const viewBox = `${projection.viewBox.x - padding} ${projection.viewBox.y - padding} ${projection.viewBox.width + padding * 2.45} ${projection.viewBox.height + padding * 2}`;
+  const viewBox = `${currentProjection.viewBox.x - padding} ${currentProjection.viewBox.y - padding} ${currentProjection.viewBox.width + padding * 2.45} ${currentProjection.viewBox.height + padding * 2}`;
   return <div className={`plan${compact ? ' plan--compact' : ''}`}>
     <svg viewBox={viewBox} aria-label="整屋 CAD 与家具俯视图" role="group">
       <defs>
@@ -222,10 +236,10 @@ function ScenePlan({ mode, onModeChange, selection, onSelect, showModeRail = tru
           <image href="/assets/materials/floor-tile-warm.webp" width="1800" height="1800" opacity="0.48" preserveAspectRatio="xMidYMid slice" />
         </pattern>
       </defs>
-      <rect className="drawing-sheet" x={projection.viewBox.x - padding} y={projection.viewBox.y - padding} width={projection.viewBox.width + padding * 2.45} height={projection.viewBox.height + padding * 2} />
-      {mode === 'cad' && <CadLayer selection={selection} onSelect={onSelect} />}
-      {mode === 'furniture' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showAnnotations={false} showDimensions={false} showTexture subtle /><MediaLayer selection={selection} onSelect={onSelect} /></>}
-      {mode === 'overlay' && <><CadLayer selection={selection} onSelect={onSelect} showFurniture={false} showDimensions={!compact} showTexture /><MediaLayer selection={selection} onSelect={onSelect} /></>}
+      <rect className="drawing-sheet" x={currentProjection.viewBox.x - padding} y={currentProjection.viewBox.y - padding} width={currentProjection.viewBox.width + padding * 2.45} height={currentProjection.viewBox.height + padding * 2} />
+      {mode === 'cad' && <CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} />}
+      {mode === 'furniture' && <><CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} showFurniture={false} showAnnotations={false} showDimensions={false} showTexture subtle /><MediaLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} /></>}
+      {mode === 'overlay' && <><CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} showFurniture={false} showDimensions={!compact} showTexture /><MediaLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} /></>}
     </svg>
     {showModeRail && <nav className="mode-rail" aria-label="二维显示模式">
       {modeOptions.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={mode === id} onClick={() => onModeChange(id)}><Icon size={19} weight={mode === id ? 'bold' : 'regular'} aria-hidden="true" /><span className="mode-rail__tooltip" aria-hidden="true">{label}</span></button>)}
@@ -234,9 +248,9 @@ function ScenePlan({ mode, onModeChange, selection, onSelect, showModeRail = tru
   </div>;
 }
 
-function findEntity(selection) {
+function findEntity(sceneModel, selection) {
   if (!selection) return null;
-  const collection = { room: scene.rooms, object: scene.objects, opening: scene.openings, surface: scene.surfaces }[selection.kind];
+  const collection = { room: sceneModel.rooms, object: sceneModel.objects, opening: sceneModel.openings, surface: sceneModel.surfaces }[selection.kind];
   const entity = collection?.find((candidate) => candidate.id === selection.id);
   return entity ? { kind: selection.kind, entity } : null;
 }
@@ -247,20 +261,19 @@ function entityName(kind, entity) {
   return entity.kind ?? entity.id;
 }
 
-function Inspector({ selection, onNavigate, mode, workspaceMode, renderStats }) {
-  const selected = findEntity(selection);
-  const cameraPresets = new Map(scene.cameraPresets.map((preset) => [preset.id, preset]));
+function Inspector({ sceneModel, selection, onNavigate, mode, workspaceMode, renderStats }) {
+  const selected = findEntity(sceneModel, selection);
   return <aside className="panel inspector" aria-label="Canonical entity inspector">
     <div className="panel__header"><div><p className="panel__kicker">Selection map</p><h2 className="panel__title">对象与房间</h2></div><span className="panel__meta">{workspaceMode === '3d' ? '实时 3D' : modeOptions.find((item) => item.id === mode)?.label}</span></div>
     <div className="inspector__content">
-      {workspaceMode === '3d' && <dl className="render-stats" aria-label="3D rendering statistics"><div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div><div><dt>Draw calls</dt><dd>{renderStats.calls || '—'}</dd></div><div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div><div><dt>GLB</dt><dd>{renderStats.assets || scene.objects.length}</dd></div></dl>}
-      <ul className="entity-list">{scene.rooms.map((room) => {
-        const objects = scene.objects.filter((object) => object.roomId === room.id);
+      {workspaceMode === '3d' && <dl className="render-stats" aria-label="3D rendering statistics"><div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div><div><dt>Draw calls</dt><dd>{renderStats.calls || '—'}</dd></div><div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div><div><dt>GLB</dt><dd>{renderStats.assets || sceneModel.objects.length}</dd></div></dl>}
+      <ul className="entity-list">{sceneModel.rooms.map((room) => {
+        const objects = sceneModel.objects.filter((object) => object.roomId === room.id);
         return <li className="entity-list__room" key={room.id}>
           <button className="entity-list__room-button" type="button" aria-pressed={selection?.kind === 'room' && selection.id === room.id} onClick={() => onNavigate({ kind: 'room', id: room.id }, room.cameraPresetIds[0])}><span>{entityName('room', room)}</span><span className="entity-list__type">俯视</span></button>
-          {objects.length > 0 && <ul className="entity-list__objects">{objects.map((object) => {
-            const preset = cameraPresets.get(object.preferredCameraPresetId);
-            return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, object.preferredCameraPresetId)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
+        {objects.length > 0 && <ul className="entity-list__objects">{objects.map((object) => {
+            const preset = objectNavigationPreset(sceneModel, object);
+            return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, preset?.id)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
           })}</ul>}
         </li>;
       })}</ul>
@@ -269,16 +282,16 @@ function Inspector({ selection, onNavigate, mode, workspaceMode, renderStats }) 
   </aside>;
 }
 
-function getRoomViewPresets(roomId) {
-  const room = scene.rooms.find((candidate) => candidate.id === roomId);
+function getRoomViewPresets(sceneModel, roomId) {
+  const room = sceneModel.rooms.find((candidate) => candidate.id === roomId);
   return (room?.cameraPresetIds ?? [])
-    .map((id) => scene.cameraPresets.find((preset) => preset.id === id))
+    .map((id) => sceneModel.cameraPresets.find((preset) => preset.id === id))
     .filter((preset) => preset && !preset.objectId);
 }
 
-function selectionFromId(id) {
+function selectionFromId(sceneModel, id) {
   if (typeof id !== 'string' || !id) return null;
-  for (const [kind, collection] of Object.entries({ room: scene.rooms, surface: scene.surfaces, opening: scene.openings, object: scene.objects })) {
+  for (const [kind, collection] of Object.entries({ room: sceneModel.rooms, surface: sceneModel.surfaces, opening: sceneModel.openings, object: sceneModel.objects })) {
     if (collection.some((entity) => entity.id === id)) return { kind, id };
   }
   return null;
@@ -327,7 +340,7 @@ function LabScenePage() {
 
   const selectEntity = (nextSelection) => {
     setSelection(nextSelection);
-    const selected = findEntity(nextSelection);
+    const selected = findEntity(scene, nextSelection);
     const roomId = selected?.kind === 'room' ? selected.entity.id : selected?.entity.roomId;
     if (roomId) setActiveRoomId(roomId);
   };
@@ -341,12 +354,16 @@ function LabScenePage() {
 
   return <main className="lab">
     <header className="lab__header"><div><p className="eyebrow">Gate 2 · same-source spatial proof</p><h1>2D 户型与真实 3D 同源场景</h1><p className="lab__lede">九件原创 GLB、墙体开洞、PBR 材质和可复现镜头全部读取 Gate 1 的同一份毫米级 scene。点击房间地面会先飞到三维俯视，再选入口、主功能面或自由视角。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
-    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
+    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
     <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
   </main>;
 }
 
 function ProjectDemoPage() {
+  const [sceneStore, setSceneStore] = useState(() => createSceneStore(createDemoScene()));
+  const sceneStoreRef = useRef(sceneStore);
+  sceneStoreRef.current = sceneStore;
+  const currentScene = sceneStore.currentScene;
   const initialNavigation = useMemo(() => parseViewState(typeof window === 'undefined' ? '' : window.location.search, scene), []);
   const [navigation, setNavigation] = useState(initialNavigation);
   const [viewSequence, setViewSequence] = useState(1);
@@ -354,19 +371,23 @@ function ProjectDemoPage() {
   const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
   const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
   const [renderStats, setRenderStats] = useState({ fps: 0, calls: 0, triangles: 0, assets: 0 });
-  const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: scene.objects.length });
+  const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: currentScene.objects.length });
+  const [editMode, setEditMode] = useState('move');
+  const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
+  const [dimensionDraft, setDimensionDraft] = useState(null);
   const [pathname] = usePathname();
-  const homePreset = scene.cameraPresets.find((preset) => preset.kind === 'whole_home');
-  const selection = selectionFromId(navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
-  const displaySelection = selectionFromId(displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
-  const displaySelectedEntity = findEntity(displaySelection);
-  const selectedObject = displaySelectedEntity?.kind === 'object' ? displaySelectedEntity.entity : null;
+  const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
+  const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
+  const displaySelection = selectionFromId(currentScene, displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
+  const selectedEntity = findEntity(currentScene, selection);
+  const displaySelectedEntity = findEntity(currentScene, displaySelection);
+  const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
   const activeRoomId = navigation.roomId;
-  const currentRoom = scene.rooms.find((room) => room.id === displayRoomId) ?? null;
+  const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
   const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
   const currentViewLabel = displayViewId === 'free'
     ? '自由视角'
-    : scene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
+    : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
   const viewRequest = useMemo(
     () => ({ id: navigation.viewId, sequence: viewSequence }),
@@ -381,7 +402,7 @@ function ProjectDemoPage() {
 
   useEffect(() => {
     const handlePopState = () => {
-      const restored = parseViewState(window.location.search, scene);
+      const restored = parseViewState(window.location.search, sceneStoreRef.current.currentScene);
       setNavigation(restored);
       setViewSequence((value) => value + 1);
     };
@@ -394,8 +415,9 @@ function ProjectDemoPage() {
   }, [initialNavigation]);
 
   const commitNavigation = (nextState, { replace = false, moveCamera = true } = {}) => {
-    const safe = sanitizeViewState(nextState, scene);
-    const query = serializeViewState(safe, scene);
+    const sceneModel = sceneStoreRef.current.currentScene;
+    const safe = sanitizeViewState(nextState, sceneModel);
+    const query = serializeViewState(safe, sceneModel);
     const nextUrl = `${window.location.pathname}${query}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl || replace) {
@@ -412,21 +434,21 @@ function ProjectDemoPage() {
   };
 
   const jumpToRoom = (roomId, selectedId = roomId) => {
-    const room = scene.rooms.find((candidate) => candidate.id === roomId);
-    const preset = getRoomViewPresets(roomId)[0];
+    const room = currentScene.rooms.find((candidate) => candidate.id === roomId);
+    const preset = getRoomViewPresets(currentScene, roomId)[0];
     if (!room || !preset) return;
     commitNavigation({ roomId: room.id, viewId: preset.id, selectedId });
   };
 
   const jumpToRoomView = (presetId) => {
-    const preset = scene.cameraPresets.find((candidate) => candidate.id === presetId && candidate.roomId === activeRoomId);
+    const preset = currentScene.cameraPresets.find((candidate) => candidate.id === presetId && candidate.roomId === activeRoomId);
     if (!preset) return;
     commitNavigation({ ...navigation, viewId: preset.id });
   };
 
   const jumpToObject = (object) => {
-    const preset = scene.cameraPresets.find((candidate) => candidate.id === object.preferredCameraPresetId);
-    const fallback = getRoomViewPresets(object.roomId)[0];
+    const preset = objectNavigationPreset(currentScene, object);
+    const fallback = getRoomViewPresets(currentScene, object.roomId)[0];
     if (!preset && !fallback) return;
     commitNavigation({
       roomId: object.roomId,
@@ -436,7 +458,7 @@ function ProjectDemoPage() {
   };
 
   const selectEntity = (nextSelection) => {
-    const entity = findEntity(nextSelection);
+    const entity = findEntity(currentScene, nextSelection);
     if (!entity) return;
     if (entity.kind === 'object') {
       jumpToObject(entity.entity);
@@ -450,13 +472,174 @@ function ProjectDemoPage() {
   };
 
   const navigateFromPlan = (nextSelection) => {
-    const entity = findEntity(nextSelection);
+    const entity = findEntity(currentScene, nextSelection);
     if (!entity) return;
     const roomId = entity.kind === 'room' ? entity.entity.id : entity.entity.roomId;
     if (entity.kind === 'object') jumpToObject(entity.entity);
     else if (roomId === activeRoomId) selectEntity(nextSelection);
     else if (roomId) jumpToRoom(roomId, entity.entity.id);
   };
+
+  const executeCommand = useCallback((command, successMessage = '修改已应用') => {
+    try {
+      const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setEditFeedback({ tone: 'success', message: successMessage });
+      return nextStore;
+    } catch (error) {
+      setEditFeedback({ tone: 'error', message: `未应用：${error instanceof Error ? error.message : '未知错误'}` });
+      return null;
+    }
+  }, []);
+
+  const undo = useCallback(() => {
+    try {
+      const nextStore = undoSceneCommand(sceneStoreRef.current);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setEditFeedback({ tone: 'success', message: '已撤销上一步' });
+    } catch {
+      setEditFeedback({ tone: 'error', message: '没有可撤销的修改' });
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    try {
+      const nextStore = redoSceneCommand(sceneStoreRef.current);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setEditFeedback({ tone: 'success', message: '已重做下一步' });
+    } catch {
+      setEditFeedback({ tone: 'error', message: '没有可重做的修改' });
+    }
+  }, []);
+
+  const moveSelected = useCallback((dx, dz) => {
+    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
+    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
+    if (!object?.capabilities?.movable) {
+      setEditFeedback({ tone: 'error', message: '该对象已锁定，不能移动' });
+      return;
+    }
+    executeCommand({ type: 'object.setTransform', objectId: object.id, transform: { x: object.transform.x + dx, z: object.transform.z + dz } }, '已移动 100 mm');
+  }, [executeCommand, navigation.selectedId]);
+
+  const rotateSelected = useCallback(() => {
+    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
+    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
+    if (!object?.capabilities?.rotatable) {
+      setEditFeedback({ tone: 'error', message: '该对象已锁定，不能旋转' });
+      return;
+    }
+    executeCommand({ type: 'object.setTransform', objectId: object.id, transform: { rotationY: object.transform.rotationY + Math.PI / 12 } }, '已旋转 15°');
+  }, [executeCommand, navigation.selectedId]);
+
+  const deleteSelected = useCallback(() => {
+    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
+    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
+    if (!object?.capabilities?.deletable) {
+      setEditFeedback({ tone: 'error', message: '该对象不允许删除' });
+      return;
+    }
+    if (!executeCommand({ type: 'object.delete', objectId: object.id }, `已删除${entityName('object', object)}`)) return;
+    commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
+  }, [executeCommand, navigation]);
+
+  const duplicateSelected = () => {
+    if (!selectedObject?.capabilities?.duplicable) {
+      setEditFeedback({ tone: 'error', message: '该对象不允许复制' });
+      return;
+    }
+    const suffix = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36)).slice(0, 8);
+    const newObjectId = `${selectedObject.id}-copy-${suffix}`;
+    const gap = 900;
+    const offsets = [
+      [selectedObject.dimensions.width + gap, 0],
+      [-selectedObject.dimensions.width - gap, 0],
+      [0, selectedObject.dimensions.depth + gap],
+      [0, -selectedObject.dimensions.depth - gap],
+    ];
+    const room = currentScene.rooms.find((candidate) => candidate.id === selectedObject.roomId);
+    if (room) {
+      const xs = room.polygon.map((point) => point.x);
+      const zs = room.polygon.map((point) => point.z);
+      for (let z = Math.min(...zs) + 700; z <= Math.max(...zs) - 700; z += 500) {
+        for (let x = Math.min(...xs) + 700; x <= Math.max(...xs) - 700; x += 500) {
+          offsets.push([x - selectedObject.transform.x, z - selectedObject.transform.z]);
+        }
+      }
+    }
+    let lastError = null;
+    for (const [dx, dz] of offsets) {
+      try {
+        const nextStore = dispatchSceneCommand(sceneStoreRef.current, {
+          type: 'object.duplicate',
+          objectId: selectedObject.id,
+          newObjectId,
+          externalId: `${selectedObject.externalId}-COPY-${suffix.toUpperCase()}`,
+          transform: { x: selectedObject.transform.x + dx, z: selectedObject.transform.z + dz },
+        });
+        sceneStoreRef.current = nextStore;
+        setSceneStore(nextStore);
+        commitNavigation({ ...navigation, selectedId: newObjectId }, { replace: true, moveCamera: false });
+        setEditFeedback({ tone: 'success', message: `已复制${entityName('object', selectedObject)}` });
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    setEditFeedback({ tone: 'error', message: `未复制：${lastError instanceof Error ? lastError.message : '没有合法落位'}` });
+  };
+
+  const resizeSelected = () => {
+    if (!selectedObject?.capabilities?.parameterEditable || !dimensionDraft) return;
+    executeCommand({
+      type: 'object.setDimensions',
+      objectId: selectedObject.id,
+      dimensions: Object.fromEntries(Object.entries(dimensionDraft).map(([key, value]) => [key, Number(value)])),
+    }, '尺寸已更新');
+  };
+
+  const updateDimensionDraft = (key, value) => {
+    setDimensionDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  useEffect(() => {
+    if (!selectedObject) return;
+    if (editMode === 'move' && !selectedObject.capabilities.movable) setEditMode(selectedObject.capabilities.rotatable ? 'rotate' : null);
+    if (editMode === 'rotate' && !selectedObject.capabilities.rotatable) setEditMode(selectedObject.capabilities.movable ? 'move' : null);
+  }, [editMode, selectedObject]);
+
+  useEffect(() => {
+    setDimensionDraft(selectedObject ? { ...selectedObject.dimensions } : null);
+  }, [selectedObject?.id, selectedObject?.dimensions]);
+
+  useEffect(() => {
+    const handleEditShortcut = (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      const modifier = event.metaKey || event.ctrlKey;
+      if (modifier && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        deleteSelected();
+        return;
+      }
+      const directions = { ArrowUp: [0, -100], ArrowDown: [0, 100], ArrowLeft: [-100, 0], ArrowRight: [100, 0] };
+      if (directions[event.key]) {
+        event.preventDefault();
+        moveSelected(...directions[event.key]);
+      }
+    };
+    window.addEventListener('keydown', handleEditShortcut);
+    return () => window.removeEventListener('keydown', handleEditShortcut);
+  }, [deleteSelected, moveSelected, redo, undo]);
 
   return <main className="product-shell project-demo" data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
     <header className="product-hero">
@@ -485,9 +668,11 @@ function ProjectDemoPage() {
         </div>
         <Scene3D
           key="project-demo-scene"
-          scene={scene}
+          scene={currentScene}
           selection={selection}
           onSelect={selectEntity}
+          editMode={editMode}
+          onEditCommand={(command) => Boolean(executeCommand(command))}
           onNavigate={({ selection: nextSelection, presetId, reason }) => {
             if (reason === 'room' && nextSelection?.kind === 'room') jumpToRoom(nextSelection.id);
             else jumpToRoomView(presetId);
@@ -517,19 +702,50 @@ function ProjectDemoPage() {
             <span className="panel__meta">点击空间进入俯视</span>
           </div>
           <div className="project-overview" data-testid="overview-2d">
-            <ScenePlan mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
+            <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
           </div>
         </article>
 
         <article className="panel project-panel project-context" aria-label="当前位置摘要">
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
+          <div className="project-edit__history" aria-label="编辑历史">
+            <button type="button" onClick={undo} disabled={sceneStore.cursor === 0} title="撤销 (Cmd/Ctrl+Z)">撤销</button>
+            <button type="button" onClick={redo} disabled={sceneStore.cursor === sceneStore.commands.length} title="重做 (Shift+Cmd/Ctrl+Z)">重做</button>
+            <span className="project-edit__feedback" data-tone={editFeedback.tone} aria-live="polite">{editFeedback.message}</span>
+          </div>
           {selectedObject && <div className="project-object" data-testid="selected-object-details">
             <div><span>{selectedObject.externalId}</span><strong>{selectedObject.source === 'demo' ? '演示对象' : '企业对象'}</strong></div>
             <dl>
               <div><dt>尺寸</dt><dd>{selectedObject.dimensions.width} × {selectedObject.dimensions.depth} × {selectedObject.dimensions.height} mm</dd></div>
               <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
             </dl>
+            <div className="project-edit" aria-label={`${entityName('object', selectedObject)}编辑工具`}>
+              {(selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">
+                {selectedObject.capabilities.movable && <button type="button" aria-pressed={editMode === 'move'} onClick={() => setEditMode('move')}>移动</button>}
+                {selectedObject.capabilities.rotatable && <button type="button" aria-pressed={editMode === 'rotate'} onClick={() => setEditMode('rotate')}>旋转</button>}
+              </div>}
+              {selectedObject.capabilities.movable && <div className="project-edit__nudge" aria-label="每次移动 100 毫米">
+                <button type="button" aria-label="向北移动 100 毫米" onClick={() => moveSelected(0, -100)}>↑</button>
+                <button type="button" aria-label="向西移动 100 毫米" onClick={() => moveSelected(-100, 0)}>←</button>
+                <span>100 mm</span>
+                <button type="button" aria-label="向东移动 100 毫米" onClick={() => moveSelected(100, 0)}>→</button>
+                <button type="button" aria-label="向南移动 100 毫米" onClick={() => moveSelected(0, 100)}>↓</button>
+              </div>}
+              {selectedObject.capabilities.rotatable && <button className="project-edit__rotate" type="button" onClick={rotateSelected}>顺时针 15°</button>}
+              {selectedObject.capabilities.materialEditable && <div className="project-edit__materials" aria-label="材质">
+                <span>材质</span>
+                {currentScene.materials.filter((material) => materialLabels[material.id]).map((material) => <button key={material.id} type="button" aria-label={`切换为${materialLabels[material.id]}`} aria-pressed={selectedObject.materialId === material.id} onClick={() => executeCommand({ type: 'object.setMaterial', objectId: selectedObject.id, materialId: material.id }, `已切换为${materialLabels[material.id]}`)}><i style={{ background: material.color }} />{materialLabels[material.id]}</button>)}
+              </div>}
+              {selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
+                {Object.entries({ width: '宽', depth: '深', height: '高' }).map(([key, label]) => <label key={key}><span>{label}</span><input aria-label={`${label}度，毫米`} type="number" min="1" step="10" value={dimensionDraft[key]} onInput={(event) => updateDimensionDraft(key, event.currentTarget.value)} onChange={(event) => updateDimensionDraft(key, event.currentTarget.value)} /></label>)}
+                <button type="button" onClick={resizeSelected}>应用尺寸</button>
+              </form>}
+              {(selectedObject.capabilities.deletable || selectedObject.capabilities.duplicable) && <div className="project-edit__object-actions">
+                {selectedObject.capabilities.duplicable && <button type="button" onClick={duplicateSelected}>复制</button>}
+                {selectedObject.capabilities.deletable && <button type="button" onClick={deleteSelected}>删除</button>}
+              </div>}
+            </div>
           </div>}
           <dl className="project-metrics" aria-label="三维运行实测">
             <div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div>
@@ -538,7 +754,7 @@ function ProjectDemoPage() {
             <div><dt>GLB</dt><dd>{assetLoadState.completed}/{assetLoadState.total}{assetLoadState.failed ? ` · ${assetLoadState.failed} 占位` : ''}</dd></div>
           </dl>
           <p>{displaySelectedEntity?.kind === 'object'
-            ? '已定位到所选家具；当前仅查看，编辑能力将在后续 Gate 开放。切换房间视角不会丢失选择。'
+            ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
             : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
       </aside>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowsOutSimple, Crosshair, DoorOpen, HouseLine, SpinnerGap, Wall } from '@phosphor-icons/react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
@@ -16,6 +17,8 @@ import {
 
 const MM = 0.001;
 const MAX_OCCLUDING_SURFACES = 2;
+const assetCache = new Map();
+const safeScale = (target, source) => (Number.isFinite(source) && source > 0.0001 ? target / source : 1);
 function entityFromHit(object) {
   let current = object;
   while (current) {
@@ -212,14 +215,13 @@ function addAssetPlaceholder(world, object, entityRoots) {
 
 async function buildFurniture(world, scene, entityRoots, callbacks) {
   const loader = new GLTFLoader();
-  const cache = new Map();
   let completed = 0;
   let failed = 0;
   callbacks.onLoadState?.({ completed, failed, total: scene.objects.length });
   await Promise.all(scene.objects.map(async (object) => {
     try {
-      if (!cache.has(object.model3D.src)) cache.set(object.model3D.src, loader.loadAsync(object.model3D.src));
-      const gltf = await cache.get(object.model3D.src);
+      if (!assetCache.has(object.model3D.src)) assetCache.set(object.model3D.src, loader.loadAsync(object.model3D.src));
+      const gltf = await assetCache.get(object.model3D.src);
       const asset = gltf.scene.clone(true);
       asset.updateWorldMatrix(true, true);
       const canonicalMeshes = [];
@@ -231,8 +233,8 @@ async function buildFurniture(world, scene, entityRoots, callbacks) {
       const sourceSize = sourceBounds.getSize(new THREE.Vector3());
       const targetWidth = object.dimensions.width * MM;
       const targetDepth = object.dimensions.depth * MM;
-      const uniformScale = Math.min(targetWidth / sourceSize.x, targetDepth / sourceSize.z);
-      asset.scale.setScalar(uniformScale);
+      const targetHeight = object.dimensions.height * MM;
+      asset.scale.set(safeScale(targetWidth, sourceSize.x), safeScale(targetHeight, sourceSize.y), safeScale(targetDepth, sourceSize.z));
       asset.updateWorldMatrix(true, true);
       const scaledBounds = new THREE.Box3().setFromObject(asset);
       const scaledCenter = scaledBounds.getCenter(new THREE.Vector3());
@@ -251,12 +253,23 @@ async function buildFurniture(world, scene, entityRoots, callbacks) {
         child.castShadow = true;
         child.receiveShadow = true;
         child.userData.sourceObjectId = object.id;
-        if (child.material) child.material.envMapIntensity = 0.32;
+        const childMaterials = child.material ? (Array.isArray(child.material) ? child.material : [child.material]) : [];
+        if (childMaterials.length) {
+          child.material = Array.isArray(child.material) ? child.material.map((material) => material.clone()) : child.material.clone();
+          const material = scene.materials.find((candidate) => candidate.id === object.materialId);
+          for (const childMaterial of (Array.isArray(child.material) ? child.material : [child.material])) {
+            childMaterial.envMapIntensity = 0.32;
+            if (material?.color && childMaterial.color && (child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical')) {
+              childMaterial.color.set(material.color);
+            }
+          }
+        }
       });
       root.add(asset);
       world.add(root);
       entityRoots.set(object.id, root);
     } catch (error) {
+      assetCache.delete(object.model3D.src);
       failed += 1;
       addAssetPlaceholder(world, object, entityRoots);
       callbacks.onAssetError?.({ objectId: object.id, message: error instanceof Error ? error.message : 'ASSET_LOAD_FAILED' });
@@ -313,8 +326,17 @@ async function createController(container, scene, callbacks) {
   controls.maxDistance = cameraDistanceLimit('whole_home');
   controls.maxPolarAngle = Math.PI * 0.485;
   controls.screenSpacePanning = true;
+  const transformControls = new TransformControls(camera, renderer.domElement);
+  const transformHelper = transformControls.getHelper();
+  transformHelper.traverse((child) => { child.userData.skipPick = true; });
+  transformControls.setSpace('world');
+  transformControls.setSize(0.82);
+  transformControls.setTranslationSnap(100 * MM);
+  transformControls.setRotationSnap(Math.PI / 12);
+  world.add(transformHelper);
 
   const presets = new Map(scene.cameraPresets.map((preset) => [preset.id, preset]));
+  const objects = new Map(scene.objects.map((object) => [object.id, object]));
   const entityRoots = new Map();
   const textures = await loadTextures(renderer);
   const wallSurfaces = buildArchitecture(world, scene, textures, entityRoots);
@@ -336,6 +358,10 @@ async function createController(container, scene, callbacks) {
   let statsStart = performance.now();
   let pointerStart = null;
   let wallOcclusionEnabled = true;
+  let selectedEntityId = null;
+  let editMode = 'select';
+  let editStart = null;
+  let ignoreCanvasPointerUp = false;
   const sightRay = new THREE.Ray();
   const sightDirection = new THREE.Vector3();
   const sightHit = new THREE.Vector3();
@@ -390,14 +416,87 @@ async function createController(container, scene, callbacks) {
     }
   }
 
+  function syncEditControl() {
+    transformControls.detach();
+    const object = objects.get(selectedEntityId);
+    const root = entityRoots.get(selectedEntityId);
+    if (!object || !root) return;
+    if (editMode === 'move' && object.capabilities.movable) {
+      transformControls.setMode('translate');
+      transformControls.showX = true;
+      transformControls.showY = false;
+      transformControls.showZ = true;
+      transformControls.attach(root);
+    } else if (editMode === 'rotate' && object.capabilities.rotatable) {
+      transformControls.setMode('rotate');
+      transformControls.showX = false;
+      transformControls.showY = true;
+      transformControls.showZ = false;
+      transformControls.attach(root);
+    }
+  }
+
+  const onTransformDragging = (event) => { controls.enabled = !event.value; };
+  const onTransformMouseDown = () => {
+    const root = transformControls.object;
+    if (!root) return;
+    ignoreCanvasPointerUp = true;
+    editStart = { position: root.position.clone(), rotation: root.rotation.clone() };
+  };
+  const onTransformObjectChange = () => {
+    const root = transformControls.object;
+    if (!root || !editStart) return;
+    if (editMode === 'move') root.position.y = editStart.position.y;
+    else {
+      root.rotation.x = editStart.rotation.x;
+      root.rotation.z = editStart.rotation.z;
+    }
+    selectedHelper?.box.setFromObject(root);
+  };
+  const onTransformMouseUp = () => {
+    const root = transformControls.object;
+    if (!root || !editStart) return;
+    const accepted = callbacks.onEditCommand ? callbacks.onEditCommand({
+      type: 'object.setTransform',
+      objectId: root.userData.entityId,
+      transform: {
+        x: Math.round(root.position.x / MM),
+        y: Math.round(root.position.y / MM),
+        z: Math.round(root.position.z / MM),
+        rotationY: -root.rotation.y,
+      },
+    }) : true;
+    if (!accepted) {
+      root.position.copy(editStart.position);
+      root.rotation.copy(editStart.rotation);
+      selectedHelper?.box.setFromObject(root);
+    }
+    editStart = null;
+  };
+  transformControls.addEventListener('dragging-changed', onTransformDragging);
+  transformControls.addEventListener('mouseDown', onTransformMouseDown);
+  transformControls.addEventListener('objectChange', onTransformObjectChange);
+  transformControls.addEventListener('mouseUp', onTransformMouseUp);
+  const onEditKeyDown = (event) => {
+    if (event.key !== 'Escape' || !transformControls.dragging) return;
+    event.preventDefault();
+    transformControls.reset();
+    editStart = null;
+  };
+  window.addEventListener('keydown', onEditKeyDown);
+
   function setSelection(selection) {
+    selectedEntityId = selection?.kind === 'object' ? selection.id : null;
     if (selectedHelper) {
       world.remove(selectedHelper);
       selectedHelper.geometry.dispose();
       selectedHelper.material.dispose();
       selectedHelper = null;
     }
-    if (!selection) return;
+    if (!selection) {
+      syncEditControl();
+      return;
+    }
     const root = entityRoots.get(selection.id);
     if (!root) return;
     const bounds = new THREE.Box3().setFromObject(root);
@@ -406,6 +505,7 @@ async function createController(container, scene, callbacks) {
     selectedHelper.userData.skipPick = true;
     selectedHelper.renderOrder = 9;
     world.add(selectedHelper);
+    syncEditControl();
   }
 
   function switchView(viewId, requestedDuration) {
@@ -460,7 +560,13 @@ async function createController(container, scene, callbacks) {
   const onPointerDown = (event) => { pointerStart = { x: event.clientX, y: event.clientY }; };
   const onPointerUp = (event) => {
     if (!pointerStart) return;
-    if (Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 5) {
+    const start = pointerStart;
+    pointerStart = null;
+    if (ignoreCanvasPointerUp) {
+      ignoreCanvasPointerUp = false;
+      return;
+    }
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) {
       enterFreeView();
       return;
     }
@@ -566,6 +672,10 @@ async function createController(container, scene, callbacks) {
     setWallOcclusionEnabled(enabled) {
       wallOcclusionEnabled = enabled;
     },
+    setEditMode(nextMode) {
+      editMode = ['select', 'move', 'rotate'].includes(nextMode) ? nextMode : 'select';
+      syncEditControl();
+    },
     setSelection,
     dispose() {
       disposed = true;
@@ -574,6 +684,13 @@ async function createController(container, scene, callbacks) {
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('wheel', onWheel);
+      transformControls.removeEventListener('dragging-changed', onTransformDragging);
+      transformControls.removeEventListener('mouseDown', onTransformMouseDown);
+      transformControls.removeEventListener('objectChange', onTransformObjectChange);
+      transformControls.removeEventListener('mouseUp', onTransformMouseUp);
+      window.removeEventListener('keydown', onEditKeyDown);
+      transformControls.detach();
+      transformControls.dispose();
       controls.dispose();
       world.traverse((object) => {
         object.geometry?.dispose?.();
@@ -609,6 +726,8 @@ export default function Scene3D({
   viewRequest,
   onViewEvent,
   onLoadState,
+  editMode = 'select',
+  onEditCommand,
   showHomeView = true,
 }) {
   const mountRef = useRef(null);
@@ -616,8 +735,10 @@ export default function Scene3D({
   const viewRequestRef = useRef(viewRequest);
   viewRequestRef.current = viewRequest;
   const wallOcclusionRef = useRef(true);
-  const callbacksRef = useRef({ onSelect, onNavigate, onStats, onViewEvent, onLoadState });
-  callbacksRef.current = { onSelect, onNavigate, onStats, onViewEvent, onLoadState };
+  const editModeRef = useRef(editMode);
+  editModeRef.current = editMode;
+  const callbacksRef = useRef({ onSelect, onNavigate, onStats, onViewEvent, onLoadState, onEditCommand });
+  callbacksRef.current = { onSelect, onNavigate, onStats, onViewEvent, onLoadState, onEditCommand };
   const [status, setStatus] = useState('loading');
   const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: scene.objects.length });
   const [wallOcclusionEnabled, setWallOcclusionEnabled] = useState(true);
@@ -641,6 +762,7 @@ export default function Scene3D({
         setAssetLoadState(nextState);
         callbacksRef.current.onLoadState?.(nextState);
       },
+      onEditCommand: (...args) => callbacksRef.current.onEditCommand?.(...args),
       onViewEvent: ({ phase, preset }) => {
         setViewState({ id: preset.id, label: preset.label, phase });
         callbacksRef.current.onViewEvent?.({ phase, preset });
@@ -651,6 +773,7 @@ export default function Scene3D({
         controllerRef.current = controller;
         controller.setSelection(selection);
         controller.setWallOcclusionEnabled(wallOcclusionRef.current);
+        controller.setEditMode(editModeRef.current);
         if (viewRequestRef.current?.id) controller.switchView(viewRequestRef.current.id);
         setStatus('ready');
       }
@@ -666,6 +789,7 @@ export default function Scene3D({
   }, [scene]);
 
   useEffect(() => { controllerRef.current?.setSelection(selection); }, [selection]);
+  useEffect(() => { controllerRef.current?.setEditMode(editMode); }, [editMode]);
   useEffect(() => {
     if (viewRequest?.id) controllerRef.current?.switchView(viewRequest.id);
   }, [viewRequest]);
@@ -704,8 +828,10 @@ export default function Scene3D({
       <button type="button" aria-pressed={viewState.id === 'free'} onClick={chooseFree}><ArrowsOutSimple size={16} /><span>自由</span></button>
       <button type="button" aria-label="观察时自动关闭遮挡墙壁" aria-pressed={wallOcclusionEnabled} onClick={toggleWallOcclusion}><Wall size={16} /><span>自动剖切</span></button>
     </nav>}
-    <p className="scene3d__hint">{activeRoomId
-      ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。')
-      : '点击房间地面，镜头会先飞到该房间的三维俯视。'}</p>
+    <p className="scene3d__hint">{selection?.kind === 'object' && ['move', 'rotate'].includes(editMode)
+      ? `${editMode === 'move' ? '移动按 100 mm 吸附' : '旋转按 15° 吸附'}；按 Esc 取消本次拖动。`
+      : (activeRoomId
+        ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。')
+        : '点击房间地面，镜头会先飞到该房间的三维俯视。')}</p>
   </div>;
 }

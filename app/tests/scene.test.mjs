@@ -14,12 +14,15 @@ import {
 } from '../src/domain/camera-transition.js';
 import { pointInPolygon, rotatedFootprint } from '../src/domain/geometry.js';
 import { projectScene2D } from '../src/domain/projection.js';
+import { objectNavigationPreset } from '../src/domain/view-state.js';
 import {
   assertValidScene,
   createSceneStore,
   deserializeScene,
   dispatchSceneCommand,
+  redoSceneCommand,
   serializeScene,
+  undoSceneCommand,
   validateScene,
 } from '../src/domain/scene.js';
 
@@ -95,6 +98,34 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
   }
 });
 
+test('Gate 5 duplicate, resize, delete, undo, and redo stay command-driven', () => {
+  const initial = createSceneStore(createDemoScene());
+  const duplicated = dispatchSceneCommand(initial, {
+    type: 'object.duplicate',
+    objectId: 'object-sofa',
+    newObjectId: 'object-sofa-copy-test',
+    externalId: 'DEMO-FURN-001-COPY-TEST',
+    transform: { x: 2200, y: 0, z: 6800, rotationY: 0 },
+  });
+  assert.equal(duplicated.currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), true);
+
+  const resized = dispatchSceneCommand(duplicated, {
+    type: 'object.setDimensions',
+    objectId: 'object-sofa-copy-test',
+    dimensions: { width: 2000, depth: 800, height: 780 },
+  });
+  assert.deepEqual(
+    resized.currentScene.objects.find((object) => object.id === 'object-sofa-copy-test').dimensions,
+    { width: 2000, depth: 800, height: 780 },
+  );
+
+  const deleted = dispatchSceneCommand(resized, { type: 'object.delete', objectId: 'object-sofa-copy-test' });
+  assert.equal(deleted.currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), false);
+  const restored = undoSceneCommand(deleted);
+  assert.equal(restored.currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), true);
+  assert.equal(redoSceneCommand(restored).currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), false);
+});
+
 test('scene round trip is byte-identical and deserialized scenes are frozen', () => {
   const scene = createDemoScene();
   const serialized = serializeScene(scene);
@@ -147,6 +178,14 @@ test('camera presets provide whole-home, room-overhead, entry, and feature views
     assert.equal(preset.target.x, object.transform.x);
     assert.equal(preset.target.z, object.transform.z);
   }
+});
+
+test('movable objects open in an editable overhead while fixed objects keep their feature view', () => {
+  const scene = createDemoScene();
+  assert.equal(objectNavigationPreset(scene, scene.objects.find((object) => object.id === 'object-sofa')).id, 'camera-living-overhead');
+  assert.equal(objectNavigationPreset(scene, scene.objects.find((object) => object.id === 'object-flex-desk')).id, 'camera-flex-overhead');
+  assert.equal(objectNavigationPreset(scene, scene.objects.find((object) => object.id === 'object-dining-table')).id, 'camera-living-dining');
+  assert.equal(objectNavigationPreset(scene, scene.objects.find((object) => object.id === 'object-tv-console')).id, 'camera-living-feature');
 });
 
 test('room entry cameras never start inside furniture footprints', () => {
