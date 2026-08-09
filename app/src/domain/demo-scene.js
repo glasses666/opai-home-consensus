@@ -178,7 +178,7 @@ const cameraPresets = [
     kind: 'room_entry',
     label: '入口',
     position: { x: 3200, y: 1650, z: 3000 },
-    target: { x: 1900, y: 720, z: 1500 },
+    target: { x: 1600, y: 720, z: 1700 },
     fov: 52,
   },
   {
@@ -247,7 +247,7 @@ const cameraPresets = [
     kind: 'object_feature',
     label: '衣柜立面',
     position: { x: 900, y: 1500, z: 1600 },
-    target: { x: 3500, y: 1200, z: 1600 },
+    target: { x: 3500, y: 1200, z: 1200 },
     fov: 45,
   },
   {
@@ -367,8 +367,8 @@ export function createDemoScene() {
       { id: 'opening-kitchen-window', kind: 'window', hostSurfaceId: 'surface-wall-kitchen-east', offset: 600, width: 1200, height: 1200, sillHeight: 1000, materialId: 'mat-wall-warm-white', connectsExterior: true, ruleIds: ['rule-opening-clearance'] },
     ],
     objects: [
-      { id: 'object-primary-bed', externalId: 'DEMO-FURN-002', source: 'demo', name: 'Double Bed', category: 'bed', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-overhead', dimensions: { width: 1800, depth: 2000, height: 1050 }, transform: { x: 1900, y: 0, z: 1500, rotationY: 0 }, media2D: media2D('double-bed-top.png'), model3D: model3D('double-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600'] },
-      { id: 'object-primary-wardrobe', externalId: 'DEMO-CAB-002', source: 'demo', name: 'Wardrobe', category: 'fixed-cabinet', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-wardrobe', dimensions: { width: 2400, depth: 600, height: 2400 }, transform: { x: 3600, y: 0, z: 1600, rotationY: Math.PI / 2 }, media2D: media2D('wardrobe-v2-top.png'), model3D: model3D('wardrobe.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
+      { id: 'object-primary-bed', externalId: 'DEMO-FURN-002', source: 'demo', name: 'Double Bed', category: 'bed', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-overhead', dimensions: { width: 1800, depth: 2000, height: 1050 }, transform: { x: 1500, y: 0, z: 1800, rotationY: 0 }, media2D: media2D('double-bed-top.png'), model3D: model3D('double-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600'] },
+      { id: 'object-primary-wardrobe', externalId: 'DEMO-CAB-002', source: 'demo', name: 'Wardrobe', category: 'fixed-cabinet', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-wardrobe', dimensions: { width: 2400, depth: 600, height: 2400 }, transform: { x: 3600, y: 0, z: 1200, rotationY: Math.PI / 2 }, media2D: media2D('wardrobe-v2-top.png'), model3D: model3D('wardrobe.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
       { id: 'object-flex-bed', externalId: 'DEMO-FURN-003', source: 'demo', name: 'Single Daybed', category: 'bed', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-overhead', dimensions: { width: 1200, depth: 2000, height: 900 }, transform: { x: 7700, y: 0, z: 1500, rotationY: 0 }, media2D: media2D('single-bed-top.png'), model3D: model3D('single-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600'] },
       { id: 'object-flex-desk', externalId: 'DEMO-FURN-004', source: 'demo', name: 'Writing Desk', category: 'desk', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 1400, depth: 650, height: 740 }, transform: { x: 10500, y: 0, z: 1600, rotationY: Math.PI / 2 }, media2D: media2D('desk-top.png'), model3D: model3D('desk.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
       { id: 'object-sofa', externalId: 'DEMO-FURN-001', source: 'demo', name: 'Sofa', category: 'sofa', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-sofa', dimensions: { width: 2200, depth: 900, height: 820 }, transform: { x: 2200, y: 0, z: 5600, rotationY: 0 }, media2D: media2D('sofa-top.png'), model3D: model3D('sofa.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
@@ -381,8 +381,8 @@ export function createDemoScene() {
       { id: 'clearance-entry-route', roomId: 'room-entry', kind: 'circulation', label: '入户主通道', valueMm: 1100, minimumMm: 900, polygon: rectangle(8200, 5750, 1100, 2050), ruleIds: ['rule-main-circulation-900'] },
       { id: 'clearance-living-route', roomId: 'room-living-dining', kind: 'circulation', label: '客餐厅主通道', valueMm: 1200, minimumMm: 900, polygon: rectangle(4000, 4300, 1200, 3300), ruleIds: ['rule-main-circulation-900'] },
       { id: 'clearance-kitchen-aisle', roomId: 'room-kitchen', kind: 'work-aisle', label: '厨房操作通道', valueMm: 1100, minimumMm: 1000, polygon: rectangle(7800, 4100, 3000, 1100), ruleIds: ['rule-kitchen-aisle-1000'] },
-      { id: 'clearance-primary-bedside', roomId: 'room-primary-bedroom', kind: 'bedside-clearance', label: '床侧净距', valueMm: 700, minimumMm: 600, polygon: rectangle(300, 500, 700, 2000), ruleIds: ['rule-bedside-600'] },
-      { id: 'clearance-primary-wardrobe', roomId: 'room-primary-bedroom', kind: 'cabinet-front-clearance', label: '衣柜柜前净距', valueMm: 900, minimumMm: 900, polygon: rectangle(2400, 400, 900, 2400), ruleIds: ['rule-cabinet-front-900'] },
+      { id: 'clearance-primary-bedside', roomId: 'room-primary-bedroom', kind: 'bedside-clearance', label: '床侧净距', valueMm: 600, minimumMm: 600, polygon: rectangle(0, 800, 600, 2000), ruleIds: ['rule-bedside-600'] },
+      { id: 'clearance-primary-wardrobe', roomId: 'room-primary-bedroom', kind: 'cabinet-front-clearance', label: '衣柜柜前净距', valueMm: 900, minimumMm: 900, polygon: rectangle(2400, 0, 900, 2400), ruleIds: ['rule-cabinet-front-900'] },
     ],
   };
 }

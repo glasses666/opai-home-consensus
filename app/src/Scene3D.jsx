@@ -991,7 +991,7 @@ export default function Scene3D({
     <p className="scene3d__hint">{selection?.kind === 'object' && ['move', 'rotate'].includes(editMode)
       ? `${editMode === 'move' ? '移动按 100 mm 吸附' : '旋转按 15° 吸附'}；按 Esc 取消本次拖动。`
       : (activeRoomId
-        ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '切换俯视、入口或主功能面；拖动旋转，滚轮缩放。')
+        ? (viewState.id === 'free' ? '自由操控已开启；拖动旋转，滚轮缩放，距离会保持在当前房间范围内。' : '点家具可选择编辑；切换俯视、入口或主功能面，拖动旋转，滚轮缩放。')
         : '点击房间地面，镜头会先飞到该房间的三维俯视。')}</p>
   </div>;
 }

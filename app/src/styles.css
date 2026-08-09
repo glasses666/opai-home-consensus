@@ -165,6 +165,20 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .project-overview .cad-room-label { font-size: 320px; font-weight: 650; }
 .project-overview .cad-room-meta { font-size: 160px; }
 .project-context { padding: 16px; overflow-y: auto; }
+.project-room-brief { display: grid; gap: 5px; margin: -2px 0 14px; padding: 12px; border: 1px solid #ded3c7; border-radius: 11px; background: linear-gradient(145deg, #f5eee5, #fffdf8); box-shadow: inset 3px 0 0 #8d5c46; }
+.project-room-brief > span { color: #8d5c46; font-size: 8px; font-weight: 760; letter-spacing: .1em; text-transform: uppercase; }
+.project-room-brief > strong { font-family: var(--display-font); font-size: 15px; font-weight: 560; }
+.project-room-brief > p { margin: 0; color: #6d675f; font-size: 9px; line-height: 1.5; }
+.project-room-brief > div { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.project-room-brief small { padding: 4px 6px; border-radius: 999px; background: #ebe5dc; color: #625f57; font-size: 7px; }
+.project-room-brief__shortcuts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.project-room-brief__shortcuts button { border: 1px solid #d4c6b5; border-radius: 999px; background: #fff; color: #5a4635; font-size: 9px; font-weight: 700; padding: 6px 10px; }
+.project-room-brief__shortcuts button:hover { background: #f7f1e8; border-color: #b89a7d; }
+.version-impact-details { display: grid; gap: 6px; }
+.version-impact-details p { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; margin: 0; padding: 8px 9px; border: 1px solid #e2dbd1; border-radius: 8px; background: #fffdf8; }
+.version-impact-details strong, .version-impact-details span { font-size: 9px; }
+.version-impact-details span { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.version-impact-details small { grid-column: 1 / -1; color: var(--muted); font-size: 7px; }
 .agent-sidecar { display: flex; min-height: 0; flex-direction: column; overflow: hidden; }
 .agent-sidecar__header { display: flex; min-height: 66px; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--line); background: #fbf9f4; }
 .agent-sidecar__identity { display: flex; min-width: 0; align-items: center; gap: 9px; }

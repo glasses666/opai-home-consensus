@@ -13,7 +13,7 @@ import {
   sceneStoreForVersion,
   serializeVersionHistory,
 } from './domain/design-version.js';
-import { evaluateDesignRules } from './domain/design-rules.js';
+import { evaluateDesignRules, filterDesignRuleChecksForRoom } from './domain/design-rules.js';
 import {
   addHouseholdOpinion,
   chooseConsensusDirection,
@@ -52,7 +52,7 @@ const roomLabels = {
 };
 
 const roomLabelPositions = {
-  'room-primary-bedroom': { x: 1900, y: 1700 },
+  'room-primary-bedroom': { x: 2850, y: 2750 },
   'room-bathroom': { x: 5200, y: 1200 },
   'room-flex': { x: 8650, y: 1700 },
   'room-hall': { x: 5200, y: 3300 },
@@ -77,6 +77,18 @@ const materialLabels = {
   'mat-door-warm-white': '暖白',
   'mat-fabric-warm-gray': '暖灰织物',
   'mat-oak-veneer': '浅橡木',
+};
+const roomBriefs = {
+  'room-primary-bedroom': {
+    kicker: '主卧设计任务',
+    title: '睡眠与收纳互不让步',
+    summary: '同一 4.0 × 3.2 m 房间里，同时保护床侧通行、衣柜使用和入门开启。',
+    checks: ['床侧 ≥ 600 mm', '柜前 ≥ 900 mm', '门扇可开启'],
+    shortcuts: [
+      { label: '床', objectId: 'object-primary-bed' },
+      { label: '衣柜', objectId: 'object-primary-wardrobe' },
+    ],
+  },
 };
 const versionStatusLabels = {
   drafting: '草拟中',
@@ -133,8 +145,8 @@ const newReviewChecks = (before, after, objectIds) => {
   return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
-const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v1';
-const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v1';
+const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v2';
+const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v2';
 const opinionStanceLabels = {
   support: '支持',
   oppose: '反对',
@@ -657,17 +669,25 @@ function ProjectDemoPage() {
   const visibleRuleChecks = useMemo(() => {
     const relevant = selectedObject
       ? designEvaluation.checks.filter((check) => check.objectIds.includes(selectedObject.id))
-      : designEvaluation.violations;
+      : activeRoomId
+        ? filterDesignRuleChecksForRoom(currentScene, designEvaluation.checks, activeRoomId)
+        : designEvaluation.violations;
     return relevant
       .sort((a, b) => ['blocked', 'warning', 'recommendation', 'passed'].indexOf(a.status) - ['blocked', 'warning', 'recommendation', 'passed'].indexOf(b.status))
       .slice(0, 4);
-  }, [designEvaluation, selectedObject]);
+  }, [activeRoomId, currentScene, designEvaluation, selectedObject]);
   const currentViewLabel = displayViewId === 'free'
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
-  const agentTargetLabel = selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发';
-  const agentQuickPrompts = [`${agentTargetLabel}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
+  const roomBrief = activeRoomId ? roomBriefs[activeRoomId] : null;
+  const agentQuickPrompts = activeRoomId === 'room-primary-bedroom'
+    ? selectedObject?.id === 'object-primary-bed'
+      ? ['双人床向左移动10厘米', '检查双人床床侧净距', '对比上一版变化']
+      : selectedObject?.id === 'object-primary-wardrobe'
+        ? ['衣柜改成暖白色', '检查衣柜柜前净距', '对比上一版变化']
+        : ['检查主卧当前规则', '把衣柜改成暖白色', '对比上一版变化']
+    : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
   const namedDiffs = useMemo(() => versionDiff.objectDiffs.map((diff) => ({
     ...diff,
     label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
@@ -1364,7 +1384,7 @@ function ProjectDemoPage() {
               <p className="panel__kicker">2D 同步总览</p>
               <h2 className="panel__title">当前户型与布置</h2>
             </div>
-            <span className="panel__meta">点击空间进入俯视</span>
+            <span className="panel__meta">点房间进入 · 点家具选择</span>
           </div>
           <div className="project-overview" data-testid="overview-2d">
             <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
@@ -1372,6 +1392,16 @@ function ProjectDemoPage() {
         </article>
 
         <article className="panel project-panel project-context" aria-label="当前位置摘要">
+          {roomBrief && <section className="project-room-brief" aria-label={roomBrief.kicker}>
+            <span>{roomBrief.kicker}</span><strong>{roomBrief.title}</strong><p>{roomBrief.summary}</p>
+            <div>{roomBrief.checks.map((check) => <small key={check}>{check}</small>)}</div>
+            {roomBrief.shortcuts && <div className="project-room-brief__shortcuts" aria-label="房间内快捷对象">
+              {roomBrief.shortcuts.map((shortcut) => {
+                const object = currentScene.objects.find((candidate) => candidate.id === shortcut.objectId);
+                return object ? <button key={shortcut.objectId} type="button" onClick={() => jumpToObject(object)}>{shortcut.label}</button> : null;
+              })}
+            </div>}
+          </section>}
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
           <div className="project-edit__history" aria-label="编辑历史">
@@ -1480,7 +1510,7 @@ function ProjectDemoPage() {
           </div>}
 
           <form className="agent-composer" onSubmit={submitAgentPrompt}>
-            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentTargetLabel}向右移动20厘米`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
+            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
             <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
           </form>
           <footer className="agent-sidecar__footer">工具调用 → 确定性规则 → SceneCommand → 版本；Agent 不直接写 geometry JSON，也不会代你确认。</footer>
@@ -1588,6 +1618,11 @@ function ProjectDemoPage() {
             <div><dt>规则变化</dt><dd>{versionDiff.ruleDiffs.length}</dd></div>
             <div><dt>未决项</dt><dd>{versionDiff.impact.unresolved.length}</dd></div>
           </dl>
+          {versionDiff.impact.impacts.length > 0 && <div className="version-impact-details" aria-label="可计算影响明细">
+            {versionDiff.impact.impacts.slice(0, 4).map((impact) => impact.kind === 'clearance'
+              ? <p key={impact.clearanceZoneId}><strong>{impact.label}</strong><span>{impact.beforeAvailableMm} → {impact.afterAvailableMm} mm</span><small>保护区占用 · demo</small></p>
+              : <p key={impact.kind}><strong>柜体收纳估算</strong><span>{impact.beforeM3} → {impact.afterM3} m³</span><small>按外包围盒 · source: {impact.source}</small></p>)}
+          </div>}
           {versionDiff.impact.unresolved.length > 0 && <div className="version-unresolved"><strong>仍不能确定</strong>{versionDiff.impact.unresolved.slice(0, 3).map((item) => <p key={`${item.code}-${item.objectId ?? ''}`}>{item.reason}<small>source: {item.source ?? 'estimate'}</small></p>)}</div>}
           <button className="version-restore" type="button" onClick={restoreComparedVersion} disabled={compareFromVersion.id === currentVersion.id || hasUnsavedChanges || Boolean(pendingReview)}><ClockCounterClockwise size={15} />以 {compareFromVersion.label} 继续，创建新版本</button>
         </section>

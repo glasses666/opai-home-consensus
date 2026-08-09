@@ -298,6 +298,18 @@ export function evaluateDesignRules(scene) {
   };
 }
 
+export function filterDesignRuleChecksForRoom(scene, checks, roomId) {
+  const objectIds = new Set((scene?.objects ?? []).filter((object) => object.roomId === roomId).map((object) => object.id));
+  const clearanceIds = new Set((scene?.clearanceZones ?? []).filter((zone) => zone.roomId === roomId).map((zone) => zone.id));
+  const surfaceIds = new Set((scene?.surfaces ?? []).filter((surface) => surface.roomId === roomId).map((surface) => surface.id));
+  const openingIds = new Set((scene?.openings ?? []).filter((opening) => surfaceIds.has(opening.hostSurfaceId)).map((opening) => opening.id));
+  return checks.filter((check) => (
+    check.objectIds.some((id) => objectIds.has(id)) ||
+    clearanceIds.has(check.clearanceZoneId) ||
+    openingIds.has(check.openingId)
+  ));
+}
+
 /** @param {unknown} scene */
 export function assertDesignRules(scene) {
   const result = evaluateDesignRules(scene);

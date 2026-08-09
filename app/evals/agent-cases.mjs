@@ -43,7 +43,7 @@ export const AGENT_EVAL_CASES = Object.freeze([
     group: 'tool_selection',
     input: '向左移动10厘米',
     selectedObjectId: 'object-primary-bed',
-    expect: [CHECKS.local, CHECKS.stepsOk, ({ result }) => object(result.store, 'object-primary-bed').transform.x === 1800],
+    expect: [CHECKS.local, CHECKS.stepsOk, ({ result }) => object(result.store, 'object-primary-bed').transform.x === 1400],
   },
   {
     id: 'local-rotate-table',

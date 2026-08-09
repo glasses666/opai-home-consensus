@@ -1,7 +1,7 @@
 import { dispatchSceneCommand } from '../domain/scene.js';
 import { demoCatalogPlugin } from '../catalog/demo-catalog.js';
 import { compareVersionHistory } from '../domain/design-version.js';
-import { evaluateDesignRules } from '../domain/design-rules.js';
+import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/design-rules.js';
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
@@ -52,7 +52,7 @@ export const TOOL_REGISTRY = [
   { name: 'search_catalog', writes: false, requiredArgs: [], optionalArgs: ['query', 'category', 'kind', 'appliesTo', 'limit'], description: '搜索合成组件目录；价格和工期均为 estimate。' },
   { name: 'inspect_catalog_item', writes: false, requiredArgs: ['catalogItemId'], description: '读取目录项、约束、来源与 sceneReady 状态。' },
   { name: 'request_clarification', writes: false, requiredArgs: ['question'], optionalArgs: ['reason', 'options'], description: '信息不足时只追问一个关键问题。' },
-  { name: 'check_rules', writes: false, requiredArgs: [], optionalArgs: ['objectId'], description: '读取当前场景的确定性规则状态。' },
+  { name: 'check_rules', writes: false, requiredArgs: [], optionalArgs: ['objectId', 'roomId'], description: '读取当前对象、房间或场景的确定性规则状态。' },
   { name: 'compare_versions', writes: false, requiredArgs: ['beforeVersionId'], optionalArgs: ['afterVersionId'], description: '比较两个已保存版本的真实对象差异与影响。' },
   { name: 'request_confirmation', writes: false, requiredArgs: [], optionalArgs: ['versionId', 'message'], description: '请求住户确认当前版本；工具不直接代替住户确认。' },
   { name: 'move_object', writes: true, requiredArgs: ['objectId'], optionalArgs: ['x', 'z', 'dx', 'dz'], description: '移动已有可移动对象，单位为整数毫米。' },
@@ -178,6 +178,10 @@ function selectedOrNamedSurfaceId(input, selectedObjectId) {
   return SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? selected;
 }
 
+function namedRoomId(input) {
+  return ROOM_NOUNS.find(([pattern]) => pattern.test(input))?.[1] ?? null;
+}
+
 function previousVersionId(versionHistory) {
   if (!versionHistory?.versions?.length) return null;
   const currentIndex = versionHistory.versions.findIndex((version) => version.id === versionHistory.currentVersionId);
@@ -233,7 +237,8 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
   }
 
   if (/(规则|是否合法|能不能|会不会挡|检查)/.test(text)) {
-    return [{ tool: 'check_rules', args: objectId ? { objectId } : {} }];
+    const roomId = namedRoomId(text);
+    return [{ tool: 'check_rules', args: objectId ? { objectId } : roomId ? { roomId } : {} }];
   }
 
   if (!objectId) return [];
@@ -417,12 +422,26 @@ async function executeTool(store, call, { catalogPlugin, versionHistory }) {
   }
   if (tool === 'check_rules') {
     const objectId = optionalString(args, 'objectId');
+    const roomId = optionalString(args, 'roomId');
+    if (roomId && !findById(store.currentScene.rooms, roomId)) throw new Error(`ROOM_NOT_FOUND: ${roomId}`);
     const evaluation = evaluateDesignRules(store.currentScene);
+    const checks = objectId
+      ? evaluation.checks.filter((check) => check.objectIds.includes(objectId))
+      : roomId
+        ? filterDesignRuleChecksForRoom(store.currentScene, evaluation.checks, roomId)
+        : evaluation.violations;
+    const status = checks.some((check) => check.status === 'blocked')
+      ? 'blocked'
+      : checks.some((check) => check.status === 'warning')
+        ? 'warning'
+        : checks.some((check) => check.status === 'recommendation')
+          ? 'recommendation'
+          : 'passed';
     return {
       store,
       result: stableJsonValue({
-        status: evaluation.status,
-        checks: (objectId ? evaluation.checks.filter((check) => check.objectIds.includes(objectId)) : evaluation.violations).slice(0, 6),
+        status,
+        checks: checks.slice(0, 6),
         source: 'demo',
       }),
     };
