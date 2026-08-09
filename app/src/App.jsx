@@ -58,6 +58,38 @@ const materialLabels = {
   'mat-oak-veneer': '浅橡木',
 };
 const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
+const editErrorMessages = [
+  [/OBJECT_FOOTPRINT_OUTSIDE_ROOM/, '这件家具已经压出所属房间了，请往房间内侧移动一点。'],
+  [/CLEARANCE_OCCUPIED/, '这里会占用必要通行或使用净距，请给动线和开门留出空间。'],
+  [/OBJECT_COLLISION/, '这里会和另一件家具重叠，请错开一点再放。'],
+  [/DOOR_SWING_OCCUPIED/, '这里挡到了门扇开启范围，请避开门的开启弧线。'],
+  [/ROOM_BOUNDARY/, '这件家具需要完整留在当前房间边界内。'],
+  [/OBJECT_NOT_MOVABLE/, '这个对象属于固定构件，不能直接移动。'],
+  [/OBJECT_NOT_ROTATABLE/, '这个对象当前不允许旋转。'],
+  [/OBJECT_MATERIAL_LOCKED/, '这个对象的材质由当前方案锁定，不能直接更换。'],
+  [/OBJECT_PARAMETERS_LOCKED/, '这个对象的尺寸由当前方案锁定，不能直接改参数。'],
+];
+
+const normalizeEditError = (error) => {
+  const raw = error instanceof Error ? error.message : '未知错误';
+  const stripped = raw.replace(/^DESIGN_RULE_BLOCKED: /, '');
+  const match = editErrorMessages.find(([pattern]) => pattern.test(stripped));
+  return match ? match[1] : stripped;
+};
+const reviewableRuleStatuses = new Set(['warning', 'recommendation']);
+const ruleReviewKey = (check) => [
+  check.status,
+  check.code,
+  check.ruleId,
+  [...check.objectIds].sort().join(','),
+  check.message,
+  check.valueMm ?? '',
+].join('|');
+const newReviewChecks = (before, after) => {
+  const beforeKeys = new Set(before.checks.filter((check) => reviewableRuleStatuses.has(check.status)).map(ruleReviewKey));
+  return after.checks.filter((check) => reviewableRuleStatuses.has(check.status) && !beforeKeys.has(ruleReviewKey(check)));
+};
+const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
 
 const entityKinds = { room: '房间', object: '家具', opening: '门窗', surface: '表面' };
 const modeOptions = [
@@ -376,6 +408,7 @@ function ProjectDemoPage() {
   const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: currentScene.objects.length });
   const [editMode, setEditMode] = useState('move');
   const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
+  const [pendingReview, setPendingReview] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
@@ -493,13 +526,25 @@ function ProjectDemoPage() {
 
   const executeCommand = useCallback((command, successMessage = '修改已应用') => {
     try {
+      const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
       const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
+      const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
+      const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
-      setEditFeedback({ tone: 'success', message: successMessage });
+      if (reviewChecks.length) {
+        setPendingReview({
+          checks: reviewChecks.slice(0, 3),
+          status: topRuleStatus(reviewChecks),
+        });
+        setEditFeedback({ tone: 'warning', message: '已生成待确认预览：有规范提醒，保留前请确认代价。' });
+      } else {
+        setPendingReview(null);
+        setEditFeedback({ tone: 'success', message: successMessage });
+      }
       return nextStore;
     } catch (error) {
-      const message = error instanceof Error ? error.message.replace(/^DESIGN_RULE_BLOCKED: /, '') : '未知错误';
+      const message = normalizeEditError(error);
       setEditFeedback({ tone: 'error', message: `未应用：${message}` });
       return null;
     }
@@ -510,6 +555,7 @@ function ProjectDemoPage() {
       const nextStore = undoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setPendingReview(null);
       setEditFeedback({ tone: 'success', message: '已撤销上一步' });
     } catch {
       setEditFeedback({ tone: 'error', message: '没有可撤销的修改' });
@@ -521,6 +567,7 @@ function ProjectDemoPage() {
       const nextStore = redoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setPendingReview(null);
       setEditFeedback({ tone: 'success', message: '已重做下一步' });
     } catch {
       setEditFeedback({ tone: 'error', message: '没有可重做的修改' });
@@ -615,6 +662,11 @@ function ProjectDemoPage() {
 
   const updateDimensionDraft = (key, value) => {
     setDimensionDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const keepPendingReview = () => {
+    setPendingReview(null);
+    setEditFeedback({ tone: 'success', message: '已保留预览；这些提醒会作为 demo 规则边界继续显示。' });
   };
 
   useEffect(() => {
