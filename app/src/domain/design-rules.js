@@ -14,6 +14,29 @@ const statusForLevel = (level) => {
 };
 const roomById = (scene) => new Map((scene?.rooms ?? []).map((room) => [room.id, room]));
 const surfaceById = (scene) => new Map((scene?.surfaces ?? []).map((surface) => [surface.id, surface]));
+const ruleMeta = (rule, fallbackApplicability) => ({
+  source: rule?.source ?? 'demo',
+  applicability: rule?.applicability ?? fallbackApplicability,
+});
+const objectLabels = new Map([
+  ['object-primary-bed', '双人床'],
+  ['object-primary-wardrobe', '衣柜'],
+  ['object-flex-bed', '单人床'],
+  ['object-flex-desk', '书桌'],
+  ['object-sofa', '沙发'],
+  ['object-tv-console', '电视柜'],
+  ['object-dining-table', '餐桌'],
+  ['object-kitchen-counter', '橱柜'],
+  ['object-shoe-cabinet', '鞋柜'],
+]);
+const categoryLabels = {
+  bed: '床',
+  desk: '书桌',
+  sofa: '沙发',
+  'dining-table': '餐桌',
+  'fixed-cabinet': '柜体',
+};
+const labelFor = (object) => objectLabels.get(object.id) ?? categoryLabels[object.category] ?? object.name;
 
 const passed = (code, ruleId, message, extra = {}) => ({
   code,
@@ -82,7 +105,7 @@ const footprintNearRoomEdge = (object, room, maximumMm) => {
  * relationships that can change after a legal SceneCommand.
  *
  * @param {unknown} scene
- * @returns {{ok:boolean,status:'passed'|'warning'|'blocked',checks:Array<{code:string,status:string,level:string,ruleId:string,objectIds:string[],message:string}>,violations:Array<{code:string,status:string,level:string,ruleId:string,objectIds:string[],message:string}>}}
+ * @returns {{ok:boolean,status:'passed'|'recommendation'|'warning'|'blocked',checks:Array<{code:string,status:string,level:string,ruleId:string,objectIds:string[],message:string,source?:string,applicability?:string,suggestion?:string}>,violations:Array<{code:string,status:string,level:string,ruleId:string,objectIds:string[],message:string,source?:string,applicability?:string,suggestion?:string}>}}
  */
 export function evaluateDesignRules(scene) {
   const checks = [];
@@ -99,10 +122,14 @@ export function evaluateDesignRules(scene) {
         'hard_block',
         'rule-room-boundary',
         [object.id],
-        `${object.name} 超出所属房间边界。`,
+        `${labelFor(object)}超出所属房间边界。`,
+        {
+          ...ruleMeta(rules.get('rule-room-boundary'), '演示户型：家具不得越出所属房间'),
+          suggestion: `把${labelFor(object)}向房间中心移动，直到完整占用框回到墙体内侧。`,
+        },
       ));
     } else {
-      checks.push(passed('ROOM_BOUNDARY', 'rule-room-boundary', `${object.name} 位于所属房间内。`, { objectIds: [object.id] }));
+      checks.push(passed('ROOM_BOUNDARY', 'rule-room-boundary', `${labelFor(object)}位于所属房间内。`, { objectIds: [object.id] }));
     }
   }
 
@@ -118,7 +145,12 @@ export function evaluateDesignRules(scene) {
         'hard_block',
         'deterministic:object-collision',
         [a.id, b.id].sort(),
-        `${a.name} 与 ${b.name} 发生碰撞，请留出实际占用空间。`,
+        `${labelFor(a)} 与 ${labelFor(b)} 发生碰撞，请留出实际占用空间。`,
+        {
+          source: 'demo',
+          applicability: '演示户型：同房间家具占用框不得重叠',
+          suggestion: '移动其中一件家具，直到两个俯视占用框不再重叠。',
+        },
       ));
     }
   }
@@ -136,11 +168,13 @@ export function evaluateDesignRules(scene) {
         level,
         rule?.id ?? 'deterministic:clearance',
         [object.id],
-        `${object.name} 侵占“${zone.label}”，要求至少保留 ${zone.minimumMm} mm。`,
+        `${labelFor(object)}侵占“${zone.label}”，要求至少保留 ${zone.minimumMm} mm。`,
         {
+          ...ruleMeta(rule, `演示户型：${zone.label}需保持保护净距`),
           clearanceZoneId: zone.id,
           minimumMm: zone.minimumMm,
           valueMm: zone.valueMm,
+          suggestion: `把${labelFor(object)}移出“${zone.label}”保护区，保留至少 ${zone.minimumMm} mm 净距。`,
         },
       ));
     }
@@ -169,8 +203,12 @@ export function evaluateDesignRules(scene) {
         level,
         rule?.id ?? 'rule-opening-clearance',
         [object.id],
-        `${object.name} 侵占门扇开启范围。`,
-        { openingId: opening.id },
+        `${labelFor(object)}侵占门扇开启范围。`,
+        {
+          ...ruleMeta(rule, '演示户型：门扇开启弧线需保持可用'),
+          openingId: opening.id,
+          suggestion: '把对象移到门扇开启弧线外，保证门可以完整打开。',
+        },
       ));
     }
     if (!occupied) {
@@ -192,7 +230,13 @@ export function evaluateDesignRules(scene) {
         tvRule?.id ?? 'rule-tv-distance-1800-3600',
         [sofa.id, tv.id],
         `沙发到电视约 ${viewingDistance} mm，建议保持 1800–3600 mm，观看更舒服。`,
-        { valueMm: viewingDistance, minimumMm: 1800, maximumMm: 3600 },
+        {
+          ...ruleMeta(tvRule, '演示舒适性：沙发与电视保持舒适观看距离'),
+          valueMm: viewingDistance,
+          minimumMm: 1800,
+          maximumMm: 3600,
+          suggestion: '调整沙发或电视柜位置，让观看距离回到 1800–3600 mm。',
+        },
       ));
     } else {
       checks.push(passed('TV_VIEWING_DISTANCE', tvRule?.id ?? 'rule-tv-distance-1800-3600', `沙发到电视约 ${viewingDistance} mm，观看距离合适。`, {
@@ -212,10 +256,14 @@ export function evaluateDesignRules(scene) {
         levelForRule(antitipRule),
         antitipRule?.id ?? 'rule-tall-storage-anchored',
         [object.id],
-        `${object.name} 较高，儿童家庭建议固定或防倾倒，不应作为可自由移动家具。`,
+        `${labelFor(object)}较高，儿童家庭建议固定或防倾倒，不应作为可自由移动家具。`,
+        {
+          ...ruleMeta(antitipRule, '演示儿童安全：高柜需固定或防倾倒'),
+          suggestion: '将高柜改为固定柜，或在真实落地前补充防倾倒固定方案。',
+        },
       ));
     } else {
-      checks.push(passed('TALL_STORAGE_ANCHORED', antitipRule?.id ?? 'rule-tall-storage-anchored', `${object.name} 为固定高柜，防倾倒风险已受控。`, { objectIds: [object.id] }));
+      checks.push(passed('TALL_STORAGE_ANCHORED', antitipRule?.id ?? 'rule-tall-storage-anchored', `${labelFor(object)}为固定高柜，防倾倒风险已受控。`, { objectIds: [object.id] }));
     }
   }
 
@@ -228,10 +276,14 @@ export function evaluateDesignRules(scene) {
         levelForRule(fixedRule),
         fixedRule?.id ?? 'rule-fixed-equipment-wall-relation',
         [object.id],
-        `${object.name} 是固定设备，应贴近墙面或预留管线面，不能漂在房间中央。`,
+        `${labelFor(object)}是固定设备，应贴近墙面或预留管线面，不能漂在房间中央。`,
+        {
+          ...ruleMeta(fixedRule, '演示硬装构件：固定设备应贴近墙面或管线面'),
+          suggestion: '把固定设备移回最近墙面或管线面，再交给真实 API 复核接口条件。',
+        },
       ));
     } else {
-      checks.push(passed('FIXED_EQUIPMENT_RELATION', fixedRule?.id ?? 'rule-fixed-equipment-wall-relation', `${object.name} 与墙面 / 管线关系合理。`, { objectIds: [object.id] }));
+      checks.push(passed('FIXED_EQUIPMENT_RELATION', fixedRule?.id ?? 'rule-fixed-equipment-wall-relation', `${labelFor(object)}与墙面 / 管线关系合理。`, { objectIds: [object.id] }));
     }
   }
 

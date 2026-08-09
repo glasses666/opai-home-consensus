@@ -77,6 +77,7 @@ const normalizeEditError = (error) => {
   return match ? match[1] : stripped;
 };
 const reviewableRuleStatuses = new Set(['warning', 'recommendation']);
+const spatialReviewCommands = new Set(['object.setTransform', 'object.setDimensions']);
 const ruleReviewKey = (check) => [
   check.status,
   check.code,
@@ -85,9 +86,17 @@ const ruleReviewKey = (check) => [
   check.message,
   check.valueMm ?? '',
 ].join('|');
-const newReviewChecks = (before, after) => {
+const reviewableChecksForObjects = (evaluation, objectIds) => {
+  const ids = new Set(objectIds.filter(Boolean));
+  if (!ids.size) return [];
+  return evaluation.checks.filter((check) => (
+    reviewableRuleStatuses.has(check.status) &&
+    check.objectIds.some((id) => ids.has(id))
+  ));
+};
+const newReviewChecks = (before, after, objectIds) => {
   const beforeKeys = new Set(before.checks.filter((check) => reviewableRuleStatuses.has(check.status)).map(ruleReviewKey));
-  return after.checks.filter((check) => reviewableRuleStatuses.has(check.status) && !beforeKeys.has(ruleReviewKey(check)));
+  return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
 
@@ -409,6 +418,7 @@ function ProjectDemoPage() {
   const [editMode, setEditMode] = useState('move');
   const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
   const [pendingReview, setPendingReview] = useState(null);
+  const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
@@ -525,13 +535,22 @@ function ProjectDemoPage() {
   };
 
   const executeCommand = useCallback((command, successMessage = '修改已应用') => {
+    if (pendingReview) {
+      setEditFeedback({ tone: 'warning', message: '请先保留或撤销当前预览，再继续调整。' });
+      return null;
+    }
     try {
       const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
       const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
       const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
-      const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation);
+      const affectedObjectIds = [command.objectId, command.newObjectId];
+      const changedReviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, affectedObjectIds);
+      const reviewChecks = changedReviewChecks.length || !spatialReviewCommands.has(command.type)
+        ? changedReviewChecks
+        : reviewableChecksForObjects(afterEvaluation, affectedObjectIds);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setLastRejected(null);
       if (reviewChecks.length) {
         setPendingReview({
           checks: reviewChecks.slice(0, 3),
@@ -545,10 +564,11 @@ function ProjectDemoPage() {
       return nextStore;
     } catch (error) {
       const message = normalizeEditError(error);
+      setLastRejected({ message, source: 'demo' });
       setEditFeedback({ tone: 'error', message: `未应用：${message}` });
       return null;
     }
-  }, []);
+  }, [pendingReview]);
 
   const undo = useCallback(() => {
     try {
@@ -556,6 +576,7 @@ function ProjectDemoPage() {
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
       setPendingReview(null);
+      setLastRejected(null);
       setEditFeedback({ tone: 'success', message: '已撤销上一步' });
     } catch {
       setEditFeedback({ tone: 'error', message: '没有可撤销的修改' });
@@ -568,6 +589,7 @@ function ProjectDemoPage() {
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
       setPendingReview(null);
+      setLastRejected(null);
       setEditFeedback({ tone: 'success', message: '已重做下一步' });
     } catch {
       setEditFeedback({ tone: 'error', message: '没有可重做的修改' });
@@ -606,6 +628,10 @@ function ProjectDemoPage() {
   }, [executeCommand, navigation]);
 
   const duplicateSelected = () => {
+    if (pendingReview) {
+      setEditFeedback({ tone: 'warning', message: '请先保留或撤销当前预览，再复制家具。' });
+      return;
+    }
     if (!selectedObject?.capabilities?.duplicable) {
       setEditFeedback({ tone: 'error', message: '该对象不允许复制' });
       return;
@@ -632,6 +658,7 @@ function ProjectDemoPage() {
     let lastError = null;
     for (const [dx, dz] of offsets) {
       try {
+        const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
         const nextStore = dispatchSceneCommand(sceneStoreRef.current, {
           type: 'object.duplicate',
           objectId: selectedObject.id,
@@ -639,16 +666,26 @@ function ProjectDemoPage() {
           externalId: `${selectedObject.externalId}-COPY-${suffix.toUpperCase()}`,
           transform: { x: selectedObject.transform.x + dx, z: selectedObject.transform.z + dz },
         });
+        const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
+        const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, [newObjectId]);
         sceneStoreRef.current = nextStore;
         setSceneStore(nextStore);
+        setLastRejected(null);
         commitNavigation({ ...navigation, selectedId: newObjectId }, { replace: true, moveCamera: false });
-        setEditFeedback({ tone: 'success', message: `已复制${entityName('object', selectedObject)}` });
+        if (reviewChecks.length) {
+          setPendingReview({ checks: reviewChecks.slice(0, 3), status: topRuleStatus(reviewChecks) });
+          setEditFeedback({ tone: 'warning', message: '已生成复制预览：有规范提醒，保留前请确认代价。' });
+        } else {
+          setPendingReview(null);
+          setEditFeedback({ tone: 'success', message: `已复制${entityName('object', selectedObject)}` });
+        }
         return;
       } catch (error) {
         lastError = error;
       }
     }
-    setEditFeedback({ tone: 'error', message: `未复制：${lastError instanceof Error ? lastError.message : '没有合法落位'}` });
+    setEditFeedback({ tone: 'error', message: `未复制：${lastError ? normalizeEditError(lastError) : '没有合法落位'}` });
+    setLastRejected({ message: lastError ? normalizeEditError(lastError) : '当前房间内没有合法复制位置。', source: 'demo' });
   };
 
   const resizeSelected = () => {
@@ -678,6 +715,8 @@ function ProjectDemoPage() {
   useEffect(() => {
     setDimensionDraft(selectedObject ? { ...selectedObject.dimensions } : null);
   }, [selectedObject?.id, selectedObject?.dimensions]);
+
+  useEffect(() => { setLastRejected(null); }, [navigation.selectedId]);
 
   useEffect(() => {
     const handleEditShortcut = (event) => {
@@ -735,7 +774,7 @@ function ProjectDemoPage() {
           scene={currentScene}
           selection={selection}
           onSelect={selectEntity}
-          editMode={editMode}
+          editMode={pendingReview ? 'select' : editMode}
           onEditCommand={(command) => Boolean(executeCommand(command))}
           onNavigate={({ selection: nextSelection, presetId, reason }) => {
             if (reason === 'room' && nextSelection?.kind === 'room') jumpToRoom(nextSelection.id);
@@ -778,6 +817,19 @@ function ProjectDemoPage() {
             <button type="button" onClick={redo} disabled={sceneStore.cursor === sceneStore.commands.length} title="重做 (Shift+Cmd/Ctrl+Z)">重做</button>
             <span className="project-edit__feedback" data-tone={editFeedback.tone} aria-live="polite">{editFeedback.message}</span>
           </div>
+          {pendingReview && <div className="project-review" data-status={pendingReview.status} data-testid="pending-rule-review">
+            <div>
+              <strong>{pendingReview.status === 'warning' ? '规范提醒待确认' : '舒适建议待确认'}</strong>
+              <span>source: demo · 仅为演示规则，真实落地需欧派/施工 API 复核</span>
+            </div>
+            <ul>
+              {pendingReview.checks.map((check) => <li key={ruleReviewKey(check)}><span>{check.message}</span>{check.suggestion && <small>可这样调整：{check.suggestion}</small>}</li>)}
+            </ul>
+            <div>
+              <button type="button" onClick={keepPendingReview}>保留此预览</button>
+              <button type="button" onClick={undo}>撤销预览</button>
+            </div>
+          </div>}
           {selectedObject && <div className="project-object" data-testid="selected-object-details">
             <div><span>{selectedObject.externalId}</span><strong>{selectedObject.source === 'demo' ? '演示对象' : '企业对象'}</strong></div>
             <dl>
@@ -812,11 +864,15 @@ function ProjectDemoPage() {
             </div>
           </div>}
           <div className="project-rules" aria-label="设计规则检查">
-            <div className="project-rules__header"><span>规则检查</span><strong data-status={designEvaluation.status}>{ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status}</strong></div>
+            <div className="project-rules__header"><span>规则检查</span><strong data-status={lastRejected ? 'blocked' : designEvaluation.status}>{lastRejected ? '刚才已阻止' : (ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status)}</strong></div>
+            <p className="project-rules__scope">适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。</p>
             <ul>
+              {lastRejected && <li data-status="blocked"><span>未写入</span><p>{lastRejected.message}</p><small>刚才尝试没有改变 2D / 3D 场景 · source: {lastRejected.source}</small></li>}
               {visibleRuleChecks.map((check) => <li key={`${check.code}-${check.ruleId}-${check.objectIds.join('-')}`} data-status={check.status}>
                 <span>{ruleStatusLabels[check.status] ?? check.status}</span>
                 <p>{check.message}</p>
+                {check.suggestion && <small>可这样调整：{check.suggestion}</small>}
+                {check.applicability && <small>适用边界：{check.applicability} · source: {check.source}</small>}
               </li>)}
             </ul>
           </div>

@@ -40,6 +40,37 @@ function shapeGeometry(polygon) {
   return geometry;
 }
 
+function disposeObject3D(root) {
+  root.traverse((object) => {
+    object.geometry?.dispose?.();
+    if (Array.isArray(object.material)) object.material.forEach((value) => value.dispose());
+    else object.material?.dispose?.();
+  });
+}
+
+function buildClearanceZoneOverlays(scene) {
+  const rules = new Map(scene.rules.map((rule) => [rule.id, rule]));
+  const group = new THREE.Group();
+  group.name = 'Gate 6 clearance overlays';
+  group.visible = false;
+  group.userData.skipPick = true;
+  for (const zone of scene.clearanceZones ?? []) {
+    const severity = rules.get(zone.ruleIds?.[0])?.severity ?? 'error';
+    const color = severity === 'warning' ? '#c58a32' : (severity === 'recommendation' ? '#6f7ea8' : '#9a3f50');
+    const mesh = new THREE.Mesh(
+      shapeGeometry(zone.polygon),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide }),
+    );
+    mesh.name = zone.id;
+    mesh.position.y = 0.032;
+    mesh.renderOrder = 7;
+    mesh.userData.skipPick = true;
+    mesh.userData.roomId = zone.roomId;
+    group.add(mesh);
+  }
+  return group;
+}
+
 function setEntity(root, kind, id, roomId) {
   root.userData.entityKind = kind;
   root.userData.entityId = id;
@@ -398,6 +429,8 @@ async function createController(container, scene, callbacks) {
   const objectLoader = new GLTFLoader();
   const textures = await loadTextures(renderer);
   const wallSurfaces = buildArchitecture(world, currentScene, textures, entityRoots);
+  let clearanceZoneOverlays = buildClearanceZoneOverlays(currentScene);
+  world.add(clearanceZoneOverlays);
   await buildFurniture(world, currentScene, entityRoots, callbacks);
 
   const home = presets.get('camera-home-overview');
@@ -475,10 +508,21 @@ async function createController(container, scene, callbacks) {
     }
   }
 
+  function syncClearanceZoneOverlays() {
+    const object = objects.get(selectedEntityId);
+    const visible = Boolean(object && (
+      (editMode === 'move' && object.capabilities.movable) ||
+      (editMode === 'rotate' && object.capabilities.rotatable)
+    ));
+    clearanceZoneOverlays.visible = visible;
+    for (const child of clearanceZoneOverlays.children) child.visible = visible && child.userData.roomId === object?.roomId;
+  }
+
   function syncEditControl() {
     transformControls.detach();
     const object = objects.get(selectedEntityId);
     const root = entityRoots.get(selectedEntityId);
+    syncClearanceZoneOverlays();
     if (!object || !root) return;
     if (editMode === 'move' && object.capabilities.movable) {
       transformControls.setMode('translate');
@@ -741,6 +785,10 @@ async function createController(container, scene, callbacks) {
       currentScene = nextScene;
       presets = new Map(currentScene.cameraPresets.map((preset) => [preset.id, preset]));
       objects = new Map(currentScene.objects.map((object) => [object.id, object]));
+      world.remove(clearanceZoneOverlays);
+      disposeObject3D(clearanceZoneOverlays);
+      clearanceZoneOverlays = buildClearanceZoneOverlays(currentScene);
+      world.add(clearanceZoneOverlays);
       for (const [id, root] of entityRoots.entries()) {
         if (root.userData.entityKind === 'object' && !objects.has(id)) root.visible = false;
       }
@@ -792,11 +840,7 @@ async function createController(container, scene, callbacks) {
       transformControls.detach();
       transformControls.dispose();
       controls.dispose();
-      world.traverse((object) => {
-        object.geometry?.dispose?.();
-        if (Array.isArray(object.material)) object.material.forEach((value) => value.dispose());
-        else object.material?.dispose?.();
-      });
+      disposeObject3D(world);
       textures.oak.dispose();
       textures.tile.dispose();
       pmrem.dispose();

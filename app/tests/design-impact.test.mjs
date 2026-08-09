@@ -13,6 +13,18 @@ const moveObject = (scene, objectId, transform) => {
   object.transform = { ...object.transform, ...transform };
   return next;
 };
+const assertContract = (check, status) => {
+  assert.ok(check);
+  assert.equal(check.status, status);
+  assert.equal(check.source, 'demo');
+  assert.equal(typeof check.applicability, 'string');
+  assert.ok(check.applicability.length > 6);
+  assert.equal(typeof check.suggestion, 'string');
+  assert.ok(check.suggestion.length > 8);
+};
+const violation = (scene, code, status) => evaluateDesignRules(scene).violations.find((check) => (
+  check.code === code && (!status || check.status === status)
+));
 
 test('design rules return normalized passed warning and blocked checks', () => {
   const result = evaluateDesignRules(createDemoScene());
@@ -55,23 +67,29 @@ test('Gate 6 deterministic rules cover eight household-facing cases', () => {
     ['CLEARANCE_OCCUPIED', moveObject(base, 'object-sofa', { x: 4600, z: 5200 })],
   ];
   for (const [code, scene] of blocked) {
-    const result = evaluateDesignRules(scene);
-    assert.equal(result.violations.some((violation) => violation.code === code && violation.status === 'blocked'), true);
+    assertContract(violation(scene, code, 'blocked'), 'blocked');
   }
 
   const doorHard = clone(base);
   doorHard.rules.find((rule) => rule.id === 'rule-opening-clearance').severity = 'error';
-  assert.equal(evaluateDesignRules(doorHard).violations.some((violation) => violation.code === 'DOOR_SWING_OCCUPIED' && violation.status === 'blocked'), true);
+  assertContract(violation(doorHard, 'DOOR_SWING_OCCUPIED', 'blocked'), 'blocked');
 
   const tvTooClose = moveObject(base, 'object-sofa', { z: 7000 });
-  assert.equal(evaluateDesignRules(tvTooClose).violations.some((violation) => violation.code === 'TV_VIEWING_DISTANCE' && violation.status === 'recommendation'), true);
+  assertContract(violation(tvTooClose, 'TV_VIEWING_DISTANCE', 'recommendation'), 'recommendation');
 
   const childSafety = clone(base);
   childSafety.objects.find((object) => object.id === 'object-shoe-cabinet').capabilities.movable = true;
-  assert.equal(evaluateDesignRules(childSafety).violations.some((violation) => violation.code === 'TALL_STORAGE_ANCHORED' && violation.status === 'warning'), true);
+  assertContract(violation(childSafety, 'TALL_STORAGE_ANCHORED', 'warning'), 'warning');
 
   const fixedEquipment = moveObject(base, 'object-kitchen-counter', { x: 8500, z: 4500 });
-  assert.equal(evaluateDesignRules(fixedEquipment).violations.some((violation) => violation.code === 'FIXED_EQUIPMENT_RELATION' && violation.status === 'blocked'), true);
+  assertContract(violation(fixedEquipment, 'FIXED_EQUIPMENT_RELATION', 'blocked'), 'blocked');
+
+  const allMessages = [
+    violation(moveObject(base, 'object-primary-bed', { x: 1100 }), 'CLEARANCE_OCCUPIED').message,
+    violation(moveObject(base, 'object-sofa', { x: 6200, z: 5700 }), 'OBJECT_COLLISION').message,
+  ].join('\n');
+  assert.doesNotMatch(allMessages, /Double Bed|Sofa|Dining Table|Kitchen Run/);
+  assert.match(allMessages, /双人床|沙发|餐桌/);
 });
 
 test('impact report compares clearance and honest storage estimates', () => {

@@ -3,8 +3,8 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-10
-当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4 已实现并验证；Gate 5 已实现并验证；夜间后端包 N1、N2 与 B1–B4 已完成**
-当前 Gate：**Gate 6：设计规范与受约束编辑**
+当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4、Gate 5、Gate 6 已实现并验证；夜间后端包 N1、N2 与 B1–B4 已完成**
+当前 Gate：**Gate 7：版本、真实差异、渲染、影响与确认**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
 ## 0. 为什么重开计划
@@ -625,6 +625,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
-2. Gate 3 已于 2026-08-10 获用户授权提交并进入后续 Gate；对应源码提交后从 Gate 4 开始逐 Gate 实现、验证和提交。
-3. 镜头与墙体体验回归增加后台录屏和抽帧检查，不抢占用户前台浏览器。
+1. Gate 6 已完成确定性规则、warning 预览确认、hard block 原子拒绝和净距覆盖层；验收证据见 [GATE-6-REVIEW.md](./GATE-6-REVIEW.md)。
+2. Gate 7 只在现有 canonical scene、`SceneCommand`、命令历史和持久项目存储上补版本、真实 diff、影响与确认，不引入第二套场景数据。
+3. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
+4. 镜头与墙体体验回归继续使用后台录屏和抽帧检查，不抢占用户前台浏览器。
