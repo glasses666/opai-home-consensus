@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, Cube, HouseLine, MapTrifold, StackSimple } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
 import { createDemoScene } from './domain/demo-scene.js';
+import { evaluateDesignRules } from './domain/design-rules.js';
 import { projectScene2D } from './domain/projection.js';
 import {
   createSceneStore,
@@ -56,6 +57,7 @@ const materialLabels = {
   'mat-fabric-warm-gray': '暖灰织物',
   'mat-oak-veneer': '浅橡木',
 };
+const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
 
 const entityKinds = { room: '房间', object: '家具', opening: '门窗', surface: '表面' };
 const modeOptions = [
@@ -382,6 +384,15 @@ function ProjectDemoPage() {
   const selectedEntity = findEntity(currentScene, selection);
   const displaySelectedEntity = findEntity(currentScene, displaySelection);
   const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
+  const designEvaluation = useMemo(() => evaluateDesignRules(currentScene), [currentScene]);
+  const visibleRuleChecks = useMemo(() => {
+    const relevant = selectedObject
+      ? designEvaluation.checks.filter((check) => check.objectIds.includes(selectedObject.id))
+      : designEvaluation.violations;
+    return relevant
+      .sort((a, b) => ['blocked', 'warning', 'recommendation', 'passed'].indexOf(a.status) - ['blocked', 'warning', 'recommendation', 'passed'].indexOf(b.status))
+      .slice(0, 4);
+  }, [designEvaluation, selectedObject]);
   const activeRoomId = navigation.roomId;
   const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
   const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
@@ -488,7 +499,8 @@ function ProjectDemoPage() {
       setEditFeedback({ tone: 'success', message: successMessage });
       return nextStore;
     } catch (error) {
-      setEditFeedback({ tone: 'error', message: `未应用：${error instanceof Error ? error.message : '未知错误'}` });
+      const message = error instanceof Error ? error.message.replace(/^DESIGN_RULE_BLOCKED: /, '') : '未知错误';
+      setEditFeedback({ tone: 'error', message: `未应用：${message}` });
       return null;
     }
   }, []);
@@ -747,6 +759,15 @@ function ProjectDemoPage() {
               </div>}
             </div>
           </div>}
+          <div className="project-rules" aria-label="设计规则检查">
+            <div className="project-rules__header"><span>规则检查</span><strong data-status={designEvaluation.status}>{ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status}</strong></div>
+            <ul>
+              {visibleRuleChecks.map((check) => <li key={`${check.code}-${check.ruleId}-${check.objectIds.join('-')}`} data-status={check.status}>
+                <span>{ruleStatusLabels[check.status] ?? check.status}</span>
+                <p>{check.message}</p>
+              </li>)}
+            </ul>
+          </div>
           <dl className="project-metrics" aria-label="三维运行实测">
             <div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div>
             <div><dt>Draw</dt><dd>{renderStats.calls || '—'}</dd></div>
