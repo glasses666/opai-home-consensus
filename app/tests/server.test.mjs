@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import test from 'node:test';
 
 import { createAppServer } from '../server/index.mjs';
+import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { callAily, getFeishuHealth, syncActivity } from '../server/feishu.mjs';
 import { LarkCliError, runLarkCli } from '../server/lark-cli.mjs';
 
@@ -171,6 +175,7 @@ test('Base activity sync obtains a created record ID from read-back', async () =
 
 test('BFF applies an Agent turn and keeps Base failure as pending', async () => {
   const server = createAppServer({
+    projectStore: null,
     health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'ready' } }),
     sync: async () => { throw new Error('offline'); },
     id: () => 'test',
@@ -194,8 +199,219 @@ test('BFF applies an Agent turn and keeps Base failure as pending', async () => 
   }
 });
 
+test('BFF persists versions and pending Base events across restart', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-store-'));
+  const file = join(dir, 'project.json');
+  try {
+    const sync = async () => { throw new Error('offline'); };
+    let server = createAppServer({
+      projectStore: createPersistentProjectStore({ filePath: file, id: () => 'server-one' }),
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'ready' } }),
+      sync,
+    });
+    let origin = await listen(server);
+    const response = await fetch(`${origin}/api/agent/turn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-persist-test' }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.sync, 'pending');
+    const versionId = body.project.currentVersionId;
+    await close(server);
+
+    server = createAppServer({
+      projectStore: createPersistentProjectStore({ filePath: file }),
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'ready' } }),
+      sync,
+    });
+    origin = await listen(server);
+    const project = await (await fetch(`${origin}/api/projects/project-demo`)).json();
+    assert.equal(project.project.currentVersionId, versionId);
+    assert.equal(project.scene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+    const health = await (await fetch(`${origin}/api/health`)).json();
+    assert.equal(health.pendingBaseEvents, 1);
+    await close(server);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('BFF rejects stale expectedVersionId before overwriting a newer version', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-conflict-'));
+  try {
+    let providerCalls = 0;
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json'), id: () => 'server-two' });
+    const initialVersionId = projectStore.currentVersionId;
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => {},
+      agentProvider: () => {
+        providerCalls += 1;
+        return { toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }] };
+      },
+    });
+    const origin = await listen(server);
+    try {
+      const ok = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-fresh', expectedVersionId: initialVersionId }),
+      });
+      assert.equal(ok.status, 200);
+      assert.equal(providerCalls, 1);
+      providerCalls = 0;
+
+      const stale = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-stale', expectedVersionId: initialVersionId }),
+      });
+      const staleBody = await stale.json();
+      assert.equal(stale.status, 409);
+      assert.equal(staleBody.error, 'VERSION_CONFLICT');
+      assert.equal(providerCalls, 0);
+
+      const invalid = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-invalid', expectedVersionId: 1 }),
+      });
+      assert.equal(invalid.status, 400);
+
+      const mismatch = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          input: '沙发向右移动20厘米',
+          eventId: 'evt-mismatch',
+          versionId: initialVersionId,
+          expectedVersionId: projectStore.currentVersionId,
+        }),
+      });
+      assert.equal(mismatch.status, 400);
+      assert.equal((await mismatch.json()).error, 'VERSION_ID_MISMATCH');
+      assert.equal(providerCalls, 0);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('concurrent turns capture one base version and reject the stale finisher', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-concurrent-'));
+  try {
+    const providerCalls = [];
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => {},
+      agentProvider: (context) => new Promise((resolve) => providerCalls.push({ context, resolve })),
+    });
+    const origin = await listen(server);
+    const waitForCalls = async (count) => {
+      while (providerCalls.length < count) await new Promise((resolve) => setImmediate(resolve));
+    };
+    try {
+      const request = (eventId) => fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '沙发向右移动20厘米', eventId }),
+      });
+      const firstRequest = request('evt-concurrent-first');
+      await waitForCalls(1);
+      const secondRequest = request('evt-concurrent-second');
+      await waitForCalls(2);
+
+      providerCalls[0].resolve({ toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }] });
+      const first = await firstRequest;
+      providerCalls[1].resolve({ toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }] });
+      const second = await secondRequest;
+
+      assert.equal(first.status, 200);
+      assert.equal(second.status, 409);
+      assert.equal((await second.json()).error, 'VERSION_CONFLICT');
+      assert.equal(projectStore.getSceneStore().currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+      assert.equal(projectStore.snapshot().versions.length, 2);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('BFF replays an existing event ID without applying the turn twice', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-idempotent-'));
+  try {
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json'), id: () => 'server-three' });
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => {},
+    });
+    const origin = await listen(server);
+    try {
+      const body = JSON.stringify({ input: '沙发向右移动20厘米', eventId: 'evt-repeat' });
+      const first = await (await fetch(`${origin}/api/agent/turn`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })).json();
+      const second = await (await fetch(`${origin}/api/agent/turn`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })).json();
+
+      assert.equal(first.scene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+      assert.equal(second.scene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+      assert.equal(second.trace.source, 'idempotent_replay');
+      assert.equal(projectStore.snapshot().versions.length, 2);
+
+      const conflict = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '餐桌旋转90度', eventId: 'evt-repeat' }),
+      });
+      assert.equal(conflict.status, 409);
+      assert.equal((await conflict.json()).error, 'EVENT_ID_CONFLICT');
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('BFF records a no-write turn without creating a new version', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-readonly-'));
+  try {
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => {},
+    });
+    const origin = await listen(server);
+    try {
+      const response = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ input: '先看看客餐厅，不要改', eventId: 'evt-readonly-http' }),
+      });
+      const body = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(body.version.id, 'version-demo-initial');
+      assert.equal(projectStore.snapshot().versions.length, 1);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('BFF exposes the replaceable demo catalog without claiming real SKUs', async () => {
   const server = createAppServer({
+    projectStore: null,
     health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
   });
   const origin = await listen(server);

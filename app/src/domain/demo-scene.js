@@ -312,7 +312,7 @@ export function createDemoScene() {
     ],
     rules: [
       { id: 'rule-room-boundary', kind: 'boundary', severity: 'error', source: 'demo' },
-      { id: 'rule-opening-clearance', kind: 'opening-clearance', severity: 'error', source: 'demo' },
+      { id: 'rule-opening-clearance', kind: 'opening-clearance', severity: 'warning', source: 'demo' },
       { id: 'rule-main-circulation-900', kind: 'circulation', severity: 'error', minimumMm: 900, source: 'demo' },
       { id: 'rule-kitchen-aisle-1000', kind: 'work-aisle', severity: 'error', minimumMm: 1000, source: 'demo' },
       { id: 'rule-bedside-600', kind: 'bedside-clearance', severity: 'warning', minimumMm: 600, source: 'demo' },

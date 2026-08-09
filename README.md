@@ -8,8 +8,9 @@
 - 旧六空间 / 静态效果图 / 方块 3D 原型已移出工作区，不再作为实现基线。
 - Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
 - Gate 2 已于 2026-08-09 验收并以 `080a3b2` 提交：`/lab/scene` 已有同源实时 3D、原创 GLB、整屋 / 房间镜头和真实对象点选。
-- 夜间后端包 N1 已完成：命令事务、最小规则裁决、Agent Harness、真实 Aily OpenAPI、Base 留痕与薄 BFF 已通过完整闭环；Gate 3 产品页面尚未开始。
-- 夜间后端包 N2 已实现、尚未 commit：15 项合成装修组件目录、Prompt v2.1、相关上下文裁剪与回复安全降级已可审阅；未发送 Coach 消息。
+- 夜间后端包 N1、N2 已完成：命令事务、Agent Harness、真实 Aily / Base、15 项合成装修组件目录与 Prompt 安全边界已通过验证。
+- Gate 3 已实现并以 `da9c94b` 保存待验收快照；提交只保存状态，不代表用户验收，也没有进入 Gate 4。
+- 后端 B1–B4 已实现、验证并提交：JSON 项目 / 版本持久化、24 案例 Agent 评测、确定性规则与影响、JSON / CSV 企业目录导入适配器。
 
 ## 项目入口
 
@@ -19,6 +20,7 @@
 - [Gate 2 审阅包](./GATE-2-REVIEW.md)
 - [夜间后端包 N1 审阅](./BACKEND-N1-REVIEW.md)
 - [夜间后端包 N2 审阅](./BACKEND-N2-REVIEW.md)
+- [后端 B1–B4 审阅](./BACKEND-B1-B4-REVIEW.md)
 - [历史飞书能力证据](./FEISHU_EVIDENCE.md)
 
 ## 本地审阅
@@ -29,7 +31,7 @@ npm install
 npm run dev -- --port 5173
 ```
 
-打开 `http://127.0.0.1:5173/lab/scene`。验证命令为 `npm test` 和 `npm run build`。
+Gate 3 待验收页面为 `http://127.0.0.1:5173/project/demo`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test` 和 `npm run build`。
 
 后端能力门与 Agent Harness：
 
@@ -37,7 +39,10 @@ npm run dev -- --port 5173
 cd app
 npm run server
 npm run test:backend
+npm run eval:agent
 ```
+
+CLI 服务默认将本地演示项目写入 `app/.data/project-demo.json`；可用 `PROJECT_STORE_PATH` 指定其他单进程 JSON store。`npm run eval:agent:live` 会调用真实 Aily，仅作为独立补充证据。
 
 团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。本机 `app/.env.local` 已配置已发布的项目智能体且被 Git 忽略；两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
 
