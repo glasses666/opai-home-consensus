@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, Cube, HouseLine, MapTrifold, StackSimple } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
 import { createDemoScene } from './domain/demo-scene.js';
+import { buildSceneVersions, compareSceneVersions, restoreSceneVersion, versionLifecycle } from './domain/design-version.js';
 import { evaluateDesignRules } from './domain/design-rules.js';
 import { projectScene2D } from './domain/projection.js';
 import {
@@ -56,6 +57,19 @@ const materialLabels = {
   'mat-door-warm-white': '暖白',
   'mat-fabric-warm-gray': '暖灰织物',
   'mat-oak-veneer': '浅橡木',
+};
+const versionStatusLabels = {
+  customer_confirmed: '已确认',
+  changed_after_confirm: '确认后修改',
+  draft_current: '当前草稿',
+  draft_previous: '历史草稿',
+};
+const diffKindLabels = {
+  added: '新增',
+  deleted: '删除',
+  transform: '位置 / 旋转',
+  dimensions: '尺寸',
+  material: '材质',
 };
 const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
 const editErrorMessages = [
@@ -420,6 +434,8 @@ function ProjectDemoPage() {
   const [pendingReview, setPendingReview] = useState(null);
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
+  const [confirmedVersionId, setConfirmedVersionId] = useState(null);
+  const [compareFromVersionId, setCompareFromVersionId] = useState('version-demo-initial');
   const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
@@ -428,6 +444,14 @@ function ProjectDemoPage() {
   const displaySelectedEntity = findEntity(currentScene, displaySelection);
   const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
   const designEvaluation = useMemo(() => evaluateDesignRules(currentScene), [currentScene]);
+  const versions = useMemo(() => buildSceneVersions(sceneStore), [sceneStore]);
+  const currentVersion = versions[sceneStore.cursor] ?? versions.at(-1);
+  const compareFromVersion = versions.find((version) => version.id === compareFromVersionId) ?? versions[Math.max(0, sceneStore.cursor - 1)] ?? versions[0];
+  const versionDiff = useMemo(
+    () => compareSceneVersions(compareFromVersion, currentVersion),
+    [compareFromVersion, currentVersion],
+  );
+  const currentVersionStatus = versionLifecycle(currentVersion, currentVersion.id, confirmedVersionId);
   const visibleRuleChecks = useMemo(() => {
     const relevant = selectedObject
       ? designEvaluation.checks.filter((check) => check.objectIds.includes(selectedObject.id))
@@ -443,6 +467,10 @@ function ProjectDemoPage() {
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
+  const namedDiffs = useMemo(() => versionDiff.objectDiffs.map((diff) => ({
+    ...diff,
+    label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
+  })), [compareFromVersion.scene.objects, currentScene.objects, versionDiff.objectDiffs]);
   const viewRequest = useMemo(
     () => ({ id: navigation.viewId, sequence: viewSequence }),
     [navigation.viewId, viewSequence],
@@ -706,6 +734,20 @@ function ProjectDemoPage() {
     setEditFeedback({ tone: 'success', message: '已保留预览；这些提醒会作为 demo 规则边界继续显示。' });
   };
 
+  const confirmCurrentVersion = () => {
+    setConfirmedVersionId(currentVersion.id);
+    setEditFeedback({ tone: 'success', message: `${currentVersion.label} 已客户确认；后续修改会标记为确认后修改。` });
+  };
+
+  const restoreComparedVersion = () => {
+    const nextStore = restoreSceneVersion(sceneStoreRef.current, compareFromVersion);
+    sceneStoreRef.current = nextStore;
+    setSceneStore(nextStore);
+    setPendingReview(null);
+    setLastRejected(null);
+    setEditFeedback({ tone: 'success', message: `已回到 ${compareFromVersion.label}，旧版本仍可对比。` });
+  };
+
   useEffect(() => {
     if (!selectedObject) return;
     if (editMode === 'move' && !selectedObject.capabilities.movable) setEditMode(selectedObject.capabilities.rotatable ? 'rotate' : null);
@@ -717,6 +759,10 @@ function ProjectDemoPage() {
   }, [selectedObject?.id, selectedObject?.dimensions]);
 
   useEffect(() => { setLastRejected(null); }, [navigation.selectedId]);
+
+  useEffect(() => {
+    if (!versions.some((version) => version.id === compareFromVersionId)) setCompareFromVersionId(versions[0].id);
+  }, [compareFromVersionId, versions]);
 
   useEffect(() => {
     const handleEditShortcut = (event) => {
@@ -830,6 +876,39 @@ function ProjectDemoPage() {
               <button type="button" onClick={undo}>撤销预览</button>
             </div>
           </div>}
+          <div className="project-versions" data-testid="version-impact-drawer">
+            <div className="project-versions__header">
+              <div><span>版本与影响</span><strong>{currentVersion.label} · {versionStatusLabels[currentVersionStatus]}</strong></div>
+              <button type="button" onClick={confirmCurrentVersion} disabled={confirmedVersionId === currentVersion.id}>客户确认</button>
+            </div>
+            <div className="project-versions__timeline" aria-label="设计版本">
+              {versions.map((version) => {
+                const status = versionLifecycle(version, currentVersion.id, confirmedVersionId);
+                return <button key={version.id} type="button" aria-pressed={compareFromVersion.id === version.id} data-status={status} onClick={() => setCompareFromVersionId(version.id)}>
+                  <strong>{version.label}</strong><span>{versionStatusLabels[status]}</span>
+                </button>;
+              })}
+            </div>
+            <div className="project-versions__compare">
+              <label>对比基准
+                <select value={compareFromVersion.id} onChange={(event) => setCompareFromVersionId(event.currentTarget.value)}>
+                  {versions.map((version) => <option key={version.id} value={version.id}>{version.label}</option>)}
+                </select>
+              </label>
+              <button type="button" onClick={restoreComparedVersion} disabled={compareFromVersion.id === currentVersion.id}>回到此版</button>
+            </div>
+            <ul className="project-diff" aria-label="版本差异">
+              {namedDiffs.length
+                ? namedDiffs.slice(0, 5).map((diff, index) => <li key={`${diff.kind}-${diff.objectId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><p>{diff.label}</p></li>)
+                : <li><span>无变化</span><p>{compareFromVersion.label} 与当前场景一致</p></li>}
+            </ul>
+            <dl className="project-impact" aria-label="影响摘要">
+              <div><dt>规则状态</dt><dd>{ruleStatusLabels[versionDiff.impact.status] ?? versionDiff.impact.status}</dd></div>
+              <div><dt>影响项</dt><dd>{versionDiff.impact.impacts.length}</dd></div>
+              <div><dt>未决项</dt><dd>{versionDiff.impact.unresolved.length}</dd></div>
+            </dl>
+            {versionDiff.impact.unresolved[0] && <p className="project-versions__note">未决：{versionDiff.impact.unresolved[0].reason} source: estimate</p>}
+          </div>
           {selectedObject && <div className="project-object" data-testid="selected-object-details">
             <div><span>{selectedObject.externalId}</span><strong>{selectedObject.source === 'demo' ? '演示对象' : '企业对象'}</strong></div>
             <dl>

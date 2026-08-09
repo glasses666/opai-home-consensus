@@ -3,6 +3,18 @@ import { evaluateDesignRules } from './design-rules.js';
 const round2 = (value) => Math.round(value * 100) / 100;
 const byId = (records) => new Map((records ?? []).map((record) => [record.id, record]));
 const storageCategories = new Set(['fixed-cabinet', 'wardrobe']);
+const objectDisplayNames = {
+  'object-primary-bed': '双人床',
+  'object-primary-wardrobe': '衣柜',
+  'object-flex-bed': '单人床',
+  'object-flex-desk': '书桌',
+  'object-sofa': '沙发',
+  'object-tv-console': '电视柜',
+  'object-dining-table': '餐桌',
+  'object-kitchen-counter': '橱柜',
+  'object-shoe-cabinet': '鞋柜',
+};
+const objectDisplayName = (object) => objectDisplayNames[object.id] ?? object.name;
 
 const objectVolumeM3 = (object) => {
   if (!storageCategories.has(object.category)) return null;
@@ -38,6 +50,14 @@ const changedObjects = (beforeScene, afterScene) => {
 export function compareDesignImpact(beforeScene, afterScene) {
   const beforeRules = evaluateDesignRules(beforeScene);
   const afterRules = evaluateDesignRules(afterScene);
+  if (JSON.stringify(beforeScene) === JSON.stringify(afterScene)) {
+    return {
+      status: afterRules.status,
+      rules: { before: beforeRules, after: afterRules },
+      impacts: [],
+      unresolved: [],
+    };
+  }
   const beforeZones = byId(beforeScene?.clearanceZones);
   const afterZones = byId(afterScene?.clearanceZones);
   const impacts = [];
@@ -83,7 +103,7 @@ export function compareDesignImpact(beforeScene, afterScene) {
     unresolved.push({
       code: 'STORAGE_CAPACITY_UNSUPPORTED',
       objectId: change.after.id,
-      reason: `${change.after.name} 不是柜类对象，当前 demo 没有可估算的收纳容量字段。`,
+      reason: `${objectDisplayName(change.after)} 不是柜类对象，当前 demo 没有可估算的收纳容量字段。`,
     });
   }
 

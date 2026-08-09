@@ -117,4 +117,13 @@ test('impact report compares clearance and honest storage estimates', () => {
   assert.equal(impact.impacts.find((item) => item.kind === 'storage_capacity').source, 'estimate');
   assert.equal(impact.impacts.find((item) => item.kind === 'storage_capacity').deltaM3, 0);
   assert.equal(impact.unresolved.some((item) => item.code === 'STORAGE_CAPACITY_UNSUPPORTED' && item.objectId === 'object-primary-bed'), true);
+  assert.doesNotMatch(impact.unresolved.map((item) => item.reason).join('\n'), /Double Bed|Sofa/);
+});
+
+test('impact report is empty when comparing the same version scene', () => {
+  const scene = createDemoScene();
+  const impact = compareDesignImpact(scene, scene);
+
+  assert.equal(impact.impacts.length, 0);
+  assert.equal(impact.unresolved.length, 0);
 });
