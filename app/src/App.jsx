@@ -471,6 +471,16 @@ function ProjectDemoPage() {
     ...diff,
     label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
   })), [compareFromVersion.scene.objects, currentScene.objects, versionDiff.objectDiffs]);
+  const versionComparison = useMemo(() => {
+    if (compareFromVersion.id === currentVersion.id) return null;
+    return {
+      label: compareFromVersion.label,
+      changeCount: namedDiffs.length,
+      impactLabel: versionStatusLabels[versionDiff.impact.status] ?? versionDiff.impact.status,
+      impactCount: versionDiff.impact.impacts.length,
+      unresolvedCount: versionDiff.impact.unresolved.length,
+    };
+  }, [compareFromVersion.id, currentVersion.id, namedDiffs.length, versionDiff.impact.impacts.length, versionDiff.impact.status, versionDiff.impact.unresolved.length]);
   const viewRequest = useMemo(
     () => ({ id: navigation.viewId, sequence: viewSequence }),
     [navigation.viewId, viewSequence],
@@ -831,6 +841,7 @@ function ProjectDemoPage() {
           onStats={setRenderStats}
           onLoadState={setAssetLoadState}
           viewRequest={viewRequest}
+          versionComparison={versionComparison}
           onViewEvent={({ phase, preset }) => {
             if (phase !== 'done') return;
             setDisplayViewId(preset.id);

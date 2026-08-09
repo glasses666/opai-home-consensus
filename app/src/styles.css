@@ -278,7 +278,7 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .scene3d-shell { position: relative; height: clamp(620px, 71vh, 790px); min-height: 620px; overflow: hidden; background: #e6e1d7; }
 .scene3d { width: 100%; height: 100%; }
 .scene3d canvas { display: block; width: 100%; height: 100%; outline: 0; }
-.scene3d__status, .scene3d__room, .scene3d__hint, .camera-dock { position: absolute; z-index: 4; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+.scene3d__status, .scene3d__room, .scene3d__compare, .scene3d__hint, .camera-dock { position: absolute; z-index: 4; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
 .scene3d__status { top: 16px; left: 16px; display: inline-flex; min-height: 31px; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid rgb(255 255 255 / 58%); border-radius: 999px; background: rgb(255 254 250 / 78%); color: #55584f; font-size: 10px; font-weight: 680; box-shadow: 0 5px 16px rgb(46 41 32 / 10%); }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #728c69; box-shadow: 0 0 0 4px rgb(114 140 105 / 13%); }
 .spin { animation: spin 900ms linear infinite; }
@@ -286,6 +286,9 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .scene3d__room { top: 16px; right: 16px; display: flex; min-width: 160px; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid rgb(255 255 255 / 58%); border-radius: 9px; background: rgb(255 254 250 / 78%); box-shadow: 0 5px 16px rgb(46 41 32 / 10%); }
 .scene3d__room span { font-family: var(--display-font); font-size: 14px; }
 .scene3d__room small { color: #7e7f77; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 8px; }
+.scene3d__compare { top: 66px; right: 16px; display: grid; min-width: 160px; gap: 2px; padding: 9px 11px; border: 1px solid rgb(201 156 165 / 45%); border-radius: 9px; background: rgb(255 248 249 / 78%); color: #7f2e40; box-shadow: 0 5px 16px rgb(46 41 32 / 10%); }
+.scene3d__compare span { font-size: 10px; font-weight: 760; }
+.scene3d__compare small { color: #8b6a72; font-size: 8px; }
 .camera-dock { bottom: 18px; left: 50%; display: inline-flex; max-width: calc(100% - 36px); gap: 3px; padding: 4px; border: 1px solid rgb(205 199 189 / 78%); border-radius: 14px; background: rgb(255 253 248 / 84%); box-shadow: 0 9px 28px rgb(45 39 30 / 17%); transform: translateX(-50%); }
 .camera-dock button { display: inline-flex; height: 44px; align-items: center; gap: 6px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #666760; font-size: 10px; white-space: nowrap; cursor: pointer; }
 .camera-dock button:hover { background: rgb(236 232 223 / 80%); color: #30312d; }

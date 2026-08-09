@@ -873,6 +873,7 @@ export default function Scene3D({
   editMode = 'select',
   onEditCommand,
   showHomeView = true,
+  versionComparison = null,
 }) {
   const mountRef = useRef(null);
   const controllerRef = useRef(null);
@@ -975,6 +976,10 @@ export default function Scene3D({
       <span>{activeRoom ? roomLabels[activeRoom.id] : '整屋'}</span>
       <small>{activeRoom?.id ?? scene.id}</small>
     </div>
+    {versionComparison && <div className="scene3d__compare" aria-live="polite">
+      <span>对比 {versionComparison.label}</span>
+      <small>{versionComparison.changeCount} 处差异 · {versionComparison.impactLabel}</small>
+    </div>}
     {activeRoomId && <nav className="camera-dock" aria-label="三维视角" data-testid="camera-dock">
       {presets.map((preset) => {
         const Icon = viewIcon(preset.kind);
