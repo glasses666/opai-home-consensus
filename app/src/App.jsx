@@ -44,7 +44,7 @@ const roundTripMatches = serializeScene(deserializeScene(serialized)) === serial
 const roomLabels = {
   'room-primary-bedroom': '主卧',
   'room-bathroom': '卫生间',
-  'room-flex': '次卧 / 书房',
+  'room-flex': '儿童房 / 书房',
   'room-hall': '过厅',
   'room-living-dining': '开放客餐厅',
   'room-kitchen': '厨房',
@@ -87,6 +87,16 @@ const roomBriefs = {
     shortcuts: [
       { label: '床', objectId: 'object-primary-bed' },
       { label: '衣柜', objectId: 'object-primary-wardrobe' },
+    ],
+  },
+  'room-flex': {
+    kicker: '成长型儿童房任务',
+    title: '学习、活动与未来换床',
+    summary: '同一 4.6 × 3.2 m 房间里，先保留床侧与活动留白；床和书桌的每次调整都进入规则与版本。',
+    checks: ['床侧 ≥ 600 mm', '成长活动留白 1.6 m', '加宽床须复核活动区'],
+    shortcuts: [
+      { label: '单人床', objectId: 'object-flex-bed' },
+      { label: '书桌', objectId: 'object-flex-desk' },
     ],
   },
 };
@@ -145,8 +155,8 @@ const newReviewChecks = (before, after, objectIds) => {
   return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
-const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v2';
-const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v2';
+const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v3';
+const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v3';
 const opinionStanceLabels = {
   support: '支持',
   oppose: '反对',
@@ -687,7 +697,13 @@ function ProjectDemoPage() {
       : selectedObject?.id === 'object-primary-wardrobe'
         ? ['衣柜改成暖白色', '检查衣柜柜前净距', '对比上一版变化']
         : ['检查主卧当前规则', '把衣柜改成暖白色', '对比上一版变化']
-    : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
+    : activeRoomId === 'room-flex'
+      ? selectedObject?.id === 'object-flex-bed'
+        ? ['单人床向右移动20厘米', '检查单人床床侧净距', '对比上一版变化']
+        : selectedObject?.id === 'object-flex-desk'
+          ? ['书桌向左移动20厘米', '检查书桌周围规则', '对比上一版变化']
+          : ['检查儿童房当前规则', '单人床向右移动20厘米', '书桌向左移动20厘米']
+      : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
   const namedDiffs = useMemo(() => versionDiff.objectDiffs.map((diff) => ({
     ...diff,
     label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),

@@ -7,11 +7,19 @@ const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
 
 const OBJECT_NOUNS = [
+  ['双人床', 'object-primary-bed'],
+  ['主卧床', 'object-primary-bed'],
+  ['大床', 'object-primary-bed'],
+  ['单人床', 'object-flex-bed'],
+  ['儿童床', 'object-flex-bed'],
+  ['儿童房床', 'object-flex-bed'],
+  ['次卧床', 'object-flex-bed'],
+  ['书房床', 'object-flex-bed'],
+  ['成长床', 'object-flex-bed'],
   ['沙发', 'object-sofa'],
   ['餐桌', 'object-dining-table'],
   ['餐台', 'object-dining-table'],
   ['电视柜', 'object-tv-console'],
-  ['床', 'object-primary-bed'],
   ['书桌', 'object-flex-desk'],
   ['衣柜', 'object-primary-wardrobe'],
   ['鞋柜', 'object-shoe-cabinet'],
@@ -91,14 +99,36 @@ function hasNoWriteIntent(input) {
   return NO_WRITE_INTENT_PATTERN.test(input);
 }
 
+function roomIdForSelected(scene, selectedId) {
+  if (typeof selectedId !== 'string') return null;
+  if (findById(scene?.rooms, selectedId)) return selectedId;
+  return [...(scene?.objects ?? []), ...(scene?.surfaces ?? [])].find((entity) => entity.id === selectedId)?.roomId ?? null;
+}
+
+function selectedOrNamedObjectId(input, selectedId, scene = null) {
+  const selectedObject = typeof selectedId === 'string' && selectedId.startsWith('object-') ? findById(scene?.objects, selectedId) ?? { id: selectedId } : null;
+  const explicit = OBJECT_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
+  if (explicit) return explicit;
+  if (input.includes('床')) {
+    const roomId = namedRoomId(input) ?? roomIdForSelected(scene, selectedId) ?? selectedObject?.roomId;
+    if (roomId === 'room-flex') return 'object-flex-bed';
+    if (roomId === 'room-primary-bedroom') return 'object-primary-bed';
+    if (selectedObject?.category === 'bed') return selectedObject.id;
+    return 'object-primary-bed';
+  }
+  return selectedObject?.id ?? null;
+}
+
 function summarizeScene(scene, input, selectedObjectId) {
   const roomIds = new Set(ROOM_NOUNS.filter(([pattern]) => pattern.test(input)).map(([, roomId]) => roomId));
-  const namedObjectId = OBJECT_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
+  const namedObjectId = selectedOrNamedObjectId(input, selectedObjectId, scene);
   const namedSurfaceId = SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
   const selectedEntityId = namedObjectId ?? namedSurfaceId ?? selectedObjectId;
   const selectedEntity = [...(scene.objects ?? []), ...(scene.surfaces ?? [])].find((entity) => entity.id === selectedEntityId);
+  const selectedRoomId = findById(scene.rooms, selectedEntityId)?.id ?? roomIdForSelected(scene, selectedEntityId);
   const selectedSurfaceId = selectedEntityId?.startsWith('surface-') ? selectedEntityId : null;
   if (selectedEntity?.roomId) roomIds.add(selectedEntity.roomId);
+  if (selectedRoomId) roomIds.add(selectedRoomId);
   const includeWholeHome = /(整屋|全屋)/.test(input);
   const inScope = (entity) => includeWholeHome || roomIds.has(entity.roomId);
   const needsObjects = includeWholeHome || namedObjectId || /(家具|柜|收纳|餐桌|床|书桌)/.test(input);
@@ -145,7 +175,7 @@ function summarizeScene(scene, input, selectedObjectId) {
 function toolsForInput(input) {
   const names = new Set(['request_clarification']);
   const catalogIntent = /(墙|墙面|地面|地板|瓷砖|层板|架子|隔断|门|吊顶|顶面|柜|五金|台面)/.test(input);
-  const objectIntent = OBJECT_NOUNS.some(([noun]) => input.includes(noun));
+  const objectIntent = input.includes('床') || OBJECT_NOUNS.some(([noun]) => input.includes(noun));
   if (ROOM_NOUNS.some(([pattern]) => pattern.test(input))) names.add('inspect_room');
   if (catalogIntent) {
     names.add('search_catalog');
@@ -166,11 +196,6 @@ function toolsForInput(input) {
     names.add('search_catalog');
   }
   return TOOL_REGISTRY.filter((tool) => names.has(tool.name) && (!hasNoWriteIntent(input) || !tool.writes));
-}
-
-function selectedOrNamedObjectId(input, selectedObjectId) {
-  const selected = typeof selectedObjectId === 'string' && selectedObjectId.startsWith('object-') ? selectedObjectId : null;
-  return OBJECT_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? selected;
 }
 
 function selectedOrNamedSurfaceId(input, selectedObjectId) {
@@ -209,10 +234,10 @@ function degrees(input) {
   return match ? Number(match[1]) : null;
 }
 
-export function parseLocalToolCalls({ input, selectedObjectId = null, versionHistory = null }) {
+export function parseLocalToolCalls({ input, selectedObjectId = null, versionHistory = null, scene = null }) {
   const text = String(input ?? '').trim();
   if (!text) return [];
-  const objectId = selectedOrNamedObjectId(text, selectedObjectId);
+  const objectId = selectedOrNamedObjectId(text, selectedObjectId, scene);
   const surfaceId = selectedOrNamedSurfaceId(text, selectedObjectId);
 
   if (/(墙|墙面)/.test(text) && /(木饰面|护墙板|木墙板)/.test(text)) {
@@ -551,7 +576,7 @@ export async function runAgentTurn({
   const inputText = String(input ?? '');
   const turnTools = toolsForInput(inputText);
   const allowedToolNames = new Set(turnTools.map((tool) => tool.name));
-  const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory })
+  const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory, scene: store.currentScene })
     .filter((call) => allowedToolNames.has(call.tool));
   const catalogSummary = stableJsonValue(await Promise.resolve(catalogPlugin.summary({ input: inputText })));
   const catalogDescription = stableJsonValue(await Promise.resolve(catalogPlugin.describe()));

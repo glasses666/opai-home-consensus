@@ -46,6 +46,13 @@ export const AGENT_EVAL_CASES = Object.freeze([
     expect: [CHECKS.local, CHECKS.stepsOk, ({ result }) => object(result.store, 'object-primary-bed').transform.x === 1400],
   },
   {
+    id: 'local-flex-bed-context',
+    group: 'tool_selection',
+    input: '床向右移动20厘米',
+    selectedObjectId: 'room-flex',
+    expect: [CHECKS.local, CHECKS.stepsOk, ({ trace, result }) => hasTool(trace, 'move_object') && object(result.store, 'object-flex-bed').transform.x === 7900 && object(result.store, 'object-primary-bed').transform.x === 1500],
+  },
+  {
     id: 'local-rotate-table',
     group: 'tool_selection',
     input: '餐桌旋转90度',
