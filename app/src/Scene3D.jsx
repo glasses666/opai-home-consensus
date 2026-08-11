@@ -210,31 +210,37 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   const wallsGroup = new THREE.Group();
   wallsGroup.name = 'Canonical walls';
   const wallSurfaces = [];
+  const renderedSurfaces = new Map();
   world.add(floorGroup, wallsGroup);
 
   for (const surface of scene.surfaces.filter((candidate) => candidate.kind === 'floor')) {
+    const material = (floorMaterials[surface.materialId] ?? floorMaterials['mat-floor-light-oak']).clone();
     const mesh = setEntity(
-      new THREE.Mesh(shapeGeometry(surface.polygon), floorMaterials[surface.materialId] ?? floorMaterials['mat-floor-light-oak']),
+      new THREE.Mesh(shapeGeometry(surface.polygon), material),
       'room',
       surface.roomId,
       surface.roomId,
     );
     mesh.name = surface.id;
+    mesh.userData.materialId = surface.materialId;
     mesh.position.y = 0.006;
     mesh.receiveShadow = true;
     floorGroup.add(mesh);
+    renderedSurfaces.set(surface.id, { kind: 'floor', material, root: mesh });
     entityRoots.set(surface.roomId, mesh);
   }
 
   for (const wall of scene.surfaces.filter((candidate) => candidate.kind === 'wall')) {
+    const canonicalMaterial = scene.materials.find((candidate) => candidate.id === wall.materialId);
     const materials = {
-      wall: new THREE.MeshStandardMaterial({ color: '#f1ece3', roughness: 0.82 }),
+      wall: new THREE.MeshStandardMaterial({ color: canonicalMaterial?.color ?? '#f1ece3', roughness: 0.82 }),
       frame: new THREE.MeshStandardMaterial({ color: '#ddd3c5', roughness: 0.64 }),
       glass: new THREE.MeshPhysicalMaterial({ color: '#b7d1d4', roughness: 0.18, transmission: 0.44, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }),
     };
     for (const material of Object.values(materials)) material.userData.baseOpacity = material.opacity;
     const root = setEntity(new THREE.Group(), 'surface', wall.id, wall.roomId);
     root.name = wall.id;
+    root.userData.materialId = wall.materialId;
     const metrics = wallMetrics(wall);
     const openings = scene.openings.filter((opening) => opening.hostSurfaceId === wall.id).sort((a, b) => a.offset - b.offset);
     let cursor = 0;
@@ -260,6 +266,7 @@ function buildArchitecture(world, scene, textures, entityRoots) {
       materials: Object.values(materials),
       occlusionProgress: 0,
     });
+    renderedSurfaces.set(wall.id, { kind: 'wall', material: materials.wall, root });
     entityRoots.set(wall.id, root);
   }
 
@@ -272,7 +279,7 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   ground.receiveShadow = true;
   ground.userData.skipPick = true;
   world.add(ground);
-  return wallSurfaces;
+  return { floorMaterials, renderedSurfaces, wallSurfaces };
 }
 
 async function loadTextures(renderer) {
@@ -428,7 +435,7 @@ async function createController(container, scene, callbacks) {
   const entityRoots = new Map();
   const objectLoader = new GLTFLoader();
   const textures = await loadTextures(renderer);
-  const wallSurfaces = buildArchitecture(world, currentScene, textures, entityRoots);
+  const { floorMaterials, renderedSurfaces, wallSurfaces } = buildArchitecture(world, currentScene, textures, entityRoots);
   let clearanceZoneOverlays = buildClearanceZoneOverlays(currentScene);
   world.add(clearanceZoneOverlays);
   await buildFurniture(world, currentScene, entityRoots, callbacks);
@@ -516,6 +523,18 @@ async function createController(container, scene, callbacks) {
     ));
     clearanceZoneOverlays.visible = visible;
     for (const child of clearanceZoneOverlays.children) child.visible = visible && child.userData.roomId === object?.roomId;
+  }
+
+  function syncSurfaceMaterials() {
+    for (const surface of currentScene.surfaces) {
+      const rendered = renderedSurfaces.get(surface.id);
+      if (!rendered || rendered.root.userData.materialId === surface.materialId) continue;
+      const canonicalMaterial = currentScene.materials.find((candidate) => candidate.id === surface.materialId);
+      if (canonicalMaterial?.color) rendered.material.color.set(canonicalMaterial.color);
+      if (rendered.kind === 'floor') rendered.material.map = floorMaterials[surface.materialId]?.map ?? null;
+      rendered.material.needsUpdate = true;
+      rendered.root.userData.materialId = surface.materialId;
+    }
   }
 
   function syncEditControl() {
@@ -785,6 +804,7 @@ async function createController(container, scene, callbacks) {
       currentScene = nextScene;
       presets = new Map(currentScene.cameraPresets.map((preset) => [preset.id, preset]));
       objects = new Map(currentScene.objects.map((object) => [object.id, object]));
+      syncSurfaceMaterials();
       world.remove(clearanceZoneOverlays);
       disposeObject3D(clearanceZoneOverlays);
       clearanceZoneOverlays = buildClearanceZoneOverlays(currentScene);

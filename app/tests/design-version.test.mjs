@@ -7,6 +7,7 @@ import {
   confirmSceneVersion,
   createVersionHistory,
   deserializeVersionHistory,
+  reviewSceneVersion,
   restoreSceneVersion,
   saveSceneVersion,
   sceneStoreForVersion,
@@ -58,6 +59,19 @@ test('confirmed version stays intact and the next saved edit is changed_after_co
   assert.equal(history.versions.find((version) => version.id === 'version-two').status, 'customer_confirmed');
   assert.equal(history.versions.find((version) => version.id === 'version-three').status, 'changed_after_confirm');
   assert.equal(serializeScene(sceneStoreForVersion(history, 'version-two').currentScene), serializeScene(moved.currentScene));
+});
+
+test('designer review status preserves the reviewed scene snapshot', () => {
+  const initialStore = createSceneStore(createDemoScene());
+  let history = createVersionHistory(initialStore);
+  const moved = dispatchSceneCommand(initialStore, { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } });
+  history = saveSceneVersion(history, moved, { id: 'version-two' });
+  history = confirmSceneVersion(history, 'version-two');
+  history = reviewSceneVersion(history, 'version-two', { action: 'approve', note: '可以交接' });
+
+  assert.equal(history.versions.find((version) => version.id === 'version-two').status, 'designer_verified');
+  assert.equal(serializeScene(sceneStoreForVersion(history, 'version-two').currentScene), serializeScene(moved.currentScene));
+  assert.throws(() => reviewSceneVersion(history, 'version-two', { action: 'maybe' }), /REVIEW_ACTION_INVALID/);
 });
 
 test('restoring an old version appends a reversible version instead of overwriting history', () => {

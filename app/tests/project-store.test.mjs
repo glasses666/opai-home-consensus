@@ -92,6 +92,34 @@ test('event IDs are idempotent and expectedVersionId blocks stale writes', () =>
   }
 });
 
+test('confirm and review mutate version status idempotently without deleting scene', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file, id: () => 'review' });
+    const changed = dispatchSceneCommand(
+      store.getSceneStore(),
+      { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } },
+    );
+    const version = store.recordVersion({
+      expectedVersionId: store.currentVersionId,
+      store: changed,
+      event: { eventId: 'evt-version', input: 'move', provider: 'local', trace: { toolCalls: [] } },
+    });
+
+    const confirmed = store.confirmVersion({ versionId: version.id, eventId: 'evt-confirm', actor: 'resident' });
+    const repeated = store.confirmVersion({ versionId: version.id, eventId: 'evt-confirm', actor: 'resident' });
+    assert.equal(confirmed.status, 'customer_confirmed');
+    assert.equal(repeated.status, 'customer_confirmed');
+
+    const reviewed = store.reviewVersion({ versionId: version.id, eventId: 'evt-review', action: 'approve', note: 'ok' });
+    assert.equal(reviewed.status, 'designer_verified');
+    assert.equal(store.getSceneStore(version.id).currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+    assert.throws(() => store.reviewVersion({ versionId: version.id, eventId: 'evt-review', action: 'return', note: 'changed' }), /EVENT_ID_CONFLICT/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('corrupt project file is preserved and replaced with a valid initial store', () => {
   const { dir, file } = tmpStorePath();
   try {

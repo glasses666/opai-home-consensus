@@ -8,6 +8,10 @@ import { createAppServer } from '../server/index.mjs';
 import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { callAily, getFeishuHealth, syncActivity } from '../server/feishu.mjs';
 import { LarkCliError, runLarkCli } from '../server/lark-cli.mjs';
+import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
+import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
+import { createSceneStore, dispatchSceneCommand } from '../src/domain/scene.js';
+import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createVersionHistory, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 
@@ -493,7 +497,7 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
       assert.equal(reviewedBody.handoffUrl, `/handoff/${history.currentVersionId}`);
 
       const exported = await (await fetch(`${origin}/api/projects/project-demo/export`)).json();
-      assert.equal(exported.packet.version.status, 'customer_confirmed');
+      assert.equal(exported.packet.version.status, 'designer_verified');
       assert.equal(exported.reviewDecision.decision, 'approved');
       assert.equal(exported.packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
     } finally {
