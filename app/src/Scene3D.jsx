@@ -884,6 +884,7 @@ export default function Scene3D({
   selection,
   onSelect,
   onNavigate,
+  onExitTo2D,
   activeRoomId,
   roomLabels,
   onStats,
@@ -910,6 +911,7 @@ export default function Scene3D({
   const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: scene.objects.length });
   const [wallOcclusionEnabled, setWallOcclusionEnabled] = useState(true);
   const [viewState, setViewState] = useState({ id: 'camera-home-overview', label: '整屋', phase: 'started' });
+  const [reloadNonce, setReloadNonce] = useState(0);
   const presets = useMemo(() => [
     showHomeView ? scene.cameraPresets.find((preset) => preset.kind === 'whole_home') : null,
     ...scene.cameraPresets
@@ -921,6 +923,7 @@ export default function Scene3D({
     let cancelled = false;
     setStatus('loading');
     setAssetLoadState({ completed: 0, failed: 0, total: sceneRef.current.objects.length });
+    mountRef.current?.replaceChildren();
     createController(mountRef.current, sceneRef.current, {
       onSelect: (...args) => callbacksRef.current.onSelect?.(...args),
       onNavigate: (...args) => callbacksRef.current.onNavigate?.(...args),
@@ -953,7 +956,7 @@ export default function Scene3D({
       controllerRef.current?.dispose();
       controllerRef.current = null;
     };
-  }, [scene.id]);
+  }, [scene.id, reloadNonce]);
 
   useEffect(() => {
     const controller = controllerRef.current;
@@ -987,9 +990,15 @@ export default function Scene3D({
 
   return <div className="scene3d-shell" data-testid="scene-3d" data-room-id={activeRoomId ?? ''} data-selected-id={selection?.id ?? ''}>
     <div className="scene3d" ref={mountRef} data-status={status} />
-    <div className="scene3d__status" aria-live="polite">
+    <div className={`scene3d__status${status === 'error' ? ' scene3d__status--error' : ''}`} aria-live="polite">
       {status === 'loading' && <><SpinnerGap className="spin" size={15} /> 载入原创 GLB · {assetLoadState.completed}/{assetLoadState.total}</>}
-      {status === 'error' && '三维场景加载失败'}
+      {status === 'error' && <div className="scene3d__error">
+        <span>三维场景加载失败</span>
+        <div>
+          <button type="button" onClick={() => setReloadNonce((value) => value + 1)}>重试 3D</button>
+          {onExitTo2D && <button type="button" onClick={onExitTo2D}>回到 2D 总览</button>}
+        </div>
+      </div>}
       {status === 'ready' && <><span className="live-dot" /> {assetLoadState.failed ? `${assetLoadState.failed} 件资源使用边界占位` : (viewState.phase === 'started' ? `镜头飞行中 · ${viewState.label}` : `${viewState.label} · 同一 scene`)}</>}
     </div>
     <div className="scene3d__room">

@@ -42,6 +42,13 @@ const serialized = serializeScene(scene);
 const serializedBytes = new TextEncoder().encode(serialized).length;
 const roundTripMatches = serializeScene(deserializeScene(serialized)) === serialized;
 
+const capabilityLabel = (status, name) => {
+  if (status === 'ready') return `${name} 已连接`;
+  if (status === 'missing_scope') return `${name} 待授权`;
+  if (status === 'auth_failed') return `${name} 授权失效`;
+  return `${name} 未连接`;
+};
+
 const roomLabels = {
   'room-primary-bedroom': '主卧',
   'room-bathroom': '卫生间',
@@ -554,7 +561,7 @@ function LabScenePage() {
 
   return <main className="lab">
     <header className="lab__header"><div><p className="eyebrow">Gate 2 · same-source spatial proof</p><h1>2D 户型与真实 3D 同源场景</h1><p className="lab__lede">九件原创 GLB、墙体开洞、PBR 材质和可复现镜头全部读取 Gate 1 的同一份毫米级 scene。点击房间地面会先飞到三维俯视，再选入口、主功能面或自由视角。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
-    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
+    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} onExitTo2D={() => setWorkspaceMode('2d')} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
     <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
   </main>;
 }
@@ -601,6 +608,9 @@ function ProjectDemoPage() {
   const [opinionText, setOpinionText] = useState('');
   const [consensusFeedback, setConsensusFeedback] = useState('三位成员依次表达；所有意见都写入同一共享版本。');
   const agentMessageListRef = useRef(null);
+  const versionDrawerRef = useRef(null);
+  const versionDrawerActivatorRef = useRef(null);
+  const versionDrawerWasOpenRef = useRef(false);
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
   const displaySelection = selectionFromId(currentScene, displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
@@ -706,6 +716,7 @@ function ProjectDemoPage() {
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
   const roomBrief = activeRoomId ? roomBriefs[activeRoomId] : null;
+  const agentHasConversation = agentMessages.some((message) => message.role === 'user');
   const agentQuickPrompts = activeRoomId === 'room-primary-bedroom'
     ? selectedObject?.id === 'object-primary-bed'
       ? ['双人床向左移动10厘米', '检查双人床床侧净距', '对比上一版变化']
@@ -737,6 +748,13 @@ function ProjectDemoPage() {
     () => ({ id: navigation.viewId, sequence: viewSequence }),
     [navigation.viewId, viewSequence],
   );
+  const openVersionDrawer = useCallback(() => {
+    versionDrawerActivatorRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setVersionDrawerOpen(true);
+  }, []);
+  const closeVersionDrawer = useCallback(() => {
+    setVersionDrawerOpen(false);
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -1370,11 +1388,44 @@ function ProjectDemoPage() {
   }, [agentBusy, agentMessages]);
 
   useEffect(() => {
-    if (!versionDrawerOpen) return undefined;
-    const closeOnEscape = (event) => { if (event.key === 'Escape') setVersionDrawerOpen(false); };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
+    if (versionDrawerOpen) {
+      const drawer = versionDrawerRef.current;
+      const firstFocusable = drawer?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      (firstFocusable ?? drawer)?.focus?.();
+    } else if (versionDrawerWasOpenRef.current) {
+      versionDrawerActivatorRef.current?.focus?.();
+      versionDrawerActivatorRef.current = null;
+    }
+    versionDrawerWasOpenRef.current = versionDrawerOpen;
   }, [versionDrawerOpen]);
+
+  useEffect(() => {
+    if (!versionDrawerOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeVersionDrawer();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const drawer = versionDrawerRef.current;
+      if (!drawer) return;
+      const focusables = [...drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.hasAttribute('disabled'));
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closeVersionDrawer, versionDrawerOpen]);
 
   useEffect(() => {
     const handleEditShortcut = (event) => {
@@ -1417,7 +1468,7 @@ function ProjectDemoPage() {
         <span className="status">实时 2D / 3D 同源</span>
         <a className="utility-button" href="/review/project-demo">设计师复核</a>
         <a className="utility-button" href={`/handoff/${currentVersion.id}`}>交接 JSON</a>
-        <button className="utility-button" data-testid="open-version-drawer" type="button" onClick={() => setVersionDrawerOpen(true)}><ClockCounterClockwise size={15} aria-hidden="true" />{currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
+        <button className="utility-button" data-testid="open-version-drawer" type="button" onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />{currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
         <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome} disabled={!activeRoomId && navigation.viewId === homePreset?.id}>返回整屋</button>
       </div>
     </header>
@@ -1573,7 +1624,7 @@ function ProjectDemoPage() {
 
           <div className="agent-sidecar__scope">
             <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
-            <small>Aily: {agentCapability.aily} · Base: {agentCapability.base}</small>
+            <small>{capabilityLabel(agentCapability.aily, 'Aily')} · {capabilityLabel(agentCapability.base, '飞书留痕')}</small>
           </div>
 
           <div className="agent-quick" aria-label="快速真实任务">
@@ -1585,9 +1636,17 @@ function ProjectDemoPage() {
               <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' ? 'AILY' : 'LOCAL'}{message.fallbackReason ? ` · ${message.fallbackReason}` : ''}</small>}</div>
               <p>{message.text}</p>
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
-              {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={() => setVersionDrawerOpen(true)}>查看版本并由我确认</button>}
+              {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
             </article>)}
             {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>LOCAL</small></div><p>正在读取当前 scene、版本和规则…</p></article>}
+            {!agentBusy && !agentHasConversation && <section className="agent-empty" aria-label="Agent 初始提示">
+              <strong>先选一个房间或家具，我们就能开始了</strong>
+              <p>我会读取当前选择、版本和规则，只在允许范围内给出改动、解释代价，并保留所有未决项。</p>
+              <div>
+                <button type="button" onClick={() => runAgentPrompt(agentQuickPrompts[0])}>{agentQuickPrompts[0]}</button>
+                <button type="button" onClick={openVersionDrawer}>查看当前版本</button>
+              </div>
+            </section>}
           </div>
 
           {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
@@ -1638,7 +1697,7 @@ function ProjectDemoPage() {
               </div>}
               {householdConsensus.finalDecision && chosenDirection && <div className="household-decision">
                 <span>共同方向</span><strong>{chosenDirection.title}</strong><p>{chosenDirection.summary}</p>
-                <button type="button" onClick={() => setVersionDrawerOpen(true)}>查看真实差异与影响</button>
+                <button type="button" onClick={openVersionDrawer}>查看真实差异与影响</button>
               </div>}
             </> : <p>{householdConsensus.opinions.length < 2 ? '请至少让两位成员针对同一对象表达立场。' : '已记录的意见没有形成同一对象上的相反立场。'}</p>}
           </section>
@@ -1662,11 +1721,11 @@ function ProjectDemoPage() {
       </aside>
     </section>
     {versionDrawerOpen && <div className="version-layer">
-      <button className="version-layer__scrim" type="button" aria-label="关闭版本与影响" onClick={() => setVersionDrawerOpen(false)} />
-      <aside className="version-drawer" role="dialog" aria-modal="true" aria-labelledby="version-drawer-title" data-testid="version-impact-drawer">
+      <button className="version-layer__scrim" type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer} />
+      <aside className="version-drawer" role="dialog" aria-modal="true" aria-labelledby="version-drawer-title" data-testid="version-impact-drawer" ref={versionDrawerRef} tabIndex={-1}>
         <header className="version-drawer__header">
           <div><p className="panel__kicker">同一 scene · 可回放</p><h2 id="version-drawer-title">版本与影响</h2></div>
-          <button type="button" aria-label="关闭版本与影响" onClick={() => setVersionDrawerOpen(false)}><X size={18} /></button>
+          <button type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer}><X size={18} /></button>
         </header>
 
         <section className="version-current" data-status={currentVersionStatus}>
@@ -1767,6 +1826,9 @@ function DesignerReviewPage() {
   const [submitState, setSubmitState] = useState({ status: 'idle', message: '', handoffUrl: null });
   const projectId = routeSlug(pathname, 'review') ?? 'project-demo';
   const issueCount = (review.ruleIssues?.length ?? 0) + (review.unresolved?.length ?? 0);
+  useEffect(() => {
+    if (exportState.data.reviewDecision?.decision) setDecision(exportState.data.reviewDecision.decision);
+  }, [exportState.data.reviewDecision?.decision]);
   const submitReview = async (nextDecision) => {
     if (!packet?.version?.id) return;
     setSubmitState({ status: 'pending', message: '正在写入复核决定…', handoffUrl: null });
@@ -1796,7 +1858,7 @@ function DesignerReviewPage() {
       </div>
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
-    {exportState.status === 'fallback' && <p className="handoff-notice" data-status="failed">服务器 export 不可用：{exportState.error}。当前展示本地兜底数据。</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业复核服务尚未连接。</p>}
 
     <section className="handoff-grid">
       <article className="panel handoff-card">
@@ -1804,7 +1866,7 @@ function DesignerReviewPage() {
         <dl><div><dt>状态</dt><dd>{versionStatusLabels[review.status] ?? review.status}</dd></div><div><dt>规则</dt><dd>{ruleStatusLabels[review.ruleStatus] ?? review.ruleStatus}</dd></div><div><dt>待处理</dt><dd>{issueCount}</dd></div></dl>
       </article>
       <article className="panel handoff-card">
-        <span>飞书能力</span><strong>{review.capability.aily} / {review.capability.base}</strong>
+        <span>服务状态</span><strong>{capabilityLabel(review.capability.aily, 'Aily')} / {capabilityLabel(review.capability.base, '飞书留痕')}</strong>
         <p>页面只展示真实 capability 或本地降级，不声明已接通欧派生产、报价或 BOM。</p>
       </article>
       <article className="panel handoff-card">
@@ -1855,7 +1917,7 @@ function HandoffPage() {
       <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate('/review/project-demo')}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate('/project/demo')}>返回工作台</button></div>
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
-    {exportState.status === 'fallback' && <p className="handoff-notice" data-status="failed">服务器 export 不可用：{exportState.error}。当前展示本地兜底数据。</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业交接服务尚未连接。</p>}
 
     <section className="handoff-grid">
       <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
