@@ -21,6 +21,10 @@ export function buildDesignerReview(history, consensus, {
   const base = current.parentVersionId ? versionById(history, current.parentVersionId) : history.versions[0];
   const diff = compareSceneVersions(base, current);
   const rules = evaluateDesignRules(current.scene);
+  const changedObjectIds = new Set(diff.objectDiffs.map((change) => change.objectId));
+  const professionalReviews = current.scene.objects
+    .filter((object) => changedObjectIds.has(object.id) && object.review?.requiresProfessionalReview && object.review.status !== 'approved')
+    .map((object) => ({ objectId: object.id, status: object.review.status, reasons: clone(object.review.reasons), source: object.review.source }));
   const confirmed = consensus?.finalDecision?.versionId === current.id
     ? consensus.confirmations.map((confirmation) => confirmation.memberId)
     : [];
@@ -42,6 +46,7 @@ export function buildDesignerReview(history, consensus, {
       objectIds: [...check.objectIds],
     })),
     objectDiffs: diff.objectDiffs,
+    professionalReviews,
     unresolved: diff.impact.unresolved,
     household: {
       members: clone(consensus?.members ?? []),
@@ -50,7 +55,7 @@ export function buildDesignerReview(history, consensus, {
       confirmedMemberIds: confirmed,
     },
     capability,
-    recommendation: rules.status === 'blocked' || diff.impact.unresolved.length
+    recommendation: rules.status === 'blocked' || diff.impact.unresolved.length || professionalReviews.length
       ? 'return_with_notes'
       : 'approve',
   };
@@ -90,6 +95,11 @@ export function buildHandoffPacket(history, consensus, {
       roomId: object.roomId,
       dimensions: clone(object.dimensions),
       transform: clone(object.transform),
+      hierarchy: clone(object.hierarchy),
+      placement: clone(object.placement),
+      collision: clone(object.collision),
+      model3D: clone(object.model3D),
+      review: clone(object.review),
       materialId: object.materialId,
       materialSource: sourceOf(materials.get(object.materialId)),
       source: sourceOf(object),

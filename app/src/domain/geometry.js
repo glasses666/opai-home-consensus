@@ -167,6 +167,24 @@ export function rotatedFootprint(transform, dimensions) {
 }
 
 /**
+ * Collision stays canonical even when the visible GLB is replaced. Offsets are
+ * object-local millimeters, so rotating an object rotates its proxy with it.
+ * @param {{transform:{x:number,z:number,rotationY:number},collision:{kind:string,participates:boolean,dimensions:{width:number,depth:number},offset?:{x?:number,z?:number}}}} object
+ * @returns {PlanPoint[]}
+ */
+export function objectCollisionFootprint(object) {
+  if (object.collision?.kind !== 'box' || object.collision.participates === false) return [];
+  const offset = object.collision.offset ?? { x: 0, z: 0 };
+  const sin = Math.sin(object.transform.rotationY);
+  const cos = Math.cos(object.transform.rotationY);
+  return rotatedFootprint({
+    ...object.transform,
+    x: object.transform.x + (offset.x ?? 0) * cos - (offset.z ?? 0) * sin,
+    z: object.transform.z + (offset.x ?? 0) * sin + (offset.z ?? 0) * cos,
+  }, object.collision.dimensions);
+}
+
+/**
  * Positive-area overlap test for convex plan polygons. Edge contact is allowed.
  * Furniture footprints and clearance zones in the canonical scene are convex.
  *

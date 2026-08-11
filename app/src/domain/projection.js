@@ -1,4 +1,4 @@
-import { rotatedFootprint, segmentAtOffset, viewBoxForPolygons } from './geometry.js';
+import { objectCollisionFootprint, rotatedFootprint, segmentAtOffset, viewBoxForPolygons } from './geometry.js';
 
 /**
  * Project both 2D layers from the same scene records. The media layer deliberately
@@ -45,7 +45,10 @@ export function projectScene2D(scene) {
     id: object.id,
     sourceObjectId: object.id,
     roomId: object.roomId,
+    layer: object.hierarchy.layer,
+    hostSurfaceId: object.placement.hostSurfaceId,
     polygon: rotatedFootprint(object.transform, object.dimensions).map((point) => ({ x: point.x, y: point.z })),
+    collisionPolygon: objectCollisionFootprint(object).map((point) => ({ x: point.x, y: point.z })),
   }));
   const assets = scene.objects.map((object, index) => ({
     id: `media-${object.id}`,

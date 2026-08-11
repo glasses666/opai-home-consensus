@@ -1,4 +1,4 @@
-import { convexPolygonsOverlap, distance, polygonEdges, polygonInsidePolygon, rotatedFootprint, segmentAtOffset } from './geometry.js';
+import { convexPolygonsOverlap, distance, objectCollisionFootprint, polygonEdges, polygonInsidePolygon, segmentAtOffset } from './geometry.js';
 
 const levelForRule = (rule) => {
   if (rule?.severity === 'warning') return 'warning';
@@ -6,7 +6,7 @@ const levelForRule = (rule) => {
   return 'hard_block';
 };
 
-const footprintFor = (object) => rotatedFootprint(object.transform, object.dimensions);
+const footprintFor = objectCollisionFootprint;
 const statusForLevel = (level) => {
   if (level === 'hard_block') return 'blocked';
   if (level === 'recommendation') return 'recommendation';

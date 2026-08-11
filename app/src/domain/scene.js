@@ -4,7 +4,7 @@ import {
   polygonArea,
   polygonEdges,
   polygonInsidePolygon,
-  rotatedFootprint,
+  objectCollisionFootprint,
   segmentOnSegment,
 } from './geometry.js';
 import { assertDesignRules } from './design-rules.js';
@@ -30,6 +30,10 @@ const OBJECT_CAPABILITIES = [
   'materialEditable',
   'parameterEditable',
 ];
+
+const OBJECT_LAYERS = new Set(['furniture', 'fixed_installation', 'equipment', 'service']);
+const MODEL_SOURCES = new Set(['generated', 'ai-generated', 'enterprise']);
+const REVIEW_STATUSES = new Set(['not_required', 'required', 'approved', 'returned']);
 
 /**
  * @typedef {{code:string,path:string,message:string}} SceneValidationError
@@ -253,6 +257,7 @@ export function validateScene(scene) {
   const ruleMap = mapById(rules);
   const objectMap = mapById(objects);
   const cameraPresetMap = mapById(cameraPresets);
+  const modelSlotIds = new Set();
 
   for (const [index, preset] of cameraPresets.entries()) {
     if (isObject(preset) && preset.kind !== 'whole_home' && !roomMap.has(preset.roomId)) {
@@ -429,6 +434,50 @@ export function validateScene(scene) {
       addError(errors, 'OBJECT_CAPABILITIES_INVALID', `${path}.capabilities`, 'Object capabilities must explicitly declare every editable capability.');
     }
     if (
+      !isObject(object.hierarchy) ||
+      object.hierarchy.parentId !== object.roomId ||
+      !OBJECT_LAYERS.has(object.hierarchy.layer) ||
+      (object.hierarchy.layer === 'fixed_installation' && object.capabilities?.movable)
+    ) {
+      addError(errors, 'OBJECT_HIERARCHY_INVALID', `${path}.hierarchy`, 'Object hierarchy must place a valid layer under its owning room; fixed installations cannot move.');
+    }
+    const hostSurface = surfaceMap.get(object.placement?.hostSurfaceId);
+    if (
+      !isObject(object.placement) ||
+      object.placement.mode !== 'surface_anchored' ||
+      !hostSurface ||
+      hostSurface.roomId !== object.roomId ||
+      !isObject(object.placement.offset) ||
+      ['x', 'y', 'z'].some((axis) => !isInteger(object.placement.offset[axis]))
+    ) {
+      addError(errors, 'OBJECT_PLACEMENT_INVALID', `${path}.placement`, 'Object placement must reference a surface in the same room with integer millimeter offsets.');
+    }
+    if (
+      !isObject(object.collision) ||
+      object.collision.kind !== 'box' ||
+      object.collision.participates !== true ||
+      !['canonical', 'manual', 'enterprise'].includes(object.collision.source) ||
+      !isObject(object.collision.dimensions) ||
+      !isPositiveInteger(object.collision.dimensions.width) ||
+      !isPositiveInteger(object.collision.dimensions.depth) ||
+      !isPositiveInteger(object.collision.dimensions.height) ||
+      !isObject(object.collision.offset) ||
+      ['x', 'y', 'z'].some((axis) => !isInteger(object.collision.offset[axis]))
+    ) {
+      addError(errors, 'OBJECT_COLLISION_INVALID', `${path}.collision`, 'Object collision must be an enabled box proxy in integer millimeters.');
+    }
+    if (
+      !isObject(object.review) ||
+      typeof object.review.requiresProfessionalReview !== 'boolean' ||
+      !REVIEW_STATUSES.has(object.review.status) ||
+      !Array.isArray(object.review.reasons) ||
+      object.review.reasons.some((reason) => typeof reason !== 'string' || !reason) ||
+      !['demo', 'estimate', 'enterprise'].includes(object.review.source) ||
+      (object.review.requiresProfessionalReview ? object.review.status === 'not_required' : object.review.status !== 'not_required')
+    ) {
+      addError(errors, 'OBJECT_REVIEW_INVALID', `${path}.review`, 'Object review must explicitly declare whether professional verification is required.');
+    }
+    if (
       !isObject(object.media2D) ||
       typeof object.media2D.src !== 'string' ||
       !object.media2D.src.startsWith('/assets/') ||
@@ -442,23 +491,38 @@ export function validateScene(scene) {
         'Object media2D must reference a generated orthographic-top asset under /assets/.',
       );
     }
+    const model = object.model3D;
+    const modelBoundsValid = isObject(model?.renderBounds) &&
+      isPositiveInteger(model.renderBounds.width) &&
+      isPositiveInteger(model.renderBounds.depth) &&
+      isPositiveInteger(model.renderBounds.height);
+    const provenanceValid = isObject(model?.provenance) &&
+      typeof model.provenance.provider === 'string' && Boolean(model.provenance.provider) &&
+      typeof model.provenance.generationId === 'string' && Boolean(model.provenance.generationId) &&
+      typeof model.provenance.humanReviewed === 'boolean';
     if (
-      !isObject(object.model3D) ||
-      typeof object.model3D.src !== 'string' ||
-      !object.model3D.src.startsWith('/assets/models/') ||
-      object.model3D.format !== 'glb' ||
-      object.model3D.source !== 'generated' ||
-      object.model3D.generator !== 'scripts/build_demo_assets.py'
+      !isObject(model) ||
+      typeof model.src !== 'string' ||
+      !/^\/assets\/models\/[A-Za-z0-9][A-Za-z0-9._-]*\.glb$/.test(model.src) ||
+      model.format !== 'glb' ||
+      !MODEL_SOURCES.has(model.source) ||
+      typeof model.slotId !== 'string' || !model.slotId ||
+      !isPositiveInteger(model.revision) ||
+      model.units !== 'mm' || model.upAxis !== 'y' || model.forwardAxis !== 'z' ||
+      !modelBoundsValid || !provenanceValid ||
+      (model.source === 'generated' && model.generator !== 'scripts/build_demo_assets.py')
     ) {
       addError(
         errors,
         'OBJECT_MODEL3D_INVALID',
         `${path}.model3D`,
-        'Object model3D must reference a generated GLB and its checked-in Blender generator.',
+        'Object model3D must use a unique local GLB slot with dimensions, axes, revision, and traceable provenance.',
       );
     }
+    if (modelSlotIds.has(model?.slotId)) addError(errors, 'MODEL_SLOT_DUPLICATE', `${path}.model3D.slotId`, `Model slot "${model.slotId}" is reused.`);
+    if (typeof model?.slotId === 'string') modelSlotIds.add(model.slotId);
     if (room?.polygon && object.dimensions && object.transform) {
-      const footprint = rotatedFootprint(object.transform, object.dimensions);
+      const footprint = objectCollisionFootprint(object);
       if (!polygonInsidePolygon(footprint, room.polygon)) {
         addError(errors, 'OBJECT_FOOTPRINT_OUTSIDE_ROOM', path, `Object "${object.id}" footprint must stay inside owning room.`);
       }
@@ -556,6 +620,31 @@ function applySceneCommand(scene, command) {
       throw new Error('DIMENSIONS_INVALID: dimensions must be positive integer millimeters.');
     }
     object.dimensions = dimensions;
+    if (object.collision?.source === 'canonical') object.collision.dimensions = { ...dimensions };
+    if (object.model3D?.renderBounds) object.model3D.renderBounds = { ...dimensions };
+  } else if (command.type === 'object.setModelAsset') {
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
+    if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
+    if (!object.capabilities.replaceable) throw new Error(`OBJECT_NOT_REPLACEABLE: Object "${command.objectId}" model is locked.`);
+    if (!isObject(command.model3D)) throw new Error('MODEL_ASSET_INVALID: model3D is required.');
+    if (command.model3D.source && command.model3D.source !== object.model3D.source && !isObject(command.model3D.provenance)) {
+      throw new Error('MODEL_PROVENANCE_REQUIRED: a new asset source needs provider and generation metadata.');
+    }
+    object.model3D = {
+      ...object.model3D,
+      ...command.model3D,
+      slotId: object.model3D.slotId,
+      revision: object.model3D.revision + 1,
+    };
+    if (object.model3D.source !== 'generated' && command.model3D.generator === undefined) delete object.model3D.generator;
+    if (object.model3D.provenance.humanReviewed === false) {
+      object.review = {
+        requiresProfessionalReview: true,
+        status: 'required',
+        reasons: [...new Set([...object.review.reasons, 'ai_model_requires_asset_review'])],
+        source: 'estimate',
+      };
+    }
   } else if (command.type === 'object.duplicate') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
@@ -573,6 +662,7 @@ function applySceneCommand(scene, command) {
       name: `${object.name} Copy`,
       preferredCameraPresetId: room?.cameraPresetIds?.[0] ?? null,
       transform: { ...object.transform, ...command.transform },
+      model3D: { ...object.model3D, slotId: `slot-${command.newObjectId}` },
     });
   } else if (command.type === 'object.delete') {
     const index = nextScene.objects?.findIndex((candidate) => candidate.id === command.objectId) ?? -1;

@@ -39,6 +39,11 @@ test('handoff packet keeps enterprise data pending and every object source expli
   assert.equal(packet.version.status, 'customer_confirmed');
   assert.equal(packet.confirmedObjects.every((object) => object.source), true);
   assert.equal(packet.confirmedObjects.every((object) => object.materialSource), true);
+  assert.equal(packet.confirmedObjects.every((object) => object.hierarchy?.parentId === object.roomId), true);
+  assert.equal(packet.confirmedObjects.every((object) => object.placement?.hostSurfaceId), true);
+  assert.equal(packet.confirmedObjects.every((object) => object.collision?.kind === 'box'), true);
+  assert.equal(packet.confirmedObjects.every((object) => object.model3D?.slotId), true);
+  assert.equal(packet.confirmedObjects.every((object) => object.review?.source), true);
   assert.equal(packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
   assert.equal(packet.downstreamPlaceholders.production, 'not_connected_in_v1');
 });

@@ -104,6 +104,7 @@ function buildObjectAsset(templateScene, object, scene) {
   asset.position.y -= scaledBounds.min.y;
   asset.traverse((child) => {
     if (!child.isMesh) return;
+    child.geometry = child.geometry.clone();
     child.castShadow = true;
     child.receiveShadow = true;
     child.userData.sourceObjectId = object.id;
@@ -133,6 +134,7 @@ function createObjectRoot(templateScene, object, scene, entityRoots) {
   root.userData.materialId = object.materialId;
   root.userData.assetSource = object.model3D.source;
   root.userData.modelSrc = object.model3D.src;
+  root.userData.assetRevision = object.model3D.revision;
   root.userData.sourceSize = sourceSize;
   root.userData.baseDimensions = { ...object.dimensions };
   root.userData.assetRoot = asset;
@@ -343,6 +345,8 @@ function addAssetPlaceholder(object) {
   mesh.position.y = object.dimensions.height * MM / 2;
   root.name = object.id;
   root.userData.assetSource = 'placeholder';
+  root.userData.modelSrc = object.model3D.src;
+  root.userData.assetRevision = object.model3D.revision;
   root.userData.baseDimensions = { ...object.dimensions };
   root.add(mesh);
   syncObjectRoot(root, object);
@@ -815,6 +819,14 @@ async function createController(container, scene, callbacks) {
       for (const object of currentScene.objects) {
         if (revision !== sceneUpdateRevision) return false;
         let root = entityRoots.get(object.id);
+        if (root && (root.userData.modelSrc !== object.model3D.src || root.userData.assetRevision !== object.model3D.revision)) {
+          const previousSrc = root.userData.modelSrc;
+          world.remove(root);
+          disposeObject3D(root);
+          entityRoots.delete(object.id);
+          assetTemplateCache.delete(previousSrc);
+          root = null;
+        }
         if (!root) {
           try {
             if (!assetTemplateCache.has(object.model3D.src)) assetTemplateCache.set(object.model3D.src, objectLoader.loadAsync(object.model3D.src).then((gltf) => gltf.scene));

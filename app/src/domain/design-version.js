@@ -190,6 +190,10 @@ export function compareSceneVersions(beforeVersion, afterVersion) {
       if (!same(before.transform, after.transform)) objectDiffs.push(diffValue('transform', id, before.transform, after.transform));
       if (!same(before.dimensions, after.dimensions)) objectDiffs.push(diffValue('dimensions', id, before.dimensions, after.dimensions));
       if (before.materialId !== after.materialId) objectDiffs.push(diffValue('material', id, before.materialId, after.materialId));
+      if (!same(before.model3D, after.model3D)) objectDiffs.push(diffValue('model', id, before.model3D, after.model3D));
+      if (!same(before.placement, after.placement)) objectDiffs.push(diffValue('placement', id, before.placement, after.placement));
+      if (!same(before.collision, after.collision)) objectDiffs.push(diffValue('collision', id, before.collision, after.collision));
+      if (!same(before.review, after.review)) objectDiffs.push(diffValue('review', id, before.review, after.review));
     }
   }
   for (const [id, after] of afterObjects) {

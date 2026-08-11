@@ -122,7 +122,12 @@ const diffKindLabels = {
   transform: '位置 / 旋转',
   dimensions: '尺寸',
   material: '材质',
+  model: '3D 模型',
+  placement: '安装位置',
+  collision: '碰撞代理',
+  review: '专业复核',
 };
+const objectLayerLabels = { fixed_installation: '固定安装', furniture: '家具', equipment: '设备', service: '点位' };
 const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
 const editErrorMessages = [
   [/OBJECT_FOOTPRINT_OUTSIDE_ROOM/, '这件家具已经压出所属房间了，请往房间内侧移动一点。'],
@@ -487,13 +492,18 @@ function Inspector({ sceneModel, selection, onNavigate, mode, workspaceMode, ren
     <div className="inspector__content">
       {workspaceMode === '3d' && <dl className="render-stats" aria-label="3D rendering statistics"><div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div><div><dt>Draw calls</dt><dd>{renderStats.calls || '—'}</dd></div><div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div><div><dt>GLB</dt><dd>{renderStats.assets || sceneModel.objects.length}</dd></div></dl>}
       <ul className="entity-list">{sceneModel.rooms.map((room) => {
-        const objects = sceneModel.objects.filter((object) => object.roomId === room.id);
+        const groups = Object.entries(objectLayerLabels)
+          .map(([layer, label]) => ({ layer, label, objects: sceneModel.objects.filter((object) => object.roomId === room.id && object.hierarchy.layer === layer) }))
+          .filter((group) => group.objects.length);
         return <li className="entity-list__room" key={room.id}>
           <button className="entity-list__room-button" type="button" aria-pressed={selection?.kind === 'room' && selection.id === room.id} onClick={() => onNavigate({ kind: 'room', id: room.id }, room.cameraPresetIds[0])}><span>{entityName('room', room)}</span><span className="entity-list__type">俯视</span></button>
-        {objects.length > 0 && <ul className="entity-list__objects">{objects.map((object) => {
-            const preset = objectNavigationPreset(sceneModel, object);
-            return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, preset?.id)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
-          })}</ul>}
+          {groups.map((group) => <section className="entity-list__group" key={group.layer} aria-label={group.label}>
+            <span>{group.label}</span>
+            <ul className="entity-list__objects">{group.objects.map((object) => {
+              const preset = objectNavigationPreset(sceneModel, object);
+              return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, preset?.id)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
+            })}</ul>
+          </section>)}
         </li>;
       })}</ul>
       {selected ? <dl className="inspector__details"><div className="inspector__row"><dt>类型</dt><dd>{entityKinds[selected.kind]}</dd></div>{Object.entries(selected.entity).map(([key, value]) => <div className="inspector__row" key={key}><dt>{key}</dt><dd>{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>)}</dl> : <div className="empty">点击房间或家具，检查它对应的唯一 scene ID。</div>}
@@ -1582,6 +1592,11 @@ function ProjectDemoPage() {
             <dl>
               <div><dt>尺寸</dt><dd>{selectedObject.dimensions.width} × {selectedObject.dimensions.depth} × {selectedObject.dimensions.height} mm</dd></div>
               <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
+              <div><dt>层级</dt><dd>{roomLabels[selectedObject.roomId] ?? selectedObject.roomId} / {objectLayerLabels[selectedObject.hierarchy.layer]}</dd></div>
+              <div><dt>宿主</dt><dd>{selectedObject.placement.hostSurfaceId}</dd></div>
+              <div><dt>碰撞</dt><dd>{selectedObject.collision.kind} · {selectedObject.collision.dimensions.width} × {selectedObject.collision.dimensions.depth} mm</dd></div>
+              <div><dt>模型槽</dt><dd>{selectedObject.model3D.slotId} · r{selectedObject.model3D.revision}</dd></div>
+              <div><dt>复核</dt><dd>{selectedObject.review.requiresProfessionalReview ? '需专业复核' : '无需额外复核'}</dd></div>
             </dl>
             <div className="project-edit" aria-label={`${entityName('object', selectedObject)}编辑工具`}>
               {(selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">

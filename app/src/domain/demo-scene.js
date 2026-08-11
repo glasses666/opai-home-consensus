@@ -30,6 +30,43 @@ const model3D = (filename) => ({
   generator: 'scripts/build_demo_assets.py',
 });
 
+const withObjectContract = (object) => {
+  const fixed = object.category === 'fixed-cabinet';
+  return {
+    ...object,
+    hierarchy: { parentId: object.roomId, layer: fixed ? 'fixed_installation' : 'furniture' },
+    placement: {
+      mode: 'surface_anchored',
+      hostSurfaceId: `surface-floor-${object.roomId.slice(5)}`,
+      offset: { x: 0, y: 0, z: 0 },
+    },
+    collision: {
+      kind: 'box',
+      participates: true,
+      source: 'canonical',
+      dimensions: { ...object.dimensions },
+      offset: { x: 0, y: 0, z: 0 },
+    },
+    review: {
+      requiresProfessionalReview: fixed,
+      status: fixed ? 'required' : 'not_required',
+      reasons: fixed ? ['installation_anchor_requires_site_verification'] : [],
+      source: 'demo',
+    },
+    model3D: {
+      ...object.model3D,
+      slotId: `slot-${object.id}`,
+      revision: 1,
+      units: 'mm',
+      upAxis: 'y',
+      forwardAxis: 'z',
+      renderBounds: { ...object.dimensions },
+      provenance: { provider: 'local-generator', generationId: object.model3D.src, humanReviewed: true },
+    },
+    capabilities: { ...object.capabilities, replaceable: !fixed && object.capabilities.selectable },
+  };
+};
+
 const floor = (id, roomId, polygon, materialId = 'mat-floor-light-oak') => ({
   id,
   kind: 'floor',
@@ -377,7 +414,7 @@ export function createDemoScene() {
       { id: 'object-dining-table', externalId: 'DEMO-FURN-005', source: 'demo', name: 'Dining Table', category: 'dining-table', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-dining', dimensions: { width: 1600, depth: 900, height: 740 }, transform: { x: 6200, y: 0, z: 5700, rotationY: Math.PI / 2 }, media2D: media2D('dining-table-top.png'), model3D: model3D('dining-table.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
       { id: 'object-kitchen-counter', externalId: 'DEMO-CAB-003', source: 'demo', name: 'Kitchen Run', category: 'fixed-cabinet', roomId: 'room-kitchen', preferredCameraPresetId: 'camera-kitchen-worktop', dimensions: { width: 3000, depth: 650, height: 900 }, transform: { x: 9300, y: 0, z: 3625, rotationY: 0 }, media2D: media2D('kitchen-counter-v2-top.png'), model3D: model3D('kitchen-counter.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-kitchen-aisle-1000', 'rule-fixed-equipment-wall-relation'] },
       { id: 'object-shoe-cabinet', externalId: 'DEMO-CAB-004', source: 'demo', name: 'Shoe Cabinet', category: 'fixed-cabinet', roomId: 'room-entry', preferredCameraPresetId: 'camera-entry-storage', dimensions: { width: 1200, depth: 360, height: 1050 }, transform: { x: 10600, y: 0, z: 6800, rotationY: Math.PI / 2 }, media2D: media2D('shoe-cabinet-top.png'), model3D: model3D('shoe-cabinet.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900', 'rule-tall-storage-anchored', 'rule-fixed-equipment-wall-relation'] },
-    ],
+    ].map(withObjectContract),
     clearanceZones: [
       { id: 'clearance-entry-route', roomId: 'room-entry', kind: 'circulation', label: '入户主通道', valueMm: 1100, minimumMm: 900, polygon: rectangle(8200, 5750, 1100, 2050), ruleIds: ['rule-main-circulation-900'] },
       { id: 'clearance-living-route', roomId: 'room-living-dining', kind: 'circulation', label: '客餐厅主通道', valueMm: 1200, minimumMm: 900, polygon: rectangle(4000, 4300, 1200, 3300), ruleIds: ['rule-main-circulation-900'] },
