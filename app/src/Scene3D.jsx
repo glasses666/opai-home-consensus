@@ -14,6 +14,7 @@ import {
   surfaceFadeProgress,
   surfaceOcclusionOpacity,
 } from './domain/camera-transition.js';
+import { syncTransformAttachment } from './domain/transform-controls.js';
 
 const MM = 0.001;
 const MAX_OCCLUDING_SURFACES = 2;
@@ -542,24 +543,24 @@ async function createController(container, scene, callbacks) {
   }
 
   function syncEditControl() {
-    transformControls.detach();
     const object = objects.get(selectedEntityId);
     const root = entityRoots.get(selectedEntityId);
     syncClearanceZoneOverlays();
-    if (!object || !root) return;
+    if (!object || !root) {
+      syncTransformAttachment(transformControls, null);
+      return;
+    }
     if (editMode === 'move' && object.capabilities.movable) {
-      transformControls.setMode('translate');
       transformControls.showX = true;
       transformControls.showY = false;
       transformControls.showZ = true;
-      transformControls.attach(root);
+      syncTransformAttachment(transformControls, root, 'translate');
     } else if (editMode === 'rotate' && object.capabilities.rotatable) {
-      transformControls.setMode('rotate');
       transformControls.showX = false;
       transformControls.showY = true;
       transformControls.showZ = false;
-      transformControls.attach(root);
-    }
+      syncTransformAttachment(transformControls, root, 'rotate');
+    } else syncTransformAttachment(transformControls, null);
   }
 
   const onTransformDragging = (event) => { controls.enabled = !event.value; };
@@ -979,7 +980,7 @@ export default function Scene3D({
     });
   }, [scene, status]);
 
-  useEffect(() => { controllerRef.current?.setSelection(selection); }, [selection]);
+  useEffect(() => { controllerRef.current?.setSelection(selection); }, [selection?.kind, selection?.id]);
   useEffect(() => { controllerRef.current?.setEditMode(editMode); }, [editMode]);
   useEffect(() => {
     if (viewRequest?.id) controllerRef.current?.switchView(viewRequest.id);

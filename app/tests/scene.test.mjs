@@ -232,6 +232,17 @@ test('the dining table canonical bounds include its legs', async () => {
     .map((node) => node.name);
 
   assert.equal(canonicalNames.filter((name) => name.startsWith('CANONICAL table leg')).length, 4);
+  assert.equal(model.nodes.some((node) => /chair/i.test(node.name)), false);
+});
+
+test('the sofa GLB stays a sofa instead of a sofa-and-coffee-table vignette', async () => {
+  const bytes = await readFile(new URL('../public/assets/models/sofa.glb', import.meta.url));
+  const jsonLength = bytes.readUInt32LE(12);
+  const model = JSON.parse(bytes.subarray(20, 20 + jsonLength).toString().replace(/\0+$/, ''));
+  const names = model.nodes.map((node) => node.name);
+
+  assert.equal(names.some((name) => /coffee|rug/i.test(name)), false);
+  assert.equal(names.some((name) => name === 'CANONICAL frame'), true);
 });
 
 test('bed mattresses keep their ivory asset material instead of inheriting upholstery', async () => {

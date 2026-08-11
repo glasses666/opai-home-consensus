@@ -93,10 +93,6 @@ def add_plant(x, y, z, scale=1.0):
 
 
 def sofa():
-    box("ACCENT wool rug", (2.85, 1.8, 0.025), (0, -0.78, 0.015), IVORY, 0.05, role="accent")
-    box("ACCENT coffee top", (1.12, 0.58, 0.065), (0, -0.82, 0.34), OAK, 0.055, role="accent")
-    for x in (-0.43, 0.43):
-        cylinder("ACCENT coffee leg", 0.025, 0.3, (x, -0.82, 0.16), CHARCOAL)
     box("CANONICAL frame", (2.08, 0.78, 0.17), (0, 0, 0.24), OAT, 0.07, smooth=True)
     for x in (-0.99, 0.99):
         box("CANONICAL arm", (0.18, 0.82, 0.5), (x, -0.005, 0.48), OAT, 0.075, smooth=True)
@@ -109,31 +105,11 @@ def sofa():
     box("ACCENT throw", (0.48, 0.58, 0.045), (0.48, -0.05, 0.52), BURGUNDY, 0.025, rotation=(0, 0, radians(5)), smooth=True)
 
 
-def chair(x, y, rotation=0):
-    root = bpy.data.objects.new("ACCENT chair root", None)
-    bpy.context.collection.objects.link(root)
-    root.location = (x, y, 0)
-    root.rotation_euler[2] = rotation
-    created = [
-        box("ACCENT chair seat", (0.43, 0.42, 0.075), (0, 0, 0.47), IVORY, 0.045, role="accent", smooth=True),
-        box("ACCENT chair back", (0.43, 0.08, 0.42), (0, 0.18, 0.72), OAK, 0.035, rotation=(radians(-6), 0, 0), role="accent"),
-    ]
-    for leg_x in (-0.16, 0.16):
-        for leg_y in (-0.15, 0.15):
-            created.append(cylinder("ACCENT chair leg", 0.018, 0.43, (leg_x, leg_y, 0.215), OAK))
-    for obj in created:
-        obj.parent = root
-
-
 def dining_table():
     box("CANONICAL table top", (1.6, 0.9, 0.09), (0, 0, 0.71), OAK, 0.07)
     for x in (-0.62, 0.62):
         for y in (-0.28, 0.28):
             cylinder("CANONICAL table leg", 0.035, 0.69, (x, y, 0.345), OAK, role="canonical")
-    chair(-0.47, -0.72, radians(180))
-    chair(0.47, -0.72, radians(180))
-    chair(-0.47, 0.72, 0)
-    chair(0.47, 0.72, 0)
     add_plant(0, 0, 0.76, 0.68)
 
 
