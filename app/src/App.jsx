@@ -1160,9 +1160,10 @@ function ProjectDemoPage() {
       setAgentMessages((messages) => [...messages, {
         id: `agent-saved-${nextHistory.currentVersionId}`,
         role: 'assistant',
-        text: `规范提醒已由你保留，当前 Agent 预览已保存为 ${nextHistory.versions.at(-1).label}。`,
+        text: `当前 Agent 预览已保存为 ${nextHistory.versions.at(-1).label}。下一步可邀请家庭成员针对同一版本表达意见；我会保留分歧，不会替你们投票。`,
         source: pendingReview.versionSource ?? 'agent-local',
         tools: [],
+        nextAction: 'household',
       }]);
     }
     setPendingReview(null);
@@ -1349,6 +1350,14 @@ function ProjectDemoPage() {
     setVersionHistory(nextHistory);
     const saved = nextHistory.versions.at(-1);
     setEditFeedback({ tone: 'success', message: `${saved.label} 已保存；可与 ${currentVersion.label} 对比或回退。` });
+    setAgentMessages((messages) => [...messages, {
+      id: `manual-saved-${saved.id}`,
+      role: 'assistant',
+      text: `${saved.label} 已进入版本链。需要家庭共识时，请让每位成员针对这个版本表达真实理由。`,
+      source: 'local',
+      tools: [],
+      nextAction: 'household',
+    }]);
   };
 
   const confirmCurrentVersion = () => {
@@ -1438,6 +1447,16 @@ function ProjectDemoPage() {
       setConsensusFeedback(conflictCount > householdConflicts.length
         ? '共识助手识别到同一对象上的相反立场，可以生成两套真实可行方向。'
         : `${activeMember.name}的意见已绑定到 ${currentVersion.label} · ${opinionTargetLabel}。`);
+      if (conflictCount > householdConflicts.length) {
+        setAgentMessages((messages) => [...messages, {
+          id: `agent-conflict-${next.opinions.at(-1).id}`,
+          role: 'assistant',
+          text: `我识别到家庭成员对${opinionTargetLabel}存在相反立场。原始意见会保留；我只生成经过同一 scene 规则校验的少数方向，由家庭决定。`,
+          source: 'local',
+          tools: [],
+          nextAction: 'household',
+        }]);
+      }
     } catch {
       setConsensusFeedback('这条意见没有保存，请检查成员、对象和版本是否仍有效。');
     }
@@ -1485,6 +1504,14 @@ function ProjectDemoPage() {
       setCompareFromVersionId(beforeHistory.currentVersionId);
       setHouseholdConsensus(nextConsensus);
       setConsensusFeedback(`${activeMember.name}选择了“${direction.title}”，已形成 ${outcomeVersion.label}；现在请三位成员分别确认。`);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-direction-${outcomeVersion.id}`,
+        role: 'assistant',
+        text: `“${direction.title}”已形成 ${outcomeVersion.label}。原分歧仍可追溯；现在需要三位成员分别确认，我不会代替任何人确认。`,
+        source: 'local',
+        tools: [],
+        nextAction: 'household',
+      }]);
     } catch (error) {
       setConsensusFeedback(`没有应用：${normalizeEditError(error)}`);
     }
@@ -1503,6 +1530,14 @@ function ProjectDemoPage() {
       versionHistoryRef.current = nextHistory;
       setVersionHistory(nextHistory);
       setConsensusFeedback(`${currentVersion.label} 已得到三位成员共同确认；每次确认都可追溯到成员和版本。`);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-household-confirmed-${decision.versionId}`,
+        role: 'assistant',
+        text: `${currentVersion.label} 已得到三位成员共同确认。下一步可查看版本影响并提交设计师复核；企业报价、BOM 与施工数据仍标记为 pending。`,
+        source: 'local',
+        tools: [],
+        nextAction: 'version',
+      }]);
     } else {
       setConsensusFeedback(`${activeMember.name}已确认；还差 ${nextConsensus.members.length - nextConsensus.confirmations.length} 位。`);
     }
@@ -1849,6 +1884,8 @@ function ProjectDemoPage() {
               <p>{message.text}</p>
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
+              {message.nextAction === 'household' && <button className="agent-message__action" type="button" onClick={() => setSidecarMode('household')}>进入家庭共识</button>}
+              {message.nextAction === 'version' && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本与交接</button>}
             </article>)}
             {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>AILY → LOCAL</small></div><p>Aily 正在分析当前 scene、版本和规则；超时后自动切换本地规划器。</p></article>}
             {!agentBusy && !agentHasConversation && <section className="agent-empty" aria-label="Agent 初始提示">
