@@ -846,7 +846,9 @@ function ProjectDemoPage() {
       window.history[replace ? 'replaceState' : 'pushState']({}, '', nextUrl);
     }
     setNavigation(safe);
-    if (!moveCamera) setDisplaySelectedId(safe.selectedId);
+    setDisplayViewId(safe.viewId);
+    setDisplayRoomId(safe.roomId);
+    setDisplaySelectedId(safe.selectedId);
     if (moveCamera) setViewSequence((value) => value + 1);
   };
 

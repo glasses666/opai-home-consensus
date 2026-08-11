@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@source "../../node_modules/@pascal-app/editor/src";
+@source "../../node_modules/@pascal-app/nodes/src";
+
+@theme {
+  --color-background: #f5f0e8;
+  --color-foreground: #2d2825;
+}
+
+.pascal-stage,
+.pascal-stage > div:not(.pascal-view-switch) {
+  min-height: 720px;
+  height: 100%;
+}
+
+.pascal-stage {
+  position: relative;
+  overflow: hidden;
+  background: #f5f0e8;
+}
+
+.pascal-view-switch {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 70;
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid rgba(45, 40, 37, 0.12);
+  border-radius: 999px;
+  background: rgba(250, 247, 241, 0.92);
+  box-shadow: 0 10px 30px rgba(53, 45, 36, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.pascal-view-switch button {
+  min-width: 42px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  color: #6f6861;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pascal-view-switch button[aria-pressed="true"] {
+  color: #fff9f3;
+  background: #8f3d58;
+}
+
+.pascal-view-switch button:focus-visible {
+  outline: 2px solid #8f3d58;
+  outline-offset: 2px;
+}
+
+.pascal-stage-loading {
+  display: grid;
+  min-height: 560px;
+  place-items: center;
+  color: #8f3d58;
+  background: #f5f0e8;
+}
+
+.pascal-app-badge {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: #2d2825;
+  color: #fff7ef;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pascal-navbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  color: #2d2825;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pascal-sidebar-note {
+  margin: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(143, 61, 88, 0.18);
+  border-radius: 14px;
+  color: #8f3d58;
+  font-size: 12px;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pascal-sidebar-note strong,
+.pascal-sidebar-note span {
+  display: block;
+}
+
+.pascal-navbar span,
+.pascal-banner {
+  color: #8f3d58;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pascal-banner {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 32px rgba(53, 45, 36, 0.12);
+}

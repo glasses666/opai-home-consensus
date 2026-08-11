@@ -3,8 +3,8 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-11
-当前状态：**Gate 1–Gate 14 已形成可操作的工程 V1；原自研前端以本地 tag `v1-pre-pascal-20260811` 保存，用户已授权将成熟的开源 Pascal Editor 嵌入为主要装修模拟器前端，业务内核保持不变**
-当前 Gate：**Gate 15：Pascal Editor 开源装修模拟器迁移（分支 `codex/pascal-frontend`，实施中）**
+当前状态：**Gate 1–Gate 15 已形成可操作的工程 V1；Pascal Editor 已成为主要装修模拟器前端，canonical scene、规则、Agent、版本和家庭共识仍是唯一业务内核**
+当前 Gate：**Gate 15：Pascal Editor 开源装修模拟器迁移（已实现并验证，等待用户验收）**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
 ## 0. 为什么重开计划
@@ -702,7 +702,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 15：Pascal Editor 开源装修模拟器迁移
 
-**当前状态：实施中。迁移前 V1 已以 tag `v1-pre-pascal-20260811` 保存；迁移在分支 `codex/pascal-frontend` 完成。**
+**当前状态：已实现并完成自动化与浏览器验证，等待用户验收。迁移前 V1 已以 tag `v1-pre-pascal-20260811` 保存；审阅证据见 [GATE-15-REVIEW.md](./GATE-15-REVIEW.md)。**
 
 **目的**
 
@@ -730,6 +730,14 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 - 不让 Agent 直接写 Pascal scene，不建立双向自动同步。
 - 本 Gate 不增加固定柜、层板、隔断、背景墙或真实欧派目录；这些顺延到 Gate 16。
 
+**后续资源优化门槛（不阻塞当前迁移）**
+
+- 将本次多个 3D 渲染器与测试浏览器叠加造成的高 CPU 占用作为性能回归场景；单一项目页不得长时间占用多个 CPU 核心。
+- 宿主只保留一个活跃渲染实例；标签隐藏或窗口失去可见性时暂停渲染，卸载时释放 geometry、material、texture、BVH 和 WebGL / WebGPU 上下文。
+- 浏览器自动化与视觉 QA 每轮只启动一个实例，验证后必须关闭并检查无遗留渲染进程。
+- 移动端不直接承诺完整桌面编辑器：默认 2D 或房间级轻量 3D，按设备能力降低 DPR、阴影、材质、模型 LOD 和同时加载范围。
+- 后续性能 Gate 需用真实移动设备验收首帧、稳态 CPU / GPU、内存峰值、隐藏页占用与持续操作温升；桌面构建通过不能替代设备证据。
+
 ## 5. 旧实现处理结果
 
 - 用户于 2026-08-08 验收 Gate 0，并明确要求丢弃此前错误版本、修复 Git 状态并 commit。
@@ -740,7 +748,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. 完成 Gate 15：在保持 canonical scene / SceneCommand / Agent / 版本链不变的前提下，用 Pascal Editor 替换自研装修模拟器前端。
-2. Gate 15 验收后，Gate 16 再增加固定柜、层板、隔断和背景墙，并优先复用 Pascal 的节点与构建工具。
+1. 用户验收 Gate 15：确认 Pascal 作为主要装修模拟器前端，canonical scene / SceneCommand / Agent / 版本链保持不变。
+2. 验收后进入 Gate 16：增加固定柜、层板、隔断和背景墙，并优先复用 Pascal 的节点与构建工具。
 3. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
-4. 功能 Gate 完成后再统一处理信息层级、材质光照、镜头叙事与 route-level code splitting。
+4. 功能 Gate 完成后再统一处理信息层级、材质光照、镜头叙事、route-level code splitting 与上述渲染资源门槛。
