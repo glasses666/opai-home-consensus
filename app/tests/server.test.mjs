@@ -136,6 +136,20 @@ test('health reports only verified capabilities as ready', async () => {
   assert.equal(verified.base.status, 'ready');
 });
 
+test('BFF health identifies the active Agent provider', async () => {
+  const server = createAppServer({
+    health: async () => ({ aily: { status: 'ready' }, base: { status: 'ready' } }),
+    sync: async () => {},
+  });
+  const origin = await listen(server);
+  try {
+    const health = await (await fetch(`${origin}/api/health`)).json();
+    assert.equal(health.provider, 'aily');
+  } finally {
+    await close(server);
+  }
+});
+
 test('Base activity sync updates the same record for a repeated Event ID', async () => {
   const calls = [];
   const fakeRun = async (args) => {

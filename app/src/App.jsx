@@ -260,21 +260,21 @@ const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {})
   const failed = trace.steps.find((step) => !step.ok);
   if (trace.rolledBack || failed) {
     const reason = normalizeEditError(new Error(failed?.error ?? '规则未通过')).replace(/[。！？!?]+$/, '');
-    return `这次没有写入场景：${reason}。你可以换一个距离或方向再试。`;
+    return `场景未写入：${reason}。调整距离或方向后重试。`;
   }
   const clarification = trace.steps.find((step) => step.tool === 'request_clarification' && step.ok)?.result;
   if (clarification?.question) return clarification.question;
   const confirmation = trace.steps.find((step) => step.tool === 'request_confirmation' && step.ok)?.result;
   if (confirmation?.message) return confirmation.message;
   const comparison = trace.steps.find((step) => step.tool === 'compare_versions' && step.ok)?.result;
-  if (comparison) return `已按真实版本数据比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.surfaceDiffs?.length ?? 0} 项饰面变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项仍待确认。`;
+  if (comparison) return `版本比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.surfaceDiffs?.length ?? 0} 项饰面变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项待确认。`;
   const writes = trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
   if (writes.length) {
     const actions = [...new Set(writes.map((step) => agentToolLabels[step.tool] ?? step.tool))].join('、');
     if (pending) return `已生成${actions}预览；有 demo 规范提醒，请先保留或撤销，再进入版本链。`;
     return `已完成${actions}，确定性规则已检查${savedLabel ? `，并保存为 ${savedLabel}` : ''}。`;
   }
-  return trace.assistantReply || '已读取当前场景，没有修改 2D / 3D。';
+  return trace.assistantReply || '当前场景已读取；2D / 3D 未修改。';
 };
 
 const createInitialVersionProject = () => {
@@ -701,7 +701,7 @@ function ProjectDemoPage() {
   const [agentMessages, setAgentMessages] = useState([{
     id: 'agent-welcome',
     role: 'assistant',
-    text: '我会读取当前选择和最新版本，只通过受约束工具修改场景。需要真实欧派数据的部分会明确留作未决项。',
+    text: '读取当前选择、最新版本与规则；仅通过受约束工具修改场景。真实欧派数据缺口保留为未决项。',
     source: 'local',
     tools: [],
   }]);
@@ -1174,7 +1174,7 @@ function ProjectDemoPage() {
       setAgentMessages((messages) => [...messages, {
         id: `agent-review-${Date.now()}`,
         role: 'assistant',
-        text: '先保留或撤销当前规范预览，我再继续修改，避免把未确认状态叠在一起。',
+        text: '需保留或撤销当前规范预览；未确认状态不可叠加。',
         source: 'local',
         tools: [],
       }]);
@@ -1196,7 +1196,7 @@ function ProjectDemoPage() {
         const response = await fetch('/api/agent/turn', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          signal: AbortSignal.timeout(10_000),
+          signal: AbortSignal.timeout(40_000),
           body: JSON.stringify({
             eventId: turnId,
             projectId: 'project-demo',
@@ -1278,7 +1278,7 @@ function ProjectDemoPage() {
       setAgentMessages((messages) => [...messages, {
         id: `${turnId}-assistant`,
         role: 'assistant',
-        text: 'Agent 本轮没有完成，场景保持原样。你可以重试，或继续用右侧手动工具编辑。',
+        text: 'Agent 本轮未完成，场景未变。可重试或使用手动工具。',
         source: 'local',
         tools: [],
       }]);
@@ -1790,10 +1790,10 @@ function ProjectDemoPage() {
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
             </article>)}
-            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>AILY → LOCAL</small></div><p>正在读取当前 scene、版本和规则；10 秒内未完成会自动切换本地规划器。</p></article>}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>AILY → LOCAL</small></div><p>Aily 正在分析当前 scene、版本和规则；超时后自动切换本地规划器。</p></article>}
             {!agentBusy && !agentHasConversation && <section className="agent-empty" aria-label="Agent 初始提示">
-              <strong>先选一个房间或家具，我们就能开始了</strong>
-              <p>我会读取当前选择、版本和规则，只在允许范围内给出改动、解释代价，并保留所有未决项。</p>
+              <strong>选择房间或家具后开始</strong>
+              <p>基于当前选择、版本和规则生成可验证变更，并保留未决项。</p>
               <div>
                 <button type="button" onClick={() => runAgentPrompt(agentQuickPrompts[0])}>{agentQuickPrompts[0]}</button>
                 <button type="button" onClick={openVersionDrawer}>查看当前版本</button>

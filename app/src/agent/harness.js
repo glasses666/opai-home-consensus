@@ -360,13 +360,16 @@ function validateAssistantReply(reply, context) {
 function normalizeProviderResult(result, context) {
   const calls = Array.isArray(result) ? result : result?.toolCalls ?? result?.tool_calls;
   if (!Array.isArray(calls)) throw new Error('PROVIDER_SHAPE_INVALID');
-  const assistantReply = result?.assistantReply ?? result?.assistant_reply ?? '';
-  if (typeof assistantReply !== 'string' || assistantReply.length > 2000) throw new Error('PROVIDER_SHAPE_INVALID');
+  const rawAssistantReply = result?.assistantReply ?? result?.assistant_reply ?? '';
+  if (typeof rawAssistantReply !== 'string' || rawAssistantReply.length > 2000) throw new Error('PROVIDER_SHAPE_INVALID');
+  const assistantReply = rawAssistantReply
+    .replace(/^(?:(?:您好|你好|好的|好|当然(?:可以)?|没问题)[，,。.!！\s]*)+/, '')
+    .trim();
   const toolCalls = calls.map(normalizeToolCall);
   const allowedToolNames = new Set(context.tools.map((tool) => tool.name));
   if (toolCalls.some((call) => !allowedToolNames.has(call.tool))) throw new Error('TOOL_NOT_ALLOWED');
   validateAssistantReply(assistantReply, { ...context, toolCalls });
-  return { assistantReply: assistantReply.trim(), toolCalls };
+  return { assistantReply, toolCalls };
 }
 
 function withTimeout(promise, timeoutMs) {
@@ -392,11 +395,11 @@ function localFallbackReply(input) {
   if (/(架子|层板|置物架|书架|开放架)/.test(input)) {
     return '演示目录里有悬浮层板和开放架体，但安装规则尚未接入。你想放在哪个房间的哪面墙？';
   }
-  if (hasNoWriteIntent(input)) return '先只提供方向，不修改当前场景。';
+  if (hasNoWriteIntent(input)) return '仅提供方向，不修改当前场景。';
   if (/(墙|墙面)/.test(input) && /(木饰面|护墙板|木墙板)/.test(input)) {
     return '已按演示目录提交浅橡木木饰面变更，实际材料、报价与施工条件仍需复核。';
   }
-  return 'Aily 暂时不可用，已由本地规则引擎处理。';
+  return 'Aily 未完成，本轮由本地规则引擎处理。';
 }
 
 function requireString(args, key) {

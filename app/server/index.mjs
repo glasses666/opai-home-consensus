@@ -15,7 +15,8 @@ import { createPersistentProjectStore } from './project-store.mjs';
 
 const JSON_LIMIT = 128 * 1024;
 const SNAPSHOT_JSON_LIMIT = 1024 * 1024;
-const AGENT_PROVIDER_TIMEOUT_MS = 8_000;
+const AILY_RESPONSE_TIMEOUT_MS = 35_000;
+const AGENT_PROVIDER_TIMEOUT_MS = 38_000;
 const DEFAULT_PROJECT_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', '.data', 'project-demo.json');
 const REVIEW_ACTIONS = new Set(['approve', 'return']);
 
@@ -88,7 +89,7 @@ export function createAppServer({
       ? (context) => callAily(context, {
           agentId: process.env.AILY_AGENT_ID,
           appId: process.env.AILY_APP_ID,
-          timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
+          timeoutMs: AILY_RESPONSE_TIMEOUT_MS,
           maxAttempts: 1,
         })
       : null,
@@ -128,6 +129,7 @@ export function createAppServer({
         const capabilities = await health();
         sendJson(response, 200, {
           ...capabilities,
+          provider: capabilities.aily?.status === 'ready' ? 'aily' : 'local',
           catalog: { status: 'ready', reason: 'demo_catalog', ...(await Promise.resolve(catalogPlugin.describe())) },
           pendingBaseEvents: projectStore ? projectStore.listPendingBaseEvents().length : pendingEvents.size,
         });

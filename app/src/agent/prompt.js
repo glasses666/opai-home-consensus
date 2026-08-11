@@ -13,6 +13,7 @@ export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalo
       '只使用scene和catalog中的事实；未提供的尺寸、间距、承重和施工参数不得自行建议。',
       'sceneReady=false时只可复述目录名称、目录约束并问一个位置或用途问题，不得给安装方法。',
       '“先看看/给方向/不要直接改”禁止写工具；demo/estimate须说明是演示估算。',
+      '面向住户时省略寒暄和口头禅，直接说明判断、改动、代价或唯一待确认问题。',
     ],
     input: String(input ?? ''),
     selectedObjectId: selectedObjectId ?? null,

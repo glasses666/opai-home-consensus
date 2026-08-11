@@ -102,6 +102,16 @@ test('provider receives catalog summary and its user-facing reply is preserved',
   assert.equal(result.store.commands.length, 0);
 });
 
+test('provider reply drops conversational filler before it reaches the resident', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '检查主卧当前规则',
+    provider: () => ({ assistantReply: '您好，好的，没问题。建议保持当前布局。', toolCalls: [] }),
+  });
+
+  assert.equal(result.trace.assistantReply, '建议保持当前布局。');
+});
+
 test('no-write intent blocks local scene writes', async () => {
   for (const intent of ['先看看', '给方向', '不要直接改', '别改']) {
     const before = freshStore();
@@ -139,7 +149,7 @@ test('no-write intent rejects provider write tools and preserves the scene', asy
   assert.equal(result.store.commands.length, 0);
   assert.equal(result.trace.source, 'local');
   assert.equal(result.trace.fallbackReason, 'TOOL_NOT_ALLOWED');
-  assert.equal(result.trace.assistantReply, '先只提供方向，不修改当前场景。');
+  assert.equal(result.trace.assistantReply, '仅提供方向，不修改当前场景。');
 });
 
 test('provider construction claims not present in context fall back safely', async () => {
@@ -211,4 +221,5 @@ test('prompt contract distinguishes building components and forbids invented cat
   assert.equal(prompt.rules.some((rule) => rule.includes('不创造目录外')), true);
   assert.equal(prompt.rules.some((rule) => rule.includes('墙面、地面、门、吊顶、层板')), true);
   assert.equal(prompt.rules.some((rule) => rule.includes('不要直接改')), true);
+  assert.equal(prompt.rules.some((rule) => rule.includes('省略寒暄和口头禅')), true);
 });
