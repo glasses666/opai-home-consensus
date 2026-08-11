@@ -9,7 +9,7 @@ import { createDemoScene } from '../src/domain/demo-scene.js';
 import { confirmSceneVersion, createVersionHistory, deserializeVersionHistory, reviewSceneVersion, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, deserializeHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { buildDesignerReview, buildHandoffPacket } from '../src/domain/handoff.js';
-import { createSceneStore } from '../src/domain/scene.js';
+import { createSceneStore, deserializeScene } from '../src/domain/scene.js';
 import { callAily, getFeishuHealth, syncActivity } from './feishu.mjs';
 import { createPersistentProjectStore } from './project-store.mjs';
 

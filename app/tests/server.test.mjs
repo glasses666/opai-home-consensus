@@ -12,8 +12,6 @@ import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../sr
 import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createSceneStore, dispatchSceneCommand } from '../src/domain/scene.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
-import { createVersionHistory, serializeVersionHistory } from '../src/domain/design-version.js';
-import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 
 const listen = (server) => new Promise((resolve) => {
   server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`));
@@ -407,6 +405,106 @@ test('BFF records a no-write turn without creating a new version', async () => {
       assert.equal(response.status, 200);
       assert.equal(body.version.id, 'version-demo-initial');
       assert.equal(projectStore.snapshot().versions.length, 1);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('BFF client-scene Agent mode returns commands without persisting server versions', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-client-scene-'));
+  try {
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+    const beforeScene = projectStore.getSceneStore().currentScene;
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => {},
+      agentProvider: () => ({ toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }] }),
+    });
+    const origin = await listen(server);
+    try {
+      const response = await fetch(`${origin}/api/agent/turn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          input: '沙发向右移动20厘米',
+          eventId: 'evt-client-scene',
+          versionId: projectStore.currentVersionId,
+          scene: JSON.stringify(beforeScene),
+        }),
+      });
+      const body = await response.json();
+      assert.equal(response.status, 200);
+      assert.equal(body.commands.length, 1);
+      assert.equal(body.scene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+      assert.equal(projectStore.snapshot().versions.length, 1);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('BFF snapshot confirm review and export keep statuses and pending sync', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-handoff-'));
+  try {
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json'), id: () => 'handoff' });
+    const initial = createSceneStore(createDemoScene());
+    const moved = dispatchSceneCommand(initial, { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } });
+    const version = projectStore.recordVersion({
+      expectedVersionId: projectStore.currentVersionId,
+      store: moved,
+      event: { eventId: 'evt-handoff-version', input: 'move', provider: 'local', trace: { toolCalls: [] } },
+    });
+    let history = createVersionHistory(initial, { now: '2026-08-11T00:00:00.000Z' });
+    history = saveSceneVersion(history, moved, { id: version.id, now: version.createdAt, source: 'manual' });
+    const household = createDemoHouseholdConsensus(version.id);
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'ready' } }),
+      sync: async () => { throw new Error('offline'); },
+    });
+    const origin = await listen(server);
+    try {
+      const snapshot = await fetch(`${origin}/api/projects/project-demo/snapshot`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          eventId: 'evt-snapshot',
+          versionHistory: serializeVersionHistory(history),
+          householdConsensus: serializeHouseholdConsensus(household),
+        }),
+      });
+      assert.equal(snapshot.status, 200);
+      assert.equal((await snapshot.json()).sync, 'pending');
+
+      const confirmed = await fetch(`${origin}/api/versions/${version.id}/confirm`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ eventId: 'evt-confirm-http', actor: 'resident' }),
+      });
+      const confirmedBody = await confirmed.json();
+      assert.equal(confirmed.status, 200);
+      assert.equal(confirmedBody.version.status, 'customer_confirmed');
+
+      const reviewed = await fetch(`${origin}/api/versions/${version.id}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ eventId: 'evt-review-http', action: 'approve', note: '可以交接' }),
+      });
+      const reviewedBody = await reviewed.json();
+      assert.equal(reviewed.status, 200);
+      assert.equal(reviewedBody.version.status, 'designer_verified');
+      assert.equal(reviewedBody.sync, 'pending');
+
+      const exported = await (await fetch(`${origin}/api/projects/project-demo/export?versionId=${version.id}`)).json();
+      assert.equal(exported.packet.version.id, version.id);
+      assert.equal(exported.packet.downstreamPlaceholders.production, 'not_connected_in_v1');
+      assert.equal(exported.packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
     } finally {
       await close(server);
     }
