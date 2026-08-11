@@ -146,6 +146,28 @@ export function createPersistentProjectStore({
     return deepFreeze({ ...store, commands: clone(version.commands), cursor: version.cursor });
   };
 
+  const publishVersionHistory = (history) => {
+    if (!history?.versions?.length || typeof history.currentVersionId !== 'string') throw new Error('VERSION_HISTORY_INVALID');
+    const incoming = new Map(history.versions.map((version) => [version.id, version]));
+    if (
+      serializeScene(history.initialScene) !== serializeScene(findVersion(INITIAL_VERSION_ID).scene) ||
+      state.versions.some((version) => version.id !== INITIAL_VERSION_ID && !incoming.has(version.id)) ||
+      state.versions.some((version) => incoming.has(version.id) && serializeScene(version.scene) !== serializeScene(incoming.get(version.id).scene))
+    ) throw new Error('VERSION_CONFLICT');
+
+    state = normalizeState({
+      ...state,
+      project: {
+        ...state.project,
+        currentVersionId: history.currentVersionId,
+        confirmedVersionId: history.confirmedVersionId ?? null,
+      },
+      versions: clone(history.versions),
+    }, fallback);
+    save();
+    return clone(findVersion());
+  };
+
   const recordVersion = ({ expectedVersionId, store, event = {} }) => {
     if (expectedVersionId && expectedVersionId !== state.project.currentVersionId) throw new Error('VERSION_CONFLICT');
     if (event.eventId) {
@@ -260,6 +282,7 @@ export function createPersistentProjectStore({
     getSceneStore: sceneStoreFor,
     getVersion: (versionId) => clone(findVersion(versionId)),
     listPendingBaseEvents: () => clone(state.pendingBaseEvents),
+    publishVersionHistory,
     recordVersion,
     confirmVersion,
     reviewVersion,

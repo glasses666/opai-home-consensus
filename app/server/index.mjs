@@ -195,10 +195,7 @@ export function createAppServer({
           sendJson(response, 400, { error: 'VERSION_NOT_FOUND' });
           return;
         }
-        if (current.id !== projectStore.currentVersionId) {
-          sendJson(response, 409, { error: 'VERSION_CONFLICT' });
-          return;
-        }
+        projectStore.publishVersionHistory(history);
         const saved = projectStore.saveHandoffSnapshot({
           eventId: body.eventId,
           versionId: current.id,
@@ -521,7 +518,7 @@ export function createAppServer({
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const port = Number(process.env.PORT ?? 8787);
+  const port = Number(process.env.PORT ?? 8791);
   const projectStore = createPersistentProjectStore({
     filePath: process.env.PROJECT_STORE_PATH ?? DEFAULT_PROJECT_STORE_PATH,
   });

@@ -548,7 +548,17 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
   const dir = mkdtempSync(join(tmpdir(), 'op-bff-handoff-'));
   try {
     const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
-    const history = createVersionHistory(projectStore.getSceneStore());
+    const initial = projectStore.getSceneStore();
+    const changed = dispatchSceneCommand(initial, {
+      type: 'object.setTransform',
+      objectId: 'object-sofa',
+      transform: { x: 2400 },
+    });
+    const history = saveSceneVersion(createVersionHistory(initial), changed, {
+      id: 'version-browser-v2',
+      now: '2026-08-11T00:00:00.000Z',
+      source: 'manual',
+    });
     const consensus = createDemoHouseholdConsensus(history.currentVersionId);
     const server = createAppServer({
       projectStore,
@@ -571,6 +581,8 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
       assert.equal(snapshot.status, 200);
       assert.equal(snapshotBody.sync, 'pending');
       assert.equal(snapshotBody.packet.version.id, history.currentVersionId);
+      assert.equal(projectStore.currentVersionId, history.currentVersionId);
+      assert.equal(projectStore.getSceneStore().currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
 
       const confirmed = await fetch(`${origin}/api/versions/${history.currentVersionId}/confirm`, { method: 'POST' });
       const confirmedBody = await confirmed.json();

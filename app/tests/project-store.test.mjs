@@ -6,7 +6,7 @@ import test from 'node:test';
 
 import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
-import { createVersionHistory, serializeVersionHistory } from '../src/domain/design-version.js';
+import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 
@@ -87,6 +87,34 @@ test('event IDs are idempotent and expectedVersionId blocks stale writes', () =>
       () => store.recordVersion({ expectedVersionId: initialVersionId, store: changed }),
       /VERSION_CONFLICT/,
     );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('validated browser version history can become the durable current version', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file });
+    const initial = store.getSceneStore();
+    const moved = dispatchSceneCommand(initial, {
+      type: 'object.setTransform',
+      objectId: 'object-sofa',
+      transform: { x: 2400 },
+    });
+    const history = saveSceneVersion(createVersionHistory(initial), moved, {
+      id: 'version-client-v2',
+      now: '2026-08-11T00:00:00.000Z',
+      source: 'manual',
+    });
+
+    const published = store.publishVersionHistory(history);
+    assert.equal(published.id, 'version-client-v2');
+    assert.equal(store.currentVersionId, 'version-client-v2');
+    assert.equal(store.getSceneStore().currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+
+    const unrelated = createPersistentProjectStore({ filePath: join(dir, 'other.json'), initialScene: { ...createDemoScene(), id: 'other-scene' } });
+    assert.throws(() => unrelated.publishVersionHistory(history), /VERSION_CONFLICT/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
