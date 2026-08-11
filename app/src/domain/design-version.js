@@ -177,11 +177,15 @@ export function versionLifecycle(version, currentVersionId, confirmedVersionId) 
 }
 
 const diffValue = (kind, objectId, before, after) => ({ kind, objectId, before, after });
+const surfaceDiffValue = (kind, surfaceId, before, after) => ({ kind, surfaceId, before, after });
 
 export function compareSceneVersions(beforeVersion, afterVersion) {
   const beforeObjects = byId(beforeVersion.scene.objects);
   const afterObjects = byId(afterVersion.scene.objects);
   const objectDiffs = [];
+  const beforeSurfaces = byId(beforeVersion.scene.surfaces);
+  const afterSurfaces = byId(afterVersion.scene.surfaces);
+  const surfaceDiffs = [];
 
   for (const [id, before] of beforeObjects) {
     const after = afterObjects.get(id);
@@ -200,6 +204,15 @@ export function compareSceneVersions(beforeVersion, afterVersion) {
     if (!beforeObjects.has(id)) objectDiffs.push(diffValue('added', id, null, after));
   }
 
+  for (const [id, before] of beforeSurfaces) {
+    const after = afterSurfaces.get(id);
+    if (!after) surfaceDiffs.push(surfaceDiffValue('deleted', id, before, null));
+    else if (before.materialId !== after.materialId) surfaceDiffs.push(surfaceDiffValue('material', id, before.materialId, after.materialId));
+  }
+  for (const [id, after] of afterSurfaces) {
+    if (!beforeSurfaces.has(id)) surfaceDiffs.push(surfaceDiffValue('added', id, null, after));
+  }
+
   const impact = compareDesignImpact(beforeVersion.scene, afterVersion.scene);
   const beforeRules = byId(impact.rules.before.checks.map((check) => ({ ...check, id: `${check.code}:${check.objectIds.join(',')}:${check.clearanceZoneId ?? ''}` })));
   const ruleDiffs = impact.rules.after.checks
@@ -216,6 +229,7 @@ export function compareSceneVersions(beforeVersion, afterVersion) {
     toVersionId: afterVersion.id,
     sceneChanged,
     objectDiffs,
+    surfaceDiffs,
     ruleDiffs,
     impact: { ...impact, unresolved: [...impact.unresolved, ...commercialUnresolved] },
   });

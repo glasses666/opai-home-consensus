@@ -213,16 +213,19 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   floorGroup.name = 'Canonical floors';
   const wallsGroup = new THREE.Group();
   wallsGroup.name = 'Canonical walls';
+  const ceilingsGroup = new THREE.Group();
+  ceilingsGroup.name = 'Canonical ceilings';
   const wallSurfaces = [];
+  const ceilingSurfaces = [];
   const renderedSurfaces = new Map();
-  world.add(floorGroup, wallsGroup);
+  world.add(floorGroup, wallsGroup, ceilingsGroup);
 
   for (const surface of scene.surfaces.filter((candidate) => candidate.kind === 'floor')) {
     const material = (floorMaterials[surface.materialId] ?? floorMaterials['mat-floor-light-oak']).clone();
     const mesh = setEntity(
       new THREE.Mesh(shapeGeometry(surface.polygon), material),
-      'room',
-      surface.roomId,
+      'surface',
+      surface.id,
       surface.roomId,
     );
     mesh.name = surface.id;
@@ -231,7 +234,30 @@ function buildArchitecture(world, scene, textures, entityRoots) {
     mesh.receiveShadow = true;
     floorGroup.add(mesh);
     renderedSurfaces.set(surface.id, { kind: 'floor', material, root: mesh });
+    entityRoots.set(surface.id, mesh);
     entityRoots.set(surface.roomId, mesh);
+  }
+
+  for (const surface of scene.surfaces.filter((candidate) => candidate.kind === 'ceiling')) {
+    const canonicalMaterial = scene.materials.find((candidate) => candidate.id === surface.materialId);
+    const material = new THREE.MeshStandardMaterial({
+      color: canonicalMaterial?.color ?? '#f4f0e8',
+      roughness: 0.88,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    });
+    material.userData.baseOpacity = 1;
+    const mesh = setEntity(new THREE.Mesh(shapeGeometry(surface.polygon), material), 'surface', surface.id, surface.roomId);
+    mesh.name = surface.id;
+    mesh.userData.materialId = surface.materialId;
+    mesh.position.y = surface.elevation * MM;
+    mesh.receiveShadow = true;
+    ceilingsGroup.add(mesh);
+    ceilingSurfaces.push({ elevation: surface.elevation * MM, material, fadeProgress: 1 });
+    renderedSurfaces.set(surface.id, { kind: 'ceiling', material, root: mesh });
+    entityRoots.set(surface.id, mesh);
   }
 
   for (const wall of scene.surfaces.filter((candidate) => candidate.kind === 'wall')) {
@@ -283,7 +309,7 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   ground.receiveShadow = true;
   ground.userData.skipPick = true;
   world.add(ground);
-  return { floorMaterials, renderedSurfaces, wallSurfaces };
+  return { floorMaterials, renderedSurfaces, wallSurfaces, ceilingSurfaces };
 }
 
 async function loadTextures(renderer) {
@@ -441,7 +467,7 @@ async function createController(container, scene, callbacks) {
   const entityRoots = new Map();
   const objectLoader = new GLTFLoader();
   const textures = await loadTextures(renderer);
-  const { floorMaterials, renderedSurfaces, wallSurfaces } = buildArchitecture(world, currentScene, textures, entityRoots);
+  const { floorMaterials, renderedSurfaces, wallSurfaces, ceilingSurfaces } = buildArchitecture(world, currentScene, textures, entityRoots);
   let clearanceZoneOverlays = buildClearanceZoneOverlays(currentScene);
   world.add(clearanceZoneOverlays);
   await buildFurniture(world, currentScene, entityRoots, callbacks);
@@ -462,7 +488,7 @@ async function createController(container, scene, callbacks) {
   let statsStart = performance.now();
   let pointerStart = null;
   let wallOcclusionEnabled = true;
-  let selectedEntityId = null;
+  let selectedEntity = null;
   let editMode = 'select';
   let editStart = null;
   let ignoreCanvasPointerUp = false;
@@ -471,6 +497,7 @@ async function createController(container, scene, callbacks) {
   const sightDirection = new THREE.Vector3();
   const sightHit = new THREE.Vector3();
   let lastOcclusionUpdateAt = performance.now();
+  let lastCeilingUpdateAt = performance.now();
 
   function updateWallOcclusion(now) {
     const deltaMs = Math.min(32, Math.max(0, now - lastOcclusionUpdateAt));
@@ -521,8 +548,22 @@ async function createController(container, scene, callbacks) {
     }
   }
 
+  function updateCeilingVisibility(now) {
+    const deltaMs = Math.min(32, Math.max(0, now - lastCeilingUpdateAt));
+    lastCeilingUpdateAt = now;
+    for (const ceiling of ceilingSurfaces) {
+      ceiling.fadeProgress = surfaceFadeProgress(ceiling.fadeProgress, camera.position.y > ceiling.elevation + 0.05 ? 1 : 0, deltaMs);
+      ceiling.material.opacity = surfaceOcclusionOpacity(ceiling.fadeProgress);
+      const faded = ceiling.material.opacity < 0.999;
+      if (ceiling.material.depthWrite === faded) {
+        ceiling.material.depthWrite = !faded;
+        ceiling.material.needsUpdate = true;
+      }
+    }
+  }
+
   function syncClearanceZoneOverlays() {
-    const object = objects.get(selectedEntityId);
+    const object = selectedEntity?.kind === 'object' ? objects.get(selectedEntity.id) : null;
     const visible = Boolean(object && (
       (editMode === 'move' && object.capabilities.movable) ||
       (editMode === 'rotate' && object.capabilities.rotatable)
@@ -544,8 +585,8 @@ async function createController(container, scene, callbacks) {
   }
 
   function syncEditControl() {
-    const object = objects.get(selectedEntityId);
-    const root = entityRoots.get(selectedEntityId);
+    const object = selectedEntity?.kind === 'object' ? objects.get(selectedEntity.id) : null;
+    const root = selectedEntity ? entityRoots.get(selectedEntity.id) : null;
     syncClearanceZoneOverlays();
     if (!object || !root) {
       syncTransformAttachment(transformControls, null);
@@ -614,7 +655,7 @@ async function createController(container, scene, callbacks) {
   window.addEventListener('keydown', onEditKeyDown);
 
   function setSelection(selection) {
-    selectedEntityId = selection?.kind === 'object' ? selection.id : null;
+    selectedEntity = selection ?? null;
     if (selectedHelper) {
       world.remove(selectedHelper);
       selectedHelper.geometry.dispose();
@@ -779,6 +820,7 @@ async function createController(container, scene, callbacks) {
     }
     if (!transition) controls.update();
     updateWallOcclusion(now);
+    updateCeilingVisibility(now);
     renderer.render(world, camera);
     frameCount += 1;
     if (now - statsStart >= 1000) {
@@ -854,8 +896,13 @@ async function createController(container, scene, callbacks) {
         root.visible && root.userData.entityKind === 'object' && root.userData.assetSource === 'placeholder'
       )).length;
       callbacks.onLoadState?.({ completed: currentScene.objects.length, failed, total: currentScene.objects.length });
-      if (selectedEntityId && !objects.has(selectedEntityId)) setSelection(null);
-      else if (selectedEntityId) setSelection({ kind: 'object', id: selectedEntityId });
+      const selectionStillExists = !selectedEntity
+        || (selectedEntity.kind === 'object' && objects.has(selectedEntity.id))
+        || (selectedEntity.kind === 'surface' && currentScene.surfaces.some((surface) => surface.id === selectedEntity.id))
+        || (selectedEntity.kind === 'opening' && currentScene.openings.some((opening) => opening.id === selectedEntity.id))
+        || (selectedEntity.kind === 'room' && currentScene.rooms.some((room) => room.id === selectedEntity.id));
+      if (!selectionStillExists) setSelection(null);
+      else if (selectedEntity) setSelection(selectedEntity);
       else syncEditControl();
       return true;
     },

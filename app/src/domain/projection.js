@@ -9,11 +9,14 @@ export function projectScene2D(scene) {
   const roomPolygons = scene.rooms.map((room) => room.polygon);
   const rooms = scene.rooms.map((room) => {
     const floor = scene.surfaces.find((surface) => surface.kind === 'floor' && surface.roomId === room.id);
+    const ceiling = scene.surfaces.find((surface) => surface.kind === 'ceiling' && surface.roomId === room.id);
     return {
       id: room.id,
       name: room.name,
       polygon: room.polygon.map((point) => ({ x: point.x, y: point.z })),
       materialId: floor?.materialId ?? null,
+      floorMaterialId: floor?.materialId ?? null,
+      ceilingMaterialId: ceiling?.materialId ?? null,
       sourceRoomId: room.id,
     };
   });
@@ -26,6 +29,7 @@ export function projectScene2D(scene) {
       start: { x: surface.edge.start.x, y: surface.edge.start.z },
       end: { x: surface.edge.end.x, y: surface.edge.end.z },
       thickness: surface.thickness,
+      materialId: surface.materialId,
     }));
   const openingSegments = scene.openings.map((opening) => {
     const host = scene.surfaces.find((surface) => surface.id === opening.hostSurfaceId);

@@ -52,7 +52,7 @@ test('Gate 10A Agent operates the selected bedroom objects through existing tool
 
   assert.equal(moved.store.currentScene.objects.find((object) => object.id === 'object-primary-bed').transform.x, 1400);
   assert.deepEqual(moved.trace.toolCalls.map((call) => call.tool), ['move_object']);
-  assert.equal(recolored.store.currentScene.objects.find((object) => object.id === 'object-primary-wardrobe').materialId, 'mat-wall-warm-white');
+  assert.equal(recolored.store.currentScene.objects.find((object) => object.id === 'object-primary-wardrobe').materialId, 'mat-object-warm-white');
   assert.deepEqual(recolored.trace.toolCalls.map((call) => call.tool), ['set_object_material']);
 });
 

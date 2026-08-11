@@ -46,6 +46,7 @@ export function buildDesignerReview(history, consensus, {
       objectIds: [...check.objectIds],
     })),
     objectDiffs: diff.objectDiffs,
+    surfaceDiffs: diff.surfaceDiffs,
     professionalReviews,
     unresolved: diff.impact.unresolved,
     household: {
@@ -70,6 +71,7 @@ export function buildHandoffPacket(history, consensus, {
   const base = version.parentVersionId ? versionById(history, version.parentVersionId) : history.versions[0];
   const diff = compareSceneVersions(base, version);
   const objects = byId(version.scene.objects);
+  const surfaces = byId(version.scene.surfaces);
   const materials = byId(version.scene.materials);
 
   return {
@@ -104,10 +106,22 @@ export function buildHandoffPacket(history, consensus, {
       materialSource: sourceOf(materials.get(object.materialId)),
       source: sourceOf(object),
     })),
+    confirmedSurfaces: version.scene.surfaces.map((surface) => ({
+      id: surface.id,
+      kind: surface.kind,
+      roomId: surface.roomId,
+      materialId: surface.materialId,
+      materialSource: sourceOf(materials.get(surface.materialId)),
+      source: sourceOf(surface),
+    })),
     changes: diff.objectDiffs.map((change) => ({
       ...change,
       objectName: objects.get(change.objectId)?.name ?? change.objectId,
       source: sourceOf(objects.get(change.objectId)),
+    })),
+    surfaceChanges: diff.surfaceDiffs.map((change) => ({
+      ...change,
+      source: sourceOf(surfaces.get(change.surfaceId)),
     })),
     impacts: clone(diff.impact.impacts),
     unresolved: [

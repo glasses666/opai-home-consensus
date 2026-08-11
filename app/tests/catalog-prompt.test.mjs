@@ -13,8 +13,8 @@ const surfaceById = (store, id) => store.currentScene.surfaces.find((surface) =>
 test('demo catalog covers renovation systems and labels every commercial value', () => {
   const description = demoCatalogPlugin.describe();
   assert.equal(description.source, 'demo');
-  assert.equal(description.itemCount, 15);
-  for (const category of ['wall_finish', 'floor_finish', 'shelving', 'partition', 'cabinetry', 'furniture', 'door', 'worktop', 'ceiling', 'hardware']) {
+  assert.equal(description.itemCount, 17);
+  for (const category of ['wall_finish', 'floor_finish', 'ceiling_finish', 'shelving', 'partition', 'cabinetry', 'furniture', 'door', 'worktop', 'ceiling', 'hardware']) {
     assert.equal(description.categories.includes(category), true, category);
   }
 
@@ -41,6 +41,19 @@ test('local planner applies a scene-ready wall system through SceneCommand', asy
   });
   assert.equal(result.trace.steps[0].result.source, 'demo');
   assert.equal(result.trace.steps[0].result.commercial.price.source, 'estimate');
+});
+
+test('provider applies a scene-ready ceiling finish through the same SceneCommand', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把开放客餐厅顶面换成暖灰饰面',
+    provider: () => ({ toolCalls: [{
+      tool: 'apply_catalog_item',
+      args: { catalogItemId: 'demo-ceiling-paint-greige', surfaceId: 'surface-ceiling-living-dining' },
+    }] }),
+  });
+  assert.equal(surfaceById(result.store, 'surface-ceiling-living-dining').materialId, 'mat-ceiling-greige');
+  assert.deepEqual(result.store.commands[0], { type: 'surface.setMaterial', surfaceId: 'surface-ceiling-living-dining', materialId: 'mat-ceiling-greige' });
 });
 
 test('non-scene-ready shelving cannot be installed by a provider', async () => {

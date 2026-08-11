@@ -627,7 +627,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 13：空间层级、安装锚点、碰撞代理与可替换 3D 资产合同
 
-**当前状态：已实现；拖拽持续命中、复合资产穿模与编辑俯视焦点回归已修复，等待用户验收。**
+**当前状态：已验收并以 `ce6d917` 提交（2026-08-11）。**
 
 审阅包：[GATE-13-REVIEW.md](./GATE-13-REVIEW.md)
 
@@ -657,6 +657,47 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 - 不在本 Gate 接 AI 生成服务、不生成新 GLB、不做 mesh 级物理引擎。
 - 不在本 Gate 新增墙体拆改、固定系统、水电管线或施工计算；这些能力只复用本 Gate 的层级、宿主、碰撞与复核合同继续实现。
 
+---
+
+### Gate 14：墙面、地面与顶面饰面
+
+**当前状态：已实现并完成自动化与后台住户黑盒复测，等待用户验收（基线 `ce6d917`）。**
+
+**目的**
+
+在同一 canonical scene 的 `Surface` / `Material` 合同上补齐墙面、地面与顶面饰面，让用户和 Agent 修改的不再只有家具，同时保留后续欧派目录与 AI 生成资产的替换边界。
+
+**构建什么**
+
+- 每个房间都由 canonical scene 持有可校验的 floor、wall 与 ceiling surface；顶面只表示饰面，不冒充吊顶结构或灯光工程。
+- 所有饰面修改继续只经过既有 `surface.setMaterial`，并在命令层校验材质适用面，禁止墙面材质写到地面或顶面。
+- 3D 房间内可直接选择表面；属性区只展示该表面可用的 demo 饰面。2D、3D、版本、Agent 与导出读取同一个 materialId。
+- 顶面在室内视角可见，在整屋与俯视镜头中平滑淡出，避免遮挡空间浏览。
+- 版本比较、设计师复核和共识导出明确列出表面饰面变化与 demo 来源。
+- 本地 Agent 支持在已选墙面、地面或顶面上应用合法饰面；未选目标时先澄清，不猜测整屋批量修改。
+
+**本 Gate 精确路径**
+
+- `PLAN.md`、`GATE-14-REVIEW.md`
+- `app/src/domain/demo-scene.js`、`scene.js`、`projection.js`、`design-version.js`、`handoff.js`
+- `app/src/catalog/demo-catalog.js`、`app/src/agent/harness.js`
+- `app/src/Scene3D.jsx`、`app/src/App.jsx`、`app/src/styles.css`
+- `app/tests/gate14-surface-finishes.test.mjs` 及受影响的既有回归测试
+
+**验收证据**
+
+- 墙、地、顶三类表面都可选择并通过同一命令修改；非法材质组合、锁定表面和缺失目标都稳定拒绝且不污染 scene。
+- undo / redo、保存 / 恢复和命令重放后，表面 materialId 字节一致。
+- 3D 与 2D 投影读取相同 surface 数据；顶面不遮挡整屋或房间俯视。
+- 版本差异、设计师复核和导出包含表面变化与 `source: demo`，不宣称真实欧派 SKU、报价或施工。
+- 领域测试、Agent 测试、站点测试、生产构建与浏览器核心流程通过。
+
+**明确不做**
+
+- 不做墙体拆改、吊顶造型、灯槽、灯具、电气或施工计算。
+- 不在本 Gate 增加固定柜、层板、隔断和背景墙对象；这些属于 Gate 15。
+- 不接入或宣称真实欧派产品、报价、BOM、工期或生产数据。
+
 ## 5. 旧实现处理结果
 
 - 用户于 2026-08-08 验收 Gate 0，并明确要求丢弃此前错误版本、修复 Git 状态并 commit。
@@ -667,7 +708,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. 用户验收 Gate 13：层级、安装宿主、碰撞代理、可替换模型槽，以及拖拽持续命中 / 复合 GLB 穿模 / 编辑俯视焦点回归均已实现并验证；验收前不进入下一 Gate。
-2. Gate 14 在同一 surface / material 合同上完成墙面、地面与吊顶饰面；Gate 15 再增加固定柜、层板、隔断和背景墙。
+1. 用户验收 Gate 14：同一 surface / material 合同上的墙面、地面与顶面饰面；验收前不进入 Gate 15。
+2. Gate 14 验收后，Gate 15 再增加固定柜、层板、隔断和背景墙。
 3. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
 4. 功能 Gate 完成后再统一处理信息层级、材质光照、镜头叙事与 route-level code splitting。

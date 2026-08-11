@@ -34,6 +34,8 @@ const OBJECT_CAPABILITIES = [
 const OBJECT_LAYERS = new Set(['furniture', 'fixed_installation', 'equipment', 'service']);
 const MODEL_SOURCES = new Set(['generated', 'ai-generated', 'enterprise']);
 const REVIEW_STATUSES = new Set(['not_required', 'required', 'approved', 'returned']);
+const SURFACE_KINDS = new Set(['wall', 'floor', 'ceiling']);
+const MATERIAL_TARGETS = new Set(['object', 'opening', ...SURFACE_KINDS]);
 
 /**
  * @typedef {{code:string,path:string,message:string}} SceneValidationError
@@ -180,6 +182,10 @@ function mapById(records) {
   return new Map(records.filter((record) => isObject(record)).map((record) => [record.id, record]));
 }
 
+function materialAppliesTo(material, target) {
+  return Array.isArray(material?.appliesTo) && material.appliesTo.includes(target);
+}
+
 /**
  * @param {unknown} scene
  * @returns {SceneValidationResult}
@@ -259,6 +265,20 @@ export function validateScene(scene) {
   const cameraPresetMap = mapById(cameraPresets);
   const modelSlotIds = new Set();
 
+  for (const [index, material] of materials.entries()) {
+    const path = `materials[${index}]`;
+    if (!isObject(material)) continue;
+    if (
+      typeof material.name !== 'string' || !material.name ||
+      typeof material.kind !== 'string' || !material.kind ||
+      !['demo', 'enterprise'].includes(material.source) ||
+      !Array.isArray(material.appliesTo) || !material.appliesTo.length ||
+      material.appliesTo.some((target) => !MATERIAL_TARGETS.has(target))
+    ) {
+      addError(errors, 'MATERIAL_INVALID', path, 'Material needs a name, kind, source, and valid appliesTo targets.');
+    }
+  }
+
   for (const [index, preset] of cameraPresets.entries()) {
     if (isObject(preset) && preset.kind !== 'whole_home' && !roomMap.has(preset.roomId)) {
       addError(errors, 'ROOM_REF_DANGLING', `cameraPresets[${index}].roomId`, `Camera preset room "${preset.roomId}" does not exist.`);
@@ -315,8 +335,20 @@ export function validateScene(scene) {
     if (!room) {
       addError(errors, 'SURFACE_ROOM_REF_DANGLING', `${path}.roomId`, `Surface room "${surface.roomId}" does not exist.`);
     }
-    if (!materialMap.has(surface.materialId)) {
+    const material = materialMap.get(surface.materialId);
+    if (!material) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Surface material "${surface.materialId}" does not exist.`);
+    } else if (!materialAppliesTo(material, surface.kind)) {
+      addError(errors, 'SURFACE_MATERIAL_INCOMPATIBLE', `${path}.materialId`, `Material "${surface.materialId}" does not apply to ${surface.kind}.`);
+    }
+    if (!SURFACE_KINDS.has(surface.kind)) {
+      addError(errors, 'SURFACE_KIND_INVALID', `${path}.kind`, 'Surface kind must be wall, floor, or ceiling.');
+    }
+    if (!isObject(surface.capabilities) || typeof surface.capabilities.materialEditable !== 'boolean') {
+      addError(errors, 'SURFACE_CAPABILITIES_INVALID', `${path}.capabilities`, 'Surface capabilities must declare materialEditable.');
+    }
+    if (!['demo', 'enterprise'].includes(surface.source)) {
+      addError(errors, 'SURFACE_SOURCE_INVALID', `${path}.source`, 'Surface source must be demo or enterprise.');
     }
     for (const ruleId of surface.ruleIds ?? []) {
       if (!ruleMap.has(ruleId)) {
@@ -332,14 +364,25 @@ export function validateScene(scene) {
       if (!isPositiveInteger(surface.height) || !isPositiveInteger(surface.thickness)) {
         addError(errors, 'WALL_DIMENSIONS_INVALID', path, 'Wall height and thickness must be positive integer millimeters.');
       }
-    } else if (surface.kind === 'floor') {
+    } else if (surface.kind === 'floor' || surface.kind === 'ceiling') {
       if (!isPolygon(surface.polygon) || polygonArea(surface.polygon) <= 0 || !isSimplePolygon(surface.polygon)) {
-        addError(errors, 'FLOOR_POLYGON_INVALID', `${path}.polygon`, 'Floor surface needs a simple positive polygon in integer millimeters.');
+        addError(errors, surface.kind === 'floor' ? 'FLOOR_POLYGON_INVALID' : 'CEILING_POLYGON_INVALID', `${path}.polygon`, `${surface.kind} surface needs a simple positive polygon in integer millimeters.`);
       } else if (
         room?.polygon &&
         (!polygonInsidePolygon(surface.polygon, room.polygon) || !polygonInsidePolygon(room.polygon, surface.polygon))
       ) {
-        addError(errors, 'FLOOR_ROOM_MISMATCH', `${path}.polygon`, `Floor "${surface.id}" must match its room boundary.`);
+        addError(errors, surface.kind === 'floor' ? 'FLOOR_ROOM_MISMATCH' : 'CEILING_ROOM_MISMATCH', `${path}.polygon`, `${surface.kind} "${surface.id}" must match its room boundary.`);
+      }
+      if (surface.kind === 'ceiling' && (!isPositiveInteger(surface.elevation) || surface.elevation > floorPlan?.bounds?.height)) {
+        addError(errors, 'CEILING_ELEVATION_INVALID', `${path}.elevation`, 'Ceiling elevation must be a positive integer within floor-plan height.');
+      }
+    }
+  }
+
+  for (const room of rooms.filter(isObject)) {
+    for (const kind of ['floor', 'ceiling']) {
+      if (surfaces.filter((surface) => surface?.roomId === room.id && surface.kind === kind).length !== 1) {
+        addError(errors, 'ROOM_SURFACE_CARDINALITY_INVALID', `rooms.${room.id}`, `Room "${room.id}" needs exactly one ${kind} surface.`);
       }
     }
   }
@@ -355,8 +398,10 @@ export function validateScene(scene) {
     if (host.kind !== 'wall') {
       addError(errors, 'OPENING_HOST_INVALID', `${path}.hostSurfaceId`, 'Opening host must be a wall surface.');
     }
-    if (opening.materialId && !materialMap.has(opening.materialId)) {
-      addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Opening material "${opening.materialId}" does not exist.`);
+    if (opening.materialId) {
+      const material = materialMap.get(opening.materialId);
+      if (!material) addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Opening material "${opening.materialId}" does not exist.`);
+      else if (!materialAppliesTo(material, 'opening')) addError(errors, 'OPENING_MATERIAL_INCOMPATIBLE', `${path}.materialId`, `Material "${opening.materialId}" does not apply to openings.`);
     }
     for (const ruleId of opening.ruleIds ?? []) {
       if (!ruleMap.has(ruleId)) {
@@ -394,8 +439,11 @@ export function validateScene(scene) {
     if (!room) {
       addError(errors, 'OBJECT_ROOM_REF_DANGLING', `${path}.roomId`, `Object room "${object.roomId}" does not exist.`);
     }
-    if (!materialMap.has(object.materialId)) {
+    const material = materialMap.get(object.materialId);
+    if (!material) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Object material "${object.materialId}" does not exist.`);
+    } else if (!materialAppliesTo(material, 'object')) {
+      addError(errors, 'OBJECT_MATERIAL_INCOMPATIBLE', `${path}.materialId`, `Material "${object.materialId}" does not apply to objects.`);
     }
     if (typeof object.externalId !== 'string' || !object.externalId || !['demo', 'enterprise'].includes(object.source)) {
       addError(errors, 'OBJECT_PROVENANCE_INVALID', path, 'Object must declare an externalId and demo or enterprise source.');
@@ -606,9 +654,9 @@ function applySceneCommand(scene, command) {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
     if (!object.capabilities.materialEditable) throw new Error(`OBJECT_MATERIAL_LOCKED: Object "${command.objectId}" material is locked.`);
-    if (!nextScene.materials?.some((material) => material.id === command.materialId)) {
-      throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
-    }
+    const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
+    if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
+    if (!materialAppliesTo(material, 'object')) throw new Error(`OBJECT_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to objects.`);
     object.materialId = command.materialId;
   } else if (command.type === 'object.setDimensions') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
@@ -675,9 +723,9 @@ function applySceneCommand(scene, command) {
     const surface = nextScene.surfaces?.find((candidate) => candidate.id === command.surfaceId);
     if (!surface) throw new Error(`SURFACE_NOT_FOUND: Surface "${command.surfaceId}" does not exist.`);
     if (!surface.capabilities?.materialEditable) throw new Error(`SURFACE_MATERIAL_LOCKED: Surface "${command.surfaceId}" material is locked.`);
-    if (!nextScene.materials?.some((material) => material.id === command.materialId)) {
-      throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
-    }
+    const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
+    if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
+    if (!materialAppliesTo(material, surface.kind)) throw new Error(`SURFACE_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to ${surface.kind}.`);
     surface.materialId = command.materialId;
   } else {
     throw new Error(`COMMAND_UNSUPPORTED: ${command.type}`);

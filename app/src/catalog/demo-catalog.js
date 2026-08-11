@@ -100,6 +100,18 @@ const ITEMS = [
     constraints: [{ code: 'DEMO_CUTOUT_REVIEW', message: '水槽、灶具开孔和现场复尺后才能下单。', source: 'demo' }], source: 'demo',
   },
   {
+    id: 'demo-ceiling-paint-warm-white', externalId: 'DEMO-CEIL-FIN-001', name: '暖白哑光顶面饰面',
+    kind: 'surface_finish', category: 'ceiling_finish', appliesTo: ['ceiling'], tags: ['顶面', '天花', '暖白', '哑光'],
+    sceneReady: true, operation: { type: 'surface.setMaterial', materialId: 'mat-ceiling-warm-white' },
+    commercial: { price: estimate(55, 95, 'm2'), leadTime: leadTime(3, 6) }, constraints: [], source: 'demo',
+  },
+  {
+    id: 'demo-ceiling-paint-greige', externalId: 'DEMO-CEIL-FIN-002', name: '暖灰哑光顶面饰面',
+    kind: 'surface_finish', category: 'ceiling_finish', appliesTo: ['ceiling'], tags: ['顶面', '天花', '暖灰', '哑光'],
+    sceneReady: true, operation: { type: 'surface.setMaterial', materialId: 'mat-ceiling-greige' },
+    commercial: { price: estimate(65, 110, 'm2'), leadTime: leadTime(3, 6) }, constraints: [], source: 'demo',
+  },
+  {
     id: 'demo-ceiling-cove', externalId: 'DEMO-CEIL-001', name: '无主灯边吊系统',
     kind: 'architectural_component', category: 'ceiling', appliesTo: ['ceiling', 'wall'], tags: ['吊顶', '无主灯', '灯槽', '顶面'],
     sceneReady: false, dimensions: { depth: 320, height: 180 },
@@ -136,7 +148,8 @@ const CATEGORY_HINTS = [
   [/(沙发|家具|餐桌|床)/, 'furniture'],
   [/(门|门洞)/, 'door'],
   [/(台面|石英石)/, 'worktop'],
-  [/(吊顶|顶面|灯槽)/, 'ceiling'],
+  [/(吊顶|灯槽)/, 'ceiling'],
+  [/(顶面|天花)/, 'ceiling_finish'],
   [/(五金|拉手)/, 'hardware'],
 ];
 

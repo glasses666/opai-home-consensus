@@ -82,9 +82,23 @@ const objectLabels = {
 };
 
 const materialLabels = {
+  'mat-ceiling-greige': '暖灰顶面',
+  'mat-ceiling-warm-white': '暖白顶面',
   'mat-door-warm-white': '暖白',
   'mat-fabric-warm-gray': '暖灰织物',
+  'mat-floor-light-oak': '浅橡木地板',
+  'mat-floor-tile-warm': '暖灰哑光砖',
   'mat-oak-veneer': '浅橡木',
+  'mat-object-warm-white': '暖白家具饰面',
+  'mat-wall-greige': '暖灰墙面',
+  'mat-wall-oak-panel': '浅橡木墙板',
+  'mat-wall-warm-white': '暖白墙面',
+};
+const surfaceKindLabels = { wall: '墙面', floor: '地面', ceiling: '顶面' };
+const wallDirectionLabels = { north: '北墙', south: '南墙', east: '东墙', west: '西墙' };
+const surfaceLabelOverrides = {
+  'surface-wall-living-east-kitchen': '东墙 · 厨房侧',
+  'surface-wall-living-east-entry': '东墙 · 玄关侧',
 };
 const roomBriefs = {
   'room-primary-bedroom': {
@@ -139,6 +153,8 @@ const editErrorMessages = [
   [/OBJECT_NOT_ROTATABLE/, '这个对象当前不允许旋转。'],
   [/OBJECT_MATERIAL_LOCKED/, '这个对象的材质由当前方案锁定，不能直接更换。'],
   [/OBJECT_PARAMETERS_LOCKED/, '这个对象的尺寸由当前方案锁定，不能直接改参数。'],
+  [/SURFACE_MATERIAL_LOCKED/, '这个表面的饰面由当前方案锁定，不能直接更换。'],
+  [/SURFACE_MATERIAL_INCOMPATIBLE/, '这种材质不适用于当前表面，请改选同类饰面。'],
 ];
 
 const normalizeEditError = (error) => {
@@ -231,7 +247,7 @@ const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {})
   const confirmation = trace.steps.find((step) => step.tool === 'request_confirmation' && step.ok)?.result;
   if (confirmation?.message) return confirmation.message;
   const comparison = trace.steps.find((step) => step.tool === 'compare_versions' && step.ok)?.result;
-  if (comparison) return `已按真实版本数据比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项仍待确认。`;
+  if (comparison) return `已按真实版本数据比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.surfaceDiffs?.length ?? 0} 项饰面变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项仍待确认。`;
   const writes = trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
   if (writes.length) {
     const actions = [...new Set(writes.map((step) => agentToolLabels[step.tool] ?? step.tool))].join('、');
@@ -482,6 +498,12 @@ function findEntity(sceneModel, selection) {
 function entityName(kind, entity) {
   if (kind === 'room') return roomLabels[entity.id] ?? entity.name;
   if (kind === 'object') return objectLabels[entity.id] ?? entity.name;
+  if (kind === 'surface') {
+    if (surfaceLabelOverrides[entity.id]) return surfaceLabelOverrides[entity.id];
+    if (entity.kind !== 'wall') return surfaceKindLabels[entity.kind] ?? entity.id;
+    const direction = Object.keys(wallDirectionLabels).find((value) => entity.id.includes(`-${value}`));
+    return direction ? wallDirectionLabels[direction] : '墙面';
+  }
   return entity.kind ?? entity.id;
 }
 
@@ -639,7 +661,11 @@ function ProjectDemoPage() {
   const selectedEntity = findEntity(currentScene, selection);
   const displaySelectedEntity = findEntity(currentScene, displaySelection);
   const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
+  const selectedSurface = selectedEntity?.kind === 'surface' ? selectedEntity.entity : null;
   const activeRoomId = navigation.roomId;
+  const activeRoomSurfaces = currentScene.surfaces
+    .filter((surface) => surface.roomId === activeRoomId)
+    .sort((left, right) => ['floor', 'ceiling', 'wall'].indexOf(left.kind) - ['floor', 'ceiling', 'wall'].indexOf(right.kind));
   const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
   const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
   const designEvaluation = useMemo(() => evaluateDesignRules(currentScene), [currentScene]);
@@ -739,7 +765,13 @@ function ProjectDemoPage() {
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
   const roomBrief = activeRoomId ? roomBriefs[activeRoomId] : null;
   const agentHasConversation = agentMessages.some((message) => message.role === 'user');
-  const agentQuickPrompts = activeRoomId === 'room-primary-bedroom'
+  const agentQuickPrompts = selectedSurface
+    ? selectedSurface.kind === 'wall'
+      ? ['这面墙改成暖灰', '这面墙改成浅橡木饰面', '检查当前房间规则']
+      : selectedSurface.kind === 'floor'
+        ? ['这个地面改成暖灰瓷砖', '这个地面改成浅橡木地板', '对比上一版变化']
+        : ['这个顶面改成暖灰', '这个顶面改成暖白', '对比上一版变化']
+    : activeRoomId === 'room-primary-bedroom'
     ? selectedObject?.id === 'object-primary-bed'
       ? ['双人床向左移动10厘米', '检查双人床床侧净距', '对比上一版变化']
       : selectedObject?.id === 'object-primary-wardrobe'
@@ -752,10 +784,18 @@ function ProjectDemoPage() {
           ? ['书桌向左移动20厘米', '检查书桌周围规则', '对比上一版变化']
           : ['检查儿童房当前规则', '单人床向右移动20厘米', '书桌向左移动20厘米']
       : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
-  const namedDiffs = useMemo(() => versionDiff.objectDiffs.map((diff) => ({
-    ...diff,
-    label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
-  })), [compareFromVersion.scene.objects, currentScene.objects, versionDiff.objectDiffs]);
+  const namedDiffs = useMemo(() => [
+    ...versionDiff.objectDiffs.map((diff) => ({
+      ...diff,
+      entityId: diff.objectId,
+      label: entityName('object', currentScene.objects.find((object) => object.id === diff.objectId) ?? compareFromVersion.scene.objects.find((object) => object.id === diff.objectId) ?? { id: diff.objectId, name: diff.objectId }),
+    })),
+    ...versionDiff.surfaceDiffs.map((diff) => ({
+      ...diff,
+      entityId: diff.surfaceId,
+      label: entityName('surface', currentScene.surfaces.find((surface) => surface.id === diff.surfaceId) ?? compareFromVersion.scene.surfaces.find((surface) => surface.id === diff.surfaceId) ?? { id: diff.surfaceId, kind: 'surface' }),
+    })),
+  ], [compareFromVersion.scene.objects, compareFromVersion.scene.surfaces, currentScene.objects, currentScene.surfaces, versionDiff.objectDiffs, versionDiff.surfaceDiffs]);
   const versionComparison = useMemo(() => {
     if (compareFromVersion.id === currentVersion.id) return null;
     return {
@@ -1573,6 +1613,12 @@ function ProjectDemoPage() {
           </section>}
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
+          {activeRoomSurfaces.length > 0 && <section className="project-surfaces" aria-label="当前房间装修表面">
+            <div><span>装修表面</span><small>墙 · 地 · 顶同一 scene</small></div>
+            <div>{activeRoomSurfaces.map((surface) => <button key={surface.id} type="button" aria-pressed={selectedSurface?.id === surface.id} onClick={() => selectEntity({ kind: 'surface', id: surface.id })}>
+              <span>{entityName('surface', surface)}</span><small>{materialLabels[surface.materialId] ?? surface.materialId}</small>
+            </button>)}</div>
+          </section>}
           <div className="project-edit__history" aria-label="编辑历史">
             <button type="button" onClick={undo} disabled={sceneStore.cursor === 0} title="撤销 (Cmd/Ctrl+Z)">撤销</button>
             <button type="button" onClick={redo} disabled={sceneStore.cursor === sceneStore.commands.length} title="重做 (Shift+Cmd/Ctrl+Z)">重做</button>
@@ -1617,7 +1663,7 @@ function ProjectDemoPage() {
               {selectedObject.capabilities.rotatable && <button className="project-edit__rotate" type="button" onClick={rotateSelected}>顺时针 15°</button>}
               {selectedObject.capabilities.materialEditable && <div className="project-edit__materials" aria-label="材质">
                 <span>材质</span>
-                {currentScene.materials.filter((material) => materialLabels[material.id]).map((material) => <button key={material.id} type="button" aria-label={`切换为${materialLabels[material.id]}`} aria-pressed={selectedObject.materialId === material.id} onClick={() => executeCommand({ type: 'object.setMaterial', objectId: selectedObject.id, materialId: material.id }, `已切换为${materialLabels[material.id]}`)}><i style={{ background: material.color }} />{materialLabels[material.id]}</button>)}
+                {currentScene.materials.filter((material) => material.appliesTo.includes('object')).map((material) => <button key={material.id} type="button" aria-label={`切换为${material.name}`} aria-pressed={selectedObject.materialId === material.id} onClick={() => executeCommand({ type: 'object.setMaterial', objectId: selectedObject.id, materialId: material.id }, `已切换为${material.name}`)}><i style={{ background: material.color }} />{material.name}</button>)}
               </div>}
               {selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
                 {Object.entries({ width: '宽', depth: '深', height: '高' }).map(([key, label]) => <label key={key}><span>{label}</span><input aria-label={`${label}度，毫米`} type="number" min="1" step="10" value={dimensionDraft[key]} onInput={(event) => updateDimensionDraft(key, event.currentTarget.value)} onChange={(event) => updateDimensionDraft(key, event.currentTarget.value)} /></label>)}
@@ -1627,6 +1673,21 @@ function ProjectDemoPage() {
                 {selectedObject.capabilities.duplicable && <button type="button" onClick={duplicateSelected}>复制</button>}
                 {selectedObject.capabilities.deletable && <button type="button" onClick={deleteSelected}>删除</button>}
               </div>}
+            </div>
+          </div>}
+          {selectedSurface && <div className="project-object project-surface" data-testid="selected-surface-details">
+            <div><span>{selectedSurface.id}</span><strong>演示饰面</strong></div>
+            <dl>
+              <div><dt>类型</dt><dd>{surfaceKindLabels[selectedSurface.kind]}</dd></div>
+              <div><dt>房间</dt><dd>{roomLabels[selectedSurface.roomId] ?? selectedSurface.roomId}</dd></div>
+              <div><dt>当前饰面</dt><dd>{materialLabels[selectedSurface.materialId] ?? selectedSurface.materialId}</dd></div>
+              <div><dt>来源</dt><dd>source: {selectedSurface.source}</dd></div>
+            </dl>
+            <div className="project-edit" aria-label={`${entityName('surface', selectedSurface)}饰面工具`}>
+              <div className="project-edit__materials" aria-label="兼容饰面">
+                <span>可用饰面</span>
+                {currentScene.materials.filter((material) => material.appliesTo.includes(selectedSurface.kind)).map((material) => <button key={material.id} type="button" aria-label={`切换为${material.name}`} aria-pressed={selectedSurface.materialId === material.id} onClick={() => executeCommand({ type: 'surface.setMaterial', surfaceId: selectedSurface.id, materialId: material.id }, `${entityName('surface', selectedSurface)}已切换为${material.name}`)}><i style={{ background: material.color }} />{material.name}</button>)}
+              </div>
             </div>
           </div>}
           <div className="project-rules" aria-label="设计规则检查">
@@ -1650,6 +1711,8 @@ function ProjectDemoPage() {
           </dl>
           <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
+            : displaySelectedEntity?.kind === 'surface'
+              ? '已选择真实装修表面；饰面修改会同步进入 2D、3D、版本与交接。'
             : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
         </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
@@ -1797,12 +1860,13 @@ function ProjectDemoPage() {
           </div>
           <ul className="version-diff" aria-label="版本差异">
             {namedDiffs.length
-              ? namedDiffs.map((diff, index) => <li key={`${diff.kind}-${diff.objectId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><p>{diff.label}</p></li>)
+              ? namedDiffs.map((diff, index) => <li key={`${diff.kind}-${diff.entityId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><p>{diff.label}</p></li>)
               : <li><span>无变化</span><p>基准版与当前场景完全一致</p></li>}
           </ul>
           <dl className="version-impact" aria-label="影响摘要">
             <div><dt>规则状态</dt><dd>{ruleStatusLabels[versionDiff.impact.status] ?? versionDiff.impact.status}</dd></div>
             <div><dt>对象差异</dt><dd>{versionDiff.objectDiffs.length}</dd></div>
+            <div><dt>表面差异</dt><dd>{versionDiff.surfaceDiffs.length}</dd></div>
             <div><dt>规则变化</dt><dd>{versionDiff.ruleDiffs.length}</dd></div>
             <div><dt>未决项</dt><dd>{versionDiff.impact.unresolved.length}</dd></div>
           </dl>
@@ -1921,8 +1985,10 @@ function DesignerReviewPage() {
     </section>
 
     <section className="panel handoff-section">
-      <div className="handoff-section__title"><span>真实差异</span><strong>{review.objectDiffs.length} 项对象变化</strong></div>
-      <ul>{review.objectDiffs.length ? review.objectDiffs.map((diff, index) => <li key={`${diff.objectId}-${diff.kind}-${index}`}><b>{diffKindLabels[diff.kind] ?? diff.kind}</b><span>{objectLabels[diff.objectId] ?? diff.objectId}</span></li>) : <li>当前版本与基准版本无对象差异。</li>}</ul>
+      <div className="handoff-section__title"><span>真实差异</span><strong>{review.objectDiffs.length + (review.surfaceDiffs?.length ?? 0)} 项变化</strong></div>
+      <ul>{review.objectDiffs.length || review.surfaceDiffs?.length
+        ? <>{review.objectDiffs.map((diff, index) => <li key={`${diff.objectId}-${diff.kind}-${index}`}><b>{diffKindLabels[diff.kind] ?? diff.kind}</b><span>{objectLabels[diff.objectId] ?? diff.objectId}</span></li>)}{(review.surfaceDiffs ?? []).map((diff, index) => <li key={`${diff.surfaceId}-${diff.kind}-${index}`}><b>饰面</b><span>{diff.surfaceId}</span></li>)}</>
+        : <li>当前版本与基准版本无对象或表面差异。</li>}</ul>
     </section>
 
     <section className="panel handoff-section">
@@ -1964,7 +2030,7 @@ function HandoffPage() {
 
     <section className="handoff-grid">
       <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
-      <article className="panel handoff-card"><span>对象</span><strong>{packet.confirmedObjects.length}</strong><p>每个对象都带 demo / estimate 来源，不冒充真实产品库。</p></article>
+      <article className="panel handoff-card"><span>对象 / 表面</span><strong>{packet.confirmedObjects.length} / {packet.confirmedSurfaces?.length ?? 0}</strong><p>对象与饰面都保留 demo / estimate 来源，不冒充真实产品库。</p></article>
       <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{downstreamValueLabels[packet.downstreamPlaceholders.pricing] ?? packet.downstreamPlaceholders.pricing}</p></article>
     </section>
 

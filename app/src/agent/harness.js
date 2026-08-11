@@ -32,8 +32,8 @@ const MATERIAL_NOUNS = [
   ['浅橡木', 'mat-floor-light-oak'],
   ['灰色', 'mat-fabric-warm-gray'],
   ['暖灰', 'mat-fabric-warm-gray'],
-  ['白色', 'mat-wall-warm-white'],
-  ['暖白', 'mat-wall-warm-white'],
+  ['白色', 'mat-object-warm-white'],
+  ['暖白', 'mat-object-warm-white'],
   ['瓷砖', 'mat-floor-tile-warm'],
 ];
 
@@ -43,6 +43,22 @@ const SURFACE_NOUNS = [
   ['客厅南墙', 'surface-wall-living-south'],
   ['客厅西墙', 'surface-wall-living-west'],
 ];
+
+const SURFACE_MATERIAL_NOUNS = {
+  wall: [
+    [/(木饰面|护墙板|木墙板|浅橡木|橡木)/, 'mat-wall-oak-panel'],
+    [/(暖灰|微水泥|灰色)/, 'mat-wall-greige'],
+    [/(暖白|白色)/, 'mat-wall-warm-white'],
+  ],
+  floor: [
+    [/(瓷砖|暖灰|灰色)/, 'mat-floor-tile-warm'],
+    [/(浅橡木|木地板|地板)/, 'mat-floor-light-oak'],
+  ],
+  ceiling: [
+    [/(暖灰|灰色)/, 'mat-ceiling-greige'],
+    [/(暖白|白色)/, 'mat-ceiling-warm-white'],
+  ],
+};
 
 const ROOM_NOUNS = [
   [/(主卧)/, 'room-primary-bedroom'],
@@ -132,7 +148,7 @@ function summarizeScene(scene, input, selectedObjectId) {
   const includeWholeHome = /(整屋|全屋)/.test(input);
   const inScope = (entity) => includeWholeHome || roomIds.has(entity.roomId);
   const needsObjects = includeWholeHome || namedObjectId || /(家具|柜|收纳|餐桌|床|书桌)/.test(input);
-  const needsSurfaces = includeWholeHome || namedSurfaceId || selectedSurfaceId || /(墙面|地面|地板|瓷砖).*(改|换|设|刷|铺)|(?:改|换|设|刷|铺).*(墙面|地面|地板|瓷砖)/.test(input);
+  const needsSurfaces = includeWholeHome || namedSurfaceId || selectedSurfaceId || /(墙面|地面|地板|瓷砖|顶面|天花).*(改|换|设|刷|铺)|(?:改|换|设|刷|铺).*(墙面|地面|地板|瓷砖|顶面|天花)/.test(input);
   const objectInScope = (object) => namedObjectId ? object.id === namedObjectId : needsObjects && inScope(object);
   const surfaceInScope = (surface) => (namedSurfaceId ?? selectedSurfaceId) ? surface.id === (namedSurfaceId ?? selectedSurfaceId) : needsSurfaces && inScope(surface);
 
@@ -181,8 +197,8 @@ function toolsForInput(input) {
     names.add('search_catalog');
     names.add('inspect_catalog_item');
   }
-  if (/(墙|墙面|地面|地板|瓷砖)/.test(input)) names.add('apply_catalog_item');
-  if (/(墙|墙面|地面|地板|瓷砖)/.test(input) && /(改成|换成|设为|设置为)/.test(input)) names.add('set_surface_material');
+  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(input)) names.add('apply_catalog_item');
+  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(input) && /(改成|换成|设为|设置为)/.test(input)) names.add('set_surface_material');
   if (objectIntent) names.add('inspect_object');
   if (/(移动|挪|移)/.test(input)) names.add('move_object');
   if (input.includes('旋转')) names.add('rotate_object');
@@ -198,9 +214,14 @@ function toolsForInput(input) {
   return TOOL_REGISTRY.filter((tool) => names.has(tool.name) && (!hasNoWriteIntent(input) || !tool.writes));
 }
 
-function selectedOrNamedSurfaceId(input, selectedObjectId) {
-  const selected = typeof selectedObjectId === 'string' && selectedObjectId.startsWith('surface-') ? selectedObjectId : null;
-  return SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? selected;
+function selectedOrNamedSurfaceId(input, selectedObjectId, scene) {
+  const explicit = SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
+  if (explicit) return explicit;
+  const selected = findById(scene?.surfaces, selectedObjectId);
+  if (selected) return selected.id;
+  const roomId = namedRoomId(input);
+  const kind = /(顶面|天花)/.test(input) ? 'ceiling' : /(地面|地板|瓷砖)/.test(input) ? 'floor' : null;
+  return roomId && kind ? scene?.surfaces?.find((surface) => surface.roomId === roomId && surface.kind === kind)?.id ?? null : null;
 }
 
 function namedRoomId(input) {
@@ -216,6 +237,10 @@ function previousVersionId(versionHistory) {
 
 function namedMaterialId(input) {
   return MATERIAL_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
+}
+
+function namedSurfaceMaterialId(input, kind) {
+  return SURFACE_MATERIAL_NOUNS[kind]?.find(([pattern]) => pattern.test(input))?.[1] ?? null;
 }
 
 function amountMm(input) {
@@ -238,11 +263,19 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
   const text = String(input ?? '').trim();
   if (!text) return [];
   const objectId = selectedOrNamedObjectId(text, selectedObjectId, scene);
-  const surfaceId = selectedOrNamedSurfaceId(text, selectedObjectId);
+  const surfaceId = selectedOrNamedSurfaceId(text, selectedObjectId, scene);
 
   if (/(墙|墙面)/.test(text) && /(木饰面|护墙板|木墙板)/.test(text)) {
     if (surfaceId) return [{ tool: 'apply_catalog_item', args: { catalogItemId: 'demo-wall-panel-light-oak', surfaceId } }];
     return [{ tool: 'request_clarification', args: { question: '你想把木饰面应用到哪一个房间的哪面墙？', reason: '目标墙面不明确' } }];
+  }
+
+  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(text) && /(改成|换成|设为|设置为)/.test(text)) {
+    if (!surfaceId) return [{ tool: 'request_clarification', args: { question: '请先在户型图、3D 场景或装修表面列表中选择要修改的墙面、地面或顶面。', reason: '目标表面不明确' } }];
+    const target = findById(scene?.surfaces, surfaceId);
+    const materialId = namedSurfaceMaterialId(text, target?.kind);
+    if (materialId) return [{ tool: 'set_surface_material', args: { surfaceId, materialId } }];
+    return [{ tool: 'request_clarification', args: { question: '这个表面想用哪一种饰面？', reason: '饰面材质不明确' } }];
   }
 
   if (/(架子|层板|置物架|书架|开放架)/.test(text)) {
