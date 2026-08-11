@@ -6,6 +6,7 @@ Run with:
 
 from math import radians
 from pathlib import Path
+import sys
 
 import bpy
 from mathutils import Vector
@@ -128,7 +129,7 @@ def dining_table():
     box("CANONICAL table top", (1.6, 0.9, 0.09), (0, 0, 0.71), OAK, 0.07)
     for x in (-0.62, 0.62):
         for y in (-0.28, 0.28):
-            cylinder("ACCENT table leg", 0.035, 0.69, (x, y, 0.345), OAK)
+            cylinder("CANONICAL table leg", 0.035, 0.69, (x, y, 0.345), OAK, role="canonical")
     chair(-0.47, -0.72, radians(180))
     chair(0.47, -0.72, radians(180))
     chair(-0.47, 0.72, 0)
@@ -235,7 +236,14 @@ ASSETS = {
     "shoe-cabinet": shoe_cabinet,
 }
 
+requested_assets = set(sys.argv[sys.argv.index("--") + 1:]) if "--" in sys.argv else set(ASSETS)
+unknown_assets = requested_assets - ASSETS.keys()
+if unknown_assets:
+    raise SystemExit(f"Unknown asset(s): {', '.join(sorted(unknown_assets))}")
+
 for asset_name, build in ASSETS.items():
+    if asset_name not in requested_assets:
+        continue
     normalize_and_export(asset_name, build)
 
-print(f"Built {len(ASSETS)} original GLBs in {OUTPUT}")
+print(f"Built {len(requested_assets)} original GLBs in {OUTPUT}")

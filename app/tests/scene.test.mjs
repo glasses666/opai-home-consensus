@@ -223,6 +223,17 @@ test('every 3D model is a checked-in generated GLB within the Gate 2 asset budge
   }
 });
 
+test('the dining table canonical bounds include its legs', async () => {
+  const bytes = await readFile(new URL('../public/assets/models/dining-table.glb', import.meta.url));
+  const jsonLength = bytes.readUInt32LE(12);
+  const model = JSON.parse(bytes.subarray(20, 20 + jsonLength).toString().replace(/\0+$/, ''));
+  const canonicalNames = model.nodes
+    .filter((node) => node.extras?.material_role === 'canonical')
+    .map((node) => node.name);
+
+  assert.equal(canonicalNames.filter((name) => name.startsWith('CANONICAL table leg')).length, 4);
+});
+
 test('validation rejects invalid 3D asset metadata and camera transforms', () => {
   const badAsset = cloneScene();
   badAsset.objects[0].model3D.source = 'downloaded';
