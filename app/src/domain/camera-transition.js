@@ -7,7 +7,10 @@ export const surfaceFadeProgress = (current, target, deltaMs) => {
   const next = lerp(current, target, 1 - Math.exp(-Math.max(0, deltaMs) / 110));
   return Math.abs(target - next) < 0.002 ? target : next;
 };
-export const surfaceOcclusionOpacity = (progress) => 1 - smoothCameraProgress(clamp(progress, 0, 1));
+// Keep a faint silhouette so occluding surfaces read as "softly faded" instead of disappearing.
+const MIN_OCCLUSION_OPACITY = 0.16;
+export const surfaceOcclusionOpacity = (progress) => MIN_OCCLUSION_OPACITY
+  + (1 - MIN_OCCLUSION_OPACITY) * (1 - smoothCameraProgress(clamp(progress, 0, 1)));
 export const cameraDistanceLimit = (viewKind, roomSpan = 8) => viewKind === 'whole_home'
   ? 28
   : Math.max(8, Math.min(16, roomSpan * 2));

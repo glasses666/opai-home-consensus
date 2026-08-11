@@ -1093,7 +1093,7 @@ export default function Scene3D({
         return <button key={preset.id} type="button" data-preset-id={preset.id} aria-pressed={viewState.id === preset.id} onClick={() => chooseView(preset)}><Icon size={16} /><span>{preset.label}</span></button>;
       })}
       <button type="button" aria-pressed={viewState.id === 'free'} onClick={chooseFree}><ArrowsOutSimple size={16} /><span>自由</span></button>
-      <button type="button" aria-label="观察时自动关闭遮挡墙壁" aria-pressed={wallOcclusionEnabled} onClick={toggleWallOcclusion}><Wall size={16} /><span>自动剖切</span></button>
+      <button type="button" aria-label="观察时自动关闭遮挡墙壁" aria-pressed={wallOcclusionEnabled} onClick={toggleWallOcclusion}><Wall size={16} /><span>自动关墙</span></button>
     </nav>}
     <p className="scene3d__hint">{selection?.kind === 'object' && ['move', 'rotate'].includes(editMode)
       ? `${editMode === 'move' ? '移动按 100 mm 吸附' : '旋转按 15° 吸附'}；按 Esc 取消本次拖动。`

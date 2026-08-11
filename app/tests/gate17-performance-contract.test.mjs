@@ -5,7 +5,7 @@ import { resolveRenderProfile } from '../src/domain/render-profile.js';
 
 test('Gate 17 uses the full editor only for a visible capable desktop', () => {
   assert.deepEqual(resolveRenderProfile({ width: 1440, coarsePointer: false, deviceMemory: 8 }), {
-    mode: 'full', defaultView: 'split', allowHeavy3D: true, dprCap: 1.75,
+    mode: 'full', defaultView: '3d', allowHeavy3D: true, dprCap: 1.75,
   });
 });
 

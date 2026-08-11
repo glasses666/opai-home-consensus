@@ -76,6 +76,12 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
 
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
+    const viewer = useViewer.getState();
+    viewer.setSceneTheme('paper');
+    viewer.setTransparentBackground(true);
+    viewer.setShading('solid');
+    viewer.setTextures(false);
+    viewer.setShadows(false);
     try {
       applySceneSnapshot(snapshotFromProjection(projection), { origin: 'host' });
       setStatus('canonical scene 已同步到 Pascal');

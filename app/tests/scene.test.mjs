@@ -56,8 +56,8 @@ test('large camera turns follow a shortest orbit without collapsing into the tar
   assert.equal(smoothCameraProgress(1), 1);
   assert.equal(cameraTransitionDuration(diningToSofaAngle, 1), 1);
   assert.equal(surfaceOcclusionOpacity(0), 1);
-  assert.equal(surfaceOcclusionOpacity(0.5), 0.5);
-  assert.equal(surfaceOcclusionOpacity(1), 0);
+  assert.equal(surfaceOcclusionOpacity(0.5), 0.58);
+  assert.equal(surfaceOcclusionOpacity(1), 0.16);
   const fadeOut = surfaceFadeProgress(0, 1, 16);
   assert.ok(fadeOut > 0 && fadeOut < 1);
   assert.ok(surfaceFadeProgress(fadeOut, 1, 16) > fadeOut);
