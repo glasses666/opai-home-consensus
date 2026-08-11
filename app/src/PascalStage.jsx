@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { applySceneSnapshot, loadPlugin, subscribeSceneCommits } from '@pascal-app/core';
-import { Editor, useEditor, useSidebarStore, useViewer } from '@pascal-app/editor';
+import { applySceneSnapshot, emitter, loadPlugin, subscribeSceneCommits } from '@pascal-app/core';
+import { Editor, subscribeCameraPose, useEditor, useSidebarStore, useViewer } from '@pascal-app/editor';
 import { builtinPlugin } from '@pascal-app/nodes';
 import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
 import { pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
 import { resolveRenderProfile } from './domain/render-profile.js';
+import {
+  isTrackpadPanWheel,
+  isTrackpadPinchWheel,
+  panCameraPose,
+  zoomCameraPose,
+} from './pascal/trackpad-navigation.js';
 import './pascal/pascal.css';
 
 const BUILDING_ID = 'building_oppein_demo';
@@ -28,6 +34,7 @@ function snapshotFromProjection(projection) {
 }
 
 export default function PascalStage({ scene, selection, onSelect, onEditCommand }) {
+  const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
   const onEditCommandRef = useRef(onEditCommand);
@@ -117,13 +124,15 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
   if (!renderProfile.allowHeavy3D) return <div className="pascal-stage-loading" data-render-profile="paused">页面暂时隐藏，装修编辑器已暂停以节省资源。</div>;
 
   return (
-    <div className="pascal-stage" data-render-profile={renderProfile.mode}>
+    <div ref={stageRef} className="pascal-stage" data-render-profile={renderProfile.mode}>
       {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
+      {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
       <PascalViewSwitch renderProfile={renderProfile} />
       <button className="pascal-sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
         {sidebarCollapsed ? '打开装修工具' : '收起装修工具'}
       </button>
       {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
+      {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
       <Editor
         key={scene.id}
         layoutVersion="v1"
@@ -137,6 +146,68 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
       />
     </div>
   );
+}
+
+function PascalTrackpadNavigation({ rootRef }) {
+  const viewMode = useEditor((state) => state.viewMode);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || viewMode === '2d') return undefined;
+
+    let pose = null;
+    let desiredPose = null;
+    let gestureUntil = 0;
+    let frame = 0;
+    let deltaX = 0;
+    let deltaY = 0;
+    let pinchDelta = 0;
+    const unsubscribe = subscribeCameraPose((nextPose) => {
+      pose = nextPose;
+      if (performance.now() >= gestureUntil) desiredPose = nextPose;
+    });
+
+    const flush = (canvas) => {
+      frame = 0;
+      const basePose = pinchDelta ? zoomCameraPose(desiredPose || pose, pinchDelta) : desiredPose || pose;
+      const nextPose = (deltaX || deltaY) ? panCameraPose(basePose, {
+        deltaX,
+        deltaY,
+        viewportWidth: canvas.clientWidth,
+      }) : basePose;
+      deltaX = 0;
+      deltaY = 0;
+      pinchDelta = 0;
+      if (!nextPose) return;
+      desiredPose = nextPose;
+      emitter.emit('camera-controls:apply-pose', nextPose);
+    };
+
+    const onWheel = (event) => {
+      if (!(event.target instanceof HTMLCanvasElement)) return;
+      const now = performance.now();
+      const pinch = isTrackpadPinchWheel(event);
+      if (!pinch && !isTrackpadPanWheel(event, now < gestureUntil)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      gestureUntil = now + 180;
+      if (pinch) pinchDelta += event.deltaY;
+      else {
+        deltaX += event.deltaX;
+        deltaY += event.deltaY;
+      }
+      if (!frame) frame = requestAnimationFrame(() => flush(event.target));
+    };
+
+    root.addEventListener('wheel', onWheel, { capture: true, passive: false });
+    return () => {
+      root.removeEventListener('wheel', onWheel, { capture: true });
+      unsubscribe();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [rootRef, viewMode]);
+
+  return null;
 }
 
 function PascalSelectionBridge({ mapping, selection, onSelect }) {

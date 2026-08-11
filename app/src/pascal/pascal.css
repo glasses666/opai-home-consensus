@@ -154,6 +154,22 @@
   backdrop-filter: blur(12px);
 }
 
+.pascal-trackpad-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 69;
+  padding: 7px 11px;
+  border: 1px solid rgba(45, 40, 37, 0.12);
+  border-radius: 999px;
+  color: #655e56;
+  background: rgba(250, 247, 241, 0.9);
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+}
+
 @media (max-width: 840px) {
   .pascal-stage,
   .pascal-stage > div:not(.pascal-view-switch):not(.pascal-resource-badge) {
@@ -163,6 +179,7 @@
   .pascal-view-switch { top: 12px; right: 12px; }
   .pascal-sidebar-toggle { top: 12px; left: 12px; }
   .pascal-resource-badge { top: 58px; right: 12px; }
+  .pascal-trackpad-hint { right: 12px; bottom: 12px; }
 }
 
 @media (max-width: 520px) {
