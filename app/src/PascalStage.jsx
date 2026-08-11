@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { applySceneSnapshot, loadPlugin, subscribeSceneCommits } from '@pascal-app/core';
-import { Editor, useEditor, useViewer } from '@pascal-app/editor';
+import { Editor, useEditor, useSidebarStore, useViewer } from '@pascal-app/editor';
 import { builtinPlugin } from '@pascal-app/nodes';
 import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
 import { pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
@@ -36,6 +36,8 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
   const renderProfile = useRenderProfile();
+  const sidebarCollapsed = useSidebarStore((state) => state.isCollapsed);
+  const setSidebarCollapsed = useSidebarStore((state) => state.setIsCollapsed);
 
   useEffect(() => {
     projectionRef.current = projection;
@@ -79,9 +81,9 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
     const viewer = useViewer.getState();
     viewer.setSceneTheme('paper');
     viewer.setTransparentBackground(true);
-    viewer.setShading('solid');
-    viewer.setTextures(false);
-    viewer.setShadows(false);
+    viewer.setShading('rendered');
+    viewer.setTextures(true);
+    viewer.setShadows(true);
     try {
       applySceneSnapshot(snapshotFromProjection(projection), { origin: 'host' });
       setStatus('canonical scene 已同步到 Pascal');
@@ -89,6 +91,13 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
       // Pascal refuses snapshot replacement during pointer interactions; next scene change retries.
     }
   }, [editorLoaded, projection, ready]);
+
+  useEffect(() => {
+    if (!editorLoaded) return undefined;
+    setSidebarCollapsed(true);
+    const resizeTimer = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 180);
+    return () => window.clearTimeout(resizeTimer);
+  }, [editorLoaded, setSidebarCollapsed]);
 
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
@@ -111,6 +120,9 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
     <div className="pascal-stage" data-render-profile={renderProfile.mode}>
       {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       <PascalViewSwitch renderProfile={renderProfile} />
+      <button className="pascal-sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+        {sidebarCollapsed ? '打开装修工具' : '收起装修工具'}
+      </button>
       {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
       <Editor
         key={scene.id}

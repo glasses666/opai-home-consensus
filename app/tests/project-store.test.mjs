@@ -8,7 +8,7 @@ import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
-import { dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
+import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 
 const tmpStorePath = () => {
   const dir = mkdtempSync(join(tmpdir(), 'op-project-store-'));
@@ -115,6 +115,22 @@ test('validated browser version history can become the durable current version',
 
     const unrelated = createPersistentProjectStore({ filePath: join(dir, 'other.json'), initialScene: { ...createDemoScene(), id: 'other-scene' } });
     assert.throws(() => unrelated.publishVersionHistory(history), /VERSION_CONFLICT/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a pristine demo store accepts the same canonical scene after schema evolution', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const previousScene = createDemoScene();
+    previousScene.objects = previousScene.objects.filter((object) => object.id !== 'object-primary-feature-wall');
+    const store = createPersistentProjectStore({ filePath: file, initialScene: previousScene });
+    const current = createSceneStore(createDemoScene());
+    const history = createVersionHistory(current);
+
+    assert.equal(store.publishVersionHistory(history).id, 'version-demo-initial');
+    assert.ok(store.getSceneStore().currentScene.objects.some((object) => object.id === 'object-primary-feature-wall'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -587,6 +587,11 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .agent-composer textarea,
 .household-opinion textarea { font-size: 11px; }
 
+/* Keep the business sidecar readable beside the dense embedded editor. */
+.product-grid .project-sidebar :where(p, span, small, button, input, textarea, label, dt, dd, li) {
+  font-size: 11px;
+}
+
 @media (max-width: 840px) {
   .lab { padding-inline: 18px; }
   .lab__workspace { grid-template-columns: 1fr; }

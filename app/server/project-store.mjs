@@ -149,10 +149,19 @@ export function createPersistentProjectStore({
   const publishVersionHistory = (history) => {
     if (!history?.versions?.length || typeof history.currentVersionId !== 'string') throw new Error('VERSION_HISTORY_INVALID');
     const incoming = new Map(history.versions.map((version) => [version.id, version]));
-    if (
-      serializeScene(history.initialScene) !== serializeScene(findVersion(INITIAL_VERSION_ID).scene) ||
-      state.versions.some((version) => incoming.has(version.id) && serializeScene(version.scene) !== serializeScene(incoming.get(version.id).scene))
-    ) throw new Error('VERSION_CONFLICT');
+    const persistedInitial = findVersion(INITIAL_VERSION_ID);
+    if (serializeScene(history.initialScene) !== serializeScene(persistedInitial.scene)) {
+      const canMigratePristineDemo = history.initialScene?.id === persistedInitial.scene?.id
+        && state.versions.length === 1
+        && state.project.currentVersionId === INITIAL_VERSION_ID
+        && state.project.confirmedVersionId === null
+        && !state.handoffSnapshots.some((snapshot) => snapshot.versionHistory);
+      if (!canMigratePristineDemo) throw new Error('VERSION_CONFLICT');
+      persistedInitial.scene = clone(history.initialScene);
+    }
+    if (state.versions.some((version) => incoming.has(version.id) && serializeScene(version.scene) !== serializeScene(incoming.get(version.id).scene))) {
+      throw new Error('VERSION_CONFLICT');
+    }
 
     const mergedVersions = [
       ...state.versions,

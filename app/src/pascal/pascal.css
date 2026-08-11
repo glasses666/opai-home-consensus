@@ -19,6 +19,8 @@
   position: relative;
   overflow: hidden;
   background: #f5f0e8;
+  contain: paint;
+  transform: translateZ(0);
 }
 
 .pascal-view-switch {
@@ -34,6 +36,30 @@
   background: rgba(250, 247, 241, 0.92);
   box-shadow: 0 10px 30px rgba(53, 45, 36, 0.12);
   backdrop-filter: blur(14px);
+}
+
+.pascal-sidebar-toggle {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 70;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(45, 40, 37, 0.12);
+  border-radius: 999px;
+  color: #4d4741;
+  background: rgba(250, 247, 241, 0.92);
+  box-shadow: 0 10px 30px rgba(53, 45, 36, 0.12);
+  backdrop-filter: blur(14px);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pascal-sidebar-toggle:focus-visible {
+  outline: 2px solid #8f3d58;
+  outline-offset: 2px;
 }
 
 .pascal-view-switch button {
@@ -135,6 +161,7 @@
   }
 
   .pascal-view-switch { top: 12px; right: 12px; }
+  .pascal-sidebar-toggle { top: 12px; left: 12px; }
   .pascal-resource-badge { top: 58px; right: 12px; }
 }
 

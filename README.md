@@ -42,7 +42,7 @@ npm run dev -- --port 5173
 
 主要审阅页面为 `http://127.0.0.1:5173/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 
-当前 V1 验证基线：165 项全量测试、77 项后端专项测试、28 案例 Agent 评测全部通过；1440×900、1366×768、1024×768 无水平溢出或未处理控制台错误。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+当前 V1 验证基线：166 项全量测试、78 项后端专项测试、28 案例 Agent 评测全部通过；1440×900、1366×768、1024×768 和 390×844 轻量态无水平溢出或未处理控制台错误。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
 
 后端能力门与 Agent Harness：
 
@@ -61,7 +61,7 @@ CLI 服务默认将本地演示项目写入 `app/.data/project-demo.json`；可�
 
 ## Git 规则
 
-- 本地 `main` 是唯一当前分支。
+- 当前交付分支为 `codex/pascal-frontend`；本地保存，不创建 remote。
 - 不创建 remote、不 push、不部署，除非用户另行授权。
 - 每个 Gate 单独实现、验证、审阅；用户验收后才进入下一 Gate。
 - 旧 V1 的可恢复副本位于系统废纸篓，不允许直接复制回新实现。

@@ -3,8 +3,8 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-11
-当前状态：**Gate 1–Gate 15 已验收；Pascal Editor 已成为主要装修模拟器前端，canonical scene、规则、Agent、版本和家庭共识仍是唯一业务内核；用户已授权 Gate 16–Gate 18 连续完成后再统一汇报**
-当前 Gate：**Gate 18：最终信息层级、UI polish 与交付验收**
+当前状态：**Gate 0–Gate 18 已实现、逐 Gate 验证并提交；Pascal Editor 是装修模拟器前端，canonical scene、规则、Agent、版本和家庭共识仍是唯一业务内核；V1 已进入用户最终验收**
+当前 Gate：**V1 本地交付完成，等待用户验收**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
 > 2026-08-11 用户已授权 Gate 16–Gate 18 连续实施、逐 Gate 验证和提交，并在全部完成后统一验收；本次授权覆盖本文件原有的逐 Gate 等待要求，但不放宽真实数据、生产接口和外部发布边界。
@@ -816,6 +816,10 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 18：最终信息层级、视觉收口与 V1 交付
 
+**状态：已实现并验证（2026-08-11）。**
+
+审阅包：[GATE-18-REVIEW.md](./GATE-18-REVIEW.md)
+
 **目的**
 
 在功能与性能边界稳定后，统一主工作台、Pascal 编辑区、Agent、版本 / 家庭 / 复核 / 交接的信息层级，使 V1 看起来像一个以空间为主角的当代家装产品，而不是开源编辑器与业务面板的拼接。
@@ -855,6 +859,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. 按用户授权连续完成 Gate 16 固定装修组件、Gate 17 性能 / 移动降级与 Gate 18 最终 polish，每个 Gate 独立验证和提交，全部结束后统一验收。
-2. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
-3. AI 生成 3D 与企业 GLB 都只替换 Gate 13 / 16 的 `model3D` 槽；真实报价、BOM、工期和生产写入继续保持 pending。
+1. 用户按 [GATE-18-REVIEW.md](./GATE-18-REVIEW.md) 与 [DEMO-SCRIPT.md](./DEMO-SCRIPT.md) 验收本地 V1；本轮不再增加新的内部 Gate。
+2. 真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的目录适配边界接入，不改 Agent catalog 工具合同。
+3. AI 生成 3D 与企业 GLB 只替换 Gate 13 / 16 的 `model3D` 槽；真实报价、BOM、工期和生产写入继续保持 `pending`，直到端到端验证。
+4. 客户级写实材质与真机移动性能属于 V1 后验优化，不冒充本轮已完成能力。

@@ -115,17 +115,11 @@ export function projectOppeinSceneToPascal(scene) {
     materials[toPascalMaterialId(material.id)] = buildMaterial(material, mapping);
   }
 
-  const bounds = scene.floorPlan?.bounds;
-  const xs = bounds
-    ? [bounds.x, bounds.x + bounds.width]
-    : scene.rooms.flatMap((room) => room.polygon.map((p) => p.x));
-  const zs = bounds
-    ? [bounds.z, bounds.z + bounds.depth]
-    : scene.rooms.flatMap((room) => room.polygon.map((p) => p.z));
-  const minX = Math.min(...xs) - 2000;
-  const maxX = Math.max(...xs) + 2000;
-  const minZ = Math.min(...zs) - 2000;
-  const maxZ = Math.max(...zs) + 2000;
+  const bounds = scene.floorPlan.bounds;
+  const minX = bounds.x - 2000;
+  const maxX = bounds.x + bounds.width + 2000;
+  const minZ = bounds.z - 2000;
+  const maxZ = bounds.z + bounds.depth + 2000;
 
   nodes.site_oppein_demo = {
     object: 'node',
@@ -138,6 +132,7 @@ export function projectOppeinSceneToPascal(scene) {
     polygon: { type: 'polygon', points: [point({ x: minX, z: minZ }), point({ x: maxX, z: minZ }), point({ x: maxX, z: maxZ }), point({ x: minX, z: maxZ })] },
     children: ['building_oppein_demo'],
   };
+
   nodes.building_oppein_demo = {
     object: 'node',
     id: 'building_oppein_demo',

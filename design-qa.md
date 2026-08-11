@@ -15,21 +15,27 @@ final result: passed
 
 - 信息架构保持当前产品合同：3D 是主浏览和编辑面，2D 是同步只读总览，不回到旧的静态图片热点原型。
 - 视觉风格维持浅木、暖白、克制层级和北欧家居目录感；没有使用 IKEA logo、蓝黄品牌配色、商品图或独立效果图冒充实时 3D。
-- 床垫、柜体、浅木地板继续使用同一 canonical scene 内的原创 GLB / 材质；餐桌尺度、主卧入口镜头、墙面软淡化和“自动关墙”按钮文案已通过实际截图复查。
+- 对照参考图，3D 仍占据工作台最大视觉面积；Pascal 自带侧栏默认收起，宿主只保留一个可逆入口，减少“双编辑器”拼接感。
+- Agent / 家庭 / 版本仍是同一右侧任务区；Pascal 覆盖层已限制在编辑区，不再拦截宿主侧栏点击。
+- 暖白、浅木和克制酒红延续参考概念图的目录感，但没有使用 IKEA logo、蓝黄品牌配色、商品图片或复制页面结构。
+- 1440、1366、1024 桌面视口均保留可用主画面与侧栏；密集业务微文案提高到至少 11px，390×844 默认只加载轻量态，不启动完整 3D。
+- 版本、来源、Agent 降级和企业 `pending` 状态始终可见；页面不会把本地 planner、演示目录或估算字段伪装成真实欧派能力。
+- Pascal 采用有效的 site / building scene graph 与 `rendered` 阴影材质；这是实时同源模型，不用独立效果图冒充 3D 结果。
 - 复核与交接被放在独立页面，不恢复旧的客户 / 设计师模式切换。
 - 产品状态清楚暴露 demo / estimate / pending，不冒充真实欧派报价、SKU、BOM、生产或施工接口。
 
 ## 验证证据
 
-- `cd app && npm test`：165/165 通过。
-- `cd app && npm run test:backend`：77/77 通过。
+- `cd app && npm test`：166/166 通过。
+- `cd app && npm run test:backend`：78/78 通过。
 - `cd app && npm run build`：通过；保留 Vite 大 chunk 警告。
 - `cd app && npm run eval:agent`：28/28 通过，`passed: true`。
-- 用户可见的浏览器截图复核覆盖 1440×900、俯视编辑与墙面遮挡状态；以下三张图作为 Gate 18 视觉证据：
+- 用户可见浏览器复核覆盖桌面三档、移动轻量态、交接页和相机运动；证据如下：
   - 参考图：`/Users/dracoglasser/.codex/generated_images/019fe061-23e5-7491-a93b-fdfea4046d88/exec-b617e994-c333-4c2d-8f1b-bee31eda4aa4.png`
-  - 当前编辑截图：`/var/folders/dl/kf8l_tpn6s53_sqqkdhx28_00000gn/T/codex-clipboard-20e24546-6283-4485-bfba-199f24d2dfd2.png`
-  - 当前墙面遮挡截图：`/var/folders/dl/kf8l_tpn6s53_sqqkdhx28_00000gn/T/codex-clipboard-dd3902d5-8769-42d5-bf5c-8395a47e8cea.png`
-  - 过渡 / 淡化问题对照：`/var/folders/dl/kf8l_tpn6s53_sqqkdhx28_00000gn/T/codex-clipboard-2d18b799-f2ff-4397-bcf2-1d1ada4921ea.png`
+  - 当前桌面：`.omx/audits/gate18/final-1440x900.png`、`.omx/audits/gate18/final-1366x768.png`、`.omx/audits/gate18/final-1024x768.png`
+  - 移动轻量态：`.omx/audits/gate18/final-mobile-390x844.png`
+  - 交接页：`.omx/audits/gate18/final-handoff.png`
+  - 旋转 / 缩放录屏与抽帧：`.omx/audits/gate18/camera-orbit-zoom.mp4`、`.omx/audits/gate18/camera-contact-sheet.png`
 
 ## 已知视觉 / 体验边界
 
@@ -37,3 +43,4 @@ final result: passed
 - 当前实时验证状态为 Aily `api_unavailable`、Base `ready`；Agent 最多等待 10 秒后自动降级本地 planner，页面不会冒充 Live Aily。
 - Vite 报告单 chunk 超过 500 kB；V1 本地 Demo 可接受，正式部署前建议做 Three.js / 页面路由 code splitting。
 - `/lab/scene` 仍保留为技术验证入口；若比赛交付需要更干净的 URL，可在部署时隐藏。
+- 典型旋转 / 缩放连续且无异常；极端自由环绕仍可能到达建筑外侧，Pascal beta 的上游 BVH deprecation warning 也仍会出现在控制台 warning 层级。两者均不冒充已解决。
