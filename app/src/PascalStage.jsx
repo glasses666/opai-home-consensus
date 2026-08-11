@@ -4,6 +4,7 @@ import { Editor, useEditor, useViewer } from '@pascal-app/editor';
 import { builtinPlugin } from '@pascal-app/nodes';
 import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
 import { pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
+import { resolveRenderProfile } from './domain/render-profile.js';
 import './pascal/pascal.css';
 
 const BUILDING_ID = 'building_oppein_demo';
@@ -34,6 +35,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
   const [ready, setReady] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
+  const renderProfile = useRenderProfile();
 
   useEffect(() => {
     projectionRef.current = projection;
@@ -97,11 +99,13 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
   const onSave = useCallback(async () => {}, []);
 
   if (!ready) return <div className="pascal-stage-loading">{status}</div>;
+  if (!renderProfile.allowHeavy3D) return <div className="pascal-stage-loading" data-render-profile="paused">页面暂时隐藏，装修编辑器已暂停以节省资源。</div>;
 
   return (
-    <div className="pascal-stage">
+    <div className="pascal-stage" data-render-profile={renderProfile.mode}>
       {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
-      <PascalViewSwitch />
+      <PascalViewSwitch renderProfile={renderProfile} />
+      {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
       <Editor
         key={scene.id}
         layoutVersion="v1"
@@ -128,9 +132,10 @@ function PascalSelectionBridge({ mapping, selection, onSelect }) {
   return null;
 }
 
-function PascalViewSwitch() {
+function PascalViewSwitch({ renderProfile }) {
   const viewMode = useEditor((state) => state.viewMode);
   const setViewMode = useEditor((state) => state.setViewMode);
+  useEffect(() => { setViewMode(renderProfile.defaultView); }, [renderProfile.mode, setViewMode]);
   return (
     <div className="pascal-view-switch" aria-label="Pascal 编辑视图">
       {[
@@ -144,6 +149,31 @@ function PascalViewSwitch() {
       ))}
     </div>
   );
+}
+
+function useRenderProfile() {
+  const read = useCallback(() => resolveRenderProfile({
+    width: window.innerWidth,
+    coarsePointer: window.matchMedia('(pointer: coarse)').matches,
+    deviceMemory: navigator.deviceMemory,
+    hidden: document.visibilityState === 'hidden',
+  }), []);
+  const [profile, setProfile] = useState(read);
+
+  useEffect(() => {
+    const pointer = window.matchMedia('(pointer: coarse)');
+    const update = () => setProfile(read());
+    window.addEventListener('resize', update);
+    document.addEventListener('visibilitychange', update);
+    pointer.addEventListener?.('change', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      document.removeEventListener('visibilitychange', update);
+      pointer.removeEventListener?.('change', update);
+    };
+  }, [read]);
+
+  return profile;
 }
 
 function localizeAssetUrls(projection) {

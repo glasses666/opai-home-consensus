@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
-import Scene3D from './Scene3D.jsx';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
 import {
@@ -35,9 +34,10 @@ import {
   undoSceneCommand,
   validateScene,
 } from './domain/scene.js';
-import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+import { objectNavigationPreset, parseViewState, resolveWorkspaceTier, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
+const Scene3D = lazy(() => import('./Scene3D.jsx'));
 
 const scene = createSceneStore(createDemoScene()).currentScene;
 const serialized = serializeScene(scene);
@@ -586,6 +586,46 @@ function usePathname() {
   return [pathname, navigate];
 }
 
+function useWorkspaceTier() {
+  const computeTier = useCallback(() => {
+    if (typeof window === 'undefined') return 'full';
+    const hasFinePointer = window.matchMedia?.('(pointer: fine)').matches ?? true;
+    const hasHover = window.matchMedia?.('(hover: hover)').matches ?? true;
+    return resolveWorkspaceTier({
+      width: window.innerWidth,
+      hasFinePointer,
+      hasHover,
+      maxTouchPoints: navigator.maxTouchPoints ?? 0,
+    });
+  }, []);
+
+  const [tier, setTier] = useState(computeTier);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const update = () => setTier(computeTier());
+    update();
+    const mediaQueries = [
+      window.matchMedia?.('(pointer: fine)'),
+      window.matchMedia?.('(hover: hover)'),
+    ].filter(Boolean);
+    for (const query of mediaQueries) {
+      query.addEventListener?.('change', update);
+    }
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      for (const query of mediaQueries) {
+        query.removeEventListener?.('change', update);
+      }
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, [computeTier]);
+
+  return tier;
+}
+
 function LabScenePage() {
   const [mode, setMode] = useState('overlay');
   const [workspaceMode, setWorkspaceMode] = useState('3d');
@@ -624,7 +664,7 @@ function LabScenePage() {
 
   return <main className="lab">
     <header className="lab__header"><div><p className="eyebrow">Gate 2 · same-source spatial proof</p><h1>2D 户型与真实 3D 同源场景</h1><p className="lab__lede">九件原创 GLB、墙体开洞、PBR 材质和可复现镜头全部读取 Gate 1 的同一份毫米级 scene。点击房间地面会先飞到三维俯视，再选入口、主功能面或自由视角。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
-    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} onExitTo2D={() => setWorkspaceMode('2d')} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} />}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
+    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Suspense fallback={<div className="scene3d-loading">正在启动内部 3D 校验器…</div>}><Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} onExitTo2D={() => setWorkspaceMode('2d')} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} /></Suspense>}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
     <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
   </main>;
 }
@@ -648,6 +688,9 @@ function ProjectDemoPage() {
   const [editMode, setEditMode] = useState('move');
   const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
   const [pendingReview, setPendingReview] = useState(null);
+  const viewerTier = useWorkspaceTier();
+  const [pascalExpanded, setPascalExpanded] = useState(viewerTier === 'full');
+  useEffect(() => { setPascalExpanded(viewerTier === 'full'); }, [viewerTier]);
   const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
@@ -1571,17 +1614,30 @@ function ProjectDemoPage() {
             <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
           </div>
           <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
+          <div className="project-stage__tier" data-tier={viewerTier}>
+            <span>{viewerTier === 'full' ? '完整 3D 已启用' : '轻量浏览 · 先省资源'}</span>
+            {viewerTier === 'light' && !pascalExpanded && <button type="button" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>}
+          </div>
         </div>
-        <Suspense fallback={<div className="pascal-stage-loading">正在启动装修编辑器…</div>}>
-          <PascalStage
-            scene={currentScene}
-            selection={selection}
-            onSelect={selectEntity}
-            onEditCommand={(command) => Boolean(executeCommand(command))}
-            activeRoomId={displayRoomId}
-            roomLabels={roomLabels}
-          />
-        </Suspense>
+        {viewerTier === 'light' && !pascalExpanded
+          ? <div className="pascal-stage-light">
+            <p className="pascal-stage-light__kicker">轻量浏览模式</p>
+            <strong>{currentRoomLabel}</strong>
+            <span>当前设备先保留 2D 总览与右侧上下文，完整 Pascal 3D 只在需要时加载。</span>
+            <div className="pascal-stage-light__actions">
+              <button type="button" className="utility-button utility-button--strong" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>
+            </div>
+          </div>
+          : <Suspense fallback={<div className="pascal-stage-loading">正在启动装修编辑器…</div>}>
+            <PascalStage
+              scene={currentScene}
+              selection={selection}
+              onSelect={selectEntity}
+              onEditCommand={(command) => Boolean(executeCommand(command))}
+              activeRoomId={displayRoomId}
+              roomLabels={roomLabels}
+            />
+          </Suspense>}
       </section>
 
       <aside className="project-sidebar" data-mode={sidecarMode}>

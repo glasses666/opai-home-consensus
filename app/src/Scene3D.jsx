@@ -483,7 +483,7 @@ async function createController(container, scene, callbacks) {
   let transition = null;
   let selectedHelper = null;
   let activeViewId = home.id;
-  let animationFrame = 0;
+  let animationFrame = null;
   let frameCount = 0;
   let statsStart = performance.now();
   let pointerStart = null;
@@ -792,9 +792,12 @@ async function createController(container, scene, callbacks) {
   observer.observe(container);
   resize();
 
+  const queueFrame = () => {
+    if (!disposed && document.visibilityState !== 'hidden' && animationFrame === null) animationFrame = requestAnimationFrame(render);
+  };
   const render = (now) => {
-    if (disposed) return;
-    animationFrame = requestAnimationFrame(render);
+    animationFrame = null;
+    if (disposed || document.visibilityState === 'hidden') return;
     if (transition) {
       const progress = Math.min(1, (now - transition.startedAt) / transition.duration);
       const eased = smoothCameraProgress(progress);
@@ -833,8 +836,20 @@ async function createController(container, scene, callbacks) {
       statsStart = now;
       frameCount = 0;
     }
+    queueFrame();
   };
-  animationFrame = requestAnimationFrame(render);
+  const onVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+      return;
+    }
+    statsStart = performance.now();
+    frameCount = 0;
+    queueFrame();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  queueFrame();
   switchView(home.id, 1);
 
   return {
@@ -909,7 +924,8 @@ async function createController(container, scene, callbacks) {
     setSelection,
     dispose() {
       disposed = true;
-      cancelAnimationFrame(animationFrame);
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       observer.disconnect();
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('pointerup', onPointerUp);
