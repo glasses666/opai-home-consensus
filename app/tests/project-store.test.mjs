@@ -6,6 +6,8 @@ import test from 'node:test';
 
 import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { createVersionHistory, serializeVersionHistory } from '../src/domain/design-version.js';
+import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 
 const tmpStorePath = () => {
@@ -114,6 +116,57 @@ test('logically corrupt version references are quarantined instead of partially 
     const recovered = createPersistentProjectStore({ filePath: file });
     assert.equal(recovered.currentVersionId, 'version-demo-initial');
     assert.equal(readdirSync(dir).some((name) => name.startsWith('project.json.corrupt-')), true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('handoff snapshots are idempotent for the same event ID and reject conflicting replay', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file });
+    const history = createVersionHistory(store.getSceneStore());
+    const payload = {
+      eventId: 'evt-handoff-one',
+      versionId: history.currentVersionId,
+      versionHistory: serializeVersionHistory(history),
+      householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(history.currentVersionId)),
+    };
+
+    const first = store.saveHandoffSnapshot(payload);
+    const duplicate = store.saveHandoffSnapshot(payload);
+    assert.equal(first.eventId, duplicate.eventId);
+    assert.equal(store.snapshot().handoffSnapshots.length, 1);
+
+    assert.throws(
+      () => store.saveHandoffSnapshot({ ...payload, versionId: 'version-other' }),
+      /EVENT_ID_CONFLICT/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('handoff snapshot review updates the latest snapshot for a version', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file });
+    const history = createVersionHistory(store.getSceneStore());
+    const payload = {
+      versionId: history.currentVersionId,
+      versionHistory: serializeVersionHistory(history),
+      householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(history.currentVersionId)),
+    };
+    store.saveHandoffSnapshot({ ...payload, eventId: 'evt-handoff-first' });
+    store.saveHandoffSnapshot({ ...payload, eventId: 'evt-handoff-second' });
+
+    const reviewed = store.updateHandoffSnapshot(history.currentVersionId, (snapshot) => ({
+      ...snapshot,
+      review: { decision: 'approved', source: 'demo' },
+    }));
+
+    assert.equal(reviewed.eventId, 'evt-handoff-second');
+    assert.equal(store.getHandoffSnapshotForVersion(history.currentVersionId).review.decision, 'approved');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

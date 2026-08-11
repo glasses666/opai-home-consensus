@@ -156,6 +156,7 @@ const newReviewChecks = (before, after, objectIds) => {
   return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
+const PROJECT_ID = 'project-demo';
 const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v3';
 const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v3';
 const opinionStanceLabels = {
@@ -182,6 +183,16 @@ const agentToolLabels = {
   set_object_material: '修改家具材质',
   set_surface_material: '修改表面材质',
 };
+
+async function fetchJson(path, options) {
+  const response = await fetch(path, options);
+  const text = await response.text();
+  const body = text ? JSON.parse(text) : {};
+  if (!response.ok) throw new Error(body.error ?? `HTTP_${response.status}`);
+  return body;
+}
+
+const eventId = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {}) => {
   const failed = trace.steps.find((step) => !step.ok);
@@ -567,6 +578,7 @@ function ProjectDemoPage() {
   const [editMode, setEditMode] = useState('move');
   const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
   const [pendingReview, setPendingReview] = useState(null);
+  const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
@@ -587,7 +599,6 @@ function ProjectDemoPage() {
   const [opinionText, setOpinionText] = useState('');
   const [consensusFeedback, setConsensusFeedback] = useState('三位成员依次表达；所有意见都写入同一共享版本。');
   const agentMessageListRef = useRef(null);
-  const [pathname] = usePathname();
   const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
   const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
   const displaySelection = selectionFromId(currentScene, displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
@@ -612,6 +623,7 @@ function ProjectDemoPage() {
   const currentVersionStatus = hasUnsavedChanges && versionHistory.confirmedVersionId
     ? 'changed_after_confirm'
     : currentVersion.status;
+  const canSubmitDesignerReview = currentVersion.status === 'customer_confirmed' && !hasUnsavedChanges && !pendingReview;
   const activeMember = householdConsensus.members.find((member) => member.id === activeMemberId) ?? householdConsensus.members[0];
   const opinionTarget = selectedObject
     ? { type: 'object', id: selectedObject.id }
@@ -723,12 +735,6 @@ function ProjectDemoPage() {
     () => ({ id: navigation.viewId, sequence: viewSequence }),
     [navigation.viewId, viewSequence],
   );
-
-  useEffect(() => {
-    document.title = pathname.startsWith('/lab/scene')
-      ? '欧派 AI 家装共识层 · 技术页'
-      : '家庭共创设计器 · 数字住宅';
-  }, [pathname]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -1138,6 +1144,40 @@ function ProjectDemoPage() {
     setVersionHistory(nextHistory);
     setCompareFromVersionId(currentVersion.id);
     setEditFeedback({ tone: 'success', message: `${currentVersion.label} 已客户确认；后续保存会标记为确认后修改。` });
+    setHandoffSync({ status: 'idle', message: '已客户确认，可以提交设计师复核。', reviewUrl: null, handoffUrl: null });
+  };
+
+  const submitDesignerReview = async () => {
+    if (!canSubmitDesignerReview) {
+      setHandoffSync({ status: 'failed', message: hasUnsavedChanges || pendingReview ? '请先保存修改并处理规则预览。' : '需要先完成客户确认。', reviewUrl: null, handoffUrl: null });
+      return;
+    }
+    const id = eventId('evt-handoff');
+    setHandoffSync({ status: 'pending', message: '正在提交复核快照…', reviewUrl: null, handoffUrl: null });
+    try {
+      await fetchJson(`/api/projects/${PROJECT_ID}/snapshot`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          eventId: id,
+          versionHistory: serializeVersionHistory(versionHistoryRef.current),
+          householdConsensus: serializeHouseholdConsensus(householdConsensus),
+        }),
+      });
+      await fetchJson(`/api/versions/${currentVersion.id}/confirm`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ eventId: `${id}-confirm` }),
+      });
+      setHandoffSync({
+        status: 'synced',
+        message: '已提交设计师复核；真实欧派数据仍以 pending 字段保留。',
+        reviewUrl: `/${'review'}/${PROJECT_ID}?versionId=${encodeURIComponent(currentVersion.id)}`,
+        handoffUrl: `/handoff/${encodeURIComponent(currentVersion.id)}`,
+      });
+    } catch (error) {
+      setHandoffSync({ status: 'failed', message: `提交失败：${error.message}`, reviewUrl: null, handoffUrl: null });
+    }
   };
 
   const restoreComparedVersion = () => {
@@ -1607,6 +1647,12 @@ function ProjectDemoPage() {
           <div className="version-current__actions">
             <button type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview)}><FloppyDisk size={15} />保存为 V{versions.length + 1}</button>
             <button type="button" onClick={confirmCurrentVersion} disabled={hasUnsavedChanges || Boolean(pendingReview) || currentVersion.status === 'customer_confirmed'}><Check size={15} />客户确认</button>
+            <button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交设计师复核</button>
+          </div>
+          <div className="handoff-submit" data-status={handoffSync.status} role="status">
+            <span>{handoffSync.message}</span>
+            {handoffSync.reviewUrl && <a href={handoffSync.reviewUrl}>打开复核页</a>}
+            {handoffSync.handoffUrl && <a href={handoffSync.handoffUrl}>打开交接单</a>}
           </div>
         </section>
 
@@ -1655,17 +1701,74 @@ const latestLocalProject = () => {
   return { history, consensus: createInitialHouseholdProject(history) };
 };
 
-function DesignerReviewPage() {
+const routeSlug = (pathname, section) => {
+  const parts = pathname.split('/').filter(Boolean);
+  return parts[0] === section ? parts[1] ?? null : null;
+};
+
+function useExportPayload(versionId) {
   const [{ history, consensus }] = useState(latestLocalProject);
-  const [decision, setDecision] = useState('pending');
-  const review = useMemo(() => buildDesignerReview(history, consensus), [consensus, history]);
-  const issueCount = review.ruleIssues.length + review.unresolved.length;
+  const fallback = useMemo(() => ({
+    packet: buildHandoffPacket(history, consensus),
+    review: buildDesignerReview(history, consensus),
+    reviewDecision: null,
+    source: 'local',
+  }), [consensus, history]);
+  const [state, setState] = useState({ status: 'loading', data: fallback, error: null });
+
+  useEffect(() => {
+    let alive = true;
+    const query = versionId ? `?versionId=${encodeURIComponent(versionId)}` : '';
+    fetchJson(`/api/projects/${PROJECT_ID}/export${query}`)
+      .then((data) => { if (alive) setState({ status: 'ready', data: { ...data, source: 'server' }, error: null }); })
+      .catch((error) => { if (alive) setState({ status: 'fallback', data: fallback, error: error.message }); });
+    return () => { alive = false; };
+  }, [fallback, versionId]);
+
+  return state;
+}
+
+function DesignerReviewPage() {
+  const [pathname, navigate] = usePathname();
+  const versionId = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('versionId');
+  const exportState = useExportPayload(versionId);
+  const packet = exportState.data.packet;
+  const review = exportState.data.review;
+  const [decision, setDecision] = useState(exportState.data.reviewDecision?.decision ?? 'pending');
+  const [notes, setNotes] = useState('');
+  const [submitState, setSubmitState] = useState({ status: 'idle', message: '', handoffUrl: null });
+  const projectId = routeSlug(pathname, 'review') ?? 'project-demo';
+  const issueCount = (review.ruleIssues?.length ?? 0) + (review.unresolved?.length ?? 0);
+  const submitReview = async (nextDecision) => {
+    if (!packet?.version?.id) return;
+    setSubmitState({ status: 'pending', message: '正在写入复核决定…', handoffUrl: null });
+    try {
+      const result = await fetchJson(`/api/versions/${packet.version.id}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: nextDecision, notes }),
+      });
+      setDecision(nextDecision);
+      setSubmitState({
+        status: 'synced',
+        message: nextDecision === 'approved' ? '已批准，可进入交接单。' : '已退回客户工作台修改。',
+        handoffUrl: result.handoffUrl,
+      });
+    } catch (error) {
+      setSubmitState({ status: 'failed', message: `复核失败：${error.message}`, handoffUrl: null });
+    }
+  };
 
   return <main className="handoff-shell">
     <header className="handoff-hero">
       <div><p className="eyebrow">Gate 11 · Designer Review</p><h1>设计师复核</h1><p>只读查看家庭确认版本、规则告警、版本差异和企业数据缺口；不混进客户工作台。</p></div>
-      <a className="utility-button" href="/project/demo">返回客户工作台</a>
+      <div className="handoff-actions">
+        <button className="utility-button" type="button" onClick={() => navigate('/project/demo')}>返回客户工作台</button>
+        <button className="utility-button" type="button" onClick={() => navigate(`/handoff/${review.currentVersionId}`)}>查看交接单</button>
+      </div>
     </header>
+    {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice" data-status="failed">服务器 export 不可用：{exportState.error}。当前展示本地兜底数据。</p>}
 
     <section className="handoff-grid">
       <article className="panel handoff-card">
@@ -1678,7 +1781,9 @@ function DesignerReviewPage() {
       </article>
       <article className="panel handoff-card">
         <span>设计师决定</span><strong>{decision === 'approved' ? '已批准' : decision === 'returned' ? '已退回' : '待复核'}</strong>
-        <div className="handoff-actions"><button type="button" onClick={() => setDecision('approved')}>批准进入交接</button><button type="button" onClick={() => setDecision('returned')}>退回修改</button></div>
+        <textarea rows="3" maxLength="1000" aria-label="复核备注" placeholder="复核备注，选填" value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
+        <div className="handoff-actions"><button type="button" onClick={() => submitReview('approved')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>批准进入交接</button><button type="button" onClick={() => submitReview('returned')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>退回修改</button></div>
+        {submitState.message && <p className="handoff-notice" data-status={submitState.status}>{submitState.message}{submitState.handoffUrl && <> <button type="button" onClick={() => navigate(submitState.handoffUrl)}>打开交接单</button></>}</p>}
       </article>
     </section>
 
@@ -1689,27 +1794,40 @@ function DesignerReviewPage() {
 
     <section className="panel handoff-section">
       <div className="handoff-section__title"><span>规则与未决项</span><strong>{issueCount ? '需说明边界' : '可批准'}</strong></div>
-      <ul>{[...review.ruleIssues, ...review.unresolved].map((item, index) => <li key={`${item.code}-${index}`}><b>{item.status ?? '未决'}</b><span>{item.message ?? item.reason}</span><small>source: {item.source ?? 'estimate'}</small></li>)}</ul>
+      <ul>{[...(review.ruleIssues ?? []), ...(review.unresolved ?? [])].map((item, index) => <li key={`${item.code}-${index}`}><b>{item.status ?? '未决'}</b><span>{item.message ?? item.reason}</span><small>source: {item.source ?? 'estimate'}</small></li>)}</ul>
     </section>
   </main>;
 }
 
 function HandoffPage() {
-  const [{ history, consensus }] = useState(latestLocalProject);
+  const [pathname, navigate] = usePathname();
   const [copyStatus, setCopyStatus] = useState('复制 JSON');
-  const packet = useMemo(() => buildHandoffPacket(history, consensus), [consensus, history]);
+  const requestedVersionId = routeSlug(pathname, 'handoff');
+  const exportState = useExportPayload(requestedVersionId);
+  const packet = exportState.data.packet;
   const serializedPacket = useMemo(() => JSON.stringify(packet, null, 2), [packet]);
   const copyPacket = async () => {
     try { await navigator.clipboard.writeText(serializedPacket); setCopyStatus('已复制'); }
     catch { setCopyStatus('复制失败'); }
     window.setTimeout(() => setCopyStatus('复制 JSON'), 1200);
   };
+  const downloadPacket = () => {
+    const blob = new Blob([serializedPacket], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${packet.version.id}-handoff.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   return <main className="handoff-shell">
     <header className="handoff-hero">
       <div><p className="eyebrow">Gate 11 · Downstream Handoff</p><h1>共识交接单</h1><p>脱敏、机器可读；真实欧派 SKU / 报价 / BOM / 生产接口仍以 pending 字段预留。</p></div>
-      <div className="handoff-actions"><a className="utility-button" href="/review/project-demo">设计师复核</a><a className="utility-button" href="/project/demo">返回工作台</a></div>
+      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate('/review/project-demo')}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate('/project/demo')}>返回工作台</button></div>
     </header>
+    {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice" data-status="failed">服务器 export 不可用：{exportState.error}。当前展示本地兜底数据。</p>}
 
     <section className="handoff-grid">
       <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
@@ -1723,7 +1841,7 @@ function HandoffPage() {
     </section>
 
     <section className="panel handoff-json">
-      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">{serializedPacket.length.toLocaleString()} bytes · export ready</span></div><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button></div>
+      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">{serializedPacket.length.toLocaleString()} bytes · export ready</span></div><div className="handoff-actions"><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button><button className="utility-button" type="button" onClick={downloadPacket}>下载 JSON</button></div></div>
       <textarea className="json" readOnly spellCheck="false" value={serializedPacket} aria-label="共识交接 JSON" />
     </section>
   </main>;
@@ -1731,6 +1849,8 @@ function HandoffPage() {
 
 export default function App() {
   const [pathname, navigate] = usePathname();
+  const isProd = import.meta.env.PROD;
+  const isLabRoute = pathname.startsWith('/lab/scene');
   const demoRoute = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/project/demo');
   const page = demoRoute
     ? <ProjectDemoPage />
@@ -1738,11 +1858,27 @@ export default function App() {
       ? <DesignerReviewPage />
       : pathname.startsWith('/handoff/')
         ? <HandoffPage />
-        : <LabScenePage />;
+        : isLabRoute && !isProd
+          ? <LabScenePage />
+          : <ProjectDemoPage />;
 
   useEffect(() => {
     if (pathname === '/' || pathname === '/index.html') navigate('/project/demo');
-  }, [navigate, pathname]);
+    else if (isProd && isLabRoute) navigate('/project/demo');
+  }, [isLabRoute, isProd, navigate, pathname]);
+
+  useEffect(() => {
+    const title = pathname.startsWith('/review/')
+      ? '设计师复核 · 欧派 AI 共识工作台'
+      : pathname.startsWith('/handoff/')
+        ? '共识交接单 · 欧派 AI 共识工作台'
+        : pathname.startsWith('/project/demo') || pathname === '/' || pathname === '/index.html'
+          ? '欧派 AI 共识工作台'
+          : pathname.startsWith('/lab/scene')
+            ? '欧派 AI 共识工作台 · 内部技术页'
+            : '欧派 AI 共识工作台';
+    document.title = title;
+  }, [pathname]);
 
   return page;
 }

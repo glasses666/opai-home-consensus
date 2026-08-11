@@ -42,3 +42,16 @@ test('handoff packet keeps enterprise data pending and every object source expli
   assert.equal(packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
   assert.equal(packet.downstreamPlaceholders.production, 'not_connected_in_v1');
 });
+
+test('handoff packet can target an explicit route version', () => {
+  const history = makeHistory();
+  const packet = buildHandoffPacket(history, createDemoHouseholdConsensus(history.currentVersionId), {
+    versionId: history.versions[0].id,
+    projectId: 'project-review-demo',
+  });
+
+  assert.equal(packet.projectId, 'project-review-demo');
+  assert.equal(packet.version.id, history.versions[0].id);
+  assert.equal(packet.version.label, 'V1');
+  assert.equal(packet.version.status, 'drafting');
+});

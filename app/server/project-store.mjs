@@ -12,6 +12,7 @@ import {
 } from '../src/domain/scene.js';
 
 const INITIAL_VERSION_ID = 'version-demo-initial';
+const VERSION_STATUSES = new Set(['drafting', 'impact_review', 'customer_confirmed', 'changed_after_confirm', 'designer_verified', 'designer_returned']);
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const nowIso = () => new Date().toISOString();
@@ -24,6 +25,7 @@ function makeInitialState({ projectId, scene, now }) {
       id: projectId,
       name: '欧派 AI 家装共识 Demo',
       currentVersionId: INITIAL_VERSION_ID,
+      confirmedVersionId: null,
       createdAt: now,
       updatedAt: now,
     },
@@ -32,6 +34,7 @@ function makeInitialState({ projectId, scene, now }) {
       parentVersionId: null,
       createdAt: now,
       source: 'demo',
+      status: 'drafting',
       scene,
       commands: [],
       cursor: 0,
@@ -39,6 +42,7 @@ function makeInitialState({ projectId, scene, now }) {
     commandLog: [],
     pendingBaseEvents: [],
     syncedBaseEventIds: [],
+    handoffSnapshots: [],
   };
 }
 
@@ -65,7 +69,8 @@ function normalizeState(value, fallback) {
       !Number.isInteger(version.cursor) ||
       version.cursor < 0 ||
       version.cursor > version.commands.length ||
-      (version.parentVersionId !== null && !versionIds.has(version.parentVersionId))
+      (version.parentVersionId !== null && !versionIds.has(version.parentVersionId)) ||
+      (version.status !== undefined && !VERSION_STATUSES.has(version.status))
     ) throw new Error('PROJECT_STORE_INVALID');
     let replay = createSceneStore(initialScene);
     for (const command of version.commands.slice(0, version.cursor)) replay = dispatchSceneCommand(replay, command);
@@ -84,6 +89,7 @@ function normalizeState(value, fallback) {
     commandLog,
     pendingBaseEvents: Array.isArray(value.pendingBaseEvents) ? value.pendingBaseEvents : [],
     syncedBaseEventIds: Array.isArray(value.syncedBaseEventIds) ? value.syncedBaseEventIds : [],
+    handoffSnapshots: Array.isArray(value.handoffSnapshots) ? value.handoffSnapshots : [],
   };
 }
 
@@ -157,6 +163,7 @@ export function createPersistentProjectStore({
       parentVersionId: state.project.currentVersionId,
       createdAt: now(),
       source: event.provider ?? 'local',
+      status: state.project.confirmedVersionId ? 'changed_after_confirm' : 'impact_review',
       scene: store.currentScene,
       commands: clone(store.commands),
       cursor: store.cursor,
@@ -183,6 +190,62 @@ export function createPersistentProjectStore({
     save();
   };
 
+  const saveHandoffSnapshot = ({ eventId, versionId, versionHistory, householdConsensus }) => {
+    if (!eventId || !versionId || typeof versionHistory !== 'string' || typeof householdConsensus !== 'string') {
+      throw new Error('HANDOFF_SNAPSHOT_INVALID');
+    }
+    const existing = state.handoffSnapshots.find((snapshot) => snapshot.eventId === eventId);
+    if (existing && (existing.versionId !== versionId || existing.versionHistory !== versionHistory || existing.householdConsensus !== householdConsensus)) {
+      throw new Error('EVENT_ID_CONFLICT');
+    }
+    if (existing) return clone(existing);
+    const snapshot = { eventId, versionId, versionHistory, householdConsensus, createdAt: now(), review: null };
+    state.handoffSnapshots.push(snapshot);
+    save();
+    return clone(snapshot);
+  };
+
+  const confirmVersion = ({ versionId = state.project.currentVersionId, eventId, actor = 'customer' }) => {
+    if (!eventId) throw new Error('EVENT_ID_INVALID');
+    const version = findVersion(versionId);
+    if (version.id !== state.project.currentVersionId) throw new Error('VERSION_NOT_CURRENT');
+    const existing = state.handoffSnapshots.find((snapshot) => snapshot.eventId === eventId);
+    if (existing && (existing.versionId !== versionId || existing.type !== 'customer_confirmed')) throw new Error('EVENT_ID_CONFLICT');
+    if (!existing) {
+      version.status = 'customer_confirmed';
+      version.confirmation = { actor, confirmedAt: now(), source: 'demo' };
+      state.project.confirmedVersionId = versionId;
+      state.handoffSnapshots.push({ eventId, type: 'customer_confirmed', versionId, actor, createdAt: now() });
+      save();
+    }
+    return clone(version);
+  };
+
+  const reviewVersion = ({ versionId, eventId, action, note = '', actor = 'designer' }) => {
+    if (!eventId) throw new Error('EVENT_ID_INVALID');
+    if (!['approve', 'return'].includes(action)) throw new Error('REVIEW_ACTION_INVALID');
+    const version = findVersion(versionId);
+    const status = action === 'approve' ? 'designer_verified' : 'designer_returned';
+    const existing = state.handoffSnapshots.find((snapshot) => snapshot.eventId === eventId);
+    if (existing && (existing.versionId !== versionId || existing.type !== status || existing.note !== note)) throw new Error('EVENT_ID_CONFLICT');
+    if (!existing) {
+      version.status = status;
+      version.review = { action, actor, note, reviewedAt: now(), source: 'demo' };
+      state.handoffSnapshots.push({ eventId, type: status, versionId, action, actor, note, createdAt: now() });
+      save();
+    }
+    return clone(version);
+  };
+
+  const updateHandoffSnapshot = (versionId, updater) => {
+    const reverseIndex = [...state.handoffSnapshots].reverse().findIndex((snapshot) => snapshot.versionId === versionId && snapshot.versionHistory);
+    if (reverseIndex < 0) throw new Error('HANDOFF_SNAPSHOT_NOT_FOUND');
+    const index = state.handoffSnapshots.length - 1 - reverseIndex;
+    state.handoffSnapshots[index] = updater(clone(state.handoffSnapshots[index]));
+    save();
+    return clone(state.handoffSnapshots[index]);
+  };
+
   return {
     get currentVersionId() { return state.project.currentVersionId; },
     findEventById: (eventId) => {
@@ -195,10 +258,17 @@ export function createPersistentProjectStore({
     },
     getProject: () => clone({ ...state.project, versions: state.versions.map(({ scene, commands, ...version }) => version) }),
     getSceneStore: sceneStoreFor,
+    getVersion: (versionId) => clone(findVersion(versionId)),
     listPendingBaseEvents: () => clone(state.pendingBaseEvents),
     recordVersion,
+    confirmVersion,
+    reviewVersion,
     enqueueBaseEvent,
     markBaseSynced,
+    saveHandoffSnapshot,
+    updateHandoffSnapshot,
+    getLatestHandoffSnapshot: () => clone([...state.handoffSnapshots].reverse().find((snapshot) => snapshot.versionHistory) ?? null),
+    getHandoffSnapshotForVersion: (versionId) => clone([...state.handoffSnapshots].reverse().find((snapshot) => snapshot.versionId === versionId && snapshot.versionHistory) ?? null),
     snapshot: () => clone(state),
   };
 }

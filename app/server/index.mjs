@@ -6,26 +6,56 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runAgentTurn } from '../src/agent/harness.js';
 import { demoCatalogPlugin } from '../src/catalog/demo-catalog.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
-import { createVersionHistory } from '../src/domain/design-version.js';
-import { createDemoHouseholdConsensus } from '../src/domain/household-consensus.js';
-import { buildHandoffPacket } from '../src/domain/handoff.js';
+import { confirmSceneVersion, createVersionHistory, deserializeVersionHistory, reviewSceneVersion, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
+import { createDemoHouseholdConsensus, deserializeHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
+import { buildDesignerReview, buildHandoffPacket } from '../src/domain/handoff.js';
 import { createSceneStore } from '../src/domain/scene.js';
 import { callAily, getFeishuHealth, syncActivity } from './feishu.mjs';
 import { createPersistentProjectStore } from './project-store.mjs';
 
 const JSON_LIMIT = 128 * 1024;
+const SNAPSHOT_JSON_LIMIT = 1024 * 1024;
 const DEFAULT_PROJECT_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', '.data', 'project-demo.json');
+const REVIEW_ACTIONS = new Set(['approve', 'return']);
 
 function sendJson(response, statusCode, value) {
   response.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   response.end(JSON.stringify(value));
 }
 
-async function readJson(request) {
+const compactHistoryFromProjectStore = (snapshot) => ({
+  ...snapshot.versions.slice(1).reduce(
+    (history, version) => saveSceneVersion(history, {
+      initialScene: snapshot.versions[0].scene,
+      currentScene: version.scene,
+      commands: version.commands,
+      cursor: version.cursor,
+    }, {
+      id: version.id,
+      now: version.createdAt,
+      source: version.source,
+    }),
+    createVersionHistory(createSceneStore(snapshot.versions[0].scene), { now: snapshot.versions[0].createdAt }),
+  ),
+  currentVersionId: snapshot.project.currentVersionId,
+});
+
+const payloadFromHandoffSnapshot = (snapshot, { projectId, versionId } = {}) => {
+  const history = deserializeVersionHistory(snapshot.versionHistory);
+  const consensus = deserializeHouseholdConsensus(snapshot.householdConsensus);
+  return {
+    project: { id: projectId },
+    packet: buildHandoffPacket(history, consensus, { projectId, versionId: versionId ?? snapshot.versionId }),
+    review: buildDesignerReview(history, consensus, { projectId }),
+    reviewDecision: snapshot.review ?? null,
+  };
+};
+
+async function readJson(request, limit = JSON_LIMIT) {
   let body = '';
   for await (const chunk of request) {
     body += chunk;
-    if (Buffer.byteLength(body) > JSON_LIMIT) throw new Error('REQUEST_TOO_LARGE');
+    if (Buffer.byteLength(body) > limit) throw new Error('REQUEST_TOO_LARGE');
   }
   try {
     return JSON.parse(body || '{}');
@@ -111,12 +141,15 @@ export function createAppServer({
       const exportMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/export$/);
       if (request.method === 'GET' && exportMatch) {
         const projectId = decodeURIComponent(exportMatch[1]);
+        const requestedVersionId = url.searchParams.get('versionId') || null;
         if (!projectStore) {
+          const history = createVersionHistory(createSceneStore(store.initialScene));
+          const consensus = createDemoHouseholdConsensus(history.currentVersionId);
           sendJson(response, 200, {
-            packet: buildHandoffPacket({
-              ...createVersionHistory(createSceneStore(store.initialScene)),
-              currentVersionId: 'version-demo-initial',
-            }, createDemoHouseholdConsensus('version-demo-initial'), { projectId }),
+            project: { id: projectId },
+            packet: buildHandoffPacket(history, consensus, { projectId }),
+            review: buildDesignerReview(history, consensus, { projectId }),
+            reviewDecision: null,
           });
           return;
         }
@@ -125,28 +158,167 @@ export function createAppServer({
           sendJson(response, 404, { error: 'PROJECT_NOT_FOUND' });
           return;
         }
-        const current = snapshot.versions.find((version) => version.id === snapshot.project.currentVersionId);
-        const versions = snapshot.versions.map((version, index) => ({
-          ...version,
-          label: index === 0 ? 'V1' : `V${index + 1}`,
-          status: version.id === snapshot.project.currentVersionId ? 'impact_review' : 'drafting',
-          summary: {
-            snapshotHash: String(index),
-            snapshotBytes: JSON.stringify(version.scene).length,
-            commandHash: String(version.cursor),
-            commandCount: version.cursor,
-            objectCount: version.scene.objects.length,
-          },
-        }));
+        const saved = requestedVersionId
+          ? projectStore.getHandoffSnapshotForVersion(requestedVersionId)
+          : projectStore.getLatestHandoffSnapshot();
+        if (saved) {
+          sendJson(response, 200, payloadFromHandoffSnapshot(saved, { projectId, versionId: requestedVersionId ?? saved.versionId }));
+          return;
+        }
+        const history = compactHistoryFromProjectStore(snapshot);
+        const consensus = createDemoHouseholdConsensus(history.currentVersionId);
         sendJson(response, 200, {
-          packet: buildHandoffPacket({
-            schemaVersion: 1,
-            id: 'history-project-demo',
-            initialScene: snapshot.versions[0].scene,
-            currentVersionId: current.id,
-            confirmedVersionId: null,
-            versions,
-          }, createDemoHouseholdConsensus(current.id), { projectId }),
+          project: { id: projectId },
+          packet: buildHandoffPacket(history, consensus, { projectId }),
+          review: buildDesignerReview(history, consensus, { projectId }),
+          reviewDecision: null,
+        });
+        return;
+      }
+
+      const snapshotMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/snapshot$/);
+      if (request.method === 'POST' && snapshotMatch) {
+        const projectId = decodeURIComponent(snapshotMatch[1]);
+        const body = await readJson(request, SNAPSHOT_JSON_LIMIT);
+        if (!projectStore || projectStore.getProject().id !== projectId) {
+          sendJson(response, projectStore ? 404 : 503, { error: projectStore ? 'PROJECT_NOT_FOUND' : 'PROJECT_STORE_UNAVAILABLE' });
+          return;
+        }
+        if (typeof body.eventId !== 'string' || !body.eventId || body.eventId.length > 128) {
+          sendJson(response, 400, { error: 'EVENT_ID_INVALID' });
+          return;
+        }
+        const history = deserializeVersionHistory(typeof body.versionHistory === 'string' ? body.versionHistory : JSON.stringify(body.versionHistory));
+        const consensus = deserializeHouseholdConsensus(typeof body.householdConsensus === 'string' ? body.householdConsensus : JSON.stringify(body.householdConsensus));
+        const current = history.versions.find((version) => version.id === history.currentVersionId);
+        if (!current) {
+          sendJson(response, 400, { error: 'VERSION_NOT_FOUND' });
+          return;
+        }
+        if (current.id !== projectStore.currentVersionId) {
+          sendJson(response, 409, { error: 'VERSION_CONFLICT' });
+          return;
+        }
+        const saved = projectStore.saveHandoffSnapshot({
+          eventId: body.eventId,
+          versionId: current.id,
+          versionHistory: serializeVersionHistory(history),
+          householdConsensus: serializeHouseholdConsensus(consensus),
+        });
+        projectStore.enqueueBaseEvent({
+          eventId: body.eventId,
+          type: 'snapshot_published',
+          input: 'handoff_snapshot',
+          projectId,
+          provider: 'local',
+          trace: { source: 'handoff_snapshot', versionId: current.id },
+          traceId: body.eventId,
+          versionId: current.id,
+        });
+        await flushPending();
+        sendJson(response, 200, {
+          ...payloadFromHandoffSnapshot(saved, { projectId }),
+          sync: projectStore.listPendingBaseEvents().some((pending) => pending.eventId === body.eventId) ? 'pending' : 'synced',
+        });
+        return;
+      }
+
+      const confirmMatch = url.pathname.match(/^\/api\/versions\/([^/]+)\/confirm$/);
+      if (request.method === 'POST' && confirmMatch) {
+        const versionId = decodeURIComponent(confirmMatch[1]);
+        const body = await readJson(request, SNAPSHOT_JSON_LIMIT);
+        if (!projectStore) {
+          sendJson(response, 503, { error: 'PROJECT_STORE_UNAVAILABLE' });
+          return;
+        }
+        if (body.eventId !== undefined && (typeof body.eventId !== 'string' || !body.eventId || body.eventId.length > 128)) {
+          sendJson(response, 400, { error: 'EVENT_ID_INVALID' });
+          return;
+        }
+        const eventId = body.eventId ?? `evt-confirm-${id()}`;
+        const version = projectStore.confirmVersion({ versionId, eventId, actor: typeof body.actor === 'string' ? body.actor.slice(0, 80) : 'customer' });
+        const snapshot = projectStore.getHandoffSnapshotForVersion(versionId);
+        if (snapshot) {
+          projectStore.updateHandoffSnapshot(versionId, (saved) => {
+            let history = deserializeVersionHistory(saved.versionHistory);
+            if (history.versions.find((candidate) => candidate.id === versionId)?.status !== 'customer_confirmed') {
+              history = confirmSceneVersion(history, versionId);
+            }
+            return { ...saved, versionHistory: serializeVersionHistory(history), confirmedAt: version.confirmation?.confirmedAt ?? new Date().toISOString() };
+          });
+        }
+        projectStore.enqueueBaseEvent({
+          eventId,
+          type: 'customer_confirmed',
+          input: 'customer_confirmed',
+          projectId: projectStore.getProject().id,
+          provider: 'local',
+          trace: { source: 'customer_confirmed', versionId, actor: body.actor ?? 'customer' },
+          traceId: eventId,
+          versionId,
+        });
+        await flushPending();
+        sendJson(response, 200, {
+          project: projectStore.getProject(),
+          version,
+          ...(projectStore.getHandoffSnapshotForVersion(versionId)
+            ? payloadFromHandoffSnapshot(projectStore.getHandoffSnapshotForVersion(versionId), { projectId: projectStore.getProject().id, versionId })
+            : {}),
+          sync: projectStore.listPendingBaseEvents().some((pending) => pending.eventId === eventId) ? 'pending' : 'synced',
+        });
+        return;
+      }
+
+      const reviewMatch = url.pathname.match(/^\/api\/versions\/([^/]+)\/review$/);
+      if (request.method === 'POST' && reviewMatch) {
+        const versionId = decodeURIComponent(reviewMatch[1]);
+        const body = await readJson(request);
+        if (!projectStore) {
+          sendJson(response, 503, { error: 'PROJECT_STORE_UNAVAILABLE' });
+          return;
+        }
+        const action = body.action ?? (body.decision === 'approved' ? 'approve' : body.decision === 'returned' ? 'return' : null);
+        if (!REVIEW_ACTIONS.has(action)) {
+          sendJson(response, 400, { error: 'REVIEW_ACTION_INVALID' });
+          return;
+        }
+        if (body.eventId !== undefined && (typeof body.eventId !== 'string' || !body.eventId || body.eventId.length > 128)) {
+          sendJson(response, 400, { error: 'EVENT_ID_INVALID' });
+          return;
+        }
+        const eventId = body.eventId ?? `evt-review-${id()}`;
+        const note = typeof body.note === 'string' ? body.note.slice(0, 1000) : typeof body.notes === 'string' ? body.notes.slice(0, 1000) : '';
+        const version = projectStore.reviewVersion({ versionId, eventId, action, note });
+        const snapshot = projectStore.getHandoffSnapshotForVersion(versionId);
+        if (snapshot) {
+          projectStore.updateHandoffSnapshot(versionId, (saved) => ({
+            ...saved,
+            versionHistory: serializeVersionHistory(reviewSceneVersion(
+              deserializeVersionHistory(saved.versionHistory),
+              versionId,
+              { action, note, now: version.review?.reviewedAt ?? new Date().toISOString() },
+            )),
+            review: { action, note, status: version.status, reviewedAt: version.review?.reviewedAt ?? new Date().toISOString(), source: 'demo' },
+          }));
+        }
+        projectStore.enqueueBaseEvent({
+          eventId,
+          type: version.status,
+          input: version.status,
+          projectId: projectStore.getProject().id,
+          provider: 'local',
+          trace: { source: version.status, versionId, action, note },
+          traceId: eventId,
+          versionId,
+        });
+        await flushPending();
+        sendJson(response, 200, {
+          project: projectStore.getProject(),
+          version,
+          review: version.review,
+          reviewDecision: projectStore.getHandoffSnapshotForVersion(versionId)?.review ?? null,
+          handoffUrl: action === 'approve' ? `/handoff/${versionId}` : null,
+          sync: projectStore.listPendingBaseEvents().some((pending) => pending.eventId === eventId) ? 'pending' : 'synced',
         });
         return;
       }
@@ -195,6 +367,53 @@ export function createAppServer({
         const project = projectStore?.getProject();
         if (project && body.projectId && body.projectId !== project.id) {
           sendJson(response, 404, { error: 'PROJECT_NOT_FOUND' });
+          return;
+        }
+        if (body.scene !== undefined && typeof body.scene !== 'string') {
+          sendJson(response, 400, { error: 'SCENE_INVALID' });
+          return;
+        }
+        if (body.versionHistory !== undefined && typeof body.versionHistory !== 'string') {
+          sendJson(response, 400, { error: 'VERSION_HISTORY_INVALID' });
+          return;
+        }
+        const clientSceneMode = typeof body.scene === 'string';
+        if (clientSceneMode) {
+          const clientStore = createSceneStore(deserializeScene(body.scene));
+          const clientHistory = body.versionHistory ? deserializeVersionHistory(body.versionHistory) : null;
+          const result = await runAgentTurn({
+            store: clientStore,
+            input: body.input,
+            selectedObjectId: body.selectedObjectId ?? null,
+            provider: agentProvider,
+            catalogPlugin,
+            versionHistory: clientHistory,
+            timeoutMs: 40_000,
+          });
+          const commands = result.store.commands.slice(clientStore.cursor);
+          const event = {
+            eventId,
+            type: 'agent_turn',
+            input: body.input,
+            projectId: body.projectId ?? project?.id,
+            provider: result.trace.source === 'provider' ? 'aily' : 'local',
+            selectedObjectId: body.selectedObjectId ?? null,
+            spaceId: body.spaceId,
+            trace: result.trace,
+            traceId: eventId,
+            versionId: body.versionId ?? clientHistory?.currentVersionId ?? 'client-scene',
+          };
+          if (projectStore) projectStore.enqueueBaseEvent(event);
+          else pendingEvents.set(eventId, event);
+          await flushPending();
+          sendJson(response, 200, {
+            scene: result.store.currentScene,
+            commands,
+            trace: result.trace,
+            sync: projectStore
+              ? projectStore.listPendingBaseEvents().some((pending) => pending.eventId === eventId) ? 'pending' : 'synced'
+              : pendingEvents.has(eventId) ? 'pending' : 'synced',
+          });
           return;
         }
         const existingEvent = projectStore?.findEventById(eventId);

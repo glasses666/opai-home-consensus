@@ -2,7 +2,14 @@ import { compareDesignImpact } from './design-impact.js';
 import { createSceneStore, deepFreeze, replaySceneCommands, serializeScene } from './scene.js';
 
 const INITIAL_VERSION_ID = 'version-demo-initial';
-const VERSION_STATUSES = new Set(['drafting', 'impact_review', 'customer_confirmed', 'changed_after_confirm']);
+const VERSION_STATUSES = new Set([
+  'drafting',
+  'impact_review',
+  'customer_confirmed',
+  'changed_after_confirm',
+  'designer_verified',
+  'designer_returned',
+]);
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const byId = (records) => new Map((records ?? []).map((record) => [record.id, record]));
 const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -108,6 +115,16 @@ export function confirmSceneVersion(history, versionId = history.currentVersionI
     ? deepFreeze({ ...version, status: 'customer_confirmed', confirmation: { actor, confirmedAt: timestamp(now), source: 'demo' } })
     : version);
   return freezeHistory({ ...history, confirmedVersionId: versionId, versions });
+}
+
+export function reviewSceneVersion(history, versionId = history.currentVersionId, { action, actor = 'designer', note = '', now = nowIso } = {}) {
+  if (!['approve', 'return'].includes(action)) throw new Error('REVIEW_ACTION_INVALID');
+  versionById(history, versionId);
+  const status = action === 'approve' ? 'designer_verified' : 'designer_returned';
+  const versions = history.versions.map((version) => version.id === versionId
+    ? deepFreeze({ ...version, status, review: { action, actor, note, reviewedAt: timestamp(now), source: 'demo' } })
+    : version);
+  return freezeHistory({ ...history, currentVersionId: versionId, versions });
 }
 
 export function sceneStoreForVersion(history, versionId = history.currentVersionId) {

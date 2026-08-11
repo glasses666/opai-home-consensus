@@ -8,6 +8,8 @@ import { createAppServer } from '../server/index.mjs';
 import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { callAily, getFeishuHealth, syncActivity } from '../server/feishu.mjs';
 import { LarkCliError, runLarkCli } from '../server/lark-cli.mjs';
+import { createVersionHistory, serializeVersionHistory } from '../src/domain/design-version.js';
+import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 
 const listen = (server) => new Promise((resolve) => {
   server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`));
@@ -437,5 +439,67 @@ test('BFF exposes the replaceable demo catalog without claiming real SKUs', asyn
     assert.equal(invalid.status, 400);
   } finally {
     await close(server);
+  }
+});
+
+test('BFF persists handoff snapshot, customer confirmation, designer review, and export read-back', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-bff-handoff-'));
+  try {
+    const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+    const history = createVersionHistory(projectStore.getSceneStore());
+    const consensus = createDemoHouseholdConsensus(history.currentVersionId);
+    const server = createAppServer({
+      projectStore,
+      health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
+      sync: async () => { throw new Error('offline'); },
+      id: () => 'handoff',
+    });
+    const origin = await listen(server);
+    try {
+      const snapshot = await fetch(`${origin}/api/projects/project-demo/snapshot`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          eventId: 'evt-handoff-http',
+          versionHistory: serializeVersionHistory(history),
+          householdConsensus: serializeHouseholdConsensus(consensus),
+        }),
+      });
+      const snapshotBody = await snapshot.json();
+      assert.equal(snapshot.status, 200);
+      assert.equal(snapshotBody.sync, 'pending');
+      assert.equal(snapshotBody.packet.version.id, history.currentVersionId);
+
+      const confirmed = await fetch(`${origin}/api/versions/${history.currentVersionId}/confirm`, { method: 'POST' });
+      const confirmedBody = await confirmed.json();
+      assert.equal(confirmed.status, 200);
+      assert.equal(confirmedBody.packet.version.status, 'customer_confirmed');
+
+      const invalidReview = await fetch(`${origin}/api/versions/${history.currentVersionId}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: 'maybe' }),
+      });
+      assert.equal(invalidReview.status, 400);
+
+      const reviewed = await fetch(`${origin}/api/versions/${history.currentVersionId}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: 'approved', notes: '可进入下一步' }),
+      });
+      const reviewedBody = await reviewed.json();
+      assert.equal(reviewed.status, 200);
+      assert.equal(reviewedBody.reviewDecision.decision, 'approved');
+      assert.equal(reviewedBody.handoffUrl, `/handoff/${history.currentVersionId}`);
+
+      const exported = await (await fetch(`${origin}/api/projects/project-demo/export`)).json();
+      assert.equal(exported.packet.version.status, 'customer_confirmed');
+      assert.equal(exported.reviewDecision.decision, 'approved');
+      assert.equal(exported.packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
+    } finally {
+      await close(server);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
