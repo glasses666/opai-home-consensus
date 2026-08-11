@@ -13,13 +13,24 @@
     "eval:agent:live": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live"
   },
   "dependencies": {
+    "@pascal-app/core": "1.0.0-beta.4",
+    "@pascal-app/editor": "1.0.0-beta.4",
+    "@pascal-app/nodes": "1.0.0-beta.4",
+    "@pascal-app/viewer": "1.0.0-beta.4",
     "@phosphor-icons/react": "2.1.10",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "lucide-react": "^1.31.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "three": "^0.185.1"
+    "three": "0.185.1",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "6.0.5",
+    "tailwindcss": "^4.1.18",
+    "tw-animate-css": "^1.4.0",
     "vite": "8.2.1"
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import Scene3D from './Scene3D.jsx';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
@@ -36,6 +36,8 @@ import {
   validateScene,
 } from './domain/scene.js';
 import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+
+const PascalStage = lazy(() => import('./PascalStage.jsx'));
 
 const scene = createSceneStore(createDemoScene()).currentScene;
 const serialized = serializeScene(scene);
@@ -626,8 +628,6 @@ function ProjectDemoPage() {
   const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
   const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
   const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
-  const [renderStats, setRenderStats] = useState({ fps: 0, calls: 0, triangles: 0, assets: 0 });
-  const [assetLoadState, setAssetLoadState] = useState({ completed: 0, failed: 0, total: currentScene.objects.length });
   const [editMode, setEditMode] = useState('move');
   const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
   const [pendingReview, setPendingReview] = useState(null);
@@ -1553,31 +1553,16 @@ function ProjectDemoPage() {
           </div>
           <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
         </div>
-        <Scene3D
-          key="project-demo-scene"
-          scene={currentScene}
-          selection={selection}
-          onSelect={selectEntity}
-          editMode={pendingReview ? 'select' : editMode}
-          onEditCommand={(command) => Boolean(executeCommand(command))}
-          onNavigate={({ selection: nextSelection, presetId, reason }) => {
-            if (reason === 'room' && nextSelection?.kind === 'room') jumpToRoom(nextSelection.id);
-            else jumpToRoomView(presetId);
-          }}
-          activeRoomId={displayRoomId}
-          roomLabels={roomLabels}
-          onStats={setRenderStats}
-          onLoadState={setAssetLoadState}
-          viewRequest={viewRequest}
-          versionComparison={versionComparison}
-          onViewEvent={({ phase, preset }) => {
-            if (phase !== 'done') return;
-            setDisplayViewId(preset.id);
-            setDisplaySelectedId(navigation.selectedId);
-            if (preset.kind !== 'free') setDisplayRoomId(preset.roomId ?? null);
-          }}
-          showHomeView={false}
-        />
+        <Suspense fallback={<div className="pascal-stage-loading">正在启动装修编辑器…</div>}>
+          <PascalStage
+            scene={currentScene}
+            selection={selection}
+            onSelect={selectEntity}
+            onEditCommand={(command) => Boolean(executeCommand(command))}
+            activeRoomId={displayRoomId}
+            roomLabels={roomLabels}
+          />
+        </Suspense>
       </section>
 
       <aside className="project-sidebar" data-mode={sidecarMode}>
@@ -1703,12 +1688,6 @@ function ProjectDemoPage() {
               </li>)}
             </ul>
           </div>
-          <dl className="project-metrics" aria-label="三维运行实测">
-            <div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div>
-            <div><dt>Draw</dt><dd>{renderStats.calls || '—'}</dd></div>
-            <div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div>
-            <div><dt>GLB</dt><dd>{assetLoadState.completed}/{assetLoadState.total}{assetLoadState.failed ? ` · ${assetLoadState.failed} 占位` : ''}</dd></div>
-          </dl>
           <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
             : displaySelectedEntity?.kind === 'surface'

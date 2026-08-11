@@ -3,8 +3,8 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-11
-当前状态：**Gate 1–Gate 12 已形成可操作的工程 V1；用户已授权继续完善功能地基，视觉与信息层级留到功能 Gate 完成后统一 polish；夜间后端包 N1、N2 与 B1–B4 已完成；Gate 13 已实现并等待用户验收**
-当前 Gate：**Gate 13：空间层级、安装锚点、碰撞代理与可替换 3D 资产合同（已实现，待用户验收）**
+当前状态：**Gate 1–Gate 14 已形成可操作的工程 V1；原自研前端以本地 tag `v1-pre-pascal-20260811` 保存，用户已授权将成熟的开源 Pascal Editor 嵌入为主要装修模拟器前端，业务内核保持不变**
+当前 Gate：**Gate 15：Pascal Editor 开源装修模拟器迁移（分支 `codex/pascal-frontend`，实施中）**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
 ## 0. 为什么重开计划
@@ -661,7 +661,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 14：墙面、地面与顶面饰面
 
-**当前状态：已实现并完成自动化与后台住户黑盒复测，等待用户验收（基线 `ce6d917`）。**
+**当前状态：已实现、完成自动化与后台住户黑盒复测，并以 `9d268f1` 保存（2026-08-11）。用户已授权进入开源前端迁移。**
 
 **目的**
 
@@ -698,6 +698,38 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 - 不在本 Gate 增加固定柜、层板、隔断和背景墙对象；这些属于 Gate 15。
 - 不接入或宣称真实欧派产品、报价、BOM、工期或生产数据。
 
+---
+
+### Gate 15：Pascal Editor 开源装修模拟器迁移
+
+**当前状态：实施中。迁移前 V1 已以 tag `v1-pre-pascal-20260811` 保存；迁移在分支 `codex/pascal-frontend` 完成。**
+
+**目的**
+
+停止继续从零补齐通用装修编辑器能力，把时间集中到 Agent、家庭共识、规则和企业接入；以 MIT 开源的 Pascal Editor 1.0 beta 作为嵌入式 2D / 3D 编辑前端。
+
+**构建什么**
+
+- 将完整 Pascal Editor 组件嵌入 `/project/demo`，复用其 2D / 3D、对象选择、移动、旋转、材质、墙体与空间编辑界面。
+- canonical scene 仍是唯一业务真相；Pascal 只保存可随时重建的界面投影，不成为第二套版本或数据库。
+- 建立 `canonical scene → Pascal SceneGraph` 单向投影，保留房间、表面、opening、家具的 canonical ID 映射。
+- Pascal 中的本地操作必须先翻译为现有 `SceneCommand`，通过规则引擎后才回写并重新投影；拒绝动作不污染 canonical scene。
+- Agent、undo / redo、版本、家庭共识、设计师复核、飞书留痕和交接继续使用现有合同，不直接依赖 Pascal store。
+- 保留本地 shim 与第三方许可证；不把项目迁移到 Next.js，不 fork 或复制整套 Pascal 源码。
+
+**验收证据**
+
+- 七个房间、全部对象、表面和 opening 能从同一 canonical scene 导入；2D / 3D 返回同一 canonical ID。
+- 家具移动、旋转、对象材质和墙地顶饰面都生成现有 `SceneCommand`，规则拒绝、undo / redo、版本 replay 仍有效。
+- Safari 与 Tailnet 页面不白屏；生产构建、全量测试、后端测试和 Agent 评测通过。
+- 开源前端可以移除后回到保存 tag；迁移不改变真实欧派数据仍为 pending 的边界。
+
+**明确不做**
+
+- 不让 Pascal IndexedDB 或 undo history 取代 canonical scene / version history。
+- 不让 Agent 直接写 Pascal scene，不建立双向自动同步。
+- 本 Gate 不增加固定柜、层板、隔断、背景墙或真实欧派目录；这些顺延到 Gate 16。
+
 ## 5. 旧实现处理结果
 
 - 用户于 2026-08-08 验收 Gate 0，并明确要求丢弃此前错误版本、修复 Git 状态并 commit。
@@ -708,7 +740,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. 用户验收 Gate 14：同一 surface / material 合同上的墙面、地面与顶面饰面；验收前不进入 Gate 15。
-2. Gate 14 验收后，Gate 15 再增加固定柜、层板、隔断和背景墙。
+1. 完成 Gate 15：在保持 canonical scene / SceneCommand / Agent / 版本链不变的前提下，用 Pascal Editor 替换自研装修模拟器前端。
+2. Gate 15 验收后，Gate 16 再增加固定柜、层板、隔断和背景墙，并优先复用 Pascal 的节点与构建工具。
 3. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
 4. 功能 Gate 完成后再统一处理信息层级、材质光照、镜头叙事与 route-level code splitting。
