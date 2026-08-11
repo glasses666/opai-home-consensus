@@ -106,6 +106,8 @@ const versionStatusLabels = {
   impact_review: '待影响确认',
   customer_confirmed: '已确认',
   changed_after_confirm: '确认后修改',
+  designer_verified: '设计师已复核',
+  designer_returned: '设计师退回',
 };
 const diffKindLabels = {
   added: '新增',
@@ -1044,12 +1046,38 @@ function ProjectDemoPage() {
     const beforeHistory = versionHistoryRef.current;
 
     try {
-      const result = await runAgentTurn({
-        store: beforeStore,
-        input,
-        selectedObjectId: navigation.selectedId,
-        versionHistory: beforeHistory,
-      });
+      let result;
+      try {
+        const serializedHistory = serializeVersionHistory(beforeHistory);
+        const response = await fetch('/api/agent/turn', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            eventId: turnId,
+            projectId: 'project-demo',
+            spaceId: activeRoomId ?? 'scene-demo-whole-home',
+            versionId: beforeHistory.currentVersionId,
+            input,
+            selectedObjectId: navigation.selectedId,
+            scene: serializeScene(beforeStore.currentScene),
+            ...(serializedHistory.length < 60_000 ? { versionHistory: serializedHistory } : {}),
+          }),
+        });
+        if (!response.ok) throw new Error('AGENT_BFF_UNAVAILABLE');
+        const body = await response.json();
+        if (!Array.isArray(body.commands) || !body.trace) throw new Error('AGENT_BFF_INVALID');
+        let replayed = beforeStore;
+        for (const command of body.commands) replayed = dispatchSceneCommand(replayed, command);
+        result = { store: replayed, trace: body.trace };
+      } catch (apiError) {
+        result = await runAgentTurn({
+          store: beforeStore,
+          input,
+          selectedObjectId: navigation.selectedId,
+          versionHistory: beforeHistory,
+        });
+        result = { ...result, trace: { ...result.trace, fallbackReason: result.trace.fallbackReason ?? apiError?.message ?? 'AGENT_BFF_UNAVAILABLE' } };
+      }
       const sceneChanged = serializeScene(result.store.currentScene) !== serializeScene(beforeStore.currentScene);
       const successfulWrites = result.trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
       let savedLabel = null;

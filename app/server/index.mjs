@@ -298,7 +298,14 @@ export function createAppServer({
               versionId,
               { action, note, now: version.review?.reviewedAt ?? new Date().toISOString() },
             )),
-            review: { action, note, status: version.status, reviewedAt: version.review?.reviewedAt ?? new Date().toISOString(), source: 'demo' },
+            review: {
+              action,
+              decision: action === 'approve' ? 'approved' : 'returned',
+              note,
+              status: version.status,
+              reviewedAt: version.review?.reviewedAt ?? new Date().toISOString(),
+              source: 'demo',
+            },
           }));
         }
         projectStore.enqueueBaseEvent({
@@ -496,8 +503,16 @@ export function createAppServer({
       sendJson(response, 404, { error: 'NOT_FOUND' });
     } catch (error) {
       const clientError = ['REQUEST_TOO_LARGE', 'REQUEST_JSON_INVALID'].includes(error?.message) || /^CATALOG_/.test(error?.message ?? '');
+      if (error?.message === 'EVENT_ID_CONFLICT') {
+        sendJson(response, 409, { error: 'EVENT_ID_CONFLICT' });
+        return;
+      }
       if (error?.message === 'VERSION_CONFLICT') {
         sendJson(response, 409, { error: 'VERSION_CONFLICT' });
+        return;
+      }
+      if (['VERSION_NOT_FOUND', 'VERSION_NOT_CURRENT', 'EVENT_ID_INVALID', 'REVIEW_ACTION_INVALID', 'HANDOFF_SNAPSHOT_NOT_FOUND', 'VERSION_HISTORY_INVALID'].includes(error?.message)) {
+        sendJson(response, 400, { error: error.message });
         return;
       }
       sendJson(response, clientError ? 400 : 500, { error: clientError ? error.message : 'INTERNAL_ERROR' });

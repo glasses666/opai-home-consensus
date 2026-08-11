@@ -257,7 +257,7 @@ export async function syncActivity(event, {
   run = runLarkCli,
   env = process.env,
 } = {}) {
-  if (!event?.eventId || !event?.input || !event?.trace) throw new Error('ACTIVITY_EVENT_INVALID');
+  if (!event?.eventId) throw new Error('ACTIVITY_EVENT_INVALID');
   const baseToken = env.FEISHU_BASE_TOKEN ?? DEFAULT_BASE_TOKEN;
   const tableId = env.FEISHU_ACTIVITY_TABLE_ID ?? DEFAULT_ACTIVITY_TABLE_ID;
   const searchArgs = [
@@ -273,17 +273,19 @@ export async function syncActivity(event, {
   ];
   const search = await run(searchArgs);
   const existingId = dataOf(search).record_id_list?.[0] ?? null;
+  const eventType = event.type ?? 'agent_turn';
+  const trace = event.trace ?? {};
   const fields = {
     'Event ID': event.eventId,
     'Project ID': event.projectId ?? 'PRJ-2026-008',
     'Space ID': event.spaceId ?? 'scene-demo-whole-home',
     'Version ID': event.versionId ?? 'scene-demo-whole-home:n1',
-    '事件类型': 'agent_turn',
-    Actor: 'agent',
+    '事件类型': eventType,
+    Actor: event.actor ?? (eventType === 'agent_turn' ? 'agent' : 'system'),
     Provider: event.provider === 'aily' ? 'aily' : 'local',
-    '用户表达': event.input,
-    'Structured Intent JSON': JSON.stringify(event.trace.toolCalls ?? []),
-    'Result JSON': JSON.stringify(event.trace),
+    '用户表达': event.input ?? eventType,
+    'Structured Intent JSON': JSON.stringify(trace.toolCalls ?? event.payload ?? []),
+    'Result JSON': JSON.stringify(event.result ?? trace),
     'Trace ID': event.traceId ?? event.eventId,
     '同步状态': 'synced',
   };
