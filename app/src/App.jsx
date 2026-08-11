@@ -34,7 +34,8 @@ import {
   undoSceneCommand,
   validateScene,
 } from './domain/scene.js';
-import { objectNavigationPreset, parseViewState, resolveWorkspaceTier, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+import { resolveRenderProfile } from './domain/render-profile.js';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -589,14 +590,12 @@ function usePathname() {
 function useWorkspaceTier() {
   const computeTier = useCallback(() => {
     if (typeof window === 'undefined') return 'full';
-    const hasFinePointer = window.matchMedia?.('(pointer: fine)').matches ?? true;
-    const hasHover = window.matchMedia?.('(hover: hover)').matches ?? true;
-    return resolveWorkspaceTier({
+    return resolveRenderProfile({
       width: window.innerWidth,
-      hasFinePointer,
-      hasHover,
-      maxTouchPoints: navigator.maxTouchPoints ?? 0,
-    });
+      coarsePointer: window.matchMedia?.('(pointer: coarse)').matches ?? false,
+      deviceMemory: navigator.deviceMemory,
+      hidden: document.visibilityState === 'hidden',
+    }).mode;
   }, []);
 
   const [tier, setTier] = useState(computeTier);
@@ -605,21 +604,20 @@ function useWorkspaceTier() {
     if (typeof window === 'undefined') return undefined;
     const update = () => setTier(computeTier());
     update();
-    const mediaQueries = [
-      window.matchMedia?.('(pointer: fine)'),
-      window.matchMedia?.('(hover: hover)'),
-    ].filter(Boolean);
+    const mediaQueries = [window.matchMedia?.('(pointer: coarse)')].filter(Boolean);
     for (const query of mediaQueries) {
       query.addEventListener?.('change', update);
     }
     window.addEventListener('resize', update);
     window.addEventListener('orientationchange', update);
+    document.addEventListener('visibilitychange', update);
     return () => {
       for (const query of mediaQueries) {
         query.removeEventListener?.('change', update);
       }
       window.removeEventListener('resize', update);
       window.removeEventListener('orientationchange', update);
+      document.removeEventListener('visibilitychange', update);
     };
   }, [computeTier]);
 
@@ -1616,10 +1614,10 @@ function ProjectDemoPage() {
           <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
           <div className="project-stage__tier" data-tier={viewerTier}>
             <span>{viewerTier === 'full' ? '完整 3D 已启用' : '轻量浏览 · 先省资源'}</span>
-            {viewerTier === 'light' && !pascalExpanded && <button type="button" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>}
+            {viewerTier !== 'full' && !pascalExpanded && <button type="button" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>}
           </div>
         </div>
-        {viewerTier === 'light' && !pascalExpanded
+        {viewerTier !== 'full' && !pascalExpanded
           ? <div className="pascal-stage-light">
             <p className="pascal-stage-light__kicker">轻量浏览模式</p>
             <strong>{currentRoomLabel}</strong>

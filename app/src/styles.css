@@ -145,7 +145,17 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .project-stage__summary span { color: var(--muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
 .project-stage__summary strong { max-width: 210px; overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .project-stage__summary small { color: var(--muted); font-size: 10px; }
+.project-stage__tier { display: grid; justify-items: end; gap: 6px; min-width: 170px; }
+.project-stage__tier > span { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border: 1px solid #d7d0c3; border-radius: 999px; background: rgb(255 252 245 / 92%); color: #645d54; font-size: 10px; font-weight: 720; box-shadow: 0 4px 12px rgb(54 45 36 / 7%); }
+.project-stage__tier button { min-height: 28px; padding: 0 10px; border: 1px solid #cbaeb7; border-radius: 999px; background: #8e384a; color: #fff; font-size: 10px; font-weight: 720; cursor: pointer; }
+.project-stage__tier button:hover { filter: brightness(1.04); }
 .project-stage .scene3d-shell { height: auto; min-height: 0; flex: 1; }
+.pascal-stage-light { display: grid; min-height: 0; flex: 1; align-content: center; gap: 11px; padding: 22px; background: linear-gradient(160deg, #ece5da, #f8f4ed 55%, #efe5da); }
+.pascal-stage-light__kicker { margin: 0; color: #8d5c46; font-size: 10px; font-weight: 760; letter-spacing: .1em; text-transform: uppercase; }
+.pascal-stage-light strong { font-family: var(--display-font); font-size: 28px; font-weight: 560; }
+.pascal-stage-light span { color: #6c675f; font-size: 12px; line-height: 1.55; max-width: 42ch; }
+.pascal-stage-light__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pascal-stage-light__actions .utility-button { min-height: 38px; }
 .project-sidebar { display: grid; min-width: 0; height: 100%; min-height: 0; grid-template-rows: auto minmax(0, 1fr); gap: 10px; overflow: hidden; }
 .project-sidebar[data-mode="space"] { grid-template-rows: auto minmax(220px, .82fr) minmax(0, 1.18fr); }
 .project-sidebar__switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border: 1px solid #d4cec4; border-radius: 12px; background: rgb(243 239 232 / 84%); box-shadow: 0 5px 16px rgb(50 43 34 / 7%); }

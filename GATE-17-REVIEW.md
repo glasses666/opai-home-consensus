@@ -8,7 +8,7 @@
 
 - `/project/demo` 继续懒加载 Pascal；内部 `/lab/scene` 的自研 Three.js 校验器也改为独立懒加载，不再进入主壳首包。
 - 新增纯 `resolveRenderProfile` 合同：桌面 `full`、小屏 / 粗指针 / 低内存 `light`、隐藏页 `paused`。
-- 移动轻量模式默认 Pascal 2D，仍保留用户手动进入 3D 的按钮；不冒充完整桌面编辑体验。
+- 移动轻量模式默认只显示 canonical 2D / 上下文，不挂载 Pascal；仍保留用户手动进入完整编辑器的按钮，不冒充桌面体验。
 - 页面隐藏时 Pascal Editor 直接卸载，恢复后从 canonical scene、选择和版本状态重新加载；内部 Three.js RAF 同样在隐藏时取消、恢复时重新排队。
 - 所有 resize、pointer media query、visibility listener 都有对称清理；未新增依赖或第二套渲染调度器。
 
@@ -26,7 +26,7 @@
 - `npm run build`：通过；`Scene3D` 82.20 kB、`PascalStage` 243.35 kB，均为独立入口 chunk。
 - 浏览器 1440×900：`full`，无横向溢出。
 - 浏览器 1024×768：`full`，无横向溢出。
-- 浏览器 390×844：`light`、显示“轻量模式 · 默认 2D”，无横向溢出。
+- 浏览器 390×844：`light`、Pascal 未挂载、显示轻量浏览说明与手动进入按钮，无横向溢出。
 - 当前截图：`.omx/audits/gate17/viewport-1440x900.png`、`viewport-1024x768.png`、`viewport-390x844.png`。
 
 ## 仍需真机验证
