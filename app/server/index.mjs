@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runAgentTurn } from '../src/agent/harness.js';
 import { demoCatalogPlugin } from '../src/catalog/demo-catalog.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { normalizeDesignBrief } from '../src/domain/design-brief.js';
 import { confirmSceneVersion, createVersionHistory, deserializeVersionHistory, reviewSceneVersion, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, deserializeHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { buildDesignerReview, buildHandoffPacket } from '../src/domain/handoff.js';
@@ -400,6 +401,13 @@ export function createAppServer({
           sendJson(response, 400, { error: 'VERSION_HISTORY_INVALID' });
           return;
         }
+        let designBrief;
+        try {
+          designBrief = normalizeDesignBrief(body.designBrief ?? projectStore?.getDesignBrief());
+        } catch {
+          sendJson(response, 400, { error: 'DESIGN_BRIEF_INVALID' });
+          return;
+        }
         const clientSceneMode = typeof body.scene === 'string';
         if (clientSceneMode) {
           const clientStore = createSceneStore(deserializeScene(body.scene));
@@ -411,8 +419,11 @@ export function createAppServer({
             provider: agentProvider,
             catalogPlugin,
             versionHistory: clientHistory,
+            designBrief,
+            activeRoomId: body.spaceId ?? null,
             timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
           });
+          if (projectStore) projectStore.saveDesignBrief(result.trace.designBrief);
           const commands = result.store.commands.slice(clientStore.cursor);
           const event = {
             eventId,
@@ -423,6 +434,7 @@ export function createAppServer({
             selectedObjectId: body.selectedObjectId ?? null,
             spaceId: body.spaceId,
             trace: result.trace,
+            designBrief: result.trace.designBrief,
             traceId: eventId,
             versionId: body.versionId ?? clientHistory?.currentVersionId ?? 'client-scene',
           };
@@ -477,8 +489,11 @@ export function createAppServer({
           selectedObjectId: body.selectedObjectId ?? null,
           provider: agentProvider,
           catalogPlugin,
+          designBrief,
+          activeRoomId: body.spaceId ?? null,
           timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
         });
+        if (projectStore) projectStore.saveDesignBrief(result.trace.designBrief);
         const event = {
           eventId,
           input: body.input,
@@ -487,6 +502,7 @@ export function createAppServer({
           selectedObjectId: body.selectedObjectId ?? null,
           spaceId: body.spaceId,
           trace: result.trace,
+          designBrief: result.trace.designBrief,
           traceId: eventId,
           versionId: body.versionId,
         };

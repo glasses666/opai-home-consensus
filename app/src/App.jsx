@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
+import { createDesignBrief, deserializeDesignBrief, normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
 import {
   compareSceneVersions,
   confirmSceneVersion,
@@ -206,9 +207,11 @@ const newReviewChecks = (before, after, objectIds) => {
   return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
+const reviewTitle = (status) => status === 'passed' ? 'Agent 方案待确认' : status === 'warning' ? '规范提醒待确认' : '舒适建议待确认';
 const PROJECT_ID = 'project-demo';
 const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v3';
 const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v3';
+const DESIGN_BRIEF_STORAGE_KEY = 'oppein.project-demo.design-brief.v1';
 const opinionStanceLabels = {
   support: '支持',
   oppose: '反对',
@@ -270,6 +273,7 @@ const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {})
   if (comparison) return `版本比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.surfaceDiffs?.length ?? 0} 项饰面变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项待确认。`;
   const writes = trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
   if (writes.length) {
+    if (trace.assistantReply) return trace.assistantReply;
     const actions = [...new Set(writes.map((step) => agentToolLabels[step.tool] ?? step.tool))].join('、');
     if (pending) return `已生成${actions}预览；有 demo 规范提醒，请先保留或撤销，再进入版本链。`;
     return `已完成${actions}，确定性规则已检查${savedLabel ? `，并保存为 ${savedLabel}` : ''}。`;
@@ -314,6 +318,17 @@ const createInitialHouseholdProject = (history) => {
   } catch {
     window.localStorage.removeItem(CONSENSUS_STORAGE_KEY);
     return fallback;
+  }
+};
+
+const createInitialDesignBrief = () => {
+  if (typeof window === 'undefined') return createDesignBrief();
+  try {
+    const serialized = window.localStorage.getItem(DESIGN_BRIEF_STORAGE_KEY);
+    return serialized ? deserializeDesignBrief(serialized) : createDesignBrief();
+  } catch {
+    window.localStorage.removeItem(DESIGN_BRIEF_STORAGE_KEY);
+    return createDesignBrief();
   }
 };
 
@@ -672,6 +687,7 @@ function ProjectDemoPage() {
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
   const [householdConsensus, setHouseholdConsensus] = useState(() => createInitialHouseholdProject(initialVersionProject.history));
+  const [designBrief, setDesignBrief] = useState(createInitialDesignBrief);
   const sceneStoreRef = useRef(sceneStore);
   const versionHistoryRef = useRef(versionHistory);
   sceneStoreRef.current = sceneStore;
@@ -835,7 +851,7 @@ function ProjectDemoPage() {
       ? ['双人床向左移动10厘米', '检查双人床床侧净距', '对比上一版变化']
       : selectedObject?.id === 'object-primary-wardrobe'
         ? ['衣柜改成暖白色', '检查衣柜柜前净距', '对比上一版变化']
-        : ['检查主卧当前规则', '把衣柜改成暖白色', '对比上一版变化']
+        : ['主卧太满但收纳别少', '把衣柜改成暖白色', '对比上一版变化']
     : activeRoomId === 'room-flex'
       ? selectedObject?.id === 'object-flex-bed'
         ? ['单人床向右移动20厘米', '检查单人床床侧净距', '对比上一版变化']
@@ -1206,6 +1222,7 @@ function ProjectDemoPage() {
             input,
             selectedObjectId: navigation.selectedId,
             scene: serializeScene(beforeStore.currentScene),
+            designBrief,
             ...(serializedHistory.length < 60_000 ? { versionHistory: serializedHistory } : {}),
           }),
         });
@@ -1221,12 +1238,14 @@ function ProjectDemoPage() {
           input,
           selectedObjectId: navigation.selectedId,
           versionHistory: beforeHistory,
+          designBrief,
+          activeRoomId,
         });
         result = { ...result, trace: { ...result.trace, fallbackReason: result.trace.fallbackReason ?? apiError?.message ?? 'AGENT_BFF_UNAVAILABLE' } };
       }
       const sceneChanged = serializeScene(result.store.currentScene) !== serializeScene(beforeStore.currentScene);
+      if (result.trace.designBrief) setDesignBrief(normalizeDesignBrief(result.trace.designBrief));
       const successfulWrites = result.trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
-      let savedLabel = null;
       let needsReview = false;
 
       if (sceneChanged) {
@@ -1238,24 +1257,15 @@ function ProjectDemoPage() {
         setSceneStore(result.store);
         setLastRejected(null);
 
-        if (reviewChecks.length) {
-          needsReview = true;
-          setPendingReview({
-            checks: reviewChecks.slice(0, 3),
-            saveOnKeep: true,
-            startCursor: beforeStore.cursor,
-            status: topRuleStatus(reviewChecks),
-            versionSource: result.trace.source === 'provider' ? 'aily' : 'agent-local',
-          });
-          setEditFeedback({ tone: 'warning', message: 'Agent 已生成待确认预览；保留后才写入版本链。' });
-        } else {
-          const nextHistory = saveSceneVersion(beforeHistory, result.store, { source: result.trace.source === 'provider' ? 'aily' : 'agent-local' });
-          versionHistoryRef.current = nextHistory;
-          setCompareFromVersionId(beforeHistory.currentVersionId);
-          setVersionHistory(nextHistory);
-          savedLabel = nextHistory.versions.at(-1).label;
-          setEditFeedback({ tone: 'success', message: `Agent 修改已保存为 ${savedLabel}` });
-        }
+        needsReview = true;
+        setPendingReview({
+          checks: reviewChecks.slice(0, 3),
+          saveOnKeep: true,
+          startCursor: beforeStore.cursor,
+          status: reviewChecks.length ? topRuleStatus(reviewChecks) : 'passed',
+          versionSource: result.trace.source === 'provider' ? 'aily' : 'agent-local',
+        });
+        setEditFeedback({ tone: reviewChecks.length ? 'warning' : 'success', message: 'Agent 已生成可撤销预览；由你保留后才写入版本链。' });
 
         const deletedSelected = successfulWrites.some((step) => step.tool === 'delete_object' && step.args?.objectId === navigation.selectedId);
         if (deletedSelected) commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
@@ -1269,7 +1279,7 @@ function ProjectDemoPage() {
       setAgentMessages((messages) => [...messages, {
         id: `${turnId}-assistant`,
         role: 'assistant',
-        text: agentReplyFromTrace(result.trace, { savedLabel, pending: needsReview }),
+        text: agentReplyFromTrace(result.trace, { pending: needsReview }),
         source: result.trace.source,
         fallbackReason: result.trace.fallbackReason,
         tools: result.trace.toolCalls.map((call) => call.tool),
@@ -1279,7 +1289,7 @@ function ProjectDemoPage() {
       setAgentMessages((messages) => [...messages, {
         id: `${turnId}-assistant`,
         role: 'assistant',
-        text: 'Agent 本轮未完成，场景未变。可重试或使用手动工具。',
+        text: '本轮未完成，当前场景保持不变。请重试或缩小到一个房间与一个目标。',
         source: 'local',
         tools: [],
       }]);
@@ -1493,6 +1503,11 @@ function ProjectDemoPage() {
   }, [householdConsensus]);
 
   useEffect(() => {
+    try { window.localStorage.setItem(DESIGN_BRIEF_STORAGE_KEY, serializeDesignBrief(designBrief)); }
+    catch { /* Offline cache failure must not block the live design session. */ }
+  }, [designBrief]);
+
+  useEffect(() => {
     const controller = new AbortController();
     fetch('/api/health', { signal: controller.signal })
       .then((response) => {
@@ -1687,7 +1702,7 @@ function ProjectDemoPage() {
           </div>
           {pendingReview && <div className="project-review" data-status={pendingReview.status} data-testid="pending-rule-review">
             <div>
-              <strong>{pendingReview.status === 'warning' ? '规范提醒待确认' : '舒适建议待确认'}</strong>
+              <strong>{reviewTitle(pendingReview.status)}</strong>
               <span>source: demo · 仅为演示规则，真实落地需欧派/施工 API 复核</span>
             </div>
             <ul>
@@ -1780,6 +1795,7 @@ function ProjectDemoPage() {
           <div className="agent-sidecar__scope">
             <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
             <small>{capabilityLabel(agentCapability.aily, 'Aily')} · {capabilityLabel(agentCapability.base, '飞书留痕')}</small>
+            <small>已识别 {designBrief.goals.length} 个目标 · {designBrief.hardConstraints.length} 条硬约束 · {designBrief.unresolvedIssues.length} 个未决项</small>
           </div>
 
           <div className="agent-task-actions" aria-label="当前设计动作">
@@ -1811,8 +1827,8 @@ function ProjectDemoPage() {
           </div>
 
           {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
-            <strong>{pendingReview.status === 'warning' ? '规范提醒待确认' : '舒适建议待确认'}</strong>
-            <p>{pendingReview.checks[0]?.message}</p>
+            <strong>{reviewTitle(pendingReview.status)}</strong>
+            <p>{pendingReview.checks[0]?.message ?? '场景已按当前目标生成预览，尚未保存为新版本。'}</p>
             <div><button type="button" onClick={keepPendingReview}>保留并保存</button><button type="button" onClick={discardPendingReview}>撤销预览</button></div>
           </div>}
 

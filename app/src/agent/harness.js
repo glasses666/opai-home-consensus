@@ -1,10 +1,12 @@
 import { dispatchSceneCommand } from '../domain/scene.js';
 import { demoCatalogPlugin } from '../catalog/demo-catalog.js';
+import { createDesignBrief, evolveDesignBrief, normalizeDesignBrief } from '../domain/design-brief.js';
 import { compareVersionHistory } from '../domain/design-version.js';
 import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/design-rules.js';
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
+const BEDROOM_OPEN_STORAGE_PATTERN = /主卧.*(?:太满|拥挤|开阔|动线).*(?:收纳)|主卧.*收纳.*(?:太满|拥挤|开阔|动线)/;
 
 const OBJECT_NOUNS = [
   ['双人床', 'object-primary-bed'],
@@ -196,6 +198,11 @@ function summarizeScene(scene, input, selectedObjectId) {
 
 function toolsForInput(input) {
   const names = new Set(['request_clarification']);
+  if (BEDROOM_OPEN_STORAGE_PATTERN.test(input)) {
+    names.add('inspect_room');
+    names.add('move_object');
+    names.add('check_rules');
+  }
   const catalogIntent = /(墙|墙面|地面|地板|瓷砖|层板|架子|隔断|门|吊顶|顶面|柜|五金|台面)/.test(input);
   const objectIntent = input.includes('床') || OBJECT_NOUNS.some(([noun]) => input.includes(noun));
   if (ROOM_NOUNS.some(([pattern]) => pattern.test(input))) names.add('inspect_room');
@@ -270,6 +277,21 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
   if (!text) return [];
   const objectId = selectedOrNamedObjectId(text, selectedObjectId, scene);
   const surfaceId = selectedOrNamedSurfaceId(text, selectedObjectId, scene);
+
+  if (BEDROOM_OPEN_STORAGE_PATTERN.test(text)) {
+    return [
+      { tool: 'inspect_room', args: { roomId: 'room-primary-bedroom' } },
+      { tool: 'move_object', args: { objectId: 'object-primary-bed', dz: 100 } },
+      { tool: 'check_rules', args: { roomId: 'room-primary-bedroom' } },
+    ];
+  }
+
+  if (/(更舒服|舒服一点|更好住|想改善)/.test(text) && !namedRoomId(text) && !selectedObjectId) {
+    return [{
+      tool: 'request_clarification',
+      args: { question: '你想先改善哪个房间，最困扰的是动线、收纳还是风格？', reason: '缺少空间和优先目标' },
+    }];
+  }
 
   if (/(墙|墙面)/.test(text) && /(木饰面|护墙板|木墙板)/.test(text)) {
     if (surfaceId) return [{ tool: 'apply_catalog_item', args: { catalogItemId: 'demo-wall-panel-light-oak', surfaceId } }];
@@ -392,6 +414,9 @@ function providerFailureCode(error) {
 }
 
 function localFallbackReply(input) {
+  if (BEDROOM_OPEN_STORAGE_PATTERN.test(input)) {
+    return '保留衣柜和收纳量，先把双人床向背景墙收近 100 mm，释放房间中心；规则已检查。你更在意床侧通道还是衣柜开门？';
+  }
   if (/(架子|层板|置物架|书架|开放架)/.test(input)) {
     return '演示目录里有悬浮层板和开放架体，但安装规则尚未接入。你想放在哪个房间的哪面墙？';
   }
@@ -399,7 +424,7 @@ function localFallbackReply(input) {
   if (/(墙|墙面)/.test(input) && /(木饰面|护墙板|木墙板)/.test(input)) {
     return '已按演示目录提交浅橡木木饰面变更，实际材料、报价与施工条件仍需复核。';
   }
-  return 'Aily 未完成，本轮由本地规则引擎处理。';
+  return '';
 }
 
 function requireString(args, key) {
@@ -604,6 +629,8 @@ export async function runAgentTurn({
   provider = null,
   catalogPlugin = demoCatalogPlugin,
   versionHistory = null,
+  designBrief = createDesignBrief(),
+  activeRoomId = null,
   timeoutMs = 1500,
 } = {}) {
   if (!isRecord(store) || !isRecord(store.currentScene)) throw new Error('STORE_INVALID');
@@ -616,6 +643,7 @@ export async function runAgentTurn({
   let toolCalls = [];
   let assistantReply = '';
   const inputText = String(input ?? '');
+  const currentBrief = normalizeDesignBrief(designBrief);
   const turnTools = toolsForInput(inputText);
   const allowedToolNames = new Set(turnTools.map((tool) => tool.name));
   const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory, scene: store.currentScene })
@@ -634,6 +662,7 @@ export async function runAgentTurn({
         confirmedVersionId: versionHistory.confirmedVersionId,
         versions: versionHistory.versions.map(({ id, label, status, parentVersionId, source, summary }) => ({ id, label, status, parentVersionId, source, summary })),
       }) : null,
+      designBrief: stableJsonValue(currentBrief),
     };
     try {
       const providerResult = await withTimeout(
@@ -649,6 +678,7 @@ export async function runAgentTurn({
     }
   } else {
     toolCalls = localToolCalls();
+    assistantReply = localFallbackReply(inputText);
   }
 
   let nextStore = store;
@@ -667,6 +697,15 @@ export async function runAgentTurn({
     }
   }
 
+  const clarification = steps.find((step) => step.ok && step.tool === 'request_clarification')?.result;
+  if (clarification?.question && !/[？?]/.test(assistantReply)) assistantReply = clarification.question;
+
+  const nextBrief = evolveDesignBrief(currentBrief, {
+    input: inputText,
+    activeRoomId: activeRoomId ?? roomIdForSelected(store.currentScene, selectedObjectId) ?? namedRoomId(inputText),
+    selectedObjectId,
+    steps,
+  });
   const trace = stableJsonValue({
     assistantReply,
     catalog: catalogDescription,
@@ -674,6 +713,7 @@ export async function runAgentTurn({
     input: inputText,
     selectedObjectId,
     source,
+    designBrief: nextBrief,
     steps,
     toolCalls,
     rolledBack,

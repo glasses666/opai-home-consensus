@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { createDesignBrief, normalizeDesignBrief } from '../src/domain/design-brief.js';
 import {
   createSceneStore,
   deepFreeze,
@@ -40,6 +41,7 @@ function makeInitialState({ projectId, scene, now }) {
       cursor: 0,
     }],
     commandLog: [],
+    designBrief: createDesignBrief(),
     pendingBaseEvents: [],
     syncedBaseEventIds: [],
     handoffSnapshots: [],
@@ -87,6 +89,7 @@ function normalizeState(value, fallback) {
     ...fallback,
     ...value,
     commandLog,
+    designBrief: normalizeDesignBrief(value.designBrief),
     pendingBaseEvents: Array.isArray(value.pendingBaseEvents) ? value.pendingBaseEvents : [],
     syncedBaseEventIds: Array.isArray(value.syncedBaseEventIds) ? value.syncedBaseEventIds : [],
     handoffSnapshots: Array.isArray(value.handoffSnapshots) ? value.handoffSnapshots : [],
@@ -219,6 +222,12 @@ export function createPersistentProjectStore({
     }
   };
 
+  const saveDesignBrief = (brief) => {
+    state.designBrief = clone(normalizeDesignBrief(brief));
+    save();
+    return clone(state.designBrief);
+  };
+
   const markBaseSynced = (eventId) => {
     state.pendingBaseEvents = state.pendingBaseEvents.filter((event) => event.eventId !== eventId);
     if (!state.syncedBaseEventIds.includes(eventId)) state.syncedBaseEventIds.push(eventId);
@@ -292,6 +301,8 @@ export function createPersistentProjectStore({
       return entry ? clone(findVersion(entry.versionId)) : null;
     },
     getProject: () => clone({ ...state.project, versions: state.versions.map(({ scene, commands, ...version }) => version) }),
+    getDesignBrief: () => clone(state.designBrief),
+    saveDesignBrief,
     getSceneStore: sceneStoreFor,
     getVersion: (versionId) => clone(findVersion(versionId)),
     listPendingBaseEvents: () => clone(state.pendingBaseEvents),

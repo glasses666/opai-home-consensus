@@ -1,6 +1,6 @@
 export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.1';
 
-export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog }) {
+export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog, designBrief = null }) {
   return JSON.stringify({
     promptVersion: AGENT_PROMPT_VERSION,
     role: '家装意图规划层；只澄清、选目录项和提工具调用，本地规则引擎执行。',
@@ -17,6 +17,7 @@ export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalo
     ],
     input: String(input ?? ''),
     selectedObjectId: selectedObjectId ?? null,
+    designBrief,
     scene,
     catalog,
     tools,

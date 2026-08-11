@@ -6,6 +6,7 @@ import test from 'node:test';
 
 import { createPersistentProjectStore } from '../server/project-store.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { evolveDesignBrief } from '../src/domain/design-brief.js';
 import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
 import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
@@ -39,6 +40,25 @@ test('project store persists versions, commands, and pending Base events across 
     assert.equal(restarted.listPendingBaseEvents().length, 1);
     assert.doesNotThrow(() => JSON.parse(readFileSync(file, 'utf8')));
     assert.equal(readdirSync(dir).some((name) => name.includes('.tmp-')), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('project store restores a project DesignBrief without coupling it to scene versions', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file });
+    const initialVersionId = store.currentVersionId;
+    const brief = evolveDesignBrief(store.getDesignBrief(), {
+      input: '主卧太满但收纳别少',
+      activeRoomId: 'room-primary-bedroom',
+    });
+    store.saveDesignBrief(brief);
+
+    const restarted = createPersistentProjectStore({ filePath: file });
+    assert.deepEqual(restarted.getDesignBrief(), brief);
+    assert.equal(restarted.currentVersionId, initialVersionId);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
