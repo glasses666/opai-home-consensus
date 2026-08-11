@@ -451,6 +451,10 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .project-rules li[data-status="recommendation"] > span { color: #62528e; }
 .project-rules p { margin: 0; color: #625d55; font-size: 10px; line-height: 1.35; }
 .project-rules li small { grid-column: 2; color: var(--muted); font-size: 8px; line-height: 1.35; }
+.household-conflict__voices { display: grid; gap: 6px; }
+.household-conflict__voices blockquote { display: grid; gap: 2px; margin: 0; padding: 8px 9px; border-left: 2px solid #b98791; border-radius: 0 7px 7px 0; background: #fffaf6; }
+.household-conflict__voices strong { color: #6e3744; font-size: 10px; }
+.household-conflict__voices span { color: #5f5951; font-size: 10px; line-height: 1.4; }
 .project-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 10px 0 0; padding-top: 9px; border-top: 1px solid var(--line); }
 .project-metrics div { min-width: 0; }
 .project-metrics dt, .project-metrics dd { margin: 0; }

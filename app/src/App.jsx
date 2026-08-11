@@ -776,6 +776,11 @@ function ProjectDemoPage() {
   const conflictDirections = activeConflict
     ? householdConsensus.directions.filter((direction) => direction.conflictId === activeConflict.id)
     : [];
+  const conflictOpinions = activeConflict
+    ? householdConsensus.opinions.filter((opinion) => opinion.versionId === activeConflict.versionId
+      && opinion.target.type === activeConflict.target.type
+      && opinion.target.id === activeConflict.target.id)
+    : [];
   const consensusDirectionOptions = useMemo(() => {
     if (!activeConflict || activeConflict.target.type !== 'object' || householdConsensus.finalDecision) return [];
     const object = currentScene.objects.find((candidate) => candidate.id === activeConflict.target.id);
@@ -799,15 +804,15 @@ function ProjectDemoPage() {
         if (newReviewChecks(beforeRules, rules, [object.id]).length) return [];
         return [{
           id: `direction-${activeConflict.id}-${candidate.key}`,
-          title: `${candidate.label} 200 mm`,
-          summary: `保留当前尺寸与材质；本方向未新增规则提醒，全屋 demo 状态：${ruleStatusLabels[rules.status] ?? rules.status}。`,
+          title: candidate.label,
+          summary: `${entityName('object', object)}${candidate.label}轻微调整 200 mm，保留当前尺寸与材质；没有新增规则提醒。`,
           feasible: true,
           command,
         }];
       } catch {
         return [];
       }
-    }).slice(0, 2);
+    }).slice(0, 2).map((direction, index) => ({ ...direction, title: `位置方案 ${index ? 'B' : 'A'}` }));
   }, [activeConflict, currentScene.objects, householdConsensus.finalDecision, sceneStore]);
   const chosenDirection = householdConsensus.finalDecision
     ? householdConsensus.directions.find((direction) => direction.id === householdConsensus.finalDecision.directionId) ?? null
@@ -1719,6 +1724,10 @@ function ProjectDemoPage() {
               activeRoomId={displayRoomId}
               roomLabels={roomLabels}
               advancedMode={advancedEditing}
+              loadingFallback={<>
+                <div><strong>实时 3D 正在载入</strong><span>先用同源 2D 核对房间、家具和当前选择；载入完成后会原位切换。</span></div>
+                <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
+              </>}
             />
           </Suspense>}
       </section>
@@ -1781,7 +1790,7 @@ function ProjectDemoPage() {
             </div>
           </div>}
           {selectedObject && <div className="project-object" data-testid="selected-object-details" data-layer={advancedEditing ? 'advanced' : 'quick'}>
-            <div><span>{selectedObject.externalId}</span><strong>{selectedObject.source === 'demo' ? '演示对象' : '企业对象'}</strong></div>
+            <div><span>{advancedEditing ? selectedObject.externalId : entityName('object', selectedObject)}</span><strong>{advancedEditing ? (selectedObject.source === 'demo' ? '演示对象' : '企业对象') : '当前家具'}</strong></div>
             {advancedEditing && <dl>
               <div><dt>尺寸</dt><dd>{selectedObject.dimensions.width} × {selectedObject.dimensions.depth} × {selectedObject.dimensions.height} mm</dd></div>
               <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
@@ -1865,7 +1874,7 @@ function ProjectDemoPage() {
           <div className="agent-sidecar__scope">
             <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
             <small>{capabilityLabel(agentCapability.aily, 'Aily')} · {capabilityLabel(agentCapability.base, '飞书留痕')}</small>
-            <small>已识别 {designBrief.goals.length} 个目标 · {designBrief.hardConstraints.length} 条硬约束 · {designBrief.unresolvedIssues.length} 个未决项</small>
+            <small>已识别 {designBrief.goals.length} 个目标 · {designBrief.hardConstraints.length} 条硬约束 · {designBrief.softPreferences.length} 个偏好 · {designBrief.unresolvedIssues.length} 个未决项</small>
           </div>
 
           <div className="agent-task-actions" aria-label="当前设计动作">
@@ -1901,6 +1910,7 @@ function ProjectDemoPage() {
           {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
             <strong>{reviewTitle(pendingReview.status)}</strong>
             <p>{pendingReview.checks[0]?.message ?? '场景已按当前目标生成预览，尚未保存为新版本。'}</p>
+            {designBrief.softPreferences.includes('控制预算') && <small>预算已记录为偏好；当前只能验证设计变化，真实成本是否下降需等待欧派报价 API。</small>}
             <div><button type="button" onClick={keepPendingReview}>保留并保存</button><button type="button" onClick={discardPendingReview}>撤销预览</button></div>
           </div>}
 
@@ -1908,11 +1918,11 @@ function ProjectDemoPage() {
             <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
             <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
           </form>
-          <footer className="agent-sidecar__footer">工具调用 → 确定性规则 → SceneCommand → 版本；Agent 不直接写 geometry JSON，也不会代你确认。</footer>
+          <footer className="agent-sidecar__footer">每次修改都会先检查空间规则并生成预览；未经你确认，不会保存为新版本。</footer>
         </article> : <article className="panel household-sidecar" data-testid="household-sidecar">
           <header className="household-sidecar__header">
-            <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>一个共享方案 · 无私有版本</small></div></div>
-            <em>顺序切换 · Demo</em>
+            <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>当前为 Demo 顺序切换，不是实时多人同步</small></div></div>
+            <em>同一版本</em>
           </header>
 
           <div className="household-members" role="tablist" aria-label="当前表达成员">
@@ -1940,6 +1950,10 @@ function ProjectDemoPage() {
             <div className="household-section-title"><span>共识助手</span><strong>{activeConflict ? '发现意见冲突' : '等待完整意见'}</strong></div>
             {activeConflict ? <>
               <p>{activeConflict.memberIds.length} 位成员对 {householdTargetName(activeConflict.target)} 存在支持与{activeConflict.severity === 'non_negotiable' ? '不可妥协' : '反对'}立场，基准为 {versions.find((version) => version.id === activeConflict.versionId)?.label ?? activeConflict.versionId}。</p>
+              <div className="household-conflict__voices">{conflictOpinions.map((opinion) => {
+                const member = householdConsensus.members.find((candidate) => candidate.id === opinion.memberId);
+                return <blockquote key={opinion.id}><strong>{member?.name ?? opinion.memberId} · {opinionStanceLabels[opinion.stance]}</strong><span>{opinion.note}</span></blockquote>;
+              })}</div>
               {!householdConsensus.finalDecision && conflictDirections.length === 0 && <button className="household-primary" type="button" onClick={generateConsensusDirections}>生成两套可行方向</button>}
               {!householdConsensus.finalDecision && conflictDirections.length > 0 && <div className="household-directions">
                 {conflictDirections.map((direction) => <article key={direction.id}><div><strong>{direction.title}</strong><span>已校验</span></div><p>{direction.summary}</p><button type="button" onClick={() => applyConsensusDirection(direction)}>应用并创建新版本</button></article>)}
@@ -1965,7 +1979,7 @@ function ProjectDemoPage() {
               return <li key={opinion.id}><span>{member?.name ?? opinion.memberId} · {opinionStanceLabels[opinion.stance]}</span><p>{opinion.note}</p><small>{householdTargetName(opinion.target)} · {version?.label ?? opinion.versionId}</small></li>;
             })}</ol>
           </section>
-          <footer>演示边界：当前用顺序身份切换模拟共创，不代表已完成账号权限或实时多人同步。</footer>
+          <footer>所有意见都绑定当前版本；真实账号、通知与同时在线协作尚未接入。</footer>
         </article>}
       </aside>
     </section>

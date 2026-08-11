@@ -94,6 +94,23 @@
   background: #f5f0e8;
 }
 
+.pascal-loading-preview {
+  position: absolute;
+  z-index: 68;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, .42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 32px;
+  background: linear-gradient(145deg, #ede6dc, #f8f4ec 55%, #eee4d7);
+}
+
+.pascal-loading-preview > div { display: grid; gap: 8px; }
+.pascal-loading-preview strong { color: #302b27; font-size: 22px; }
+.pascal-loading-preview span { color: #6c655d; font-size: 12px; line-height: 1.55; }
+.pascal-loading-preview .plan { min-height: 0; border: 1px solid rgb(72 63 53 / 12%); border-radius: 14px; background: rgb(255 253 248 / 82%); box-shadow: 0 18px 50px rgb(54 46 37 / 10%); }
+
 .pascal-app-badge {
   display: grid;
   width: 34px;
@@ -168,7 +185,10 @@
   font-weight: 700;
   pointer-events: none;
   backdrop-filter: blur(12px);
+  animation: pascal-hint-out 240ms ease 6s forwards;
 }
+
+@keyframes pascal-hint-out { to { visibility: hidden; opacity: 0; } }
 
 @media (max-width: 840px) {
   .pascal-stage,
@@ -180,7 +200,10 @@
   .pascal-sidebar-toggle { top: 12px; left: 12px; }
   .pascal-resource-badge { top: 58px; right: 12px; }
   .pascal-trackpad-hint { right: 12px; bottom: 12px; }
+  .pascal-loading-preview { grid-template-columns: 1fr; padding: 20px; }
 }
+
+@media (prefers-reduced-motion: reduce) { .pascal-trackpad-hint { animation-duration: 1ms; animation-delay: 6s; } }
 
 @media (max-width: 520px) {
   .pascal-stage,

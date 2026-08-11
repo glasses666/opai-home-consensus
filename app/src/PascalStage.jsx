@@ -33,7 +33,7 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand, advancedMode = false }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, advancedMode = false, loadingFallback = null }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
@@ -125,6 +125,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
 
   return (
     <div ref={stageRef} className="pascal-stage" data-render-profile={renderProfile.mode}>
+      {!editorLoaded && <div className="pascal-loading-preview" role="status">{loadingFallback ?? '正在载入实时 3D…'}</div>}
       {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
       <PascalViewSwitch renderProfile={renderProfile} />

@@ -11,7 +11,7 @@
 - 夜间后端包 N1、N2 已完成：命令事务、Agent Harness、真实 Aily / Base、15 项合成装修组件目录与 Prompt 安全边界已通过验证。
 - Gate 3 已实现并以 `da9c94b` 保存待验收快照；提交只保存状态，不代表用户验收，也没有进入 Gate 4。
 - 后端 B1–B4 已实现、验证并提交：JSON 项目 / 版本持久化、24 案例 Agent 评测、确定性规则与影响、JSON / CSV 企业目录导入适配器。
-- Gate 10B、Gate 11 与 Gate 12 已实现：儿童房 / 书房完整闭环、设计师复核页、共识交接 JSON、后端确认 / 复核 / 导出闭环和 V1 交付材料已可本地审阅。Gate 16–18 已连续完成并提交：固定装修组件、性能 / 资源生命周期、移动轻量态、最终信息层级与视觉收口都已落地，当前进入最终验收阶段。
+- Gate 10B–18 已建立同源装修场景、固定组件、性能降级、复核与交接地基。Gate 19–23 已把产品层级校正为 Agent-first：自然需求形成可撤销预览，住户微调与 Pascal 高级编辑分层，家庭意见和版本确认回到连续设计流程，并完成五类黑盒住户复测。
 
 ## 项目入口
 
@@ -29,6 +29,11 @@
 - [Gate 16 审阅包](./GATE-16-REVIEW.md)
 - [Gate 17 审阅包](./GATE-17-REVIEW.md)
 - [Gate 18 审阅包](./GATE-18-REVIEW.md)
+- [Gate 19 审阅包](./GATE-19-REVIEW.md)
+- [Gate 20 审阅包](./GATE-20-REVIEW.md)
+- [Gate 21 审阅包](./GATE-21-REVIEW.md)
+- [Gate 22 审阅包](./GATE-22-REVIEW.md)
+- [Gate 23 审阅包](./GATE-23-REVIEW.md)
 - [5 分钟演示脚本](./DEMO-SCRIPT.md)
 - [设计 QA](./design-qa.md)
 
@@ -42,7 +47,7 @@ npm run dev -- --port 5173
 
 主要审阅页面为 `http://127.0.0.1:5173/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 
-当前 V1 验证基线：166 项全量测试、78 项后端专项测试、28 案例 Agent 评测全部通过；1440×900、1366×768、1024×768 和 390×844 轻量态无水平溢出或未处理控制台错误。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+当前 V1.1 验证基线：175 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；五类模拟住户任务、1440×900、1366×768、1024×768 和移动轻量态均有证据。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
 
 后端能力门与 Agent Harness：
 
