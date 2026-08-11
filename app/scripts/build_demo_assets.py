@@ -13,6 +13,7 @@ from mathutils import Vector
 
 
 OUTPUT = Path(__file__).resolve().parents[1] / "public" / "assets" / "models"
+TOP_OUTPUT = Path(__file__).resolve().parents[1] / "public" / "assets" / "furniture"
 
 
 def material(name, color, roughness=0.62, metallic=0.0):
@@ -171,6 +172,25 @@ def shoe_cabinet():
     box("ACCENT oak top", (1.16, 0.38, 0.045), (0, 0, 1.04), OAK, 0.02)
 
 
+def floating_shelf():
+    for index, height in enumerate((0.08, 0.36, 0.64)):
+        box(f"CANONICAL shelf {index + 1}", (0.9, 0.26, 0.045), (0, 0, height), OAK, 0.018)
+    box("CANONICAL wall rail", (0.82, 0.035, 0.72), (0, 0.12, 0.36), WHITE, 0.012)
+
+
+def slat_partition():
+    for index, x in enumerate((-0.52, -0.35, -0.18, 0, 0.18, 0.35, 0.52)):
+        box(f"CANONICAL slat {index + 1}", (0.075, 0.12, 2.6), (x, 0, 1.3), OAK, 0.018)
+    box("CANONICAL floor rail", (1.2, 0.12, 0.055), (0, 0, 0.0275), OAK, 0.015)
+    box("CANONICAL ceiling rail", (1.2, 0.12, 0.055), (0, 0, 2.5725), OAK, 0.015)
+
+
+def feature_wall():
+    box("CANONICAL backing", (3.0, 0.06, 2.4), (0, 0, 1.2), WHITE, 0.02)
+    for index, x in enumerate((-1.35, -1.05, -0.75, -0.45, -0.15, 0.15, 0.45, 0.75, 1.05, 1.35)):
+        box(f"ACCENT oak reveal {index + 1}", (0.055, 0.025, 2.26), (x, -0.043, 1.2), OAK, 0.012, role="accent")
+
+
 def normalize_and_export(name, builder):
     clear_scene()
     builder()
@@ -199,6 +219,27 @@ def normalize_and_export(name, builder):
         export_lights=False,
     )
 
+    if name in TOP_VIEW_ASSETS:
+        camera_data = bpy.data.cameras.new("Top camera")
+        camera = bpy.data.objects.new("Top camera", camera_data)
+        bpy.context.collection.objects.link(camera)
+        width = maximum[0] - minimum[0]
+        depth = maximum[1] - minimum[1]
+        camera.location = (0, 0, max(point[2] for point in world_points) + max(width, depth, 1.0) * 2)
+        camera_data.type = "ORTHO"
+        camera_data.ortho_scale = max(width, depth, 0.35) * 1.28
+        bpy.context.scene.camera = camera
+        bpy.context.scene.render.engine = "BLENDER_EEVEE"
+        bpy.context.scene.render.film_transparent = True
+        bpy.context.scene.render.resolution_x = 512
+        bpy.context.scene.render.resolution_y = 512
+        bpy.context.scene.render.resolution_percentage = 100
+        bpy.context.scene.render.image_settings.file_format = "PNG"
+        bpy.context.scene.render.image_settings.color_mode = "RGBA"
+        TOP_OUTPUT.mkdir(parents=True, exist_ok=True)
+        bpy.context.scene.render.filepath = str(TOP_OUTPUT / f"{name}-top.png")
+        bpy.ops.render.render(write_still=True)
+
 
 ASSETS = {
     "sofa": sofa,
@@ -210,7 +251,12 @@ ASSETS = {
     "desk": desk,
     "kitchen-counter": kitchen_counter,
     "shoe-cabinet": shoe_cabinet,
+    "floating-shelf": floating_shelf,
+    "slat-partition": slat_partition,
+    "feature-wall": feature_wall,
 }
+
+TOP_VIEW_ASSETS = {"floating-shelf", "slat-partition", "feature-wall"}
 
 requested_assets = set(sys.argv[sys.argv.index("--") + 1:]) if "--" in sys.argv else set(ASSETS)
 unknown_assets = requested_assets - ASSETS.keys()

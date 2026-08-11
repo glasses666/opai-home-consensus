@@ -32,6 +32,8 @@ const OBJECT_CAPABILITIES = [
 ];
 
 const OBJECT_LAYERS = new Set(['furniture', 'fixed_installation', 'equipment', 'service']);
+const INSTALLATION_KINDS = new Set(['cabinetry', 'shelving', 'partition', 'feature_wall']);
+const INSTALLATION_MOUNTS = new Set(['floor', 'wall']);
 const MODEL_SOURCES = new Set(['generated', 'ai-generated', 'enterprise']);
 const REVIEW_STATUSES = new Set(['not_required', 'required', 'approved', 'returned']);
 const SURFACE_KINDS = new Set(['wall', 'floor', 'ceiling']);
@@ -499,6 +501,23 @@ export function validateScene(scene) {
       ['x', 'y', 'z'].some((axis) => !isInteger(object.placement.offset[axis]))
     ) {
       addError(errors, 'OBJECT_PLACEMENT_INVALID', `${path}.placement`, 'Object placement must reference a surface in the same room with integer millimeter offsets.');
+    }
+    if (object.hierarchy?.layer === 'fixed_installation') {
+      const installation = object.installation;
+      const expectedSurfaceKind = installation?.mount === 'wall' ? 'wall' : 'floor';
+      if (
+        !isObject(installation) ||
+        !INSTALLATION_KINDS.has(installation.kind) ||
+        !INSTALLATION_MOUNTS.has(installation.mount) ||
+        installation.hostSurfaceId !== object.placement?.hostSurfaceId ||
+        installation.source !== object.source ||
+        hostSurface?.kind !== expectedSurfaceKind ||
+        object.review?.requiresProfessionalReview !== true
+      ) {
+        addError(errors, 'OBJECT_INSTALLATION_INVALID', `${path}.installation`, 'Fixed installations must declare a traceable floor or wall mount matching their placement host and professional review.');
+      }
+    } else if (object.installation !== undefined) {
+      addError(errors, 'OBJECT_INSTALLATION_INVALID', `${path}.installation`, 'Only fixed installations may declare an installation contract.');
     }
     if (
       !isObject(object.collision) ||

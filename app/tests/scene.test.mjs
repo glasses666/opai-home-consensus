@@ -93,6 +93,7 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
 
   assert.deepEqual(livingObjects.map((object) => object.id).sort(), [
     'object-dining-table',
+    'object-living-slat-partition',
     'object-sofa',
     'object-tv-console',
   ]);
@@ -103,6 +104,34 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
     assert.equal(object.model3D.source, 'generated');
     assert.ok(object.dimensions.width > 0 && object.dimensions.depth > 0 && object.dimensions.height > 0);
   }
+});
+
+test('Gate 16 fixed installations keep installation contracts and replaceable asset slots', () => {
+  const scene = createDemoScene();
+  const fixedObjects = [
+    scene.objects.find((object) => object.id === 'object-flex-floating-shelf'),
+    scene.objects.find((object) => object.id === 'object-living-slat-partition'),
+    scene.objects.find((object) => object.id === 'object-primary-feature-wall'),
+  ];
+
+  assert.equal(fixedObjects.every(Boolean), true);
+  for (const object of fixedObjects) {
+    assert.equal(object.hierarchy.layer, 'fixed_installation');
+    assert.equal(object.capabilities.replaceable, true);
+    assert.equal(object.review.requiresProfessionalReview, true);
+    assert.equal(object.review.status, 'required');
+    assert.equal(object.model3D.slotId.startsWith('slot-object-'), true);
+    assert.equal(object.placement.hostSurfaceId, object.installation.hostSurfaceId);
+    assert.equal(object.installation.source, 'demo');
+  }
+  assert.deepEqual(
+    fixedObjects.map((object) => [object.id, object.installation.kind, object.installation.mount, object.installation.hostSurfaceId]),
+    [
+      ['object-flex-floating-shelf', 'shelving', 'wall', 'surface-wall-flex-north'],
+      ['object-living-slat-partition', 'partition', 'floor', 'surface-floor-living-dining'],
+      ['object-primary-feature-wall', 'feature_wall', 'wall', 'surface-wall-primary-south'],
+    ],
+  );
 });
 
 test('Gate 5 duplicate, resize, delete, undo, and redo stay command-driven', () => {

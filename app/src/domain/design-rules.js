@@ -28,6 +28,9 @@ const objectLabels = new Map([
   ['object-dining-table', '餐桌'],
   ['object-kitchen-counter', '橱柜'],
   ['object-shoe-cabinet', '鞋柜'],
+  ['object-flex-floating-shelf', '悬浮层板'],
+  ['object-living-slat-partition', '格栅隔断'],
+  ['object-primary-feature-wall', '主卧背景墙'],
 ]);
 const categoryLabels = {
   bed: '床',
@@ -35,6 +38,9 @@ const categoryLabels = {
   sofa: '沙发',
   'dining-table': '餐桌',
   'fixed-cabinet': '柜体',
+  'wall-shelf': '层板',
+  partition: '隔断',
+  'feature-wall': '背景墙',
 };
 const labelFor = (object) => objectLabels.get(object.id) ?? categoryLabels[object.category] ?? object.name;
 

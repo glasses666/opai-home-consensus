@@ -30,16 +30,25 @@ const model3D = (filename) => ({
   generator: 'scripts/build_demo_assets.py',
 });
 
-const withObjectContract = (object) => {
-  const fixed = object.category === 'fixed-cabinet';
+const withObjectContract = (input) => {
+  const { installation: requestedInstallation, allowModelReplacement, ...object } = input;
+  const fixed = object.category === 'fixed-cabinet' || Boolean(requestedInstallation);
+  const hostSurfaceId = requestedInstallation?.hostSurfaceId ?? `surface-floor-${object.roomId.slice(5)}`;
+  const installation = fixed ? {
+    kind: requestedInstallation?.kind ?? 'cabinetry',
+    mount: requestedInstallation?.mount ?? 'floor',
+    hostSurfaceId,
+    source: 'demo',
+  } : null;
   return {
     ...object,
     hierarchy: { parentId: object.roomId, layer: fixed ? 'fixed_installation' : 'furniture' },
     placement: {
       mode: 'surface_anchored',
-      hostSurfaceId: `surface-floor-${object.roomId.slice(5)}`,
+      hostSurfaceId,
       offset: { x: 0, y: 0, z: 0 },
     },
+    ...(installation ? { installation } : {}),
     collision: {
       kind: 'box',
       participates: true,
@@ -63,7 +72,10 @@ const withObjectContract = (object) => {
       renderBounds: { ...object.dimensions },
       provenance: { provider: 'local-generator', generationId: object.model3D.src, humanReviewed: true },
     },
-    capabilities: { ...object.capabilities, replaceable: !fixed && object.capabilities.selectable },
+    capabilities: {
+      ...object.capabilities,
+      replaceable: allowModelReplacement ?? (!fixed && object.capabilities.selectable),
+    },
   };
 };
 
@@ -436,6 +448,9 @@ export function createDemoScene() {
       { id: 'object-dining-table', externalId: 'DEMO-FURN-005', source: 'demo', name: 'Dining Table', category: 'dining-table', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-dining', dimensions: { width: 1600, depth: 900, height: 740 }, transform: { x: 6200, y: 0, z: 5700, rotationY: Math.PI / 2 }, media2D: media2D('dining-table-top.png'), model3D: model3D('dining-table.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
       { id: 'object-kitchen-counter', externalId: 'DEMO-CAB-003', source: 'demo', name: 'Kitchen Run', category: 'fixed-cabinet', roomId: 'room-kitchen', preferredCameraPresetId: 'camera-kitchen-worktop', dimensions: { width: 3000, depth: 650, height: 900 }, transform: { x: 9300, y: 0, z: 3625, rotationY: 0 }, media2D: media2D('kitchen-counter-v2-top.png'), model3D: model3D('kitchen-counter.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-kitchen-aisle-1000', 'rule-fixed-equipment-wall-relation'] },
       { id: 'object-shoe-cabinet', externalId: 'DEMO-CAB-004', source: 'demo', name: 'Shoe Cabinet', category: 'fixed-cabinet', roomId: 'room-entry', preferredCameraPresetId: 'camera-entry-storage', dimensions: { width: 1200, depth: 360, height: 1050 }, transform: { x: 10600, y: 0, z: 6800, rotationY: Math.PI / 2 }, media2D: media2D('shoe-cabinet-top.png'), model3D: model3D('shoe-cabinet.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900', 'rule-tall-storage-anchored', 'rule-fixed-equipment-wall-relation'] },
+      { id: 'object-flex-floating-shelf', externalId: 'DEMO-SHELF-001', source: 'demo', name: 'Floating Shelf System', category: 'wall-shelf', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 900, depth: 260, height: 720 }, transform: { x: 10300, y: 1300, z: 150, rotationY: 0 }, media2D: media2D('floating-shelf-top.png'), model3D: model3D('floating-shelf.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'shelving', mount: 'wall', hostSurfaceId: 'surface-wall-flex-north' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
+      { id: 'object-living-slat-partition', externalId: 'DEMO-PART-001', source: 'demo', name: 'Oak Slat Partition', category: 'partition', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-feature', dimensions: { width: 1200, depth: 120, height: 2600 }, transform: { x: 7000, y: 0, z: 7750, rotationY: 0 }, media2D: media2D('slat-partition-top.png'), model3D: model3D('slat-partition.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'partition', mount: 'floor', hostSurfaceId: 'surface-floor-living-dining' }, ruleIds: ['rule-room-boundary'] },
+      { id: 'object-primary-feature-wall', externalId: 'DEMO-FEATURE-001', source: 'demo', name: 'Oak Feature Wall', category: 'feature-wall', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-feature', dimensions: { width: 3000, depth: 60, height: 2400 }, transform: { x: 1500, y: 0, z: 3150, rotationY: 0 }, media2D: media2D('feature-wall-top.png'), model3D: model3D('feature-wall.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'feature_wall', mount: 'wall', hostSurfaceId: 'surface-wall-primary-south' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
     ].map(withObjectContract),
     clearanceZones: [
       { id: 'clearance-entry-route', roomId: 'room-entry', kind: 'circulation', label: '入户主通道', valueMm: 1100, minimumMm: 900, polygon: rectangle(8200, 5750, 1100, 2050), ruleIds: ['rule-main-circulation-900'] },

@@ -48,6 +48,7 @@ const ITEMS = [
     id: 'demo-shelf-floating-900', externalId: 'DEMO-SHELF-001', name: '900 悬浮层板',
     kind: 'mounted_component', category: 'shelving', appliesTo: ['wall'], tags: ['架子', '层板', '置物架', '悬浮', '墙装'],
     sceneReady: false, dimensions: { width: 900, depth: 260, height: 45 },
+    integration: { mode: 'canonical_asset_slot', objectId: 'object-flex-floating-shelf', modelSlotId: 'slot-object-flex-floating-shelf' },
     commercial: { price: estimate(680, 980, 'piece'), leadTime: leadTime(14, 24) },
     constraints: [{ code: 'DEMO_WALL_MOUNT_REQUIRED', message: '需校验墙体基层、固定点、标高与承重。', source: 'demo' }], source: 'demo',
   },
@@ -62,6 +63,7 @@ const ITEMS = [
     id: 'demo-partition-oak-slat-1200', externalId: 'DEMO-PART-001', name: '浅橡木格栅隔断',
     kind: 'built_in_component', category: 'partition', appliesTo: ['floor', 'ceiling'], tags: ['隔断', '格栅', '半通透', '浅橡木'],
     sceneReady: false, dimensions: { width: 1200, depth: 120, height: 2600 },
+    integration: { mode: 'canonical_asset_slot', objectId: 'object-living-slat-partition', modelSlotId: 'slot-object-living-slat-partition' },
     commercial: { price: estimate(5200, 7600, 'set'), leadTime: leadTime(20, 32) },
     constraints: [{ code: 'DEMO_EGRESS_REVIEW', message: '不得侵占主通道、门扇与消防疏散范围。', source: 'demo' }], source: 'demo',
   },
@@ -69,6 +71,7 @@ const ITEMS = [
     id: 'demo-media-base-2200', externalId: 'DEMO-CAB-001', name: '2200 电视地柜组合',
     kind: 'built_in_component', category: 'cabinetry', appliesTo: ['floor', 'wall'], tags: ['电视柜', '地柜', '收纳', '客厅'],
     sceneReady: false, dimensions: { width: 2200, depth: 450, height: 520 },
+    integration: { mode: 'canonical_asset_slot', objectId: 'object-tv-console', modelSlotId: 'slot-object-tv-console' },
     commercial: { price: estimate(7800, 11600, 'set'), leadTime: leadTime(22, 35) },
     constraints: [{ code: 'DEMO_CABINET_FRONT_900', message: '柜前建议保留 900 mm 操作净距。', source: 'demo' }], source: 'demo',
   },
@@ -76,8 +79,17 @@ const ITEMS = [
     id: 'demo-wardrobe-2400', externalId: 'DEMO-CAB-002', name: '2400 平板门衣柜',
     kind: 'built_in_component', category: 'cabinetry', appliesTo: ['floor', 'wall'], tags: ['衣柜', '收纳', '卧室', '到顶柜'],
     sceneReady: false, dimensions: { width: 2400, depth: 600, height: 2400 },
+    integration: { mode: 'canonical_asset_slot', objectId: 'object-primary-wardrobe', modelSlotId: 'slot-object-primary-wardrobe' },
     commercial: { price: estimate(16800, 23800, 'set'), leadTime: leadTime(24, 38) },
     constraints: [{ code: 'DEMO_CABINET_FRONT_900', message: '柜前建议保留 900 mm 操作净距。', source: 'demo' }], source: 'demo',
+  },
+  {
+    id: 'demo-feature-wall-oak-3000', externalId: 'DEMO-FEATURE-001', name: '3000 浅橡木背景墙系统',
+    kind: 'built_in_component', category: 'feature_wall', appliesTo: ['wall'], tags: ['背景墙', '墙板', '浅橡木', '主卧'],
+    sceneReady: false, dimensions: { width: 3000, depth: 60, height: 2400 },
+    integration: { mode: 'canonical_asset_slot', objectId: 'object-primary-feature-wall', modelSlotId: 'slot-object-primary-feature-wall' },
+    commercial: { price: estimate(9600, 14600, 'set'), leadTime: leadTime(22, 35) },
+    constraints: [{ code: 'DEMO_FEATURE_WALL_REVIEW', message: '需复核墙体、收口、插座和现场尺寸。', source: 'demo' }], source: 'demo',
   },
   {
     id: 'demo-sofa-2200', externalId: 'DEMO-FURN-001', name: '2200 三人位模块沙发',
@@ -135,6 +147,11 @@ function validateItem(item) {
   if (item.source !== 'demo') throw new Error('CATALOG_SOURCE_INVALID');
   if (!Array.isArray(item.appliesTo) || !Array.isArray(item.tags) || typeof item.sceneReady !== 'boolean') throw new Error('CATALOG_ITEM_INVALID');
   if (item.commercial?.price?.source !== 'estimate' || item.commercial?.leadTime?.source !== 'estimate') throw new Error('CATALOG_ESTIMATE_SOURCE_INVALID');
+  if (item.integration && (
+    item.integration.mode !== 'canonical_asset_slot' ||
+    typeof item.integration.objectId !== 'string' || !item.integration.objectId ||
+    typeof item.integration.modelSlotId !== 'string' || !item.integration.modelSlotId
+  )) throw new Error('CATALOG_INTEGRATION_INVALID');
 }
 
 for (const item of ITEMS) validateItem(item);

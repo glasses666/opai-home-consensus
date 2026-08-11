@@ -7,7 +7,7 @@ import { evaluateDesignRules } from '../src/domain/design-rules.js';
 import { compareDesignImpact } from '../src/domain/design-impact.js';
 import { createSceneStore, dispatchSceneCommand } from '../src/domain/scene.js';
 
-const flexObjectIds = ['object-flex-bed', 'object-flex-desk'];
+const flexObjectIds = ['object-flex-bed', 'object-flex-desk', 'object-flex-floating-shelf'];
 const objectById = (scene, id) => scene.objects.find((object) => object.id === id);
 
 test('Gate 10B flex room is a complete same-scene child study slice', () => {

@@ -81,6 +81,9 @@ const objectLabels = {
   'object-dining-table': '餐桌',
   'object-kitchen-counter': '橱柜',
   'object-shoe-cabinet': '鞋柜',
+  'object-flex-floating-shelf': '悬浮层板',
+  'object-living-slat-partition': '格栅隔断',
+  'object-primary-feature-wall': '主卧背景墙',
 };
 
 const materialLabels = {
@@ -103,6 +106,18 @@ const surfaceLabelOverrides = {
   'surface-wall-living-east-entry': '东墙 · 玄关侧',
 };
 const roomBriefs = {
+  'room-living-dining': {
+    kicker: '开放客餐厅任务',
+    title: '会客、用餐与固定系统同场协作',
+    summary: '家具、电视柜、格栅隔断与墙地顶饰面都来自同一 scene，并共享碰撞、净距与版本记录。',
+    checks: ['主通道 ≥ 900 mm', '固定构件需复核', '模型槽可替换'],
+    shortcuts: [
+      { label: '沙发', objectId: 'object-sofa' },
+      { label: '餐桌', objectId: 'object-dining-table' },
+      { label: '电视柜', objectId: 'object-tv-console' },
+      { label: '格栅隔断', objectId: 'object-living-slat-partition' },
+    ],
+  },
   'room-primary-bedroom': {
     kicker: '主卧设计任务',
     title: '睡眠与收纳互不让步',
@@ -111,6 +126,7 @@ const roomBriefs = {
     shortcuts: [
       { label: '床', objectId: 'object-primary-bed' },
       { label: '衣柜', objectId: 'object-primary-wardrobe' },
+      { label: '背景墙', objectId: 'object-primary-feature-wall' },
     ],
   },
   'room-flex': {
@@ -121,6 +137,7 @@ const roomBriefs = {
     shortcuts: [
       { label: '单人床', objectId: 'object-flex-bed' },
       { label: '书桌', objectId: 'object-flex-desk' },
+      { label: '悬浮层板', objectId: 'object-flex-floating-shelf' },
     ],
   },
 };
@@ -1631,6 +1648,7 @@ function ProjectDemoPage() {
               <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
               <div><dt>层级</dt><dd>{roomLabels[selectedObject.roomId] ?? selectedObject.roomId} / {objectLayerLabels[selectedObject.hierarchy.layer]}</dd></div>
               <div><dt>宿主</dt><dd>{selectedObject.placement.hostSurfaceId}</dd></div>
+              {selectedObject.installation && <div><dt>安装</dt><dd>{selectedObject.installation.kind} · {selectedObject.installation.mount === 'wall' ? '墙装' : '落地'}</dd></div>}
               <div><dt>碰撞</dt><dd>{selectedObject.collision.kind} · {selectedObject.collision.dimensions.width} × {selectedObject.collision.dimensions.depth} mm</dd></div>
               <div><dt>模型槽</dt><dd>{selectedObject.model3D.slotId} · r{selectedObject.model3D.revision}</dd></div>
               <div><dt>复核</dt><dd>{selectedObject.review.requiresProfessionalReview ? '需专业复核' : '无需额外复核'}</dd></div>

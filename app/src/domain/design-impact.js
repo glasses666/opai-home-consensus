@@ -2,7 +2,7 @@ import { evaluateDesignRules } from './design-rules.js';
 
 const round2 = (value) => Math.round(value * 100) / 100;
 const byId = (records) => new Map((records ?? []).map((record) => [record.id, record]));
-const storageCategories = new Set(['fixed-cabinet', 'wardrobe']);
+const storageCategories = new Set(['fixed-cabinet', 'wardrobe', 'wall-shelf']);
 const objectDisplayNames = {
   'object-primary-bed': '双人床',
   'object-primary-wardrobe': '衣柜',
@@ -13,6 +13,9 @@ const objectDisplayNames = {
   'object-dining-table': '餐桌',
   'object-kitchen-counter': '橱柜',
   'object-shoe-cabinet': '鞋柜',
+  'object-flex-floating-shelf': '悬浮层板',
+  'object-living-slat-partition': '格栅隔断',
+  'object-primary-feature-wall': '主卧背景墙',
 };
 const objectDisplayName = (object) => objectDisplayNames[object.id] ?? object.name;
 

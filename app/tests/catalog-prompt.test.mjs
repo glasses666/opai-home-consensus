@@ -13,8 +13,8 @@ const surfaceById = (store, id) => store.currentScene.surfaces.find((surface) =>
 test('demo catalog covers renovation systems and labels every commercial value', () => {
   const description = demoCatalogPlugin.describe();
   assert.equal(description.source, 'demo');
-  assert.equal(description.itemCount, 17);
-  for (const category of ['wall_finish', 'floor_finish', 'ceiling_finish', 'shelving', 'partition', 'cabinetry', 'furniture', 'door', 'worktop', 'ceiling', 'hardware']) {
+  assert.equal(description.itemCount, 18);
+  for (const category of ['wall_finish', 'floor_finish', 'ceiling_finish', 'shelving', 'partition', 'feature_wall', 'cabinetry', 'furniture', 'door', 'worktop', 'ceiling', 'hardware']) {
     assert.equal(description.categories.includes(category), true, category);
   }
 
@@ -96,7 +96,7 @@ test('provider receives catalog summary and its user-facing reply is preserved',
 
   assert.equal(received.catalog.source, 'demo');
   assert.equal(received.catalog.items.some((item) => item.category === 'shelving'), true);
-  assert.deepEqual(received.tools.map((tool) => tool.name), ['search_catalog', 'inspect_catalog_item', 'request_clarification']);
+  assert.deepEqual(received.tools.map((tool) => tool.name), ['inspect_object', 'search_catalog', 'inspect_catalog_item', 'request_clarification']);
   assert.equal(received.tools.every((tool) => tool.writes === false), true);
   assert.equal(result.trace.assistantReply, '我先给你看两个演示方向，不改场景。');
   assert.equal(result.store.commands.length, 0);

@@ -24,6 +24,12 @@ const OBJECT_NOUNS = [
   ['衣柜', 'object-primary-wardrobe'],
   ['鞋柜', 'object-shoe-cabinet'],
   ['橱柜', 'object-kitchen-counter'],
+  ['悬浮层板', 'object-flex-floating-shelf'],
+  ['层板', 'object-flex-floating-shelf'],
+  ['格栅隔断', 'object-living-slat-partition'],
+  ['隔断', 'object-living-slat-partition'],
+  ['主卧背景墙', 'object-primary-feature-wall'],
+  ['背景墙', 'object-primary-feature-wall'],
 ];
 
 const MATERIAL_NOUNS = [
@@ -278,7 +284,7 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
     return [{ tool: 'request_clarification', args: { question: '这个表面想用哪一种饰面？', reason: '饰面材质不明确' } }];
   }
 
-  if (/(架子|层板|置物架|书架|开放架)/.test(text)) {
+  if (/(架子|层板|置物架|书架|开放架)/.test(text) && !/(改成|换成|设为|设置为)/.test(text)) {
     return [
       { tool: 'search_catalog', args: { query: text.includes('层板') ? '层板' : '架子', category: 'shelving', limit: 4 } },
       { tool: 'request_clarification', args: { question: '架体准备放在哪个房间、靠哪面墙，主要收纳什么？', reason: '墙装位置与承重条件尚未确认' } },

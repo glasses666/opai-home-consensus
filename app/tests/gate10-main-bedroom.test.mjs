@@ -7,7 +7,7 @@ import { evaluateDesignRules } from '../src/domain/design-rules.js';
 import { compareDesignImpact } from '../src/domain/design-impact.js';
 import { createSceneStore, dispatchSceneCommand } from '../src/domain/scene.js';
 
-const primaryObjectIds = ['object-primary-bed', 'object-primary-wardrobe'];
+const primaryObjectIds = ['object-primary-bed', 'object-primary-wardrobe', 'object-primary-feature-wall'];
 
 test('Gate 10A main bedroom is a complete same-scene room slice', () => {
   const scene = createDemoScene();
@@ -21,6 +21,7 @@ test('Gate 10A main bedroom is a complete same-scene room slice', () => {
   assert.equal(objects.find((object) => object.id === 'object-primary-bed').capabilities.movable, true);
   assert.equal(objects.find((object) => object.id === 'object-primary-wardrobe').capabilities.materialEditable, true);
   assert.equal(objects.find((object) => object.id === 'object-primary-wardrobe').capabilities.parameterEditable, true);
+  assert.equal(objects.find((object) => object.id === 'object-primary-feature-wall').capabilities.movable, false);
 
   const bedroomViolations = evaluateDesignRules(scene).violations
     .filter((check) => check.objectIds.some((id) => primaryObjectIds.includes(id)));
