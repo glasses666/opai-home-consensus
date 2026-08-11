@@ -37,6 +37,14 @@ import {
 } from './domain/scene.js';
 import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 import { resolveRenderProfile } from './domain/render-profile.js';
+import {
+  DEFAULT_EXPERIENCE_STYLE,
+  EXPERIENCE_STYLES,
+  experienceStyleHref,
+  resolveExperienceStyle,
+  withExperienceStyle,
+} from './domain/experience-style.js';
+import { ExperienceDirectionsPage, ExperienceLandingPage } from './DesignDirections.jsx';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -584,16 +592,17 @@ function selectionFromId(sceneModel, id) {
 }
 
 function usePathname() {
-  const [pathname, setPathname] = useState(() => (typeof window === 'undefined' ? '/project/demo' : window.location.pathname));
+  const currentRoute = () => (typeof window === 'undefined' ? '/project/demo' : `${window.location.pathname}${window.location.search}${window.location.hash}`);
+  const [pathname, setPathname] = useState(currentRoute);
 
   useEffect(() => {
-    const handlePopState = () => setPathname(window.location.pathname);
+    const handlePopState = () => setPathname(currentRoute());
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigate = (nextPathname) => {
-    if (typeof window === 'undefined' || window.location.pathname === nextPathname) return;
+    if (typeof window === 'undefined' || currentRoute() === nextPathname) return;
     window.history.pushState({}, '', nextPathname);
     window.dispatchEvent(new PopStateEvent('popstate'));
     setPathname(nextPathname);
@@ -683,6 +692,11 @@ function LabScenePage() {
 }
 
 function ProjectDemoPage() {
+  const initialExperienceStyle = useMemo(() => resolveExperienceStyle(
+    typeof window === 'undefined' ? '' : window.location.search,
+    typeof window === 'undefined' ? '' : window.localStorage.getItem('oppein.experience-style'),
+  ), []);
+  const experienceStyleLabel = EXPERIENCE_STYLES.find((style) => style.id === initialExperienceStyle)?.name ?? EXPERIENCE_STYLES[0].name;
   const [initialVersionProject] = useState(createInitialVersionProject);
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
@@ -695,6 +709,7 @@ function ProjectDemoPage() {
   const currentScene = sceneStore.currentScene;
   const initialNavigation = useMemo(() => parseViewState(typeof window === 'undefined' ? '' : window.location.search, scene), []);
   const [navigation, setNavigation] = useState(initialNavigation);
+  const experienceStyle = initialExperienceStyle;
   const [viewSequence, setViewSequence] = useState(1);
   const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
   const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
@@ -705,7 +720,7 @@ function ProjectDemoPage() {
   const viewerTier = useWorkspaceTier();
   const [pascalExpanded, setPascalExpanded] = useState(viewerTier === 'full');
   useEffect(() => { setPascalExpanded(viewerTier === 'full'); }, [viewerTier]);
-  const [advancedEditing, setAdvancedEditing] = useState(false);
+  const [advancedEditing, setAdvancedEditing] = useState(() => new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('advanced') === '1');
   const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
@@ -909,18 +924,19 @@ function ProjectDemoPage() {
       setNavigation(restored);
       setViewSequence((value) => value + 1);
     };
-    const canonicalQuery = serializeViewState(initialNavigation, scene);
+    const canonicalQuery = withExperienceStyle(serializeViewState(initialNavigation, scene), experienceStyle);
     if (window.location.search !== canonicalQuery) {
       window.history.replaceState({}, '', `${window.location.pathname}${canonicalQuery}`);
     }
+    window.localStorage.setItem('oppein.experience-style', experienceStyle);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [initialNavigation]);
+  }, [experienceStyle, initialNavigation]);
 
   const commitNavigation = (nextState, { replace = false, moveCamera = true } = {}) => {
     const sceneModel = sceneStoreRef.current.currentScene;
     const safe = sanitizeViewState(nextState, sceneModel);
-    const query = serializeViewState(safe, sceneModel);
+    const query = withExperienceStyle(serializeViewState(safe, sceneModel), experienceStyle);
     const nextUrl = `${window.location.pathname}${query}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl || replace) {
@@ -1402,8 +1418,8 @@ function ProjectDemoPage() {
       setHandoffSync({
         status: 'synced',
         message: '已提交设计师复核；真实欧派数据仍以 pending 字段保留。',
-        reviewUrl: `/${'review'}/${PROJECT_ID}?versionId=${encodeURIComponent(currentVersion.id)}`,
-        handoffUrl: `/handoff/${encodeURIComponent(currentVersion.id)}`,
+        reviewUrl: `/review/${PROJECT_ID}${withExperienceStyle(`?versionId=${encodeURIComponent(currentVersion.id)}`, experienceStyle)}`,
+        handoffUrl: `/handoff/${encodeURIComponent(currentVersion.id)}${experienceStyle ? `?style=${experienceStyle}` : ''}`,
       });
     } catch (error) {
       setHandoffSync({ status: 'failed', message: `提交失败：${error.message}`, reviewUrl: null, handoffUrl: null });
@@ -1669,17 +1685,18 @@ function ProjectDemoPage() {
     return () => window.removeEventListener('keydown', handleEditShortcut);
   }, [deleteSelected, moveSelected, redo, undo, versionDrawerOpen]);
 
-  return <main className="product-shell project-demo" data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
+  return <main className="product-shell project-demo" data-experience-style={experienceStyle} data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
     <header className="product-hero">
-      <div className="product-brand">
+      <a className="product-brand" href="/" aria-label="回到项目入口">
         <span className="product-brand__mark" aria-hidden="true">元</span>
         <div>
           <p className="eyebrow">家庭共创设计器</p>
           <h1>一层数字住宅</h1>
         </div>
-      </div>
+      </a>
       <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
       <div className="product-hero__meta">
+        <a className="experience-chip" href={experienceStyleHref(experienceStyle, '/directions')}>{experienceStyleLabel}</a>
         <span className="status">实时 2D / 3D 同源</span>
         {handoffSync.reviewUrl
           ? <a className="utility-button" href={handoffSync.reviewUrl}>设计师复核</a>
@@ -2053,7 +2070,8 @@ const latestLocalProject = () => {
 };
 
 const routeSlug = (pathname, section) => {
-  const parts = pathname.split('/').filter(Boolean);
+  const cleanPathname = pathname.split('?')[0].split('#')[0];
+  const parts = cleanPathname.split('/').filter(Boolean);
   return parts[0] === section ? parts[1] ?? null : null;
 };
 
@@ -2082,6 +2100,7 @@ function useExportPayload(versionId) {
 function DesignerReviewPage() {
   const [pathname, navigate] = usePathname();
   const versionId = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('versionId');
+  const experienceStyle = normalizeExperienceStyle(new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('style'));
   const exportState = useExportPayload(versionId);
   const packet = exportState.data.packet;
   const review = exportState.data.review;
@@ -2111,7 +2130,9 @@ function DesignerReviewPage() {
       setSubmitState({
         status: 'synced',
         message: nextDecision === 'approved' ? '已批准，可进入交接单。' : '已退回客户工作台修改。',
-        handoffUrl: result.handoffUrl,
+        handoffUrl: experienceStyle && result.handoffUrl && !result.handoffUrl.includes('style=')
+          ? `${result.handoffUrl}${result.handoffUrl.includes('?') ? '&' : '?'}style=${experienceStyle}`
+          : result.handoffUrl,
       });
     } catch (error) {
       setSubmitState({ status: 'failed', message: `复核失败：${error.message}`, handoffUrl: null });
@@ -2122,8 +2143,8 @@ function DesignerReviewPage() {
     <header className="handoff-hero">
       <div><p className="eyebrow">Gate 11 · Designer Review</p><h1>设计师复核</h1><p>只读查看家庭确认版本、规则告警、版本差异和企业数据缺口；不混进客户工作台。</p></div>
       <div className="handoff-actions">
-        <button className="utility-button" type="button" onClick={() => navigate('/project/demo')}>返回客户工作台</button>
-        <button className="utility-button" type="button" onClick={() => navigate(`/handoff/${review.currentVersionId}`)}>查看交接单</button>
+        <button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回客户工作台</button>
+        <button className="utility-button" type="button" onClick={() => navigate(`/handoff/${review.currentVersionId}${experienceStyle ? `?style=${experienceStyle}` : ''}`)}>查看交接单</button>
       </div>
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
@@ -2166,6 +2187,7 @@ function HandoffPage() {
   const [pathname, navigate] = usePathname();
   const [copyStatus, setCopyStatus] = useState('复制 JSON');
   const requestedVersionId = routeSlug(pathname, 'handoff');
+  const experienceStyle = normalizeExperienceStyle(new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('style'));
   const exportState = useExportPayload(requestedVersionId);
   const packet = exportState.data.packet;
   const serializedPacket = useMemo(() => JSON.stringify(packet, null, 2), [packet]);
@@ -2187,7 +2209,7 @@ function HandoffPage() {
   return <main className="handoff-shell">
     <header className="handoff-hero">
       <div><p className="eyebrow">Gate 11 · Downstream Handoff</p><h1>共识交接单</h1><p>脱敏、机器可读；真实欧派 SKU / 报价 / BOM / 生产接口仍以 pending 字段预留。</p></div>
-      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate('/review/project-demo')}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate('/project/demo')}>返回工作台</button></div>
+      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate(`/review/project-demo${experienceStyle ? `?style=${experienceStyle}` : ''}`)}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回工作台</button></div>
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
     {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业交接服务尚未连接。</p>}
@@ -2215,9 +2237,12 @@ export default function App() {
   const [pathname, navigate] = usePathname();
   const isProd = import.meta.env.PROD;
   const isLabRoute = pathname.startsWith('/lab/scene');
-  const demoRoute = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/project/demo');
-  const page = demoRoute
-    ? <ProjectDemoPage />
+  const page = pathname === '/' || pathname === '/index.html'
+    ? <ExperienceLandingPage />
+    : pathname === '/directions'
+      ? <ExperienceDirectionsPage />
+      : pathname.startsWith('/project/demo')
+        ? <ProjectDemoPage />
     : pathname.startsWith('/review/')
       ? <DesignerReviewPage />
       : pathname.startsWith('/handoff/')
@@ -2227,16 +2252,19 @@ export default function App() {
           : <ProjectDemoPage />;
 
   useEffect(() => {
-    if (pathname === '/' || pathname === '/index.html') navigate('/project/demo');
-    else if (isProd && isLabRoute) navigate('/project/demo');
-  }, [isLabRoute, isProd, navigate, pathname]);
+    if (isProd && isLabRoute) navigate('/project/demo');
+  }, [isLabRoute, isProd, navigate]);
 
   useEffect(() => {
     const title = pathname.startsWith('/review/')
       ? '设计师复核 · 欧派 AI 共识工作台'
       : pathname.startsWith('/handoff/')
         ? '共识交接单 · 欧派 AI 共识工作台'
-        : pathname.startsWith('/project/demo') || pathname === '/' || pathname === '/index.html'
+        : pathname === '/directions'
+          ? '设计方向 · 欧派 AI 共识工作台'
+          : pathname === '/' || pathname === '/index.html'
+            ? 'AI 家装共识 · 欧派 AI 共识工作台'
+            : pathname.startsWith('/project/demo')
           ? '欧派 AI 共识工作台'
           : pathname.startsWith('/lab/scene')
             ? '欧派 AI 共识工作台 · 内部技术页'

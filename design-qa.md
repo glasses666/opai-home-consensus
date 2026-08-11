@@ -38,9 +38,10 @@ final result: passed
   - 移动轻量态：`.omx/audits/gate18/final-mobile-390x844.png`
   - 交接页：`.omx/audits/gate18/final-handoff.png`
   - 旋转 / 缩放录屏与抽帧：`.omx/audits/gate18/camera-orbit-zoom.mp4`、`.omx/audits/gate18/camera-contact-sheet.png`
-  - 五类住户黑盒截图：`.omx/audits/gate23/resident-1-first-timer.png` 至 `resident-5-remote-member.png`
-  - 修复复验：`.omx/audits/gate23/resident-1-after-fix.png`、`resident-2-after-fix.png`
-  - Gate 23 相机录屏与抽帧：`.omx/audits/gate23/camera-orbit-zoom.webm`、`camera-contact-sheet.png`
+- 五类住户黑盒截图：`.omx/audits/gate23/resident-1-first-timer.png` 至 `resident-5-remote-member.png`
+- 修复复验：`.omx/audits/gate23/resident-1-after-fix.png`、`resident-2-after-fix.png`
+- Gate 23 相机录屏与抽帧：`.omx/audits/gate23/camera-orbit-zoom.webm`、`camera-contact-sheet.png`
+- Gate 24 方向样机本地复核：已在 `/`、`/directions` 和 `/project/demo?style=spatial-cinema` 做 headless 截图复验，确认四方向导航、Agent-first 首屏与动态样机外壳均能渲染。
 
 ## 已知视觉 / 体验边界
 
@@ -49,3 +50,4 @@ final result: passed
 - Vite 报告单 chunk 超过 500 kB；V1 本地 Demo 可接受，正式部署前建议做 Three.js / 页面路由 code splitting。
 - `/lab/scene` 仍保留为技术验证入口；若比赛交付需要更干净的 URL，可在部署时隐藏。
 - 典型旋转 / 缩放连续且无异常；极端自由环绕仍可能到达建筑外侧，Pascal beta 的上游 BVH deprecation warning 也仍会出现在控制台 warning 层级。两者均不冒充已解决。
+- Gate 24 只新增了体验外壳和导航，不把四个方向拆成四套 scene / Agent / 版本；若后续继续扩展，只能沿同一产品壳加风格，不能回到旧版多入口分叉。
