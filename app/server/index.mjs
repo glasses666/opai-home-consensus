@@ -15,6 +15,7 @@ import { createPersistentProjectStore } from './project-store.mjs';
 
 const JSON_LIMIT = 128 * 1024;
 const SNAPSHOT_JSON_LIMIT = 1024 * 1024;
+const AGENT_PROVIDER_TIMEOUT_MS = 8_000;
 const DEFAULT_PROJECT_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', '.data', 'project-demo.json');
 const REVIEW_ACTIONS = new Set(['approve', 'return']);
 
@@ -40,15 +41,28 @@ const compactHistoryFromProjectStore = (snapshot) => ({
   currentVersionId: snapshot.project.currentVersionId,
 });
 
-const payloadFromHandoffSnapshot = (snapshot, { projectId, versionId } = {}) => {
+const payloadFromHandoffSnapshot = (snapshot, { projectId, versionId, capability } = {}) => {
   const history = deserializeVersionHistory(snapshot.versionHistory);
   const consensus = deserializeHouseholdConsensus(snapshot.householdConsensus);
+  const targetVersionId = versionId ?? snapshot.versionId;
   return {
     project: { id: projectId },
-    packet: buildHandoffPacket(history, consensus, { projectId, versionId: versionId ?? snapshot.versionId }),
-    review: buildDesignerReview(history, consensus, { projectId }),
+    packet: buildHandoffPacket(history, consensus, { projectId, versionId: targetVersionId, capability }),
+    review: buildDesignerReview(history, consensus, { projectId, versionId: targetVersionId, capability }),
     reviewDecision: snapshot.review ?? null,
   };
+};
+
+const verifiedCapability = async (health) => {
+  try {
+    const value = await health();
+    return {
+      aily: value.aily?.status ?? value.aily ?? 'api_unavailable',
+      base: value.base?.status ?? value.base ?? 'api_unavailable',
+    };
+  } catch {
+    return { aily: 'api_unavailable', base: 'api_unavailable' };
+  }
 };
 
 async function readJson(request, limit = JSON_LIMIT) {
@@ -74,7 +88,7 @@ export function createAppServer({
       ? (context) => callAily(context, {
           agentId: process.env.AILY_AGENT_ID,
           appId: process.env.AILY_APP_ID,
-          timeoutMs: 35_000,
+          timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
           maxAttempts: 1,
         })
       : null,
@@ -142,13 +156,15 @@ export function createAppServer({
       if (request.method === 'GET' && exportMatch) {
         const projectId = decodeURIComponent(exportMatch[1]);
         const requestedVersionId = url.searchParams.get('versionId') || null;
+        const capability = await verifiedCapability(health);
         if (!projectStore) {
           const history = createVersionHistory(createSceneStore(store.initialScene));
           const consensus = createDemoHouseholdConsensus(history.currentVersionId);
+          const targetVersionId = requestedVersionId ?? history.currentVersionId;
           sendJson(response, 200, {
             project: { id: projectId },
-            packet: buildHandoffPacket(history, consensus, { projectId }),
-            review: buildDesignerReview(history, consensus, { projectId }),
+            packet: buildHandoffPacket(history, consensus, { projectId, versionId: targetVersionId, capability }),
+            review: buildDesignerReview(history, consensus, { projectId, versionId: targetVersionId, capability }),
             reviewDecision: null,
           });
           return;
@@ -162,15 +178,16 @@ export function createAppServer({
           ? projectStore.getHandoffSnapshotForVersion(requestedVersionId)
           : projectStore.getLatestHandoffSnapshot();
         if (saved) {
-          sendJson(response, 200, payloadFromHandoffSnapshot(saved, { projectId, versionId: requestedVersionId ?? saved.versionId }));
+          sendJson(response, 200, payloadFromHandoffSnapshot(saved, { projectId, versionId: requestedVersionId ?? saved.versionId, capability }));
           return;
         }
         const history = compactHistoryFromProjectStore(snapshot);
         const consensus = createDemoHouseholdConsensus(history.currentVersionId);
+        const targetVersionId = requestedVersionId ?? history.currentVersionId;
         sendJson(response, 200, {
           project: { id: projectId },
-          packet: buildHandoffPacket(history, consensus, { projectId }),
-          review: buildDesignerReview(history, consensus, { projectId }),
+          packet: buildHandoffPacket(history, consensus, { projectId, versionId: targetVersionId, capability }),
+          review: buildDesignerReview(history, consensus, { projectId, versionId: targetVersionId, capability }),
           reviewDecision: null,
         });
         return;
@@ -392,7 +409,7 @@ export function createAppServer({
             provider: agentProvider,
             catalogPlugin,
             versionHistory: clientHistory,
-            timeoutMs: 40_000,
+            timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
           });
           const commands = result.store.commands.slice(clientStore.cursor);
           const event = {
@@ -458,7 +475,7 @@ export function createAppServer({
           selectedObjectId: body.selectedObjectId ?? null,
           provider: agentProvider,
           catalogPlugin,
-          timeoutMs: 40_000,
+          timeoutMs: AGENT_PROVIDER_TIMEOUT_MS,
         });
         const event = {
           eventId,

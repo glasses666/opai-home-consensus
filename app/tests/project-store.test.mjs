@@ -120,6 +120,30 @@ test('validated browser version history can become the durable current version',
   }
 });
 
+test('a browser branch can publish without deleting a durable sibling branch', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file, id: () => 'server' });
+    const initial = store.getSceneStore('version-demo-initial');
+    const serverStore = dispatchSceneCommand(initial, {
+      type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 },
+    });
+    const serverVersion = store.recordVersion({ expectedVersionId: store.currentVersionId, store: serverStore });
+
+    const browserStore = dispatchSceneCommand(initial, {
+      type: 'object.setTransform', objectId: 'object-dining-table', transform: { x: 6400 },
+    });
+    const browserHistory = saveSceneVersion(createVersionHistory(initial), browserStore, { id: 'version-browser-v2' });
+    store.publishVersionHistory(browserHistory);
+
+    assert.equal(store.currentVersionId, 'version-browser-v2');
+    assert.equal(store.snapshot().versions.some((version) => version.id === serverVersion.id), true);
+    assert.equal(store.snapshot().versions.length, 3);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('confirm and review mutate version status idempotently without deleting scene', () => {
   const { dir, file } = tmpStorePath();
   try {

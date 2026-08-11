@@ -14,9 +14,10 @@ const versionById = (history, versionId = history.currentVersionId) => {
 
 export function buildDesignerReview(history, consensus, {
   projectId = 'project-demo',
+  versionId = history.currentVersionId,
   capability = { aily: 'api_unavailable', base: 'api_unavailable' },
 } = {}) {
-  const current = versionById(history);
+  const current = versionById(history, versionId);
   const base = current.parentVersionId ? versionById(history, current.parentVersionId) : history.versions[0];
   const diff = compareSceneVersions(base, current);
   const rules = evaluateDesignRules(current.scene);

@@ -234,6 +234,16 @@ test('the dining table canonical bounds include its legs', async () => {
   assert.equal(canonicalNames.filter((name) => name.startsWith('CANONICAL table leg')).length, 4);
 });
 
+test('bed mattresses keep their ivory asset material instead of inheriting upholstery', async () => {
+  for (const name of ['double-bed', 'single-bed']) {
+    const bytes = await readFile(new URL(`../public/assets/models/${name}.glb`, import.meta.url));
+    const jsonLength = bytes.readUInt32LE(12);
+    const model = JSON.parse(bytes.subarray(20, 20 + jsonLength).toString().replace(/\0+$/, ''));
+    const mattress = model.nodes.find((node) => node.name === 'ACCENT mattress');
+    assert.equal(mattress?.extras?.material_role, 'accent');
+  }
+});
+
 test('validation rejects invalid 3D asset metadata and camera transforms', () => {
   const badAsset = cloneScene();
   badAsset.objects[0].model3D.source = 'downloaded';

@@ -192,6 +192,18 @@ const agentToolLabels = {
   set_object_material: '修改家具材质',
   set_surface_material: '修改表面材质',
 };
+const downstreamLabels = {
+  skuMapping: '产品与 SKU 映射',
+  pricing: '报价与估算',
+  bom: 'BOM 预览',
+  production: '生产下发',
+};
+const downstreamValueLabels = {
+  pending_enterprise_catalog: '等待欧派企业产品目录',
+  pending_overseas_quote_or_estimate_api: '等待海外报价或估算接口',
+  pending_bom_preview_api: '等待 BOM 预览接口',
+  not_connected_in_v1: 'V1 暂不连接生产系统',
+};
 
 async function fetchJson(path, options) {
   const response = await fetch(path, options);
@@ -1070,6 +1082,7 @@ function ProjectDemoPage() {
         const response = await fetch('/api/agent/turn', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
+          signal: AbortSignal.timeout(10_000),
           body: JSON.stringify({
             eventId: turnId,
             projectId: 'project-demo',
@@ -1466,8 +1479,12 @@ function ProjectDemoPage() {
       <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
       <div className="product-hero__meta">
         <span className="status">实时 2D / 3D 同源</span>
-        <a className="utility-button" href="/review/project-demo">设计师复核</a>
-        <a className="utility-button" href={`/handoff/${currentVersion.id}`}>交接 JSON</a>
+        {handoffSync.reviewUrl
+          ? <a className="utility-button" href={handoffSync.reviewUrl}>设计师复核</a>
+          : <button className="utility-button" type="button" onClick={openVersionDrawer}>设计师复核</button>}
+        {handoffSync.handoffUrl
+          ? <a className="utility-button" href={handoffSync.handoffUrl}>交接 JSON</a>
+          : <button className="utility-button" type="button" onClick={openVersionDrawer}>交接 JSON</button>}
         <button className="utility-button" data-testid="open-version-drawer" type="button" onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />{currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
         <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome} disabled={!activeRoomId && navigation.viewId === homePreset?.id}>返回整屋</button>
       </div>
@@ -1633,12 +1650,12 @@ function ProjectDemoPage() {
 
           <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
             {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
-              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' ? 'AILY' : 'LOCAL'}{message.fallbackReason ? ` · ${message.fallbackReason}` : ''}</small>}</div>
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' ? 'AILY' : 'LOCAL'}{message.fallbackReason ? ' · 已自动降级' : ''}</small>}</div>
               <p>{message.text}</p>
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
             </article>)}
-            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>LOCAL</small></div><p>正在读取当前 scene、版本和规则…</p></article>}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>AILY → LOCAL</small></div><p>正在读取当前 scene、版本和规则；10 秒内未完成会自动切换本地规划器。</p></article>}
             {!agentBusy && !agentHasConversation && <section className="agent-empty" aria-label="Agent 初始提示">
               <strong>先选一个房间或家具，我们就能开始了</strong>
               <p>我会读取当前选择、版本和规则，只在允许范围内给出改动、解释代价，并保留所有未决项。</p>
@@ -1826,6 +1843,11 @@ function DesignerReviewPage() {
   const [submitState, setSubmitState] = useState({ status: 'idle', message: '', handoffUrl: null });
   const projectId = routeSlug(pathname, 'review') ?? 'project-demo';
   const issueCount = (review.ruleIssues?.length ?? 0) + (review.unresolved?.length ?? 0);
+  const displayedReviewStatus = decision === 'approved'
+    ? 'designer_verified'
+    : decision === 'returned'
+      ? 'designer_returned'
+      : review.status;
   useEffect(() => {
     if (exportState.data.reviewDecision?.decision) setDecision(exportState.data.reviewDecision.decision);
   }, [exportState.data.reviewDecision?.decision]);
@@ -1863,16 +1885,18 @@ function DesignerReviewPage() {
     <section className="handoff-grid">
       <article className="panel handoff-card">
         <span>项目 / 版本</span><strong>{review.projectId} · {review.currentVersionLabel}</strong>
-        <dl><div><dt>状态</dt><dd>{versionStatusLabels[review.status] ?? review.status}</dd></div><div><dt>规则</dt><dd>{ruleStatusLabels[review.ruleStatus] ?? review.ruleStatus}</dd></div><div><dt>待处理</dt><dd>{issueCount}</dd></div></dl>
+        <dl><div><dt>状态</dt><dd>{versionStatusLabels[displayedReviewStatus] ?? displayedReviewStatus}</dd></div><div><dt>规则</dt><dd>{ruleStatusLabels[review.ruleStatus] ?? review.ruleStatus}</dd></div><div><dt>待处理</dt><dd>{issueCount}</dd></div></dl>
       </article>
       <article className="panel handoff-card">
-        <span>服务状态</span><strong>{capabilityLabel(review.capability.aily, 'Aily')} / {capabilityLabel(review.capability.base, '飞书留痕')}</strong>
+        <span>服务状态</span><strong>{exportState.status === 'loading' ? '正在读取服务状态…' : `${capabilityLabel(review.capability.aily, 'Aily')} / ${capabilityLabel(review.capability.base, '飞书留痕')}`}</strong>
         <p>页面只展示真实 capability 或本地降级，不声明已接通欧派生产、报价或 BOM。</p>
       </article>
       <article className="panel handoff-card">
         <span>设计师决定</span><strong>{decision === 'approved' ? '已批准' : decision === 'returned' ? '已退回' : '待复核'}</strong>
         <textarea rows="3" maxLength="1000" aria-label="复核备注" placeholder="复核备注，选填" value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
-        <div className="handoff-actions"><button type="button" onClick={() => submitReview('approved')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>批准进入交接</button><button type="button" onClick={() => submitReview('returned')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>退回修改</button></div>
+        {decision === 'pending'
+          ? <div className="handoff-actions"><button type="button" onClick={() => submitReview('approved')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>批准进入交接</button><button type="button" onClick={() => submitReview('returned')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>退回修改</button></div>
+          : <p className="handoff-notice" data-status="synced">复核决定已写入版本链；如需改变结论，请回到客户工作台创建新版本。</p>}
         {submitState.message && <p className="handoff-notice" data-status={submitState.status}>{submitState.message}{submitState.handoffUrl && <> <button type="button" onClick={() => navigate(submitState.handoffUrl)}>打开交接单</button></>}</p>}
       </article>
     </section>
@@ -1922,18 +1946,19 @@ function HandoffPage() {
     <section className="handoff-grid">
       <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
       <article className="panel handoff-card"><span>对象</span><strong>{packet.confirmedObjects.length}</strong><p>每个对象都带 demo / estimate 来源，不冒充真实产品库。</p></article>
-      <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{packet.downstreamPlaceholders.pricing}</p></article>
+      <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{downstreamValueLabels[packet.downstreamPlaceholders.pricing] ?? packet.downstreamPlaceholders.pricing}</p></article>
     </section>
 
     <section className="panel handoff-section">
       <div className="handoff-section__title"><span>下游占位</span><strong>等待企业数据</strong></div>
-      <ul>{Object.entries(packet.downstreamPlaceholders).map(([key, value]) => <li key={key}><b>{key}</b><span>{value}</span></li>)}</ul>
+      <ul>{Object.entries(packet.downstreamPlaceholders).map(([key, value]) => <li key={key}><b>{downstreamLabels[key] ?? key}</b><span>{downstreamValueLabels[value] ?? value}</span></li>)}</ul>
     </section>
 
-    <section className="panel handoff-json">
-      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">{serializedPacket.length.toLocaleString()} bytes · export ready</span></div><div className="handoff-actions"><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button><button className="utility-button" type="button" onClick={downloadPacket}>下载 JSON</button></div></div>
+    <details className="panel handoff-json">
+      <summary><span><b>开发接口 JSON</b><small>{serializedPacket.length.toLocaleString()} bytes · 可复制或下载</small></span><span>展开原始数据</span></summary>
+      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">机器可读 · source 字段已保留</span></div><div className="handoff-actions"><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button><button className="utility-button" type="button" onClick={downloadPacket}>下载 JSON</button></div></div>
       <textarea className="json" readOnly spellCheck="false" value={serializedPacket} aria-label="共识交接 JSON" />
-    </section>
+    </details>
   </main>;
 }
 

@@ -152,7 +152,7 @@ def tv_console():
 
 def bed(width, depth, height, single=False):
     box("CANONICAL bed frame", (width, depth, 0.18), (0, 0, 0.2), OAK, 0.045)
-    box("CANONICAL mattress", (width * 0.94, depth * 0.9, 0.24), (0, -0.02, 0.41), IVORY, 0.08, smooth=True)
+    box("ACCENT mattress", (width * 0.94, depth * 0.9, 0.24), (0, -0.02, 0.41), IVORY, 0.08, role="accent", smooth=True)
     box("CANONICAL headboard", (width, 0.14, min(height, 1.05)), (0, depth * 0.45, min(height, 1.05) / 2), OAT, 0.065, smooth=True)
     pillow_count = 1 if single else 2
     for index in range(pillow_count):

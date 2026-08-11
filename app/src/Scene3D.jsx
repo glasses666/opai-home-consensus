@@ -109,10 +109,10 @@ function buildObjectAsset(templateScene, object, scene) {
     child.userData.sourceObjectId = object.id;
     if (Array.isArray(child.material)) {
       child.material = child.material.map((material) => material.clone());
-      for (const material of child.material) material.envMapIntensity = 0.32;
+      for (const material of child.material) material.envMapIntensity = 0.42;
     } else if (child.material) {
       child.material = child.material.clone();
-      child.material.envMapIntensity = 0.32;
+      child.material.envMapIntensity = 0.42;
     }
     const material = scene.materials.find((candidate) => candidate.id === object.materialId);
     const canonical = child.name.startsWith('CANONICAL') || child.userData.material_role === 'canonical';
@@ -313,7 +313,7 @@ function applyObjectMaterial(root, object, scene) {
   root.traverse((child) => {
     if (!child.isMesh) return;
     for (const childMaterial of materialList(child.material)) {
-      childMaterial.envMapIntensity = 0.32;
+      childMaterial.envMapIntensity = 0.42;
       if (material?.color && childMaterial.color && isCanonicalMesh(child)) childMaterial.color.set(material.color);
     }
   });
@@ -400,7 +400,7 @@ async function createController(container, scene, callbacks) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.74;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.setAttribute('aria-label', '同一 canonical scene 的三维户型');
   renderer.domElement.tabIndex = 0;
   container.append(renderer.domElement);

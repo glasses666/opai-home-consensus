@@ -55,3 +55,15 @@ test('handoff packet can target an explicit route version', () => {
   assert.equal(packet.version.label, 'V1');
   assert.equal(packet.version.status, 'drafting');
 });
+
+test('designer review targets the version named by the route', () => {
+  const history = makeHistory();
+  const first = history.versions[0];
+  const review = buildDesignerReview(history, createDemoHouseholdConsensus(history.currentVersionId), {
+    versionId: first.id,
+  });
+
+  assert.equal(review.currentVersionId, first.id);
+  assert.equal(review.currentVersionLabel, 'V1');
+  assert.equal(review.status, 'drafting');
+});

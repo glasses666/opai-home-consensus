@@ -177,9 +177,9 @@ const cameraPresets = [
     roomId: 'room-primary-bedroom',
     kind: 'room_entry',
     label: '入口',
-    position: { x: 3200, y: 1650, z: 3000 },
-    target: { x: 1600, y: 720, z: 1700 },
-    fov: 52,
+    position: { x: 3150, y: 2600, z: 3000 },
+    target: { x: 1200, y: 300, z: 1000 },
+    fov: 65,
   },
   {
     id: 'camera-primary-feature',

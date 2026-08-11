@@ -151,9 +151,13 @@ export function createPersistentProjectStore({
     const incoming = new Map(history.versions.map((version) => [version.id, version]));
     if (
       serializeScene(history.initialScene) !== serializeScene(findVersion(INITIAL_VERSION_ID).scene) ||
-      state.versions.some((version) => version.id !== INITIAL_VERSION_ID && !incoming.has(version.id)) ||
       state.versions.some((version) => incoming.has(version.id) && serializeScene(version.scene) !== serializeScene(incoming.get(version.id).scene))
     ) throw new Error('VERSION_CONFLICT');
+
+    const mergedVersions = [
+      ...state.versions,
+      ...history.versions.filter((version) => !state.versions.some((existing) => existing.id === version.id)),
+    ];
 
     state = normalizeState({
       ...state,
@@ -162,7 +166,7 @@ export function createPersistentProjectStore({
         currentVersionId: history.currentVersionId,
         confirmedVersionId: history.confirmedVersionId ?? null,
       },
-      versions: clone(history.versions),
+      versions: clone(mergedVersions),
     }, fallback);
     save();
     return clone(findVersion());

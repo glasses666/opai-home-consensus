@@ -503,6 +503,8 @@ test('BFF snapshot confirm review and export keep statuses and pending sync', as
 
       const exported = await (await fetch(`${origin}/api/projects/project-demo/export?versionId=${version.id}`)).json();
       assert.equal(exported.packet.version.id, version.id);
+      assert.equal(exported.review.currentVersionId, version.id);
+      assert.equal(exported.review.capability.base, 'ready');
       assert.equal(exported.packet.downstreamPlaceholders.production, 'not_connected_in_v1');
       assert.equal(exported.packet.unresolved.some((item) => item.code === 'OPPEIN_ENTERPRISE_API_PENDING'), true);
     } finally {

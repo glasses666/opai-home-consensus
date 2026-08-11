@@ -3,7 +3,7 @@
 > “家庭共创设计器”是当前工作名，不是已确认的最终品牌名称。
 
 最后更新：2026-08-11
-当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4–Gate 12 已实现并验证，等待用户最终验收；夜间后端包 N1、N2 与 B1–B4 已完成**
+当前状态：**Gate 1、Gate 2、Gate 3 已验收；Gate 4–Gate 12 的 V1 Demo 已实现、全量验证并通过住户黑盒复测，等待用户最终验收；夜间后端包 N1、N2 与 B1–B4 已完成**
 当前 Gate：**Gate 12：商业化视觉、质量验证与比赛交付（已实现，待用户验收）**
 当前后端批次：**B1–B4 已实现、验证并提交；不改变 Gate 3 验收状态**
 
@@ -598,7 +598,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ### Gate 12：商业化视觉、质量验证与比赛交付
 
-**当前状态：已实现，等待用户最终验收。审阅包见 [GATE-12-REVIEW.md](./GATE-12-REVIEW.md)，演示脚本见 [DEMO-SCRIPT.md](./DEMO-SCRIPT.md)，设计 QA 见 [design-qa.md](./design-qa.md)。**
+**当前状态：V1 Demo 已实现并通过 134 项全量测试、28 案例 Agent 评测、三视口浏览器 QA 和住户黑盒完整链路，等待用户最终验收。审阅包见 [GATE-12-REVIEW.md](./GATE-12-REVIEW.md)，演示脚本见 [DEMO-SCRIPT.md](./DEMO-SCRIPT.md)，设计 QA 见 [design-qa.md](./design-qa.md)。**
 
 **目的**
 
@@ -633,7 +633,7 @@ V1 不做多页后台驾驶舱。消费者只有一个主工作空间，其余�
 
 ## 6. 下一步
 
-1. Gate 12 已完成 V1 收口、后端确认 / 复核 / 导出闭环、演示脚本和设计 QA，等待用户最终验收。
+1. Gate 12 已完成 V1 收口：后端确认 / 复核 / 导出保持同一 versionId，Agent 超时可降级，三视口和镜头录屏已复查，住户黑盒无剩余 P0 / P1；等待用户最终验收。
 2. B1–B4 已保存为独立 Lore commit；真实欧派数据到达后按 [BACKEND-B1-B4-REVIEW.md](./BACKEND-B1-B4-REVIEW.md) 的导入边界接入，不改 Agent catalog 工具合同。
 3. 镜头与墙体体验回归继续使用后台录屏和抽帧检查，不抢占用户前台浏览器。
-4. 下一轮如果继续升级，优先做：真实欧派 / 海外事业部数据 adapter、真实 Base 表回读截图、route-level code splitting、真实浏览器视觉验收。
+4. 下一轮如果继续升级，优先做：真实欧派 / 海外事业部数据 adapter、更高精的原创 3D 资产与写实渲染、route-level code splitting；都不改变当前 canonical scene 和 Agent 工具合同。

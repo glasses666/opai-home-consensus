@@ -511,8 +511,14 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .handoff-section li { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; align-items: start; padding-top: 8px; border-top: 1px solid var(--line); color: #5c554d; font-size: 12px; line-height: 1.45; }
 .handoff-section li b { color: #7f2e40; font-size: 11px; }
 .handoff-section li small { grid-column: 2; color: var(--muted); font-size: 10px; }
-.handoff-json { display: flex; min-height: 420px; flex-direction: column; margin-top: 14px; }
-.handoff-json .json { min-height: 340px; }
+.handoff-json { margin-top: 14px; }
+.handoff-json summary { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; list-style: none; }
+.handoff-json summary::-webkit-details-marker { display: none; }
+.handoff-json summary > span:first-child { display: grid; gap: 3px; }
+.handoff-json summary b { color: #514c45; font-family: var(--display-font); font-size: 20px; font-weight: 560; }
+.handoff-json summary small, .handoff-json summary > span:last-child { color: var(--muted); font-size: 11px; }
+.handoff-json[open] .evidence__json-header { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.handoff-json .json { min-height: 340px; margin-top: 12px; }
 
 @media (max-width: 1200px) {
   .product-grid { grid-template-columns: minmax(0, 1fr) 320px; }
@@ -542,6 +548,12 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .project-rules .project-rules__scope,
 .project-rules li small,
 .project-metrics dt { font-size: 9px; }
+.agent-sidecar__scope small,
+.agent-message__meta small,
+.agent-sidecar__footer,
+.project-rules .project-rules__scope,
+.project-rules li small,
+.project-metrics dt { font-size: 10px; }
 .project-room-brief > p,
 .agent-quick button,
 .household-sidecar__header small,

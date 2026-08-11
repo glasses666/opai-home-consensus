@@ -11,7 +11,7 @@
 - 夜间后端包 N1、N2 已完成：命令事务、Agent Harness、真实 Aily / Base、15 项合成装修组件目录与 Prompt 安全边界已通过验证。
 - Gate 3 已实现并以 `da9c94b` 保存待验收快照；提交只保存状态，不代表用户验收，也没有进入 Gate 4。
 - 后端 B1–B4 已实现、验证并提交：JSON 项目 / 版本持久化、24 案例 Agent 评测、确定性规则与影响、JSON / CSV 企业目录导入适配器。
-- Gate 10B、Gate 11 与 Gate 12 已实现：儿童房 / 书房完整闭环、设计师复核页、共识交接 JSON、后端确认 / 复核 / 导出闭环和 V1 交付材料已可本地审阅。
+- Gate 10B、Gate 11 与 Gate 12 已实现：儿童房 / 书房完整闭环、设计师复核页、共识交接 JSON、后端确认 / 复核 / 导出闭环和 V1 交付材料已可本地审阅。最终住户黑盒链路无剩余 P0 / P1。
 
 ## 项目入口
 
@@ -39,6 +39,8 @@ npm run dev -- --port 5173
 
 主要审阅页面为 `http://127.0.0.1:5173/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 
+当前 V1 验证基线：134 项全量测试、76 项后端专项测试、28 案例 Agent 评测全部通过；1440×900、1366×768、1024×768 无水平溢出或未处理控制台错误。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+
 后端能力门与 Agent Harness：
 
 ```bash
@@ -51,6 +53,8 @@ npm run eval:agent
 CLI 服务默认将本地演示项目写入 `app/.data/project-demo.json`；可用 `PROJECT_STORE_PATH` 指定其他单进程 JSON store。`npm run eval:agent:live` 会调用真实 Aily，仅作为独立补充证据。
 
 团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。本机 `app/.env.local` 已配置已发布的项目智能体且被 Git 忽略；两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
+
+本次交付前的实测能力口径为 Base `ready`、Aily `api_unavailable`；页面最多等待 10 秒后自动降级到本地 planner。真实欧派 SKU、报价、BOM、工期、施工与生产 API 仍保持 `pending` 适配边界。
 
 ## Git 规则
 
