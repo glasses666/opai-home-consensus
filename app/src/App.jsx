@@ -767,8 +767,12 @@ function ProjectDemoPage() {
     };
   }, [compareFromVersion.id, currentVersion.id, namedDiffs.length, versionDiff.impact.impacts.length, versionDiff.impact.status, versionDiff.impact.unresolved.length]);
   const viewRequest = useMemo(
-    () => ({ id: navigation.viewId, sequence: viewSequence }),
-    [navigation.viewId, viewSequence],
+    () => ({
+      id: navigation.viewId,
+      sequence: viewSequence,
+      focusId: selectedObject?.capabilities?.movable ? selectedObject.id : null,
+    }),
+    [navigation.viewId, selectedObject?.capabilities?.movable, selectedObject?.id, viewSequence],
   );
   const openVersionDrawer = useCallback(() => {
     versionDrawerActivatorRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;

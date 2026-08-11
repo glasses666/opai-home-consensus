@@ -5,6 +5,7 @@ import test from 'node:test';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import {
   cameraDistanceLimit,
+  cameraFocusObjectId,
   cameraTransitionDuration,
   createCameraOrbit,
   sampleCameraOrbit,
@@ -65,6 +66,12 @@ test('large camera turns follow a shortest orbit without collapsing into the tar
   assert.equal(cameraDistanceLimit('whole_home'), 28);
   assert.equal(cameraDistanceLimit('room_overhead', 4), 8);
   assert.equal(cameraDistanceLimit('room_overhead', 7.6), 15.2);
+});
+
+test('editable room overhead focuses the selected furniture without shifting other room views', () => {
+  assert.equal(cameraFocusObjectId({ kind: 'room_overhead' }, 'object-sofa'), 'object-sofa');
+  assert.equal(cameraFocusObjectId({ kind: 'room_entry' }, 'object-sofa'), null);
+  assert.equal(cameraFocusObjectId({ kind: 'object_overhead', objectId: 'object-dining-table' }, 'object-sofa'), 'object-dining-table');
 });
 
 test('demo fixture is a valid seven-room whole-home plan with reciprocal adjacency', () => {

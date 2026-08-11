@@ -7,6 +7,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   cameraDistanceLimit,
+  cameraFocusObjectId,
   cameraTransitionDuration,
   createCameraOrbit,
   sampleCameraOrbit,
@@ -635,7 +636,7 @@ async function createController(container, scene, callbacks) {
     syncEditControl();
   }
 
-  function switchView(viewId, requestedDuration) {
+  function switchView(viewId, requestedDuration, requestedFocusId) {
     const preset = presets.get(viewId);
     if (!preset) return false;
     activeViewId = viewId;
@@ -652,7 +653,8 @@ async function createController(container, scene, callbacks) {
     const presetTarget = new THREE.Vector3(preset.target.x * MM, preset.target.y * MM, preset.target.z * MM);
     const targetPosition = new THREE.Vector3(preset.position.x * MM, preset.position.y * MM, preset.position.z * MM);
     const targetLookAt = presetTarget.clone();
-    const subject = preset.objectId ? entityRoots.get(preset.objectId) : null;
+    const focusObjectId = cameraFocusObjectId(preset, requestedFocusId);
+    const subject = focusObjectId ? entityRoots.get(focusObjectId) : null;
     if (subject) {
       const subjectCenter = new THREE.Box3().setFromObject(subject).getCenter(new THREE.Vector3());
       targetPosition.add(subjectCenter.clone().sub(presetTarget));
@@ -957,7 +959,7 @@ export default function Scene3D({
         controller.setSelection(selection);
         controller.setWallOcclusionEnabled(wallOcclusionRef.current);
         controller.setEditMode(editModeRef.current);
-        if (viewRequestRef.current?.id) controller.switchView(viewRequestRef.current.id);
+        if (viewRequestRef.current?.id) controller.switchView(viewRequestRef.current.id, undefined, viewRequestRef.current.focusId);
         setStatus('ready');
       }
     }).catch((error) => {
@@ -983,7 +985,7 @@ export default function Scene3D({
   useEffect(() => { controllerRef.current?.setSelection(selection); }, [selection?.kind, selection?.id]);
   useEffect(() => { controllerRef.current?.setEditMode(editMode); }, [editMode]);
   useEffect(() => {
-    if (viewRequest?.id) controllerRef.current?.switchView(viewRequest.id);
+    if (viewRequest?.id) controllerRef.current?.switchView(viewRequest.id, undefined, viewRequest.focusId);
   }, [viewRequest]);
 
   const chooseView = (preset) => {

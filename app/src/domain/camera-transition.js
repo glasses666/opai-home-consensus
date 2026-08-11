@@ -11,6 +11,8 @@ export const surfaceOcclusionOpacity = (progress) => 1 - smoothCameraProgress(cl
 export const cameraDistanceLimit = (viewKind, roomSpan = 8) => viewKind === 'whole_home'
   ? 28
   : Math.max(8, Math.min(16, roomSpan * 2));
+export const cameraFocusObjectId = (preset, requestedObjectId) => preset?.objectId
+  ?? (preset?.kind === 'room_overhead' ? requestedObjectId : null);
 
 const spherical = ({ x, y, z }) => {
   const radius = Math.hypot(x, y, z);
