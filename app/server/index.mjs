@@ -6,6 +6,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runAgentTurn } from '../src/agent/harness.js';
 import { demoCatalogPlugin } from '../src/catalog/demo-catalog.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { createVersionHistory } from '../src/domain/design-version.js';
+import { createDemoHouseholdConsensus } from '../src/domain/household-consensus.js';
+import { buildHandoffPacket } from '../src/domain/handoff.js';
 import { createSceneStore } from '../src/domain/scene.js';
 import { callAily, getFeishuHealth, syncActivity } from './feishu.mjs';
 import { createPersistentProjectStore } from './project-store.mjs';
@@ -101,6 +104,49 @@ export function createAppServer({
         sendJson(response, 200, {
           project,
           scene: projectStore.getSceneStore(project.currentVersionId).currentScene,
+        });
+        return;
+      }
+
+      const exportMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/export$/);
+      if (request.method === 'GET' && exportMatch) {
+        const projectId = decodeURIComponent(exportMatch[1]);
+        if (!projectStore) {
+          sendJson(response, 200, {
+            packet: buildHandoffPacket({
+              ...createVersionHistory(createSceneStore(store.initialScene)),
+              currentVersionId: 'version-demo-initial',
+            }, createDemoHouseholdConsensus('version-demo-initial'), { projectId }),
+          });
+          return;
+        }
+        const snapshot = projectStore.snapshot();
+        if (snapshot.project.id !== projectId) {
+          sendJson(response, 404, { error: 'PROJECT_NOT_FOUND' });
+          return;
+        }
+        const current = snapshot.versions.find((version) => version.id === snapshot.project.currentVersionId);
+        const versions = snapshot.versions.map((version, index) => ({
+          ...version,
+          label: index === 0 ? 'V1' : `V${index + 1}`,
+          status: version.id === snapshot.project.currentVersionId ? 'impact_review' : 'drafting',
+          summary: {
+            snapshotHash: String(index),
+            snapshotBytes: JSON.stringify(version.scene).length,
+            commandHash: String(version.cursor),
+            commandCount: version.cursor,
+            objectCount: version.scene.objects.length,
+          },
+        }));
+        sendJson(response, 200, {
+          packet: buildHandoffPacket({
+            schemaVersion: 1,
+            id: 'history-project-demo',
+            initialScene: snapshot.versions[0].scene,
+            currentVersionId: current.id,
+            confirmedVersionId: null,
+            versions,
+          }, createDemoHouseholdConsensus(current.id), { projectId }),
         });
         return;
       }

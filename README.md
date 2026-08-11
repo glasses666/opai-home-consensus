@@ -11,6 +11,7 @@
 - 夜间后端包 N1、N2 已完成：命令事务、Agent Harness、真实 Aily / Base、15 项合成装修组件目录与 Prompt 安全边界已通过验证。
 - Gate 3 已实现并以 `da9c94b` 保存待验收快照；提交只保存状态，不代表用户验收，也没有进入 Gate 4。
 - 后端 B1–B4 已实现、验证并提交：JSON 项目 / 版本持久化、24 案例 Agent 评测、确定性规则与影响、JSON / CSV 企业目录导入适配器。
+- Gate 10B 与 Gate 11 已实现：儿童房 / 书房完整闭环、设计师复核页和共识交接 JSON 已可本地审阅。
 
 ## 项目入口
 
@@ -22,6 +23,8 @@
 - [夜间后端包 N2 审阅](./BACKEND-N2-REVIEW.md)
 - [后端 B1–B4 审阅](./BACKEND-B1-B4-REVIEW.md)
 - [历史飞书能力证据](./FEISHU_EVIDENCE.md)
+- [Gate 10B 审阅包](./GATE-10B-REVIEW.md)
+- [Gate 11 审阅包](./GATE-11-REVIEW.md)
 
 ## 本地审阅
 
@@ -31,7 +34,7 @@ npm install
 npm run dev -- --port 5173
 ```
 
-Gate 3 待验收页面为 `http://127.0.0.1:5173/project/demo`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test` 和 `npm run build`。
+主要审阅页面为 `http://127.0.0.1:5173/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`；`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test` 和 `npm run build`。
 
 后端能力门与 Agent Harness：
 

@@ -14,6 +14,7 @@ import {
   serializeVersionHistory,
 } from './domain/design-version.js';
 import { evaluateDesignRules, filterDesignRuleChecksForRoom } from './domain/design-rules.js';
+import { buildDesignerReview, buildHandoffPacket } from './domain/handoff.js';
 import {
   addHouseholdOpinion,
   chooseConsensusDirection,
@@ -1346,6 +1347,8 @@ function ProjectDemoPage() {
       <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
       <div className="product-hero__meta">
         <span className="status">实时 2D / 3D 同源</span>
+        <a className="utility-button" href="/review/project-demo">设计师复核</a>
+        <a className="utility-button" href={`/handoff/${currentVersion.id}`}>交接 JSON</a>
         <button className="utility-button" data-testid="open-version-drawer" type="button" onClick={() => setVersionDrawerOpen(true)}><ClockCounterClockwise size={15} aria-hidden="true" />{currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
         <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome} disabled={!activeRoomId && navigation.viewId === homePreset?.id}>返回整屋</button>
       </div>
@@ -1647,10 +1650,95 @@ function ProjectDemoPage() {
   </main>;
 }
 
+const latestLocalProject = () => {
+  const { history } = createInitialVersionProject();
+  return { history, consensus: createInitialHouseholdProject(history) };
+};
+
+function DesignerReviewPage() {
+  const [{ history, consensus }] = useState(latestLocalProject);
+  const [decision, setDecision] = useState('pending');
+  const review = useMemo(() => buildDesignerReview(history, consensus), [consensus, history]);
+  const issueCount = review.ruleIssues.length + review.unresolved.length;
+
+  return <main className="handoff-shell">
+    <header className="handoff-hero">
+      <div><p className="eyebrow">Gate 11 · Designer Review</p><h1>设计师复核</h1><p>只读查看家庭确认版本、规则告警、版本差异和企业数据缺口；不混进客户工作台。</p></div>
+      <a className="utility-button" href="/project/demo">返回客户工作台</a>
+    </header>
+
+    <section className="handoff-grid">
+      <article className="panel handoff-card">
+        <span>项目 / 版本</span><strong>{review.projectId} · {review.currentVersionLabel}</strong>
+        <dl><div><dt>状态</dt><dd>{versionStatusLabels[review.status] ?? review.status}</dd></div><div><dt>规则</dt><dd>{ruleStatusLabels[review.ruleStatus] ?? review.ruleStatus}</dd></div><div><dt>待处理</dt><dd>{issueCount}</dd></div></dl>
+      </article>
+      <article className="panel handoff-card">
+        <span>飞书能力</span><strong>{review.capability.aily} / {review.capability.base}</strong>
+        <p>页面只展示真实 capability 或本地降级，不声明已接通欧派生产、报价或 BOM。</p>
+      </article>
+      <article className="panel handoff-card">
+        <span>设计师决定</span><strong>{decision === 'approved' ? '已批准' : decision === 'returned' ? '已退回' : '待复核'}</strong>
+        <div className="handoff-actions"><button type="button" onClick={() => setDecision('approved')}>批准进入交接</button><button type="button" onClick={() => setDecision('returned')}>退回修改</button></div>
+      </article>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>真实差异</span><strong>{review.objectDiffs.length} 项对象变化</strong></div>
+      <ul>{review.objectDiffs.length ? review.objectDiffs.map((diff, index) => <li key={`${diff.objectId}-${diff.kind}-${index}`}><b>{diffKindLabels[diff.kind] ?? diff.kind}</b><span>{objectLabels[diff.objectId] ?? diff.objectId}</span></li>) : <li>当前版本与基准版本无对象差异。</li>}</ul>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>规则与未决项</span><strong>{issueCount ? '需说明边界' : '可批准'}</strong></div>
+      <ul>{[...review.ruleIssues, ...review.unresolved].map((item, index) => <li key={`${item.code}-${index}`}><b>{item.status ?? '未决'}</b><span>{item.message ?? item.reason}</span><small>source: {item.source ?? 'estimate'}</small></li>)}</ul>
+    </section>
+  </main>;
+}
+
+function HandoffPage() {
+  const [{ history, consensus }] = useState(latestLocalProject);
+  const [copyStatus, setCopyStatus] = useState('复制 JSON');
+  const packet = useMemo(() => buildHandoffPacket(history, consensus), [consensus, history]);
+  const serializedPacket = useMemo(() => JSON.stringify(packet, null, 2), [packet]);
+  const copyPacket = async () => {
+    try { await navigator.clipboard.writeText(serializedPacket); setCopyStatus('已复制'); }
+    catch { setCopyStatus('复制失败'); }
+    window.setTimeout(() => setCopyStatus('复制 JSON'), 1200);
+  };
+
+  return <main className="handoff-shell">
+    <header className="handoff-hero">
+      <div><p className="eyebrow">Gate 11 · Downstream Handoff</p><h1>共识交接单</h1><p>脱敏、机器可读；真实欧派 SKU / 报价 / BOM / 生产接口仍以 pending 字段预留。</p></div>
+      <div className="handoff-actions"><a className="utility-button" href="/review/project-demo">设计师复核</a><a className="utility-button" href="/project/demo">返回工作台</a></div>
+    </header>
+
+    <section className="handoff-grid">
+      <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
+      <article className="panel handoff-card"><span>对象</span><strong>{packet.confirmedObjects.length}</strong><p>每个对象都带 demo / estimate 来源，不冒充真实产品库。</p></article>
+      <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{packet.downstreamPlaceholders.pricing}</p></article>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>下游占位</span><strong>等待企业数据</strong></div>
+      <ul>{Object.entries(packet.downstreamPlaceholders).map(([key, value]) => <li key={key}><b>{key}</b><span>{value}</span></li>)}</ul>
+    </section>
+
+    <section className="panel handoff-json">
+      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">{serializedPacket.length.toLocaleString()} bytes · export ready</span></div><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button></div>
+      <textarea className="json" readOnly spellCheck="false" value={serializedPacket} aria-label="共识交接 JSON" />
+    </section>
+  </main>;
+}
+
 export default function App() {
   const [pathname, navigate] = usePathname();
   const demoRoute = pathname === '/' || pathname === '/index.html' || pathname.startsWith('/project/demo');
-  const page = demoRoute ? <ProjectDemoPage /> : <LabScenePage />;
+  const page = demoRoute
+    ? <ProjectDemoPage />
+    : pathname.startsWith('/review/')
+      ? <DesignerReviewPage />
+      : pathname.startsWith('/handoff/')
+        ? <HandoffPage />
+        : <LabScenePage />;
 
   useEffect(() => {
     if (pathname === '/' || pathname === '/index.html') navigate('/project/demo');
