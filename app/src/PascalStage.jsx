@@ -33,7 +33,7 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, advancedMode = false }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
@@ -101,10 +101,10 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
 
   useEffect(() => {
     if (!editorLoaded) return undefined;
-    setSidebarCollapsed(true);
+    setSidebarCollapsed(!advancedMode);
     const resizeTimer = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 180);
     return () => window.clearTimeout(resizeTimer);
-  }, [editorLoaded, setSidebarCollapsed]);
+  }, [advancedMode, editorLoaded, setSidebarCollapsed]);
 
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
@@ -128,9 +128,9 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand 
       {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
       <PascalViewSwitch renderProfile={renderProfile} />
-      <button className="pascal-sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+      {advancedMode && <button className="pascal-sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
         {sidebarCollapsed ? '打开装修工具' : '收起装修工具'}
-      </button>
+      </button>}
       {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
       {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
       <Editor

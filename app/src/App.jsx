@@ -689,19 +689,20 @@ function ProjectDemoPage() {
   const viewerTier = useWorkspaceTier();
   const [pascalExpanded, setPascalExpanded] = useState(viewerTier === 'full');
   useEffect(() => { setPascalExpanded(viewerTier === 'full'); }, [viewerTier]);
+  const [advancedEditing, setAdvancedEditing] = useState(false);
   const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
   const [compareFromVersionId, setCompareFromVersionId] = useState(initialVersionProject.history.versions[0].id);
-  const [sidecarMode, setSidecarMode] = useState('space');
+  const [sidecarMode, setSidecarMode] = useState('agent');
   const [agentInput, setAgentInput] = useState('');
   const [agentBusy, setAgentBusy] = useState(false);
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
   const [agentMessages, setAgentMessages] = useState([{
     id: 'agent-welcome',
     role: 'assistant',
-    text: '读取当前选择、最新版本与规则；仅通过受约束工具修改场景。真实欧派数据缺口保留为未决项。',
+    text: `我已读取这套住宅的 ${scene.rooms.length} 个空间和当前版本。先告诉我哪个房间最想改变；我会先给出可执行方案，再说明取舍。`,
     source: 'local',
     tools: [],
   }]);
@@ -1612,9 +1613,10 @@ function ProjectDemoPage() {
             <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
           </div>
           <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
-          <div className="project-stage__tier" data-tier={viewerTier}>
-            <span>{viewerTier === 'full' ? '完整 3D 已启用' : '轻量浏览 · 先省资源'}</span>
+          <div className="project-stage__tier" data-tier={viewerTier} data-advanced={advancedEditing}>
+            <span>{advancedEditing ? '高级编辑已打开' : (viewerTier === 'full' ? 'AI 设计视图' : '轻量浏览 · 先省资源')}</span>
             {viewerTier !== 'full' && !pascalExpanded && <button type="button" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>}
+            {advancedEditing && <button type="button" onClick={() => { setAdvancedEditing(false); setSidecarMode('agent'); }}>退出高级编辑</button>}
           </div>
         </div>
         {viewerTier !== 'full' && !pascalExpanded
@@ -1634,14 +1636,15 @@ function ProjectDemoPage() {
               onEditCommand={(command) => Boolean(executeCommand(command))}
               activeRoomId={displayRoomId}
               roomLabels={roomLabels}
+              advancedMode={advancedEditing}
             />
           </Suspense>}
       </section>
 
       <aside className="project-sidebar" data-mode={sidecarMode}>
         <nav className="project-sidebar__switch" aria-label="右侧工作区">
-          <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />空间</button>
           <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
+          <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />微调</button>
           <button type="button" aria-pressed={sidecarMode === 'household'} onClick={() => setSidecarMode('household')}><UsersThree size={15} />家庭</button>
         </nav>
         {sidecarMode === 'space' ? <>
@@ -1777,6 +1780,12 @@ function ProjectDemoPage() {
           <div className="agent-sidecar__scope">
             <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
             <small>{capabilityLabel(agentCapability.aily, 'Aily')} · {capabilityLabel(agentCapability.base, '飞书留痕')}</small>
+          </div>
+
+          <div className="agent-task-actions" aria-label="当前设计动作">
+            <button type="button" onClick={() => setAgentInput(`请先看看${selectedLabel}，给出一个改进方向，不要直接修改。`)}>让 Agent 调整</button>
+            <button type="button" onClick={() => setSidecarMode('space')}>快速微调</button>
+            <button type="button" onClick={() => { setAdvancedEditing(true); setPascalExpanded(true); setSidecarMode('space'); }}>高级编辑</button>
           </div>
 
           <div className="agent-quick" aria-label="快速真实任务">

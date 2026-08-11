@@ -204,6 +204,11 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .agent-sidecar__scope span { color: var(--muted); font-size: 8px; letter-spacing: .07em; text-transform: uppercase; }
 .agent-sidecar__scope strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .agent-sidecar__scope small { color: #8a8379; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 7px; }
+.agent-task-actions { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr)); gap: 5px; padding: 9px 11px 0; }
+.agent-task-actions button { min-height: 32px; padding: 0 8px; border: 1px solid #d7d0c5; border-radius: 9px; background: #fffdf8; color: #625c53; font-size: 9px; font-weight: 720; cursor: pointer; }
+.agent-task-actions button:first-child { border-color: #8e384a; background: #8e384a; color: #fff; }
+.agent-task-actions button:hover { filter: brightness(1.03); }
+.agent-task-actions button:focus-visible { outline: 2px solid #8e384a; outline-offset: 2px; }
 .agent-quick { display: flex; gap: 5px; padding: 9px 11px 5px; overflow-x: auto; scrollbar-width: none; }
 .agent-quick::-webkit-scrollbar { display: none; }
 .agent-quick button { min-height: 27px; flex: 0 0 auto; padding: 0 8px; border: 1px solid #d8d0c5; border-radius: 999px; background: #fffdf8; color: #665f56; font-size: 8px; cursor: pointer; }
