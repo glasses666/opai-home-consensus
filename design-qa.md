@@ -41,7 +41,8 @@ final result: passed
 - 五类住户黑盒截图：`.omx/audits/gate23/resident-1-first-timer.png` 至 `resident-5-remote-member.png`
 - 修复复验：`.omx/audits/gate23/resident-1-after-fix.png`、`resident-2-after-fix.png`
 - Gate 23 相机录屏与抽帧：`.omx/audits/gate23/camera-orbit-zoom.webm`、`camera-contact-sheet.png`
-- Gate 24 方向样机本地复核：已在 `/`、`/directions` 和 `/project/demo?style=spatial-cinema` 做 headless 截图复验，确认四方向导航、Agent-first 首屏与动态样机外壳均能渲染。
+- Gate 24 方向样机本地复核：`/`、`/directions` 与四种 `/project/demo?style=...` 均完成 1440×900 / 1024×768 截图；8 秒方向页动态样本及四帧接触表确认状态会变化，且 `prefers-reduced-motion` 有静止降级。
+- Gate 24 回归：177 项全量测试、81 项后端专项测试、28 案例 Agent 评测与生产构建通过。
 
 ## 已知视觉 / 体验边界
 

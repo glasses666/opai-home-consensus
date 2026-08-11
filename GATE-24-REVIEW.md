@@ -54,12 +54,16 @@ Gate 24 已实现为一个“同一产品内的四种体验气质”层，而不
 
 ## 验证
 
-- `cd app && npm test` ✅
+- `cd app && npm test`：177 / 177 ✅
+- `cd app && npm run test:backend`：81 / 81 ✅
+- `cd app && npm run eval:agent`：28 / 28 ✅
 - `cd app && npm run build` ✅
-- 本地 headless 浏览器抽查通过：
-  - `/` 首页
-  - `/directions` 方向页
-  - `/project/demo?style=spatial-cinema` 体验样机
+- 四方向桌面证据：`.omx/audits/gate24/calm-1440.png`、`cinema-1440.png`、`canvas-1440.png`、`index-1440.png`。
+- 四方向紧凑桌面证据：`.omx/audits/gate24/calm-1024.png`、`cinema-1024.png`、`canvas-1024.png`、`index-1024.png`。
+- 动态证据：`.omx/audits/gate24/directions-motion.webm`，8 秒；四帧抽样与接触表位于 `.omx/audits/gate24/motion-frames/` 和 `.omx/audits/gate24/directions-motion-contact-sheet.png`。
+- 展示参数隔离测试确认 `style` 只由 `experience-style.js` 处理；`view-state.js` 仍只拥有 `room`、`view`、`select`。
+
+Agent Reach 的 Exa 服务在本次收尾复查时不可用；没有因此新增未经验证的参考。现有四方向来源同时以公开网页复核，最终实现只提取交互原则。
 
 ## 推荐使用场景
 
