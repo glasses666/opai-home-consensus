@@ -387,8 +387,7 @@ function normalizeToolCall(call) {
   return { tool, args: stableJsonValue(args) };
 }
 
-function validateAssistantReply(reply, context) {
-  if (reply.length > 180 || (reply.match(/[？?]/g)?.length ?? 0) > 1) throw new Error('PROVIDER_SHAPE_INVALID');
+function validateAssistantGrounding(reply, context) {
   const grounding = JSON.stringify(context);
   const knownNumbers = new Set(grounding.match(/\d+(?:\.\d+)?/g) ?? []);
   if ((reply.match(/\d+(?:\.\d+)?/g) ?? []).some((number) => !knownNumbers.has(number))) {
@@ -400,25 +399,49 @@ function validateAssistantReply(reply, context) {
   }
 }
 
+function compactAssistantReply(reply) {
+  if (reply.length <= 180) return reply;
+  const head = reply.slice(0, 179);
+  const boundary = Math.max(head.lastIndexOf('。'), head.lastIndexOf('？'), head.lastIndexOf('！'), head.lastIndexOf('\n'));
+  return `${head.slice(0, boundary >= 60 ? boundary + 1 : 179).trim()}…`;
+}
+
+function removeUngroundedNumberSentences(reply, context) {
+  if (!context.styleEvidence) return reply;
+  const knownNumbers = new Set(JSON.stringify(context).match(/\d+(?:\.\d+)?/g) ?? []);
+  return (reply.match(/[^。！？!?\n]+[。！？!?]?/g) ?? [])
+    .filter((sentence) => !(sentence.match(/\d+(?:\.\d+)?/g) ?? []).some((number) => !knownNumbers.has(number)))
+    .join('')
+    .trim();
+}
+
+function validateAssistantReply(reply) {
+  if (reply.length > 180 || (reply.match(/[？?]/g)?.length ?? 0) > 1) throw new Error('PROVIDER_SHAPE_INVALID');
+}
+
 function normalizeProviderResult(result, context) {
   const calls = Array.isArray(result) ? result : result?.toolCalls ?? result?.tool_calls;
   if (!Array.isArray(calls)) throw new Error('PROVIDER_SHAPE_INVALID');
   const rawAssistantReply = result?.assistantReply ?? result?.assistant_reply ?? '';
   if (typeof rawAssistantReply !== 'string' || rawAssistantReply.length > 2000) throw new Error('PROVIDER_SHAPE_INVALID');
-  const assistantReply = rawAssistantReply
+  const fullAssistantReply = rawAssistantReply
     .replace(/^(?:(?:您好|你好|好的|好|当然(?:可以)?|没问题)[，,。.!！\s]*)+/, '')
     .replace(/\*\*/g, '')
     .trim();
   const toolCalls = calls.map(normalizeToolCall);
+  const groundingContext = { ...context, toolCalls };
+  const groundedAssistantReply = removeUngroundedNumberSentences(fullAssistantReply, groundingContext);
+  const assistantReply = compactAssistantReply(groundedAssistantReply);
   const allowedToolNames = new Set(context.tools.map((tool) => tool.name));
   if (toolCalls.some((call) => !allowedToolNames.has(call.tool))) throw new Error('TOOL_NOT_ALLOWED');
   try {
-    validateAssistantReply(assistantReply, { ...context, toolCalls });
+    validateAssistantGrounding(groundedAssistantReply, groundingContext);
+    validateAssistantReply(assistantReply);
     return { assistantReply, toolCalls, providerReplyIssue: null };
   } catch (error) {
     const readOnlyTurn = context.tools.every((tool) => tool.writes !== true);
     const hasWriteCall = toolCalls.some((call) => context.tools.some((tool) => tool.name === call.tool && tool.writes === true));
-    const inventedConstruction = CONSTRUCTION_CLAIMS.some((term) => assistantReply.includes(term) && !JSON.stringify(context).includes(term));
+    const inventedConstruction = CONSTRUCTION_CLAIMS.some((term) => fullAssistantReply.includes(term) && !JSON.stringify(context).includes(term));
     const safeToReplace = hasWriteCall ||
       (error?.message === 'PROVIDER_SHAPE_INVALID' && readOnlyTurn) ||
       (toolCalls.length === 0 && readOnlyTurn && !inventedConstruction);
@@ -467,6 +490,18 @@ function localFallbackReply(input) {
   return '';
 }
 
+async function normalizeCatalogToolCalls(toolCalls, catalogPlugin) {
+  return Promise.all(toolCalls.map(async (call) => {
+    if (call.tool !== 'set_surface_material' || typeof call.args?.materialId !== 'string') return call;
+    const item = await Promise.resolve(catalogPlugin.get(call.args.materialId));
+    if (!item) return call;
+    return {
+      tool: 'apply_catalog_item',
+      args: { catalogItemId: item.id, surfaceId: call.args.surfaceId },
+    };
+  }));
+}
+
 function requireString(args, key) {
   if (typeof args[key] !== 'string' || args[key].length === 0) {
     throw new Error(`ARG_INVALID: ${key}`);
@@ -489,10 +524,12 @@ function optionalString(args, key) {
 
 function optionalStringArray(args, key) {
   if (args[key] === undefined || args[key] === null) return undefined;
-  if (!Array.isArray(args[key]) || args[key].length > 4 || args[key].some((value) => typeof value !== 'string' || value.length > 128)) {
+  if (!Array.isArray(args[key]) || args[key].length > 4) {
     throw new Error(`ARG_INVALID: ${key}`);
   }
-  return args[key];
+  const values = args[key].map((value) => typeof value === 'string' ? value : value?.label);
+  if (values.some((value) => typeof value !== 'string' || value.length > 128)) throw new Error(`ARG_INVALID: ${key}`);
+  return values;
 }
 
 function optionalInteger(args, key) {
@@ -713,6 +750,7 @@ export async function runAgentTurn({
         timeoutMs,
       );
       ({ assistantReply, toolCalls, providerReplyIssue } = normalizeProviderResult(providerResult, providerContext));
+      toolCalls = await normalizeCatalogToolCalls(toolCalls, catalogPlugin);
       source = 'provider';
     } catch (error) {
       fallbackReason = providerFailureCode(error);

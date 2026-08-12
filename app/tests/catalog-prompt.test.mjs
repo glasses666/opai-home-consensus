@@ -56,6 +56,27 @@ test('provider applies a scene-ready ceiling finish through the same SceneComman
   assert.deepEqual(result.store.commands[0], { type: 'surface.setMaterial', surfaceId: 'surface-ceiling-living-dining', materialId: 'mat-ceiling-greige' });
 });
 
+test('provider catalog id in material field is normalized through catalog rules', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把开放客餐厅南墙改成浅橡木木饰面',
+    provider: () => ({
+      assistantReply: '应用浅橡木木饰面。',
+      toolCalls: [{
+        tool: 'set_surface_material',
+        args: { surfaceId: 'surface-wall-living-south', materialId: 'demo-wall-panel-light-oak' },
+      }],
+    }),
+  });
+
+  assert.equal(surfaceById(result.store, 'surface-wall-living-south').materialId, 'mat-wall-oak-panel');
+  assert.deepEqual(result.trace.toolCalls, [{
+    tool: 'apply_catalog_item',
+    args: { catalogItemId: 'demo-wall-panel-light-oak', surfaceId: 'surface-wall-living-south' },
+  }]);
+  assert.equal(result.trace.steps[0].result.source, 'demo');
+});
+
 test('non-scene-ready shelving cannot be installed by a provider', async () => {
   const before = freshStore();
   const result = await runAgentTurn({
@@ -206,6 +227,19 @@ test('a read-only provider turn keeps provider provenance while replacing unsafe
   assert.equal(result.store.commands.length, 0);
 });
 
+test('style advice drops only sentences with invented numbers', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '当代风怎么区分长期基底和容易过时的元素？先给方向，不要改房屋',
+    provider: () => ({
+      assistantReply: '长期基底优先用克制材质。建议每 999 年更换一次软装。容易过时的色彩只做局部。',
+      toolCalls: [],
+    }),
+  });
+  assert.equal(result.trace.providerReplyIssue, null);
+  assert.equal(result.trace.assistantReply, '长期基底优先用克制材质。容易过时的色彩只做局部。');
+});
+
 test('an overlong read-only reply keeps allowlisted inspection tools', async () => {
   const result = await runAgentTurn({
     store: freshStore(),
@@ -216,7 +250,9 @@ test('an overlong read-only reply keeps allowlisted inspection tools', async () 
     }),
   });
   assert.equal(result.trace.source, 'provider');
-  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_SHAPE_INVALID');
+  assert.equal(result.trace.providerReplyIssue, null);
+  assert.equal(result.trace.assistantReply.length <= 180, true);
+  assert.match(result.trace.assistantReply, /方向说明/);
   assert.equal(result.trace.steps[0].tool, 'search_catalog');
   assert.equal(result.store.commands.length, 0);
 });
@@ -254,6 +290,28 @@ test('provider may offer four bounded clarification options', async () => {
 
   assert.equal(result.trace.steps[0].ok, true);
   assert.equal(result.trace.steps[0].result.options.length, 4);
+});
+
+test('provider clarification option objects are reduced to resident labels', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '静奢风优先做客餐厅还是卧室？先给方向，不要改',
+    provider: () => ({
+      assistantReply: '你更重视哪个空间？',
+      toolCalls: [{
+        tool: 'request_clarification',
+        args: {
+          question: '你更重视哪个空间？',
+          options: [
+            { label: '客餐厅', value: 'living' },
+            { label: '主卧', value: 'bedroom' },
+          ],
+        },
+      }],
+    }),
+  });
+
+  assert.deepEqual(result.trace.steps[0].result.options, ['客餐厅', '主卧']);
 });
 
 test('prompt contract distinguishes building components and forbids invented catalog data', () => {

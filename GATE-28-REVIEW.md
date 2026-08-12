@@ -14,6 +14,8 @@
 - 同输入检索结果稳定；“日式北欧”不会因包含“北欧”而误判，明确比较两种风格时仍保留两个方向。
 - 真实 Aily 的间歇性失败根因之一是团队接口会先返回 `Completed + content=[]`，稍后才补 `content[0].text`；适配器现会在超时窗口内等待正文，而不是把完成态空窗误判为失败。
 - 修复后 Japandi RAG 单项连续 3 / 3 为真实 provider，墙面写入单项连续 3 / 3 正确返回 `apply_catalog_item`；最终四案例交叉验收 4 / 4 为真实 provider、0 fallback，延迟 23.8–32.4 秒。
+- 复跑旧基线后，离线 Harness 28 / 28、检索 12 / 12 继续通过；新增八风格真实 Aily 套件覆盖北欧、极简、当代、中世纪现代、静奢、新中式、工业与北欧×日式北欧。八项最终均有一次严格 `provider / no fallback / no providerReplyIssue / no write` 通过记录；其中中世纪现代依靠一次有限重试恢复，复合风格曾连续两次 `Completed` 无正文后再跑通过，不能据此宣称上游 SLA。
+- Harness 现兼容两类可确定修正：目录项 ID 误填到 `materialId` 时改走现有 `apply_catalog_item` 校验；澄清选项对象只保留居民可见标签。风格咨询会先删除含上下文外数字的句子再压缩到 180 字，承重与施工虚构仍整段拒绝。
 - Aily 的解释文字仍可能超长或夹带上下文外结论。合法写工具继续由本地规则执行，不可信解释替换为确定性短句并记录 `providerReplyIssue`；只读纯文本仅在本轮无写工具时兼容，施工虚构仍整轮降级。
 
 ## 边界
@@ -24,4 +26,4 @@
 - CLI 提案仍需显式 `apply`；本 Gate 没有接网页，也没有修改 3D editor。
 - 独立复查最初标记的 P2 是评测只检查风格名；现已把 facet 与 evidence boundary 纳入非零退出门槛，无遗留 P0 / P1 / P2。
 - Live eval 强制 `source=provider` 才通过；local fallback 即使行为正确也必须计为失败。Trace 保留脱敏的 Aily 错误码与 `providerReplyIssue` 供诊断。
-- 当前验收证明开发环境四条代表路径可用，不等于飞书上游具备生产 SLA；本地 fallback 仍为必需能力。
+- 当前验收证明开发环境四条代表路径和八个核心风格均能跑通，不等于飞书上游具备生产 SLA；单次空正文和上游失败仍会出现，本地 fallback 仍为必需能力。

@@ -139,6 +139,25 @@ test('team-agent adapter accepts plain text only for a read-only turn', async ()
   assert.deepEqual(result, { assistantReply: '请先确认具体墙面。', toolCalls: [] });
 });
 
+test('team-agent adapter retries one malformed response', async () => {
+  let creates = 0;
+  const fakeRun = async (args) => {
+    if (args[1] === 'POST') {
+      creates += 1;
+      return { data: { agent_chat_id: `chat_${creates}` } };
+    }
+    return creates === 1
+      ? { data: { status: 'Completed', content: [{ type: 'text', text: '{broken' }] } }
+      : { data: { status: 'Completed', content: [{ type: 'text', text: '{"assistantReply":"已恢复。","toolCalls":[]}' }] } };
+  };
+  const result = await callAily({
+    input: '修改客餐厅墙面', scene: {}, selectedObjectId: null,
+    tools: [{ name: 'apply_catalog_item', writes: true }],
+  }, { agentId: 'agent_test', run: fakeRun, pollMs: 0, timeoutMs: 100, maxAttempts: 2 });
+  assert.equal(creates, 2);
+  assert.equal(result.assistantReply, '已恢复。');
+});
+
 test('health reports only verified capabilities as ready', async () => {
   const scopes = [
     'aily:message:read', 'aily:message:write', 'aily:run:read',

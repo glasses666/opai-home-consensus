@@ -43,3 +43,12 @@ test('specific Japandi wording does not get swallowed by the broader Nordic subs
   const comparison = retrieveStyleCases('北欧和日式北欧之间怎么取舍', { limit: 3 });
   assert.deepEqual(comparison.results.slice(0, 2).map(({ styleId }) => styleId), ['scandinavian', 'japandi']);
 });
+
+test('Chinese style names trigger retrieval and compound Nordic comparison keeps both styles', () => {
+  assert.equal(retrieveStyleCases('三代同堂可以做极简吗？').detected.styleIds.includes('minimalist'), true);
+  assert.equal(retrieveStyleCases('当代风怎么区分长期基底？').detected.styleIds.includes('contemporary'), true);
+  assert.deepEqual(
+    retrieveStyleCases('想要安静浅木，但不要日式低矮，在北欧与日式北欧之间怎么取舍？', { limit: 3 }).detected.styleIds,
+    ['scandinavian', 'japandi'],
+  );
+});

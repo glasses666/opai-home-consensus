@@ -43,7 +43,7 @@ const BLOCKED = Object.freeze([
 const normalize = (value) => String(value ?? '').normalize('NFKC').toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, ' ').trim();
 const contains = (text, phrase) => text.includes(normalize(phrase));
 const unique = (values) => [...new Set(values)];
-const STYLE_RESEARCH_INTENT = /(风格|氛围|气质|搭配|材料|墙面|地面|顶面|灯光|色彩|家装|装修|收纳|户型|层高|预算|维护|回声|采光|格栅|混凝土|胡桃木|藤编|scandinavian|japandi|minimal|contemporary|industrial|mid.?century|quiet luxury)/i;
+const STYLE_RESEARCH_INTENT = /(风格|氛围|气质|搭配|材料|墙面|地面|顶面|灯光|色彩|家装|装修|收纳|户型|层高|预算|维护|回声|采光|格栅|混凝土|胡桃木|藤编|北欧|日式|极简|当代|中世纪|静奢|新中式|工业风|scandinavian|japandi|minimal|contemporary|industrial|mid.?century|quiet luxury)/i;
 
 export const shouldRetrieveStyleCases = (input) => STYLE_RESEARCH_INTENT.test(String(input ?? ''));
 
@@ -53,7 +53,7 @@ function detect(text, vocabulary) {
 
 function disambiguateStyles(text, detected) {
   const result = { ...detected };
-  const comparesNordic = /(北欧.{0,10}(与|和|对比|取舍|之间).{0,10}(日式北欧|japandi)|(日式北欧|japandi).{0,10}(与|和|对比|取舍|之间).{0,10}北欧)/.test(text);
+  const comparesNordic = /北欧.*(?:与|和|对比|取舍|之间).*日式北欧|日式北欧.*(?:与|和|对比|取舍|之间).*北欧/.test(text);
   if (result.japandi && result.scandinavian && !comparesNordic) delete result.scandinavian;
   return result;
 }

@@ -1218,7 +1218,7 @@ V1.1 不新增消费者页面，也不把现有能力拆成多个应用。`/proj
 
 ### Gate 28：本地风格检索、独立评测与 CLI 调试面
 
-**状态：已完成并验证。Top-k 已接入 provider 上下文，只读方向不会生成 `SceneCommand`；修复团队接口 Completed 空窗后，Japandi RAG 与墙面写入各连续 3 / 3，最终四案例 live acceptance 4 / 4 为真实 provider、0 fallback。证据见 `GATE-28-REVIEW.md`。**
+**状态：已完成并验证。Top-k 已接入 provider 上下文，只读方向不会生成 `SceneCommand`；修复团队接口 Completed 空窗后，Japandi RAG 与墙面写入各连续 3 / 3，四案例 live acceptance 4 / 4 为真实 provider。八个核心风格也均留下严格真实 provider 通过记录；飞书空正文仍属上游波动，不能宣称生产 SLA。证据见 `GATE-28-REVIEW.md`。**
 
 **构建什么**
 

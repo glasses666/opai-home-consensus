@@ -167,7 +167,8 @@ export async function callAily(context, options = {}) {
         ? await callTeamAgentOnce(context, options)
         : await callAilyOnce(context, options);
     } catch (error) {
-      if (attempt === maxAttempts - 1 || !error?.retryable) throw error;
+      const retryable = error?.retryable || error?.message === 'AILY_RESPONSE_INVALID';
+      if (attempt === maxAttempts - 1 || !retryable) throw error;
     }
   }
   throw new Error('AILY_UNAVAILABLE');
