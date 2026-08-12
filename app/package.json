@@ -13,6 +13,7 @@
     "eval:agent": "node scripts/eval_agent_prompt.mjs",
     "eval:agent:live": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live",
     "eval:agent:live:style": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live --suite=style",
+    "eval:agent:live:golden": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live --suite=golden",
     "eval:style": "node scripts/eval_style_retrieval.mjs"
   },
   "dependencies": {

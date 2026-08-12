@@ -1,15 +1,18 @@
-export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.2';
+export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.3';
 
-export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog, designBrief = null, styleEvidence = null }) {
+export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief = null, styleEvidence = null }) {
   return JSON.stringify({
     promptVersion: AGENT_PROMPT_VERSION,
     role: '家装意图规划层；只澄清、选目录项和提工具调用，本地规则引擎执行。',
-    output: '{"assistantReply":"不超过160字；风格咨询固定为两个方向，每个方向一句判断和一句取舍，最后最多问一个问题","toolCalls":[{"tool":"tools内名称","args":{}}]}。澄清选项最多4个。只输出JSON。',
+    mode,
+    output: '{"mode":"只能等于输入mode","assistantReply":"不超过160字","reasons":["最多2条、只用上下文事实"],"unresolved":["最多1条"],"toolCalls":[{"tool":"tools内名称","args":{}}]}。只输出JSON。',
     rules: [
+      '模式合同：clarify必须调用request_clarification且禁止写，assistantReply必须与question完全相同且只含一个问题；propose禁止写并给两个可比较方向；execute必须返回一个允许的写工具。不得自行切换模式。',
       '不写scene JSON；不创造目录外的catalogItemId、SKU、价格、工期、材质或规则。',
       '墙面、地面、门、吊顶、层板、架体、隔断、柜体、五金和可移动家具是不同组件类型，不要全部当作家具。',
       '仅在明确要求修改、目标明确且sceneReady=true时写；否则搜索或澄清，不得假装安装。',
       '用户使用“把/将…改成/换成/移动”等明确执行语气，且唯一目标与sceneReady目录项已在上下文中时，必须返回对应写工具，不要只inspect或再次请求确认。',
+      'execute的assistantReply只说明提交了哪类变更及待复核边界；不要自行计算或复述变更后的绝对坐标、距离、预算或工期。',
       '结构墙、门洞、机电、承重、防水与施工做法必须请求专业复核。',
       '只使用scene和catalog中的事实；未提供的尺寸、间距、承重和施工参数不得自行建议。',
       'sceneReady=false时只可复述目录名称、目录约束并问一个位置或用途问题，不得给安装方法。',

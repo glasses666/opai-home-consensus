@@ -97,6 +97,8 @@ export const TOOL_REGISTRY = [
   { name: 'delete_object', writes: true, requiredArgs: ['objectId'], description: '删除允许删除的可移动家具。' },
 ];
 const TOOL_NAMES = new Set(TOOL_REGISTRY.map((tool) => tool.name));
+const WRITE_TOOL_NAMES = new Set(TOOL_REGISTRY.filter((tool) => tool.writes).map((tool) => tool.name));
+const AGENT_MODES = new Set(['clarify', 'propose', 'execute']);
 
 const isRecord = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
 const isInteger = (value) => Number.isInteger(value);
@@ -384,7 +386,27 @@ function normalizeToolCall(call) {
   if (typeof tool !== 'string' || !TOOL_NAMES.has(tool) || !isRecord(args)) {
     throw new Error('TOOL_CALL_INVALID');
   }
-  return { tool, args: stableJsonValue(args) };
+  const normalizedArgs = stableJsonValue(args);
+  if (tool === 'request_clarification' && typeof normalizedArgs.question === 'string') {
+    const body = normalizedArgs.question.replace(/[？?]+/g, '，').replace(/[，,\s]+$/, '').slice(0, 179).trim();
+    normalizedArgs.question = `${body}？`;
+  }
+  return { tool, args: normalizedArgs };
+}
+
+function inferAgentMode(input, localToolCalls) {
+  if (hasNoWriteIntent(input)) return 'propose';
+  if (localToolCalls.some((call) => WRITE_TOOL_NAMES.has(call.tool))) return 'execute';
+  if (localToolCalls.some((call) => call.tool === 'request_clarification')) return 'clarify';
+  return 'propose';
+}
+
+function providerStringArray(result, key, limit) {
+  const value = result?.[key] ?? [];
+  if (!Array.isArray(value) || value.length > limit || value.some((entry) => typeof entry !== 'string' || entry.length > 160)) {
+    throw new Error('PROVIDER_SHAPE_INVALID');
+  }
+  return value;
 }
 
 function validateAssistantGrounding(reply, context) {
@@ -428,16 +450,42 @@ function normalizeProviderResult(result, context) {
     .replace(/^(?:(?:您好|你好|好的|好|当然(?:可以)?|没问题)[，,。.!！\s]*)+/, '')
     .replace(/\*\*/g, '')
     .trim();
-  const toolCalls = calls.map(normalizeToolCall);
+  let toolCalls = calls.map(normalizeToolCall);
+  const providerModeExplicit = result?.mode !== undefined;
+  const providerDeclaredMode = providerModeExplicit ? result.mode : null;
+  const mode = context.mode;
+  if (!AGENT_MODES.has(mode)) throw new Error('PROVIDER_MODE_INVALID');
+  const reasons = providerStringArray(result, 'reasons', 2);
+  const unresolved = providerStringArray(result, 'unresolved', 1);
+  let clarificationRepaired = false;
+  if (mode === 'clarify' && !toolCalls.some((call) => WRITE_TOOL_NAMES.has(call.tool)) && !toolCalls.some((call) => call.tool === 'request_clarification')) {
+    const question = unresolved[0] ?? fullAssistantReply;
+    if (!question) throw new Error('PROVIDER_MODE_INVALID');
+    toolCalls = [...toolCalls, normalizeToolCall({ tool: 'request_clarification', args: { question } })];
+    clarificationRepaired = true;
+  }
   const groundingContext = { ...context, toolCalls };
-  const groundedAssistantReply = removeUngroundedNumberSentences(fullAssistantReply, groundingContext);
+  const clarificationQuestion = toolCalls.find((call) => call.tool === 'request_clarification')?.args?.question;
+  const replyToValidate = mode === 'clarify' && typeof clarificationQuestion === 'string'
+    ? clarificationQuestion
+    : fullAssistantReply;
+  const groundedAssistantReply = removeUngroundedNumberSentences(replyToValidate, groundingContext);
   const assistantReply = compactAssistantReply(groundedAssistantReply);
   const allowedToolNames = new Set(context.tools.map((tool) => tool.name));
   if (toolCalls.some((call) => !allowedToolNames.has(call.tool))) throw new Error('TOOL_NOT_ALLOWED');
+  if (providerModeExplicit) {
+    const hasWriteCall = toolCalls.some((call) => WRITE_TOOL_NAMES.has(call.tool));
+    if (mode === 'clarify' && (hasWriteCall || !toolCalls.some((call) => call.tool === 'request_clarification'))) throw new Error('PROVIDER_MODE_INVALID');
+    if (mode === 'propose' && hasWriteCall) throw new Error('PROVIDER_MODE_INVALID');
+    if (mode === 'execute' && !hasWriteCall) throw new Error('PROVIDER_MODE_INVALID');
+  }
+  const providerModeIssue = providerModeExplicit && providerDeclaredMode !== mode
+    ? 'PROVIDER_MODE_CORRECTED'
+    : clarificationRepaired ? 'PROVIDER_CLARIFICATION_REPAIRED' : null;
   try {
     validateAssistantGrounding(groundedAssistantReply, groundingContext);
     validateAssistantReply(assistantReply);
-    return { assistantReply, toolCalls, providerReplyIssue: null };
+    return { assistantReply, toolCalls, providerReplyIssue: providerModeIssue, mode, providerModeExplicit, providerDeclaredMode, reasons, unresolved };
   } catch (error) {
     const readOnlyTurn = context.tools.every((tool) => tool.writes !== true);
     const hasWriteCall = toolCalls.some((call) => context.tools.some((tool) => tool.name === call.tool && tool.writes === true));
@@ -452,6 +500,11 @@ function normalizeProviderResult(result, context) {
         : '仅提供方向，不修改当前场景。请先确认具体位置和主要用途。',
       toolCalls,
       providerReplyIssue: error.message,
+      mode,
+      providerModeExplicit,
+      providerDeclaredMode,
+      reasons,
+      unresolved,
     };
   }
 }
@@ -473,6 +526,7 @@ function providerFailureCode(error) {
   if (message === 'PROVIDER_REPLY_UNGROUNDED') return message;
   if (message === 'TOOL_CALL_INVALID') return message;
   if (message === 'TOOL_NOT_ALLOWED') return message;
+  if (message === 'PROVIDER_MODE_INVALID') return message;
   return 'PROVIDER_FAILED';
 }
 
@@ -718,20 +772,30 @@ export async function runAgentTurn({
   let source = 'local';
   let fallbackReason = null;
   let providerReplyIssue = null;
+  let providerModeExplicit = false;
+  let providerDeclaredMode = null;
+  let reasons = [];
+  let unresolved = [];
   let toolCalls = [];
   let assistantReply = '';
   const inputText = String(input ?? '');
   const currentBrief = normalizeDesignBrief(designBrief);
-  const turnTools = toolsForInput(inputText);
+  const candidateTools = toolsForInput(inputText);
+  const candidateToolNames = new Set(candidateTools.map((tool) => tool.name));
+  const parsedLocalToolCalls = parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory, scene: store.currentScene })
+    .filter((call) => candidateToolNames.has(call.tool));
+  const mode = inferAgentMode(inputText, parsedLocalToolCalls);
+  const turnTools = mode === 'execute' ? candidateTools : candidateTools.filter((tool) => !tool.writes);
   const allowedToolNames = new Set(turnTools.map((tool) => tool.name));
-  const localToolCalls = () => parseLocalToolCalls({ input: inputText, selectedObjectId, versionHistory, scene: store.currentScene })
-    .filter((call) => allowedToolNames.has(call.tool));
+  const deterministicToolCalls = parsedLocalToolCalls.filter((call) => allowedToolNames.has(call.tool));
+  const localToolCalls = () => deterministicToolCalls;
   const catalogSummary = stableJsonValue(await Promise.resolve(catalogPlugin.summary({ input: inputText })));
   const catalogDescription = stableJsonValue(await Promise.resolve(catalogPlugin.describe()));
   const styleEvidence = shouldRetrieveStyleCases(inputText) ? retrieveStyleCases(inputText, { limit: 3 }) : null;
   if (provider) {
     const providerContext = {
       input: inputText,
+      mode,
       selectedObjectId,
       scene: summarizeScene(store.currentScene, String(input ?? ''), selectedObjectId),
       catalog: catalogSummary,
@@ -749,7 +813,7 @@ export async function runAgentTurn({
         Promise.resolve(provider(providerContext)),
         timeoutMs,
       );
-      ({ assistantReply, toolCalls, providerReplyIssue } = normalizeProviderResult(providerResult, providerContext));
+      ({ assistantReply, toolCalls, providerReplyIssue, providerModeExplicit, providerDeclaredMode, reasons, unresolved } = normalizeProviderResult(providerResult, providerContext));
       toolCalls = await normalizeCatalogToolCalls(toolCalls, catalogPlugin);
       source = 'provider';
     } catch (error) {
@@ -793,6 +857,11 @@ export async function runAgentTurn({
     styleEvidence,
     fallbackReason,
     providerReplyIssue,
+    mode,
+    providerModeExplicit,
+    providerDeclaredMode,
+    reasons,
+    unresolved,
     input: inputText,
     selectedObjectId,
     source,

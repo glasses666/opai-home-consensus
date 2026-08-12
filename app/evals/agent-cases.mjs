@@ -185,8 +185,8 @@ export const AGENT_EVAL_CASES = Object.freeze([
     id: 'constraint-catalog-not-ready',
     group: 'hard_constraints',
     input: '把客餐厅南墙装一组层板',
-    provider: provider({ assistantReply: '尝试应用层板。', toolCalls: [{ tool: 'apply_catalog_item', args: { catalogItemId: 'demo-shelf-floating-900', surfaceId: 'surface-wall-living-south' } }] }),
-    expect: [CHECKS.provider, CHECKS.rolledBack, ({ trace }) => hasStepError(trace, /CATALOG_ITEM_NOT_SCENE_READY/)],
+    provider: provider({ mode: 'execute', assistantReply: '尝试应用层板。', reasons: [], unresolved: [], toolCalls: [{ tool: 'apply_catalog_item', args: { catalogItemId: 'demo-shelf-floating-900', surfaceId: 'surface-wall-living-south' } }] }),
+    expect: [CHECKS.local, CHECKS.unchanged, CHECKS.noWriteTools, ({ trace }) => trace.mode === 'clarify' && trace.fallbackReason === 'TOOL_NOT_ALLOWED' && hasTool(trace, 'request_clarification')],
   },
   {
     id: 'constraint-missing-material',
@@ -224,6 +224,23 @@ export const AGENT_EVAL_CASES = Object.freeze([
     timeoutMs: 1,
     expect: [CHECKS.local, ({ trace, result }) => trace.fallbackReason === 'PROVIDER_TIMEOUT' && object(result.store, 'object-sofa').transform.x === 2400],
   },
+  {
+    id: 'provider-explicit-clarify-mode',
+    group: 'tool_selection',
+    input: '家里有孩子，想改善一下，但还没决定先改哪个房间',
+    provider: provider({
+      mode: 'clarify', assistantReply: '你想先改善哪个房间？', reasons: ['需要明确优先空间'], unresolved: ['优先房间'],
+      toolCalls: [{ tool: 'request_clarification', args: { question: '你想先改善哪个房间？' } }],
+    }),
+    expect: [CHECKS.provider, CHECKS.noWriteTools, CHECKS.stepsOk, ({ trace }) => trace.mode === 'clarify' && trace.providerModeExplicit === true],
+  },
+  {
+    id: 'provider-mode-mismatch-fallback',
+    group: 'unauthorized_mutation',
+    input: '把沙发向右移动20厘米',
+    provider: provider({ mode: 'propose', assistantReply: '先给方向。', reasons: [], unresolved: [], toolCalls: [] }),
+    expect: [CHECKS.local, CHECKS.stepsOk, ({ trace, result }) => trace.fallbackReason === 'PROVIDER_MODE_INVALID' && trace.mode === 'execute' && object(result.store, 'object-sofa').transform.x === 2400],
+  },
 ]);
 
 function percentile(values, p) {
@@ -260,6 +277,8 @@ function caseSummary({ entry, beforeScene, result, latencyMs }) {
       source: result.trace.source,
       fallbackReason: result.trace.fallbackReason,
       assistantReply: result.trace.assistantReply,
+      mode: result.trace.mode,
+      providerModeExplicit: result.trace.providerModeExplicit,
       toolCalls: result.trace.toolCalls,
       steps: result.trace.steps,
       rolledBack: result.trace.rolledBack,

@@ -57,7 +57,7 @@ function apiArgs(method, path, { data, params } = {}) {
   return args;
 }
 
-async function callAilyOnce({ input, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
+async function callAilyOnce({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
   appId,
   run = runLarkCli,
   id = randomUUID,
@@ -73,7 +73,7 @@ async function callAilyOnce({ input, scene, selectedObjectId, tools, catalog, de
   const sessionId = firstString(session.id, session.session_id);
   if (!sessionId) throw new Error('AILY_SESSION_INVALID');
 
-  const prompt = buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
+  const prompt = buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
   await run(apiArgs('POST', `/open-apis/aily/v1/sessions/${sessionId}/messages`, {
     data: { idempotent_id: id(), content_type: 'TEXT', content: prompt },
   }));
@@ -118,7 +118,7 @@ async function callAilyOnce({ input, scene, selectedObjectId, tools, catalog, de
   return parseToolCalls(content);
 }
 
-async function callTeamAgentOnce({ input, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
+async function callTeamAgentOnce({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
   agentId,
   run = runLarkCli,
   pollMs = 250,
@@ -126,7 +126,7 @@ async function callTeamAgentOnce({ input, scene, selectedObjectId, tools, catalo
 } = {}) {
   if (!/^agent_[A-Za-z0-9_-]{1,59}$/.test(agentId ?? '')) throw new Error('AILY_AGENT_ID_INVALID');
   const safeAgentId = encodeURIComponent(agentId);
-  const prompt = buildAgentPrompt({ input, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
+  const prompt = buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
   const created = await run(apiArgs('POST', `/open-apis/aily/v1/agents/${safeAgentId}/chats`, {
     data: {
       stream: false,

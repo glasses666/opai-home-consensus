@@ -249,3 +249,99 @@ test('deterministic replay returns stable commands and traces', async () => {
   assert.equal(serializeScene(first.store.currentScene), serializeScene(second.store.currentScene));
   assert.deepEqual(first.store.commands, second.store.commands);
 });
+
+test('harness fixes clarify propose and execute modes before provider planning', async () => {
+  const inputs = [
+    ['家里有孩子，想改善一下，但还没决定先改哪个房间', 'clarify'],
+    ['小户型北欧风先给两个方向，不要改', 'propose'],
+    ['把沙发向右移动20厘米', 'execute'],
+  ];
+  for (const [input, expectedMode] of inputs) {
+    const result = await runAgentTurn({
+      store: freshStore(),
+      input,
+      provider: ({ mode, tools }) => {
+        if (mode !== 'execute') assert.equal(tools.every((tool) => !tool.writes), true);
+        return {
+          mode,
+          assistantReply: mode === 'clarify' ? '你想先改善哪个房间？' : mode === 'propose' ? '先比较两个方向。' : '移动沙发。',
+          reasons: ['来自当前需求'],
+          unresolved: mode === 'clarify' ? ['优先房间'] : [],
+          toolCalls: mode === 'clarify'
+            ? [{ tool: 'request_clarification', args: { question: '你想先改善哪个房间？' } }]
+            : mode === 'execute'
+              ? [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }]
+              : [],
+        };
+      },
+    });
+    assert.equal(result.trace.mode, expectedMode, input);
+    assert.equal(result.trace.providerModeExplicit, true, input);
+    assert.equal(result.trace.source, 'provider', input);
+  }
+});
+
+test('provider cannot switch an execute turn into propose mode', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({ mode: 'propose', assistantReply: '先看看。', reasons: [], unresolved: [], toolCalls: [] }),
+  });
+  assert.equal(result.trace.source, 'local');
+  assert.equal(result.trace.fallbackReason, 'PROVIDER_MODE_INVALID');
+  assert.equal(result.trace.mode, 'execute');
+  assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+});
+
+test('declared mode drift is diagnostic when calls obey the harness mode', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '家里有孩子，想改善一下，但还没决定先改哪个房间',
+    provider: () => ({
+      mode: 'propose',
+      assistantReply: '你想先改善哪个房间？',
+      reasons: ['优先空间未明确'],
+      unresolved: ['优先空间'],
+      toolCalls: [{ tool: 'request_clarification', args: { question: '你想先改善哪个房间？' } }],
+    }),
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.mode, 'clarify');
+  assert.equal(result.trace.providerDeclaredMode, 'propose');
+  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_MODE_CORRECTED');
+});
+
+test('clarify mode collapses provider punctuation to one resident question', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '我想在客餐厅加一组悬浮层板',
+    provider: ({ mode }) => ({
+      mode,
+      assistantReply: '放在哪面墙？要单层还是双层？',
+      reasons: ['安装位置未明确'],
+      unresolved: ['墙面与层数'],
+      toolCalls: [{ tool: 'request_clarification', args: { question: '放在哪面墙？要单层还是双层？' } }],
+    }),
+  });
+  assert.equal(result.trace.providerReplyIssue, null);
+  assert.equal(result.trace.assistantReply, '放在哪面墙，要单层还是双层？');
+  assert.equal(result.trace.toolCalls[0].args.question, result.trace.assistantReply);
+});
+
+test('clarify mode repairs a missing read-only clarification call', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '我想在客餐厅加一组悬浮层板',
+    provider: ({ mode }) => ({
+      mode,
+      assistantReply: '层板准备放在哪面墙？',
+      reasons: ['目标墙面未明确'],
+      unresolved: ['层板准备放在哪面墙？'],
+      toolCalls: [{ tool: 'search_catalog', args: { query: '层板' } }],
+    }),
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_CLARIFICATION_REPAIRED');
+  assert.deepEqual(result.trace.toolCalls.map(({ tool }) => tool), ['search_catalog', 'request_clarification']);
+  assert.equal(result.store.commands.length, 0);
+});

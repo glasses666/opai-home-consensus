@@ -7,7 +7,7 @@ test('offline agent eval covers B2 harness risks with deterministic report shape
   let tick = 0;
   const report = await runFixedAgentEval({ now: () => tick++ * 7 });
 
-  assert.equal(AGENT_EVAL_CASES.length >= 20 && AGENT_EVAL_CASES.length <= 30, true);
+  assert.equal(AGENT_EVAL_CASES.length, 30);
   assert.equal(report.passed, true);
   assert.equal(report.schemaVersion, 1);
   assert.equal(report.failed, 0);

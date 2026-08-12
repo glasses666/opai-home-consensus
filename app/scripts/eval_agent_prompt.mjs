@@ -72,7 +72,48 @@ if (!live) {
       result.store.commands.length === 0 &&
       result.trace.assistantReply.length > 0 && result.trace.assistantReply.length <= 250,
   }));
-  const liveCases = (requestedSuite === 'style' ? styleCases : smokeCases)
+  const goldenCases = [
+    {
+      id: 'golden-clarify-needs',
+      input: '家里有孩子，需要更多收纳，但还没决定先改哪个房间，想改善得更好住',
+      check: (result) => result.trace.mode === 'clarify' && result.trace.toolCalls.some((call) => call.tool === 'request_clarification'),
+    },
+    {
+      id: 'golden-propose-style',
+      input: '南方潮湿小户型喜欢浅木，有孩子且要多收纳，先给两个方向，不要改房屋',
+      check: (result) => result.trace.mode === 'propose' && result.trace.toolCalls.every((call) => !writeTools.has(call.tool)) && result.store.commands.length === 0,
+    },
+    {
+      id: 'golden-execute-sofa',
+      input: '把沙发向右移动20厘米',
+      check: (result) => result.trace.mode === 'execute' && result.trace.toolCalls.some((call) => call.tool === 'move_object') && result.store.currentScene.objects.find((object) => object.id === 'object-sofa')?.transform.x === 2400,
+    },
+    {
+      id: 'golden-execute-wall',
+      input: '把开放客餐厅南墙改成浅橡木木饰面',
+      check: (result) => result.trace.mode === 'execute' && result.trace.toolCalls.some((call) => call.tool === 'apply_catalog_item') && result.store.currentScene.surfaces.find((surface) => surface.id === 'surface-wall-living-south')?.materialId === 'mat-wall-oak-panel',
+    },
+    {
+      id: 'golden-block-boundary',
+      input: '把沙发向左移动10000毫米',
+      check: (result) => result.trace.mode === 'execute' && result.trace.rolledBack === true && result.trace.steps.some((step) => step.ok === false && /OBJECT_FOOTPRINT_OUTSIDE_ROOM/.test(step.error ?? '')),
+    },
+    {
+      id: 'golden-clarify-shelf',
+      input: '我想在客餐厅加一组悬浮层板',
+      check: (result) => result.trace.mode === 'clarify' && result.trace.toolCalls.some((call) => call.tool === 'request_clarification') && result.store.commands.length === 0,
+    },
+  ].map((entry) => ({
+    ...entry,
+    check: (result) => result.trace.source === 'provider' &&
+      result.trace.providerModeExplicit === true &&
+      result.trace.fallbackReason === null &&
+      [null, 'PROVIDER_MODE_CORRECTED', 'PROVIDER_CLARIFICATION_REPAIRED'].includes(result.trace.providerReplyIssue) &&
+      result.trace.steps.every((step) => step.ok || result.trace.rolledBack) &&
+      entry.check(result),
+  }));
+  const suites = { smoke: smokeCases, style: styleCases, golden: goldenCases };
+  const liveCases = (suites[requestedSuite] ?? [])
     .filter((entry) => !requestedCase || entry.id === requestedCase);
   if (!liveCases.length) throw new Error(`EVAL_CASE_NOT_FOUND: ${requestedCase}`);
 
@@ -93,6 +134,10 @@ if (!live) {
       source: result.trace.source,
       fallbackReason: result.trace.fallbackReason,
       providerReplyIssue: result.trace.providerReplyIssue,
+      mode: result.trace.mode,
+      providerModeExplicit: result.trace.providerModeExplicit,
+      reasons: result.trace.reasons,
+      unresolved: result.trace.unresolved,
       assistantReply: result.trace.assistantReply,
       toolCalls: result.trace.toolCalls,
       steps: result.trace.steps.map((step) => ({ ok: step.ok, tool: step.tool, error: step.error ?? null })),
@@ -101,7 +146,7 @@ if (!live) {
   const failed = cases.filter((entry) => !entry.passed).length;
   console.log(JSON.stringify({
     schemaVersion: 1,
-    suite: requestedSuite === 'style' ? 'agent-harness-live-style' : 'agent-harness-live-smoke',
+    suite: `agent-harness-live-${requestedSuite}`,
     caseCount: cases.length,
     passed: failed === 0,
     failed,
