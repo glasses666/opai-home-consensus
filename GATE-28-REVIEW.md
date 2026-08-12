@@ -12,7 +12,7 @@
 - `npm run eval:style`：12 / 12 通过；10 道风格题 Top-3 全命中且每题至少命中 2 个条件维度，2 道结构安全 / 精确报价边界全部 fail-closed。
 - 相关回归：55 / 55 通过；全仓：198 / 198 通过；生产构建通过。
 - 同输入检索结果稳定；“日式北欧”不会因包含“北欧”而误判，明确比较两种风格时仍保留两个方向。
-- 真实 Aily 在临时房屋树完成过一次 provider 回合，返回 0 条命令并携带 Japandi 案例；随后两次飞书调用波动并安全降级为 local，仍为 0 条命令。不能据此宣称 Aily 稳定可用。
+- 真实 Aily 历史上只在临时房屋树完成过 1 次 provider 回合，返回 0 条命令并携带 Japandi 案例。2026-08-12 复测现有 3 条 live smoke 为 provider 0 / 3；另一次原始探测返回 `Completed` 但没有 text content。当前只能宣称安全降级有效，不能宣称 Aily 稳定可用或完成当前验收。
 
 ## 边界
 
@@ -21,3 +21,4 @@
 - 第三方页面和图片不进入产品资产；案例摘要不能证明欧派 SKU、价格、BOM、工期、施工或结构安全。
 - CLI 提案仍需显式 `apply`；本 Gate 没有接网页，也没有修改 3D editor。
 - 独立复查最初标记的 P2 是评测只检查风格名；现已把 facet 与 evidence boundary 纳入非零退出门槛，无遗留 P0 / P1 / P2。
+- Live eval 现在强制 `source=provider` 才通过；local fallback 即使行为正确也必须计为失败。Trace 保留脱敏的 `AILY_RESPONSE_INVALID` / `AILY_TIMEOUT` 等错误码供诊断。

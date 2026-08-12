@@ -67,6 +67,17 @@ test('provider failure falls back once to deterministic local parsing', async ()
   assert.equal(result.trace.fallbackReason.includes('api_key'), false);
 });
 
+test('provider fallback keeps a sanitized Aily failure code for diagnosis', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '先看看北欧方向，不要改',
+    provider: () => { throw new Error('AILY_RESPONSE_INVALID'); },
+  });
+  assert.equal(result.trace.source, 'local');
+  assert.equal(result.trace.fallbackReason, 'AILY_RESPONSE_INVALID');
+  assert.equal(result.store.commands.length, 0);
+});
+
 test('illegal tool execution leaves the scene unchanged', async () => {
   const before = freshStore();
   const beforeScene = serializeScene(before.currentScene);

@@ -29,14 +29,16 @@ if (!live) {
     {
       id: 'shelf-browse',
       input: '我想在客餐厅加一组悬浮层板，先给我方向，不要直接改',
-      check: (result) => !result.trace.toolCalls.some((call) => writeTools.has(call.tool)) &&
+      check: (result) => result.trace.source === 'provider' &&
+        !result.trace.toolCalls.some((call) => writeTools.has(call.tool)) &&
         result.trace.steps.every((step) => step.ok) &&
         result.trace.assistantReply.length > 0 && result.trace.assistantReply.length <= 250,
     },
     {
       id: 'sofa-move',
       input: '把沙发向右移动20厘米',
-      check: (result) => result.trace.toolCalls.some((call) => call.tool === 'move_object') &&
+      check: (result) => result.trace.source === 'provider' &&
+        result.trace.toolCalls.some((call) => call.tool === 'move_object') &&
         result.trace.steps.every((step) => step.ok) &&
         result.store.currentScene.objects.find((object) => object.id === 'object-sofa')?.transform.x === 2400,
     },

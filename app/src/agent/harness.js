@@ -408,6 +408,7 @@ function withTimeout(promise, timeoutMs) {
 
 function providerFailureCode(error) {
   const message = error?.message;
+  if (/^AILY_[A-Z_]+$/.test(message ?? '')) return message;
   if (message === 'PROVIDER_TIMEOUT') return message;
   if (message === 'PROVIDER_SHAPE_INVALID') return message;
   if (message === 'PROVIDER_REPLY_UNGROUNDED') return message;
