@@ -255,7 +255,7 @@ function PascalBrowseSelectionBridge({ mapping, nodes, onSelect }) {
 function PascalResidentModeGuard({ interactionMode }) {
   useEffect(() => {
     useEditor.getState().setWorkspaceMode('edit');
-    useEditor.getState().setCaptureMode(interactionMode === 'browse');
+    useEditor.getState().setCaptureMode(false);
     useEditor.getState().setMode('select');
     const unsubscribe = useEditor.subscribe((state) => {
       if (state.mode !== 'select') useEditor.getState().setMode('select');

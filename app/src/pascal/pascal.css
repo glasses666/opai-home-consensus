@@ -10,7 +10,7 @@
 }
 
 .pascal-stage,
-.pascal-stage > div:not(.pascal-view-switch) {
+.pascal-stage > .dark {
   min-height: 720px;
   height: 100%;
 }
@@ -208,7 +208,7 @@
 
 @media (max-width: 840px) {
   .pascal-stage,
-  .pascal-stage > div:not(.pascal-view-switch):not(.pascal-resource-badge) {
+  .pascal-stage > .dark {
     min-height: 560px;
   }
 
@@ -223,7 +223,7 @@
 
 @media (max-width: 520px) {
   .pascal-stage,
-  .pascal-stage > div:not(.pascal-view-switch):not(.pascal-resource-badge) {
+  .pascal-stage > .dark {
     min-height: 500px;
   }
 }
