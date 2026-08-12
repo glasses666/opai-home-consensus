@@ -93,3 +93,16 @@ test('CLI runs without loading the browser editor', async (t) => {
     /OBJECT_NOT_MOVABLE/,
   );
 });
+
+test('CLI research exposes cited style evidence without initializing a house tree', async () => {
+  const cli = fileURLToPath(new URL('../scripts/home-cli.mjs', import.meta.url));
+  const { stdout } = await execFileAsync(process.execPath, [cli, 'research', '小户型北欧风但收纳不能少', '--json']);
+  const result = JSON.parse(stdout);
+  assert.equal(result.status, 'ready');
+  assert.equal(result.results[0].styleId, 'scandinavian');
+  assert.ok(result.results.every(({ citation }) => citation.url.startsWith('https://')));
+
+  const blocked = JSON.parse((await execFileAsync(process.execPath, [cli, 'research', '根据案例给出精确每平方造价', '--json'])).stdout);
+  assert.equal(blocked.status, 'blocked');
+  assert.deepEqual(blocked.results, []);
+});

@@ -1,6 +1,7 @@
 import { dispatchSceneCommand } from '../domain/scene.js';
 import { demoCatalogPlugin } from '../catalog/demo-catalog.js';
 import { createDesignBrief, evolveDesignBrief, normalizeDesignBrief } from '../domain/design-brief.js';
+import { retrieveStyleCases, shouldRetrieveStyleCases } from '../catalog/style-retrieval.js';
 import { compareVersionHistory } from '../domain/design-version.js';
 import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/design-rules.js';
 
@@ -205,6 +206,7 @@ function toolsForInput(input) {
   }
   const catalogIntent = /(墙|墙面|地面|地板|瓷砖|层板|架子|隔断|门|吊顶|顶面|柜|五金|台面)/.test(input);
   const objectIntent = input.includes('床') || OBJECT_NOUNS.some(([noun]) => input.includes(noun));
+  const namedMaterial = MATERIAL_NOUNS.some(([noun]) => input.includes(noun));
   if (ROOM_NOUNS.some(([pattern]) => pattern.test(input))) names.add('inspect_room');
   if (catalogIntent) {
     names.add('search_catalog');
@@ -216,7 +218,7 @@ function toolsForInput(input) {
   if (/(移动|挪|移)/.test(input)) names.add('move_object');
   if (input.includes('旋转')) names.add('rotate_object');
   if (/(删除|移除|不要了)/.test(input)) names.add('delete_object');
-  if (objectIntent && /(改成|换成|设为|设置为)/.test(input)) names.add('set_object_material');
+  if (objectIntent && namedMaterial && /(改成|换成|设为|设置为)/.test(input)) names.add('set_object_material');
   if (/(规则|是否合法|能不能|会不会挡|检查)/.test(input)) names.add('check_rules');
   if (/(对比|上一版|版本|变化|差异|影响)/.test(input)) names.add('compare_versions');
   if (/(确认|定稿|认可|就这版)/.test(input)) names.add('request_confirmation');
@@ -366,7 +368,7 @@ function normalizeToolCall(call) {
 }
 
 function validateAssistantReply(reply, context) {
-  if (reply.length > 250 || (reply.match(/[？?]/g)?.length ?? 0) > 1) throw new Error('PROVIDER_SHAPE_INVALID');
+  if (reply.length > 180 || (reply.match(/[？?]/g)?.length ?? 0) > 1) throw new Error('PROVIDER_SHAPE_INVALID');
   const grounding = JSON.stringify(context);
   const knownNumbers = new Set(grounding.match(/\d+(?:\.\d+)?/g) ?? []);
   if ((reply.match(/\d+(?:\.\d+)?/g) ?? []).some((number) => !knownNumbers.has(number))) {
@@ -386,6 +388,7 @@ function normalizeProviderResult(result, context) {
   if (typeof rawAssistantReply !== 'string' || rawAssistantReply.length > 2000) throw new Error('PROVIDER_SHAPE_INVALID');
   const assistantReply = rawAssistantReply
     .replace(/^(?:(?:您好|你好|好的|好|当然(?:可以)?|没问题)[，,。.!！\s]*)+/, '')
+    .replace(/\*\*/g, '')
     .trim();
   const toolCalls = calls.map(normalizeToolCall);
   const allowedToolNames = new Set(context.tools.map((tool) => tool.name));
@@ -650,6 +653,7 @@ export async function runAgentTurn({
     .filter((call) => allowedToolNames.has(call.tool));
   const catalogSummary = stableJsonValue(await Promise.resolve(catalogPlugin.summary({ input: inputText })));
   const catalogDescription = stableJsonValue(await Promise.resolve(catalogPlugin.describe()));
+  const styleEvidence = shouldRetrieveStyleCases(inputText) ? retrieveStyleCases(inputText, { limit: 3 }) : null;
   if (provider) {
     const providerContext = {
       input: inputText,
@@ -663,6 +667,7 @@ export async function runAgentTurn({
         versions: versionHistory.versions.map(({ id, label, status, parentVersionId, source, summary }) => ({ id, label, status, parentVersionId, source, summary })),
       }) : null,
       designBrief: stableJsonValue(currentBrief),
+      styleEvidence: stableJsonValue(styleEvidence),
     };
     try {
       const providerResult = await withTimeout(
@@ -709,6 +714,7 @@ export async function runAgentTurn({
   const trace = stableJsonValue({
     assistantReply,
     catalog: catalogDescription,
+    styleEvidence,
     fallbackReason,
     input: inputText,
     selectedObjectId,

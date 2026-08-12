@@ -193,6 +193,41 @@ test('provider receives sanitized version summaries, not raw snapshots', async (
   assert.equal(result.trace.steps[0].result.sceneChanged, true);
 });
 
+test('style research reaches the provider without exposing write tools', async () => {
+  const store = freshStore();
+  const result = await runAgentTurn({
+    store,
+    input: '小户型北欧风，收纳别少，先给两个方向不要改',
+    provider: ({ styleEvidence, tools }) => {
+      assert.equal(styleEvidence.status, 'ready');
+      assert.equal(styleEvidence.results[0].styleId, 'scandinavian');
+      assert.equal(styleEvidence.results.every((item) => item.citation?.url), true);
+      assert.equal(tools.some((tool) => tool.writes), false);
+      return { assistantReply: '方向一保留浅木与自然光；方向二增加封闭收纳。', toolCalls: [] };
+    },
+  });
+
+  assert.equal(result.store, store);
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.styleEvidence.status, 'ready');
+  assert.deepEqual(result.trace.steps, []);
+});
+
+test('a style label is not treated as an editable material', async () => {
+  const store = freshStore();
+  const result = await runAgentTurn({
+    store,
+    input: '把沙发改成北欧风',
+    provider: ({ tools }) => {
+      assert.equal(tools.some((tool) => tool.name === 'set_object_material'), false);
+      return { assistantReply: '北欧不是当前目录中的材质，请先确认浅木或暖灰织物。', toolCalls: [] };
+    },
+  });
+
+  assert.equal(result.store, store);
+  assert.deepEqual(result.trace.steps, []);
+});
+
 test('deterministic replay returns stable commands and traces', async () => {
   const first = await runAgentTurn({ store: freshStore(), input: '沙发向右移动20厘米' });
   const second = await runAgentTurn({ store: freshStore(), input: '沙发向右移动20厘米' });

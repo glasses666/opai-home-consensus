@@ -223,3 +223,21 @@ test('prompt contract distinguishes building components and forbids invented cat
   assert.equal(prompt.rules.some((rule) => rule.includes('不要直接改')), true);
   assert.equal(prompt.rules.some((rule) => rule.includes('省略寒暄和口头禅')), true);
 });
+
+test('prompt contract carries style cases as reference-only evidence', () => {
+  const styleEvidence = {
+    status: 'ready',
+    results: [{ caseId: 'case-scandinavian-01', risks: ['浅色织物需维护'] }],
+  };
+  const prompt = JSON.parse(buildAgentPrompt({
+    input: '小户型北欧风先给方向，不要改',
+    scene: {},
+    selectedObjectId: null,
+    tools: [],
+    catalog: {},
+    styleEvidence,
+  }));
+  assert.deepEqual(prompt.styleEvidence, styleEvidence);
+  assert.equal(prompt.rules.some((rule) => rule.includes('reference_only')), true);
+  assert.equal(prompt.rules.some((rule) => rule.includes('仅凭风格词不得调用写工具')), true);
+});

@@ -9,6 +9,7 @@ import { runAgentTurn } from '../src/agent/harness.js';
 import { callAily } from '../server/feishu.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createDesignBrief } from '../src/domain/design-brief.js';
+import { retrieveStyleCases } from '../src/catalog/style-retrieval.js';
 import { createSceneStore, deserializeScene, dispatchSceneCommand } from '../src/domain/scene.js';
 import {
   applyAgentProposal,
@@ -34,6 +35,7 @@ const help = `欧派房屋 CLI（无渲染）
   home tree [--room room-id] [--json] [--root path]
   home show <entity-id> [--root path]
   home validate [--root path]
+  home research <风格、房间或家庭需求> [--json]
   home edit <entity-id> move [--x mm] [--z mm] [--dx mm] [--dz mm] [--apply]
   home edit <object-id> rotate --deg number [--apply]
   home edit <object-id> resize [--width mm] [--depth mm] [--height mm] [--apply]
@@ -106,6 +108,24 @@ async function main(argv) {
 
   if (command === 'validate') {
     output(await validateHouseTree(root), true);
+    return;
+  }
+
+  if (command === 'research') {
+    const input = positionals.join(' ').trim();
+    if (!input) throw new Error('USAGE: home research <需求>');
+    const result = retrieveStyleCases(input, { limit: 4 });
+    output(values.json ? result : [
+      `检索：${result.status}${result.boundary ? ` · ${result.boundary}` : ''}`,
+      result.message,
+      ...result.results.flatMap((item, index) => [
+        `${index + 1}. ${item.title} · ${item.styleId} · ${item.context.dwellingType}`,
+        `   命中：${item.matched.join(' · ') || '文本相似'}`,
+        `   可用：${item.evidence.applicability.join('；')}`,
+        `   风险：${item.evidence.risks.join('；')}`,
+        `   来源：${item.citation.url}`,
+      ]),
+    ].join('\n'), values.json);
     return;
   }
 
