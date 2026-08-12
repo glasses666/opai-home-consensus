@@ -190,7 +190,7 @@ async function main(argv) {
       provider = (context) => callAily(context, {
         agentId: process.env.AILY_AGENT_ID,
         appId: process.env.AILY_APP_ID,
-        timeoutMs: 35_000,
+        timeoutMs: 50_000,
         maxAttempts: 1,
       });
     }
@@ -203,7 +203,7 @@ async function main(argv) {
       provider,
       versionHistory,
       designBrief: currentBrief,
-      timeoutMs: values.aily ? 38_000 : 1_500,
+      timeoutMs: values.aily ? 55_000 : 1_500,
     });
     const commands = result.store.commands.slice(baseStore.cursor);
     const proposal = await saveAgentProposal(root, {

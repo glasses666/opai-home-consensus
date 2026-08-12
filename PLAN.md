@@ -1218,7 +1218,7 @@ V1.1 不新增消费者页面，也不把现有能力拆成多个应用。`/proj
 
 ### Gate 28：本地风格检索、独立评测与 CLI 调试面
 
-**状态：本地检索与 Harness 已完成并验证；真实 Aily 当前未通过稳定性验收。Top-k 已接入 provider 上下文，只读方向不会生成 `SceneCommand`；2026-08-12 live smoke 为 provider 0 / 3，失败均安全降级。证据见 `GATE-28-REVIEW.md`。**
+**状态：已完成并验证。Top-k 已接入 provider 上下文，只读方向不会生成 `SceneCommand`；修复团队接口 Completed 空窗后，Japandi RAG 与墙面写入各连续 3 / 3，最终四案例 live acceptance 4 / 4 为真实 provider、0 fallback。证据见 `GATE-28-REVIEW.md`。**
 
 **构建什么**
 

@@ -42,6 +42,14 @@ if (!live) {
         result.trace.steps.every((step) => step.ok) &&
         result.store.currentScene.objects.find((object) => object.id === 'object-sofa')?.transform.x === 2400,
     },
+    {
+      id: 'japandi-direction',
+      input: '南方潮湿小户型想做日式北欧，先给两个方向，不要改房屋',
+      check: (result) => result.trace.source === 'provider' &&
+        result.trace.styleEvidence?.detected?.styleIds.includes('japandi') &&
+        !result.trace.toolCalls.some((call) => writeTools.has(call.tool)) &&
+        result.store.commands.length === 0,
+    },
   ].filter((entry) => !requestedCase || entry.id === requestedCase);
   if (!liveCases.length) throw new Error(`EVAL_CASE_NOT_FOUND: ${requestedCase}`);
 
@@ -51,8 +59,8 @@ if (!live) {
     const result = await runAgentTurn({
       store: createSceneStore(createDemoScene()),
       input: entry.input,
-      provider: (context) => callAily(context, { agentId, timeoutMs: 35_000, maxAttempts: 1 }),
-      timeoutMs: 40_000,
+      provider: (context) => callAily(context, { agentId, timeoutMs: 50_000, maxAttempts: 1 }),
+      timeoutMs: 55_000,
     });
     cases.push({
       id: entry.id,
@@ -61,6 +69,7 @@ if (!live) {
       providerAccepted: result.trace.source === 'provider',
       source: result.trace.source,
       fallbackReason: result.trace.fallbackReason,
+      providerReplyIssue: result.trace.providerReplyIssue,
       assistantReply: result.trace.assistantReply,
       toolCalls: result.trace.toolCalls,
       steps: result.trace.steps.map((step) => ({ ok: step.ok, tool: step.tool, error: step.error ?? null })),

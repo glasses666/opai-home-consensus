@@ -109,6 +109,36 @@ test('Aily adapter prefers the official team-agent chat chain when agent ID is a
   ]);
 });
 
+test('team-agent adapter waits when Completed arrives before its text content', async () => {
+  let reads = 0;
+  const fakeRun = async (args) => {
+    if (args[1] === 'POST') return { data: { agent_chat_id: 'chat_eventual' } };
+    reads += 1;
+    return reads === 1
+      ? { data: { status: 'Completed', content: [] } }
+      : { data: { status: 'Completed', content: [{ type: 'text', text: '{"assistantReply":"已读取。","toolCalls":[]}' }] } };
+  };
+  const result = await callAily({ input: '检查客餐厅', scene: {}, selectedObjectId: null, tools: [] }, {
+    agentId: 'agent_test',
+    run: fakeRun,
+    pollMs: 0,
+    timeoutMs: 100,
+  });
+  assert.equal(reads, 2);
+  assert.equal(result.assistantReply, '已读取。');
+});
+
+test('team-agent adapter accepts plain text only for a read-only turn', async () => {
+  const fakeRun = async (args) => args[1] === 'POST'
+    ? { data: { agent_chat_id: 'chat_text' } }
+    : { data: { status: 'Completed', content: [{ type: 'text', text: '请先确认具体墙面。' }] } };
+  const result = await callAily({
+    input: '先给方向，不要改', scene: {}, selectedObjectId: null,
+    tools: [{ name: 'request_clarification', writes: false }],
+  }, { agentId: 'agent_test', run: fakeRun, pollMs: 0, timeoutMs: 100 });
+  assert.deepEqual(result, { assistantReply: '请先确认具体墙面。', toolCalls: [] });
+});
+
 test('health reports only verified capabilities as ready', async () => {
   const scopes = [
     'aily:message:read', 'aily:message:write', 'aily:run:read',

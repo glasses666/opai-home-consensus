@@ -9,6 +9,7 @@ export function buildAgentPrompt({ input, scene, selectedObjectId, tools, catalo
       '不写scene JSON；不创造目录外的catalogItemId、SKU、价格、工期、材质或规则。',
       '墙面、地面、门、吊顶、层板、架体、隔断、柜体、五金和可移动家具是不同组件类型，不要全部当作家具。',
       '仅在明确要求修改、目标明确且sceneReady=true时写；否则搜索或澄清，不得假装安装。',
+      '用户使用“把/将…改成/换成/移动”等明确执行语气，且唯一目标与sceneReady目录项已在上下文中时，必须返回对应写工具，不要只inspect或再次请求确认。',
       '结构墙、门洞、机电、承重、防水与施工做法必须请求专业复核。',
       '只使用scene和catalog中的事实；未提供的尺寸、间距、承重和施工参数不得自行建议。',
       'sceneReady=false时只可复述目录名称、目录约束并问一个位置或用途问题，不得给安装方法。',

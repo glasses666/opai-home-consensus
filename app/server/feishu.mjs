@@ -35,12 +35,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const dataOf = (envelope) => envelope?.data ?? {};
 const firstString = (...values) => values.find((value) => typeof value === 'string' && value.length > 0) ?? null;
 
-function parseToolCalls(text) {
+function parseToolCalls(text, { allowTextReply = false } = {}) {
   const cleaned = String(text ?? '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   let parsed;
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    if (allowTextReply && cleaned) return { assistantReply: cleaned, toolCalls: [] };
     throw new Error('AILY_RESPONSE_INVALID');
   }
   if (!Array.isArray(parsed?.toolCalls) && !Array.isArray(parsed?.tool_calls)) {
@@ -136,6 +137,7 @@ async function callTeamAgentOnce({ input, scene, selectedObjectId, tools, catalo
   if (!chatId) throw new Error('AILY_CHAT_INVALID');
 
   const deadline = Date.now() + timeoutMs;
+  let completedWithoutContent = false;
   while (Date.now() < deadline) {
     const result = dataOf(await run(apiArgs('GET', `/open-apis/aily/v1/agents/${safeAgentId}/chats/${encodeURIComponent(chatId)}`)));
     const state = String(result.status ?? '').toLowerCase();
@@ -143,15 +145,15 @@ async function callTeamAgentOnce({ input, scene, selectedObjectId, tools, catalo
       .filter((item) => item?.type === 'text' && typeof item.text === 'string')
       .map((item) => item.text)
       .join('\n');
-    if (result.finish_reason || ['completed', 'succeeded', 'success', 'finished', 'cancelled'].includes(state)) {
-      if (!text) throw new Error('AILY_RESPONSE_MISSING');
+    if ((result.finish_reason || ['completed', 'succeeded', 'success', 'finished'].includes(state)) && text) {
       lastAilySuccessAt = new Date().toISOString();
-      return parseToolCalls(text);
+      return parseToolCalls(text, { allowTextReply: tools.every((tool) => tool.writes !== true) });
     }
-    if (['failed', 'expired'].includes(state)) throw new Error(`AILY_CHAT_${state.toUpperCase()}`);
+    if (result.finish_reason || ['completed', 'succeeded', 'success', 'finished'].includes(state)) completedWithoutContent = true;
+    if (['failed', 'expired', 'cancelled'].includes(state)) throw new Error(`AILY_CHAT_${state.toUpperCase()}`);
     await sleep(pollMs);
   }
-  const error = new Error('AILY_TIMEOUT');
+  const error = new Error(completedWithoutContent ? 'AILY_RESPONSE_MISSING' : 'AILY_TIMEOUT');
   error.retryable = true;
   throw error;
 }

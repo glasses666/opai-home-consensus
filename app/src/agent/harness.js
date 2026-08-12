@@ -7,6 +7,7 @@ import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/de
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
+const CONSTRUCTION_CLAIMS = ['膨胀螺栓', '自攻螺丝', '结构胶', '龙骨', '混凝土', '砖墙', '石膏板'];
 const BEDROOM_OPEN_STORAGE_PATTERN = /主卧.*(?:太满|拥挤|开阔|动线).*(?:收纳)|主卧.*收纳.*(?:太满|拥挤|开阔|动线)/;
 
 const OBJECT_NOUNS = [
@@ -114,6 +115,25 @@ function stableJsonValue(value) {
       .sort()
       .map((key) => [key, stableJsonValue(value[key])]),
   );
+}
+
+function styleEvidenceForProvider(result) {
+  if (!result) return null;
+  return stableJsonValue({
+    status: result.status,
+    boundary: result.boundary ?? null,
+    message: result.message,
+    detected: result.detected ?? null,
+    results: result.results.slice(0, 2).map((item) => ({
+      caseId: item.caseId,
+      styleId: item.styleId,
+      title: item.title,
+      applicability: item.evidence.applicability.slice(0, 2),
+      risks: item.evidence.risks.slice(0, 2),
+      unknowns: item.evidence.unknowns.slice(0, 1),
+      citation: item.citation,
+    })),
+  });
 }
 
 function findById(records, id) {
@@ -375,8 +395,7 @@ function validateAssistantReply(reply, context) {
     throw new Error('PROVIDER_REPLY_UNGROUNDED');
   }
   // ponytail: block common invented installation prescriptions; replace with a policy service if the enterprise rule set grows.
-  const constructionClaims = ['膨胀螺栓', '自攻螺丝', '结构胶', '龙骨', '混凝土', '砖墙', '石膏板'];
-  if (constructionClaims.some((term) => reply.includes(term) && !grounding.includes(term))) {
+  if (CONSTRUCTION_CLAIMS.some((term) => reply.includes(term) && !grounding.includes(term))) {
     throw new Error('PROVIDER_REPLY_UNGROUNDED');
   }
 }
@@ -393,8 +412,25 @@ function normalizeProviderResult(result, context) {
   const toolCalls = calls.map(normalizeToolCall);
   const allowedToolNames = new Set(context.tools.map((tool) => tool.name));
   if (toolCalls.some((call) => !allowedToolNames.has(call.tool))) throw new Error('TOOL_NOT_ALLOWED');
-  validateAssistantReply(assistantReply, { ...context, toolCalls });
-  return { assistantReply, toolCalls };
+  try {
+    validateAssistantReply(assistantReply, { ...context, toolCalls });
+    return { assistantReply, toolCalls, providerReplyIssue: null };
+  } catch (error) {
+    const readOnlyTurn = context.tools.every((tool) => tool.writes !== true);
+    const hasWriteCall = toolCalls.some((call) => context.tools.some((tool) => tool.name === call.tool && tool.writes === true));
+    const inventedConstruction = CONSTRUCTION_CLAIMS.some((term) => assistantReply.includes(term) && !JSON.stringify(context).includes(term));
+    const safeToReplace = hasWriteCall ||
+      (error?.message === 'PROVIDER_SHAPE_INVALID' && readOnlyTurn) ||
+      (toolCalls.length === 0 && readOnlyTurn && !inventedConstruction);
+    if (!['PROVIDER_REPLY_UNGROUNDED', 'PROVIDER_SHAPE_INVALID'].includes(error?.message) || !safeToReplace) throw error;
+    return {
+      assistantReply: toolCalls.length
+        ? '已生成修改预览，最终结果以本地规则校验为准。'
+        : '仅提供方向，不修改当前场景。请先确认具体位置和主要用途。',
+      toolCalls,
+      providerReplyIssue: error.message,
+    };
+  }
 }
 
 function withTimeout(promise, timeoutMs) {
@@ -644,6 +680,7 @@ export async function runAgentTurn({
 
   let source = 'local';
   let fallbackReason = null;
+  let providerReplyIssue = null;
   let toolCalls = [];
   let assistantReply = '';
   const inputText = String(input ?? '');
@@ -668,14 +705,14 @@ export async function runAgentTurn({
         versions: versionHistory.versions.map(({ id, label, status, parentVersionId, source, summary }) => ({ id, label, status, parentVersionId, source, summary })),
       }) : null,
       designBrief: stableJsonValue(currentBrief),
-      styleEvidence: stableJsonValue(styleEvidence),
+      styleEvidence: styleEvidenceForProvider(styleEvidence),
     };
     try {
       const providerResult = await withTimeout(
         Promise.resolve(provider(providerContext)),
         timeoutMs,
       );
-      ({ assistantReply, toolCalls } = normalizeProviderResult(providerResult, providerContext));
+      ({ assistantReply, toolCalls, providerReplyIssue } = normalizeProviderResult(providerResult, providerContext));
       source = 'provider';
     } catch (error) {
       fallbackReason = providerFailureCode(error);
@@ -717,6 +754,7 @@ export async function runAgentTurn({
     catalog: catalogDescription,
     styleEvidence,
     fallbackReason,
+    providerReplyIssue,
     input: inputText,
     selectedObjectId,
     source,

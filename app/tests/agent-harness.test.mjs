@@ -212,7 +212,9 @@ test('style research reaches the provider without exposing write tools', async (
     provider: ({ styleEvidence, tools }) => {
       assert.equal(styleEvidence.status, 'ready');
       assert.equal(styleEvidence.results[0].styleId, 'scandinavian');
-      assert.equal(styleEvidence.results.every((item) => item.citation?.url), true);
+      assert.equal(styleEvidence.results.length, 2);
+      assert.equal(styleEvidence.results.every((item) => item.citation?.url && item.risks.length && item.unknowns.length), true);
+      assert.equal(styleEvidence.results.every((item) => !('context' in item) && !('designMoves' in item)), true);
       assert.equal(tools.some((tool) => tool.writes), false);
       return { assistantReply: '方向一保留浅木与自然光；方向二增加封闭收纳。', toolCalls: [] };
     },

@@ -179,6 +179,48 @@ test('provider reply may repeat a normalized number from its validated tool call
   assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
 });
 
+test('a grounded provider tool survives an ungrounded explanation', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({
+      assistantReply: '移动后一定保留 999 mm 通道。',
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }],
+    }),
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_REPLY_UNGROUNDED');
+  assert.equal(result.trace.assistantReply, '已生成修改预览，最终结果以本地规则校验为准。');
+  assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+});
+
+test('a read-only provider turn keeps provider provenance while replacing unsafe prose', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '客餐厅层板先给方向，不要改',
+    provider: () => ({ assistantReply: '建议做 999 mm 深并拆承重墙。', toolCalls: [] }),
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_REPLY_UNGROUNDED');
+  assert.equal(result.trace.assistantReply, '仅提供方向，不修改当前场景。请先确认具体位置和主要用途。');
+  assert.equal(result.store.commands.length, 0);
+});
+
+test('an overlong read-only reply keeps allowlisted inspection tools', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '客餐厅层板先给方向，不要改',
+    provider: () => ({
+      assistantReply: '方向说明。'.repeat(50),
+      toolCalls: [{ tool: 'search_catalog', args: { query: '层板', limit: 2 } }],
+    }),
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.providerReplyIssue, 'PROVIDER_SHAPE_INVALID');
+  assert.equal(result.trace.steps[0].tool, 'search_catalog');
+  assert.equal(result.store.commands.length, 0);
+});
+
 test('provider may return null for an omitted clarification options array', async () => {
   const result = await runAgentTurn({
     store: freshStore(),
@@ -222,6 +264,7 @@ test('prompt contract distinguishes building components and forbids invented cat
   assert.equal(prompt.rules.some((rule) => rule.includes('墙面、地面、门、吊顶、层板')), true);
   assert.equal(prompt.rules.some((rule) => rule.includes('不要直接改')), true);
   assert.equal(prompt.rules.some((rule) => rule.includes('省略寒暄和口头禅')), true);
+  assert.equal(prompt.rules.some((rule) => rule.includes('不要只inspect')), true);
 });
 
 test('prompt contract carries style cases as reference-only evidence', () => {
