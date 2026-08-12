@@ -39,3 +39,16 @@ export function zoomCameraPose(pose, deltaY) {
   const viewWidth = Math.max(0.25, Math.min(250, pose.viewWidth * Math.exp(deltaY * 0.01)));
   return { ...pose, position: [...pose.position], target: [...pose.target], viewWidth };
 }
+
+export function centerCameraPoseOnFloorPlan(pose, bounds) {
+  if (!pose || !bounds) return null;
+  const centerX = (bounds.x + bounds.width / 2) / 1000;
+  const centerZ = (bounds.z + bounds.depth / 2) / 1000;
+  const offsetX = centerX - pose.target[0];
+  const offsetZ = centerZ - pose.target[2];
+  return {
+    ...pose,
+    position: [pose.position[0] + offsetX, pose.position[1], pose.position[2] + offsetZ],
+    target: [centerX, pose.target[1], centerZ],
+  };
+}

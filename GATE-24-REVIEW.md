@@ -70,7 +70,8 @@ Agent Reach 的 Exa 服务在本次收尾复查时不可用；没有因此新增
 - 未换回旧 `Scene3D`；Agent 浏览和住户微调继续共用 Pascal 开源编辑器与同一 canonical scene。
 - 住户权限终端收窄为 `object.setTransform` 和 `object.setDimensions`；材质、复制、删除、墙体和结构编辑不在住户界面出现。
 - 浏览态清空编辑选择并禁止写回；微调态显示 Pascal 拖动 / 旋转手柄和宿主宽深高输入。
-- 验证：`npm test` 179/179；`npm run test:backend` 81/81；`npm run eval:agent` 28/28；`npm run build` 通过。
+- 查看器每次真正初始化时，将 Pascal 原有相机轨道平移到户型正投影包围盒的几何中心；网页重新聚焦和普通重渲染不会重置住户视角。
+- 验证：`npm test` 180/180；`npm run test:backend` 81/81；`npm run eval:agent` 28/28；`npm run build` 通过；后台冷启动截图确认整屋围绕画布中心展开。
 
 ## 推荐使用场景
 

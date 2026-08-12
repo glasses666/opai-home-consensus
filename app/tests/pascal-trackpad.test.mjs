@@ -2,11 +2,27 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  centerCameraPoseOnFloorPlan,
   isTrackpadPanWheel,
   isTrackpadPinchWheel,
   panCameraPose,
   zoomCameraPose,
 } from '../src/pascal/trackpad-navigation.js';
+
+test('viewer initialization centers the existing camera orbit on the floor plan', () => {
+  const pose = { position: [1, 8, -5], target: [1, 0, 1], viewWidth: 12 };
+  const centered = centerCameraPoseOnFloorPlan(pose, {
+    x: 1000,
+    z: 2000,
+    width: 10000,
+    depth: 8000,
+  });
+
+  assert.deepEqual(centered.target, [6, 0, 6]);
+  assert.deepEqual(centered.position, [6, 8, 0]);
+  assert.deepEqual(centered.position.map((value, index) => value - centered.target[index]), [0, 8, -6]);
+  assert.equal(centered.viewWidth, 12);
+});
 
 test('trackpad scroll pans while pinch and stepped mouse wheels remain native zoom', () => {
   assert.equal(isTrackpadPanWheel({ deltaMode: 0, deltaX: 8, deltaY: 14 }), true);

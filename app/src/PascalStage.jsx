@@ -6,6 +6,7 @@ import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
 import { isResidentEditCommand, pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
 import { resolveRenderProfile } from './domain/render-profile.js';
 import {
+  centerCameraPoseOnFloorPlan,
   isTrackpadPanWheel,
   isTrackpadPinchWheel,
   panCameraPose,
@@ -39,6 +40,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   const projectionRef = useRef(projection);
   const onEditCommandRef = useRef(onEditCommand);
   const restoringRef = useRef(false);
+  const initialFocusAppliedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
@@ -100,6 +102,17 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
       // Pascal refuses snapshot replacement during pointer interactions; next scene change retries.
     }
   }, [editorLoaded, projection, ready]);
+
+  useEffect(() => {
+    if (!(ready && editorLoaded) || initialFocusAppliedRef.current) return undefined;
+    return subscribeCameraPose((pose) => {
+      if (initialFocusAppliedRef.current) return;
+      const centeredPose = centerCameraPoseOnFloorPlan(pose, scene.floorPlan.bounds);
+      if (!centeredPose) return;
+      initialFocusAppliedRef.current = true;
+      emitter.emit('camera-controls:apply-pose', centeredPose);
+    });
+  }, [editorLoaded, ready, scene.floorPlan.bounds]);
 
   useEffect(() => {
     if (!editorLoaded) return undefined;
