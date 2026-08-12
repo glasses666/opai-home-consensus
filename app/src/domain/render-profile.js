@@ -5,3 +5,7 @@ export function resolveRenderProfile({ width = 1440, coarsePointer = false, devi
     ? { mode: 'light', defaultView: '2d', allowHeavy3D: true, dprCap: 1 }
     : { mode: 'full', defaultView: '3d', allowHeavy3D: true, dprCap: 1.75 });
 }
+
+export function resolveInteractionLayer({ sidecarMode = 'agent' } = {}) {
+  return sidecarMode === 'space' ? 'quick' : 'browse';
+}

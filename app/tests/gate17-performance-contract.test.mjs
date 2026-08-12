@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { resolveRenderProfile } from '../src/domain/render-profile.js';
+import { resolveInteractionLayer, resolveRenderProfile } from '../src/domain/render-profile.js';
 
 test('Gate 17 uses the full editor only for a visible capable desktop', () => {
   assert.deepEqual(resolveRenderProfile({ width: 1440, coarsePointer: false, deviceMemory: 8 }), {
@@ -25,4 +25,10 @@ test('Gate 17 unmounts heavy rendering while the document is hidden', () => {
   assert.deepEqual(resolveRenderProfile({ width: 1440, hidden: true }), {
     mode: 'paused', defaultView: '2d', allowHeavy3D: false, dprCap: 1,
   });
+});
+
+test('the consumer workspace only becomes editable after an explicit edit choice', () => {
+  assert.equal(resolveInteractionLayer(), 'browse');
+  assert.equal(resolveInteractionLayer({ sidecarMode: 'space' }), 'quick');
+  assert.equal(resolveInteractionLayer({ sidecarMode: 'household' }), 'browse');
 });

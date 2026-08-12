@@ -4,7 +4,7 @@ import test from 'node:test';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
 import { projectOppeinSceneToPascal, toSceneMaterialRef } from '../src/pascal/oppein-to-pascal.js';
-import { pascalCommitToSceneCommands, pascalEditToSceneCommand } from '../src/pascal/pascal-to-command.js';
+import { isResidentEditCommand, pascalCommitToSceneCommands, pascalEditToSceneCommand } from '../src/pascal/pascal-to-command.js';
 
 test('Pascal item transform maps to the existing SceneCommand path', () => {
   const scene = createDemoScene();
@@ -69,4 +69,12 @@ test('Pascal edits still rely on canonical rules for rejection', () => {
 
   assert.throws(() => dispatchSceneCommand(createSceneStore(scene), command), /OBJECT_FOOTPRINT_OUTSIDE_ROOM/);
   assert.equal(serializeScene(scene), before);
+});
+
+test('resident editing only allows furniture transform and dimensions', () => {
+  assert.equal(isResidentEditCommand({ type: 'object.setTransform' }), true);
+  assert.equal(isResidentEditCommand({ type: 'object.setDimensions' }), true);
+  assert.equal(isResidentEditCommand({ type: 'object.setMaterial' }), false);
+  assert.equal(isResidentEditCommand({ type: 'surface.setMaterial' }), false);
+  assert.equal(isResidentEditCommand({ type: 'object.delete' }), false);
 });

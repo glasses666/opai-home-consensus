@@ -32,9 +32,9 @@ Gate 24 已实现为一个“同一产品内的四种体验气质”层，而不
 
 ## Agent-first 检查
 
-- 首屏主 CTA 仍然是“与 Agent 继续设计”，不是风格切换，也不是高级编辑。
+- 首屏主 CTA 仍然是“与 Agent 继续设计”，不是风格切换或编辑器。
 - 四个方向只负责“看起来像什么”，不改 canonical scene、room/view/select、Agent、版本或家庭状态。
-- 高级编辑仍然保留为次级入口，不能抢住户的默认前台。
+- 验收修正后继续使用 Pascal 开源编辑器本体，但住户没有全量高级入口；显式微调只允许移动、旋转与宽深高。
 - 风格切换后，住户已经输入的项目上下文会继续保留。
 - 动效只负责帮助理解和定位，不阻塞输入、不改 scene 状态、不制造滚动劫持。
 
@@ -64,6 +64,13 @@ Gate 24 已实现为一个“同一产品内的四种体验气质”层，而不
 - 展示参数隔离测试确认 `style` 只由 `experience-style.js` 处理；`view-state.js` 仍只拥有 `room`、`view`、`select`。
 
 Agent Reach 的 Exa 服务在本次收尾复查时不可用；没有因此新增未经验证的参考。现有四方向来源同时以公开网页复核，最终实现只提取交互原则。
+
+### 2026-08-12 验收修正
+
+- 未换回旧 `Scene3D`；Agent 浏览和住户微调继续共用 Pascal 开源编辑器与同一 canonical scene。
+- 住户权限终端收窄为 `object.setTransform` 和 `object.setDimensions`；材质、复制、删除、墙体和结构编辑不在住户界面出现。
+- 浏览态清空编辑选择并禁止写回；微调态显示 Pascal 拖动 / 旋转手柄和宿主宽深高输入。
+- 验证：`npm test` 179/179；`npm run test:backend` 81/81；`npm run eval:agent` 28/28；`npm run build` 通过。
 
 ## 推荐使用场景
 

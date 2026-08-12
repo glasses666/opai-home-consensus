@@ -48,7 +48,7 @@ npm run dev -- --port 5173
 
 导航首页为 `http://127.0.0.1:5173/`，四方向比较页为 `/directions`，主工作台为 `/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`。`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 
-当前 V1.1 验证基线：177 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；五类模拟住户任务、1440×900、1366×768、1024×768 和移动轻量态均有证据。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+当前 V1.1 验证基线：179 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；住户前端保留 Pascal 开源 2D / 3D 编辑器地基，但手动权限只有移动、旋转与宽深高。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
 
 后端能力门与 Agent Harness：
 

@@ -84,3 +84,9 @@ export function pascalCommitToSceneCommands(commit, mapping) {
     .map((id) => pascalNodeChangeToSceneCommand(before[id], current[id], mapping))
     .filter(Boolean);
 }
+
+const RESIDENT_EDIT_COMMANDS = new Set(['object.setTransform', 'object.setDimensions']);
+
+export function isResidentEditCommand(command) {
+  return RESIDENT_EDIT_COMMANDS.has(command?.type);
+}

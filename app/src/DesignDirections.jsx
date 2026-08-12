@@ -48,7 +48,7 @@ export function ExperienceLandingPage() {
         <h1>先把生活说清楚，<br />再让空间成形。</h1>
         <p>Agent 先理解家庭、生成受规则约束的方案；住户只在必要时微调，最后把一个共同确认的版本交给设计师。</p>
         <div className="experience-actions"><a className="experience-primary" href={`/project/demo?style=${currentStyle}`}>与 Agent 继续设计 <ArrowRight size={17} aria-hidden="true" /></a><a className="experience-secondary" href="/directions">查看四个设计方向</a></div>
-        <small>高级编辑保留在项目内部，只有需要精细调整时才打开。</small>
+        <small>住户只做位置、方向和尺寸微调；其余设计变化由 Agent 提案。</small>
       </div>
       <div className="experience-hero__scene" aria-label="当前项目概览">
         <div className="experience-hero__plan"><i /><i /><i /><i /><i /></div>
@@ -70,6 +70,6 @@ export function ExperienceDirectionsPage() {
       <div className="direction-section__heading"><div><p className="experience-kicker">Gate 24 · presentation only</p><h2 id="direction-title">选择接下来要打磨的体验方向</h2></div><p>空间电影、智能画布与建筑索引包含辅助定位的动态反馈；减少动态偏好下会自动静止。</p></div>
       <DirectionGrid currentStyle={currentStyle} />
     </section>
-    <section className="direction-boundary"><HouseLine size={22} aria-hidden="true" /><div><strong>先选气质，不重做产品</strong><p>每个样机都从 Agent 开始；快速微调和高级编辑继续作为第二、第三层能力。</p></div><a href={`/project/demo?style=${currentStyle}&advanced=1`}>直接进入高级编辑</a></section>
+    <section className="direction-boundary"><HouseLine size={22} aria-hidden="true" /><div><strong>先选气质，不重做产品</strong><p>每个样机都从 Agent 开始；住户微调只保留移动、旋转和尺寸。</p></div><a href={`/project/demo?style=${currentStyle}`}>返回 Agent 设计</a></section>
   </main>;
 }

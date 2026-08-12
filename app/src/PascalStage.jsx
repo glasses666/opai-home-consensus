@@ -3,7 +3,7 @@ import { applySceneSnapshot, emitter, loadPlugin, subscribeSceneCommits } from '
 import { Editor, subscribeCameraPose, useEditor, useSidebarStore, useViewer } from '@pascal-app/editor';
 import { builtinPlugin } from '@pascal-app/nodes';
 import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
-import { pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
+import { isResidentEditCommand, pascalCommitToSceneCommands } from './pascal/pascal-to-command.js';
 import { resolveRenderProfile } from './domain/render-profile.js';
 import {
   isTrackpadPanWheel,
@@ -33,7 +33,7 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand, advancedMode = false, loadingFallback = null }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, interactionMode = 'browse', loadingFallback = null }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
@@ -43,8 +43,10 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
   const renderProfile = useRenderProfile();
-  const sidebarCollapsed = useSidebarStore((state) => state.isCollapsed);
   const setSidebarCollapsed = useSidebarStore((state) => state.setIsCollapsed);
+  const editableObjectIds = useMemo(() => new Set(scene.objects
+    .filter((object) => object.capabilities.movable || object.capabilities.rotatable || object.capabilities.parameterEditable)
+    .map((object) => object.id)), [scene]);
 
   useEffect(() => {
     projectionRef.current = projection;
@@ -67,7 +69,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
     return subscribeSceneCommits((commit) => {
       if (!editorLoaded || restoringRef.current || commit.origin !== 'local') return;
       const commands = pascalCommitToSceneCommands(commit, projectionRef.current.mapping);
-      let applied = commands.length === 1;
+      let applied = interactionMode === 'quick' && commands.length === 1 && isResidentEditCommand(commands[0]);
       if (applied) applied = Boolean(onEditCommandRef.current(commands[0]));
       if (applied) {
         setStatus(`已通过规则写入 ${commands.length} 个 SceneCommand`);
@@ -79,9 +81,9 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
       } finally {
         restoringRef.current = false;
       }
-      setStatus('该 Pascal 操作暂未映射到业务命令，已回到 canonical scene');
+      setStatus('住户微调只允许移动、旋转和尺寸调整；其他操作已撤销');
     });
-  }, [editorLoaded, ready]);
+  }, [editorLoaded, interactionMode, ready]);
 
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
@@ -101,21 +103,23 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
 
   useEffect(() => {
     if (!editorLoaded) return undefined;
-    setSidebarCollapsed(!advancedMode);
+    setSidebarCollapsed(true);
+    useEditor.getState().setMode('select');
     const resizeTimer = window.setTimeout(() => window.dispatchEvent(new Event('resize')), 180);
     return () => window.clearTimeout(resizeTimer);
-  }, [advancedMode, editorLoaded, setSidebarCollapsed]);
+  }, [editorLoaded, interactionMode, setSidebarCollapsed]);
 
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
-    const pascalId = projection.mapping.canonicalToPascal[selection?.kind]?.[selection?.id];
+    const editableSelection = interactionMode === 'quick' && selection?.kind === 'object' && editableObjectIds.has(selection.id);
+    const pascalId = editableSelection ? projection.mapping.canonicalToPascal.object[selection.id] : null;
     useViewer.getState().setSelection({
       buildingId: BUILDING_ID,
       levelId: LEVEL_ID,
-      zoneId: selection?.kind === 'room' ? pascalId : null,
-      selectedIds: selection?.kind && selection.kind !== 'room' && pascalId ? [pascalId] : [],
+      zoneId: null,
+      selectedIds: pascalId ? [pascalId] : [],
     });
-  }, [editorLoaded, projection, ready, selection?.id, selection?.kind]);
+  }, [editableObjectIds, editorLoaded, interactionMode, projection, ready, selection?.id, selection?.kind]);
 
   const onLoad = useCallback(async () => snapshotFromProjection(projectionRef.current), []);
   const onSave = useCallback(async () => {}, []);
@@ -124,14 +128,13 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   if (!renderProfile.allowHeavy3D) return <div className="pascal-stage-loading" data-render-profile="paused">页面暂时隐藏，装修编辑器已暂停以节省资源。</div>;
 
   return (
-    <div ref={stageRef} className="pascal-stage" data-render-profile={renderProfile.mode}>
+    <div ref={stageRef} className="pascal-stage" data-interaction={interactionMode} data-render-profile={renderProfile.mode}>
       {!editorLoaded && <div className="pascal-loading-preview" role="status">{loadingFallback ?? '正在载入实时 3D…'}</div>}
-      {editorLoaded && <PascalSelectionBridge mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
+      {editorLoaded && interactionMode === 'browse' && <PascalBrowseSelectionBridge mapping={projection.mapping} nodes={projection.sceneGraph.nodes} onSelect={onSelect} />}
+      {editorLoaded && interactionMode === 'quick' && <PascalSelectionBridge editableObjectIds={editableObjectIds} mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
+      {editorLoaded && <PascalResidentModeGuard interactionMode={interactionMode} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
       <PascalViewSwitch renderProfile={renderProfile} />
-      {advancedMode && <button className="pascal-sidebar-toggle" type="button" aria-expanded={!sidebarCollapsed} onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
-        {sidebarCollapsed ? '打开装修工具' : '收起装修工具'}
-      </button>}
       {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
       {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
       <Editor
@@ -211,14 +214,68 @@ function PascalTrackpadNavigation({ rootRef }) {
   return null;
 }
 
-function PascalSelectionBridge({ mapping, selection, onSelect }) {
+function PascalSelectionBridge({ editableObjectIds, mapping, selection, onSelect }) {
   const selectedId = useViewer((state) => state.selection.selectedIds[0] ?? null);
-  const zoneId = useViewer((state) => state.selection.zoneId ?? null);
   useEffect(() => {
-    const canonical = mapping.pascalToCanonical[selectedId || zoneId];
+    const canonical = mapping.pascalToCanonical[selectedId];
+    if (canonical && (canonical.kind !== 'object' || !editableObjectIds.has(canonical.id))) {
+      useViewer.getState().setSelection({ selectedIds: [] });
+      return;
+    }
     if (!canonical || (selection?.kind === canonical.kind && selection.id === canonical.id)) return;
     onSelect({ kind: canonical.kind, id: canonical.id });
-  }, [mapping, onSelect, selectedId, selection?.id, selection?.kind, zoneId]);
+  }, [editableObjectIds, mapping, onSelect, selectedId, selection?.id, selection?.kind]);
+  return null;
+}
+
+function PascalBrowseSelectionBridge({ mapping, nodes, onSelect }) {
+  useEffect(() => {
+    const types = new Set(Object.values(nodes).map((node) => node.type));
+    const clearEditorSelection = () => {
+      if (useViewer.getState().selection.selectedIds.length) {
+        useViewer.getState().setSelection({ selectedIds: [], zoneId: null });
+      }
+    };
+    const handleClick = (event) => {
+      const canonical = mapping.pascalToCanonical[event.node?.id];
+      if (canonical && canonical.kind !== 'material') onSelect(canonical);
+      clearEditorSelection();
+    };
+    for (const type of types) emitter.on(`${type}:click`, handleClick);
+    const unsubscribe = useViewer.subscribe(clearEditorSelection);
+    clearEditorSelection();
+    return () => {
+      unsubscribe();
+      for (const type of types) emitter.off(`${type}:click`, handleClick);
+    };
+  }, [mapping, nodes, onSelect]);
+  return null;
+}
+
+function PascalResidentModeGuard({ interactionMode }) {
+  useEffect(() => {
+    useEditor.getState().setWorkspaceMode('edit');
+    useEditor.getState().setCaptureMode(interactionMode === 'browse');
+    useEditor.getState().setMode('select');
+    const unsubscribe = useEditor.subscribe((state) => {
+      if (state.mode !== 'select') useEditor.getState().setMode('select');
+    });
+    const blockHiddenEditorShortcuts = (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      const blocked = event.key === 'Delete' || event.key === 'Backspace'
+        || ((event.metaKey || event.ctrlKey) && ['c', 'd', 'v', 'x'].includes(event.key.toLowerCase()));
+      if (!blocked) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    window.addEventListener('keydown', blockHiddenEditorShortcuts, { capture: true });
+    return () => {
+      useEditor.getState().setCaptureMode(false);
+      unsubscribe();
+      window.removeEventListener('keydown', blockHiddenEditorShortcuts, { capture: true });
+    };
+  }, [interactionMode]);
   return null;
 }
 
@@ -227,7 +284,7 @@ function PascalViewSwitch({ renderProfile }) {
   const setViewMode = useEditor((state) => state.setViewMode);
   useEffect(() => { setViewMode(renderProfile.defaultView); }, [renderProfile.mode, setViewMode]);
   return (
-    <div className="pascal-view-switch" aria-label="Pascal 编辑视图">
+    <div className="pascal-view-switch" aria-label="户型视图">
       {[
         ['2d', '2D'],
         ['3d', '3D'],

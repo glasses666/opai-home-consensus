@@ -16,7 +16,7 @@ final result: passed
 - 信息架构保持当前产品合同：3D 是主浏览和编辑面，2D 是同步只读总览，不回到旧的静态图片热点原型。
 - 视觉风格维持浅木、暖白、克制层级和北欧家居目录感；没有使用 IKEA logo、蓝黄品牌配色、商品图或独立效果图冒充实时 3D。
 - 对照参考图，3D 仍占据工作台最大视觉面积；Pascal 自带侧栏默认收起，宿主只保留一个可逆入口，减少“双编辑器”拼接感。
-- Agent 是默认任务入口；快速微调与 Pascal 高级编辑必须显式进入，退出后由 Agent 汇总差异。
+- Agent 是默认任务入口；Pascal 继续是唯一实时 2D / 3D 地基，但住户必须显式进入微调，且只能移动、旋转和改宽深高。
 - Pascal 载入期间显示同源 2D 户型、家具和当前选择，不再留下无法解释的空白画布。
 - 家庭冲突卡直接保留成员原话，方向使用 A / B 主标签；真实多人同步边界在标题处可见。
 - 暖白、浅木和克制酒红延续参考概念图的目录感，但没有使用 IKEA logo、蓝黄品牌配色、商品图片或复制页面结构。
@@ -28,7 +28,7 @@ final result: passed
 
 ## 验证证据
 
-- `cd app && npm test`：175/175 通过。
+- `cd app && npm test`：179/179 通过。
 - `cd app && npm run test:backend`：81/81 通过。
 - `cd app && npm run build`：通过；保留 Vite 大 chunk 警告。
 - `cd app && npm run eval:agent`：28/28 通过，`passed: true`。
@@ -43,6 +43,8 @@ final result: passed
 - Gate 23 相机录屏与抽帧：`.omx/audits/gate23/camera-orbit-zoom.webm`、`camera-contact-sheet.png`
 - Gate 24 方向样机本地复核：`/`、`/directions` 与四种 `/project/demo?style=...` 均完成 1440×900 / 1024×768 截图；8 秒方向页动态样本及四帧接触表确认状态会变化，且 `prefers-reduced-motion` 有静止降级。
 - Gate 24 回归：177 项全量测试、81 项后端专项测试、28 案例 Agent 评测与生产构建通过。
+- Gate 24 验收修正：Agent 浏览态与住户微调态都只有一个 Pascal canvas；微调态可见操作只有拖动 / 100 mm 微移、旋转和宽深高。截图：`.omx/audits/gate24-editor-scope/browse-capture-probe.png`、`.omx/audits/gate24-editor-scope/quick-final.png`。
+- 本轮最终回归：179 项全量测试、81 项后端专项测试、28 案例 Agent 评测和生产构建通过。
 
 ## 已知视觉 / 体验边界
 

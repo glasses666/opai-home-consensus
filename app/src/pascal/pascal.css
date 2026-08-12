@@ -23,6 +23,22 @@
   transform: translateZ(0);
 }
 
+/* The product owns the shell. Pascal supplies the scene and its furniture
+   handles; its construction rail, inspector and build toolbar stay internal. */
+.pascal-stage[data-interaction] > .dark > .flex-shrink-0,
+.pascal-stage[data-interaction] > .dark > .pointer-events-none {
+  display: none;
+}
+
+.pascal-stage[data-interaction="quick"] button[aria-label="Find in catalog"],
+.pascal-stage[data-interaction="quick"] button[aria-label="Curve"],
+.pascal-stage[data-interaction="quick"] button[aria-label="Duplicate"],
+.pascal-stage[data-interaction="quick"] button[aria-label="Cut Out"],
+.pascal-stage[data-interaction="quick"] button[aria-label="Delete"],
+.pascal-stage[data-interaction="quick"] button:has([data-quick-action-feedback]) {
+  display: none;
+}
+
 .pascal-view-switch {
   position: absolute;
   top: 18px;

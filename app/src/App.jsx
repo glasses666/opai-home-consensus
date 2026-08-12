@@ -13,7 +13,7 @@ import {
   sceneStoreForVersion,
   serializeVersionHistory,
 } from './domain/design-version.js';
-import { evaluateDesignRules, filterDesignRuleChecksForRoom } from './domain/design-rules.js';
+import { evaluateDesignRules } from './domain/design-rules.js';
 import { buildDesignerReview, buildHandoffPacket } from './domain/handoff.js';
 import {
   addHouseholdOpinion,
@@ -36,7 +36,7 @@ import {
   validateScene,
 } from './domain/scene.js';
 import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
-import { resolveRenderProfile } from './domain/render-profile.js';
+import { resolveInteractionLayer, resolveRenderProfile } from './domain/render-profile.js';
 import {
   DEFAULT_EXPERIENCE_STYLE,
   EXPERIENCE_STYLES,
@@ -715,18 +715,18 @@ function ProjectDemoPage() {
   const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
   const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
   const [editMode, setEditMode] = useState('move');
-  const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可编辑' });
+  const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可查看；进入微调后再调整' });
   const [pendingReview, setPendingReview] = useState(null);
   const viewerTier = useWorkspaceTier();
-  const [pascalExpanded, setPascalExpanded] = useState(viewerTier === 'full');
-  useEffect(() => { setPascalExpanded(viewerTier === 'full'); }, [viewerTier]);
-  const [advancedEditing, setAdvancedEditing] = useState(() => new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('advanced') === '1');
+  const [viewerExpanded, setViewerExpanded] = useState(viewerTier === 'full');
+  useEffect(() => { setViewerExpanded(viewerTier === 'full'); }, [viewerTier]);
   const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
   const [lastRejected, setLastRejected] = useState(null);
   const [dimensionDraft, setDimensionDraft] = useState(null);
   const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
   const [compareFromVersionId, setCompareFromVersionId] = useState(initialVersionProject.history.versions[0].id);
   const [sidecarMode, setSidecarMode] = useState('agent');
+  const interactionLayer = resolveInteractionLayer({ sidecarMode });
   const [agentInput, setAgentInput] = useState('');
   const [agentBusy, setAgentBusy] = useState(false);
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
@@ -742,7 +742,6 @@ function ProjectDemoPage() {
   const [opinionText, setOpinionText] = useState('');
   const [consensusFeedback, setConsensusFeedback] = useState('三位成员依次表达；所有意见都写入同一共享版本。');
   const agentMessageListRef = useRef(null);
-  const advancedStartSceneRef = useRef(null);
   const versionDrawerRef = useRef(null);
   const versionDrawerActivatorRef = useRef(null);
   const versionDrawerWasOpenRef = useRef(false);
@@ -845,16 +844,6 @@ function ProjectDemoPage() {
       ?? versions.flatMap((version) => version.scene.objects).find((candidate) => candidate.id === target.id);
     return object ? entityName('object', object) : target.id;
   };
-  const visibleRuleChecks = useMemo(() => {
-    const relevant = selectedObject
-      ? designEvaluation.checks.filter((check) => check.objectIds.includes(selectedObject.id))
-      : activeRoomId
-        ? filterDesignRuleChecksForRoom(currentScene, designEvaluation.checks, activeRoomId)
-        : designEvaluation.violations;
-    return relevant
-      .sort((a, b) => ['blocked', 'warning', 'recommendation', 'passed'].indexOf(a.status) - ['blocked', 'warning', 'recommendation', 'passed'].indexOf(b.status))
-      .slice(0, 4);
-  }, [activeRoomId, currentScene, designEvaluation, selectedObject]);
   const currentViewLabel = displayViewId === 'free'
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
@@ -1085,79 +1074,6 @@ function ProjectDemoPage() {
     executeCommand({ type: 'object.setTransform', objectId: object.id, transform: { rotationY: object.transform.rotationY + Math.PI / 12 } }, '已旋转 15°');
   }, [executeCommand, navigation.selectedId]);
 
-  const deleteSelected = useCallback(() => {
-    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
-    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
-    if (!object?.capabilities?.deletable) {
-      setEditFeedback({ tone: 'error', message: '该对象不允许删除' });
-      return;
-    }
-    if (!executeCommand({ type: 'object.delete', objectId: object.id }, `已删除${entityName('object', object)}`)) return;
-    commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
-  }, [executeCommand, navigation]);
-
-  const duplicateSelected = () => {
-    if (pendingReview) {
-      setEditFeedback({ tone: 'warning', message: '请先保留或撤销当前预览，再复制家具。' });
-      return;
-    }
-    if (!selectedObject?.capabilities?.duplicable) {
-      setEditFeedback({ tone: 'error', message: '该对象不允许复制' });
-      return;
-    }
-    const startCursor = sceneStoreRef.current.cursor;
-    const suffix = (globalThis.crypto?.randomUUID?.() ?? Date.now().toString(36)).slice(0, 8);
-    const newObjectId = `${selectedObject.id}-copy-${suffix}`;
-    const gap = 900;
-    const offsets = [
-      [selectedObject.dimensions.width + gap, 0],
-      [-selectedObject.dimensions.width - gap, 0],
-      [0, selectedObject.dimensions.depth + gap],
-      [0, -selectedObject.dimensions.depth - gap],
-    ];
-    const room = currentScene.rooms.find((candidate) => candidate.id === selectedObject.roomId);
-    if (room) {
-      const xs = room.polygon.map((point) => point.x);
-      const zs = room.polygon.map((point) => point.z);
-      for (let z = Math.min(...zs) + 700; z <= Math.max(...zs) - 700; z += 500) {
-        for (let x = Math.min(...xs) + 700; x <= Math.max(...xs) - 700; x += 500) {
-          offsets.push([x - selectedObject.transform.x, z - selectedObject.transform.z]);
-        }
-      }
-    }
-    let lastError = null;
-    for (const [dx, dz] of offsets) {
-      try {
-        const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
-        const nextStore = dispatchSceneCommand(sceneStoreRef.current, {
-          type: 'object.duplicate',
-          objectId: selectedObject.id,
-          newObjectId,
-          externalId: `${selectedObject.externalId}-COPY-${suffix.toUpperCase()}`,
-          transform: { x: selectedObject.transform.x + dx, z: selectedObject.transform.z + dz },
-        });
-        const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
-        const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, [newObjectId]);
-        sceneStoreRef.current = nextStore;
-        setSceneStore(nextStore);
-        setLastRejected(null);
-        commitNavigation({ ...navigation, selectedId: newObjectId }, { replace: true, moveCamera: false });
-        if (reviewChecks.length) {
-          setPendingReview({ checks: reviewChecks.slice(0, 3), startCursor, status: topRuleStatus(reviewChecks) });
-          setEditFeedback({ tone: 'warning', message: '已生成复制预览：有规范提醒，保留前请确认代价。' });
-        } else {
-          setPendingReview(null);
-          setEditFeedback({ tone: 'success', message: `已复制${entityName('object', selectedObject)}` });
-        }
-        return;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    setEditFeedback({ tone: 'error', message: `未复制：${lastError ? normalizeEditError(lastError) : '没有合法落位'}` });
-    setLastRejected({ message: lastError ? normalizeEditError(lastError) : '当前房间内没有合法复制位置。', source: 'demo' });
-  };
-
   const resizeSelected = () => {
     if (!selectedObject?.capabilities?.parameterEditable || !dimensionDraft) return;
     executeCommand({
@@ -1204,37 +1120,6 @@ function ProjectDemoPage() {
       commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
     }
     setEditFeedback({ tone: 'success', message: '已撤销整次预览' });
-  };
-
-  const enterAdvancedEditing = () => {
-    advancedStartSceneRef.current = sceneStoreRef.current.currentScene;
-    setAdvancedEditing(true);
-    setPascalExpanded(true);
-    setSidecarMode('space');
-  };
-
-  const exitAdvancedEditing = () => {
-    const beforeScene = advancedStartSceneRef.current;
-    const afterScene = sceneStoreRef.current.currentScene;
-    setAdvancedEditing(false);
-    setSidecarMode('agent');
-    advancedStartSceneRef.current = null;
-    if (!beforeScene) return;
-    const diff = compareSceneVersions(
-      { id: 'advanced-start', scene: beforeScene },
-      { id: 'working-copy', scene: afterScene },
-    );
-    const changeCount = diff.objectDiffs.length + diff.surfaceDiffs.length;
-    const warnings = evaluateDesignRules(afterScene).checks.filter((check) => check.status === 'warning').length;
-    setAgentMessages((messages) => [...messages, {
-      id: `advanced-summary-${Date.now()}`,
-      role: 'assistant',
-      text: changeCount
-        ? `高级编辑已结束：检测到 ${diff.objectDiffs.length} 项家具变化和 ${diff.surfaceDiffs.length} 项饰面变化；${warnings ? `仍有 ${warnings} 条演示规则提醒` : '当前演示规则通过'}。修改仍在工作副本中，确认后再保存版本。`
-        : '高级编辑已结束，本次没有改变方案。',
-      source: 'local',
-      tools: [],
-    }]);
   };
 
   const runAgentPrompt = async (rawInput) => {
@@ -1660,7 +1545,7 @@ function ProjectDemoPage() {
 
   useEffect(() => {
     const handleEditShortcut = (event) => {
-      if (versionDrawerOpen) return;
+      if (versionDrawerOpen || interactionLayer === 'browse') return;
       const target = event.target;
       if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
       const modifier = event.metaKey || event.ctrlKey;
@@ -1668,11 +1553,6 @@ function ProjectDemoPage() {
         event.preventDefault();
         if (event.shiftKey) redo();
         else undo();
-        return;
-      }
-      if (event.key === 'Delete' || event.key === 'Backspace') {
-        event.preventDefault();
-        deleteSelected();
         return;
       }
       const directions = { ArrowUp: [0, -100], ArrowDown: [0, 100], ArrowLeft: [-100, 0], ArrowRight: [100, 0] };
@@ -1683,7 +1563,7 @@ function ProjectDemoPage() {
     };
     window.addEventListener('keydown', handleEditShortcut);
     return () => window.removeEventListener('keydown', handleEditShortcut);
-  }, [deleteSelected, moveSelected, redo, undo, versionDrawerOpen]);
+  }, [interactionLayer, moveSelected, redo, undo, versionDrawerOpen]);
 
   return <main className="product-shell project-demo" data-experience-style={experienceStyle} data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
     <header className="product-hero">
@@ -1717,32 +1597,29 @@ function ProjectDemoPage() {
             <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
           </div>
           <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
-          <div className="project-stage__tier" data-tier={viewerTier} data-advanced={advancedEditing}>
-            <span>{advancedEditing ? '高级编辑已打开' : (viewerTier === 'full' ? 'AI 设计视图' : '轻量浏览 · 先省资源')}</span>
-            {viewerTier !== 'full' && !pascalExpanded && <button type="button" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>}
-            {advancedEditing && <button type="button" onClick={exitAdvancedEditing}>退出高级编辑</button>}
+          <div className="project-stage__tier" data-tier={viewerTier} data-interaction={interactionLayer}>
+            <span>{interactionLayer === 'quick' ? '住户微调 · 仅家具形态' : (viewerTier === 'full' ? 'AI 设计浏览' : '轻量浏览 · 先省资源')}</span>
+            {viewerTier !== 'full' && !viewerExpanded && <button type="button" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>}
           </div>
         </div>
-        {viewerTier !== 'full' && !pascalExpanded
+        {viewerTier !== 'full' && !viewerExpanded
           ? <div className="pascal-stage-light">
             <p className="pascal-stage-light__kicker">轻量浏览模式</p>
             <strong>{currentRoomLabel}</strong>
-            <span>当前设备先保留 2D 总览与右侧上下文，完整 Pascal 3D 只在需要时加载。</span>
+            <span>当前设备先保留 2D 总览与 Agent 上下文，实时 3D 只在需要时加载。</span>
             <div className="pascal-stage-light__actions">
-              <button type="button" className="utility-button utility-button--strong" onClick={() => setPascalExpanded(true)}>进入完整 3D</button>
+              <button type="button" className="utility-button utility-button--strong" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>
             </div>
           </div>
-          : <Suspense fallback={<div className="pascal-stage-loading">正在启动装修编辑器…</div>}>
+          : <Suspense fallback={<div className="pascal-stage-loading">正在启动实时装修空间…</div>}>
             <PascalStage
               scene={currentScene}
               selection={selection}
               onSelect={selectEntity}
               onEditCommand={(command) => Boolean(executeCommand(command))}
-              activeRoomId={displayRoomId}
-              roomLabels={roomLabels}
-              advancedMode={advancedEditing}
+              interactionMode={interactionLayer}
               loadingFallback={<>
-                <div><strong>实时 3D 正在载入</strong><span>先用同源 2D 核对房间、家具和当前选择；载入完成后会原位切换。</span></div>
+                <div><strong>实时 3D 正在载入</strong><span>同一个装修空间；默认浏览，进入微调后只开放家具移动、旋转和尺寸。</span></div>
                 <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
               </>}
             />
@@ -1806,21 +1683,11 @@ function ProjectDemoPage() {
               <button type="button" onClick={discardPendingReview}>撤销预览</button>
             </div>
           </div>}
-          {selectedObject && <div className="project-object" data-testid="selected-object-details" data-layer={advancedEditing ? 'advanced' : 'quick'}>
-            <div><span>{advancedEditing ? selectedObject.externalId : entityName('object', selectedObject)}</span><strong>{advancedEditing ? (selectedObject.source === 'demo' ? '演示对象' : '企业对象') : '当前家具'}</strong></div>
-            {advancedEditing && <dl>
-              <div><dt>尺寸</dt><dd>{selectedObject.dimensions.width} × {selectedObject.dimensions.depth} × {selectedObject.dimensions.height} mm</dd></div>
-              <div><dt>能力</dt><dd>{selectedObject.capabilities.movable ? '可移动 / 可旋转' : '固定构件'}</dd></div>
-              <div><dt>层级</dt><dd>{roomLabels[selectedObject.roomId] ?? selectedObject.roomId} / {objectLayerLabels[selectedObject.hierarchy.layer]}</dd></div>
-              <div><dt>宿主</dt><dd>{selectedObject.placement.hostSurfaceId}</dd></div>
-              {selectedObject.installation && <div><dt>安装</dt><dd>{selectedObject.installation.kind} · {selectedObject.installation.mount === 'wall' ? '墙装' : '落地'}</dd></div>}
-              <div><dt>碰撞</dt><dd>{selectedObject.collision.kind} · {selectedObject.collision.dimensions.width} × {selectedObject.collision.dimensions.depth} mm</dd></div>
-              <div><dt>模型槽</dt><dd>{selectedObject.model3D.slotId} · r{selectedObject.model3D.revision}</dd></div>
-              <div><dt>复核</dt><dd>{selectedObject.review.requiresProfessionalReview ? '需专业复核' : '无需额外复核'}</dd></div>
-            </dl>}
-            {!advancedEditing && <p className="project-object__quick-note">快速微调只显示该对象允许的低风险操作；完整尺寸、复制与删除在高级编辑中提供。</p>}
+          {selectedObject && <div className="project-object" data-testid="selected-object-details" data-layer="quick">
+            <div><span>{entityName('object', selectedObject)}</span><strong>当前家具</strong></div>
+            <p className="project-object__quick-note">住户只调整位置、方向和大小；选材、增删与结构装修交给 Agent 生成方案。</p>
             <div className="project-edit" aria-label={`${entityName('object', selectedObject)}编辑工具`}>
-              {advancedEditing && (selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">
+              {(selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">
                 {selectedObject.capabilities.movable && <button type="button" aria-pressed={editMode === 'move'} onClick={() => setEditMode('move')}>移动</button>}
                 {selectedObject.capabilities.rotatable && <button type="button" aria-pressed={editMode === 'rotate'} onClick={() => setEditMode('rotate')}>旋转</button>}
               </div>}
@@ -1832,21 +1699,12 @@ function ProjectDemoPage() {
                 <button type="button" aria-label="向南移动 100 毫米" onClick={() => moveSelected(0, 100)}>↓</button>
               </div>}
               {selectedObject.capabilities.rotatable && <button className="project-edit__rotate" type="button" onClick={rotateSelected}>顺时针 15°</button>}
-              {selectedObject.capabilities.materialEditable && <div className="project-edit__materials" aria-label="材质">
-                <span>材质</span>
-                {currentScene.materials.filter((material) => material.appliesTo.includes('object')).map((material) => <button key={material.id} type="button" aria-label={`切换为${material.name}`} aria-pressed={selectedObject.materialId === material.id} onClick={() => executeCommand({ type: 'object.setMaterial', objectId: selectedObject.id, materialId: material.id }, `已切换为${material.name}`)}><i style={{ background: material.color }} />{material.name}</button>)}
-              </div>}
-              {advancedEditing && selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
+              {selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
                 {Object.entries({ width: '宽', depth: '深', height: '高' }).map(([key, label]) => <label key={key}><span>{label}</span><input aria-label={`${label}度，毫米`} type="number" min="1" step="10" value={dimensionDraft[key]} onInput={(event) => updateDimensionDraft(key, event.currentTarget.value)} onChange={(event) => updateDimensionDraft(key, event.currentTarget.value)} /></label>)}
                 <button type="button" onClick={resizeSelected}>应用尺寸</button>
               </form>}
-              {advancedEditing && (selectedObject.capabilities.deletable || selectedObject.capabilities.duplicable) && <div className="project-edit__object-actions">
-                {selectedObject.capabilities.duplicable && <button type="button" onClick={duplicateSelected}>复制</button>}
-                {selectedObject.capabilities.deletable && <button type="button" onClick={deleteSelected}>删除</button>}
-              </div>}
-              {!advancedEditing && !selectedObject.capabilities.movable && !selectedObject.capabilities.rotatable && !selectedObject.capabilities.materialEditable && <p className="project-edit__locked">这是固定构件，没有可用的住户微调操作。</p>}
+              {!selectedObject.capabilities.movable && !selectedObject.capabilities.rotatable && !selectedObject.capabilities.parameterEditable && <p className="project-edit__locked">这是固定构件，只能查看；请让 Agent 调整。</p>}
             </div>
-            {!advancedEditing && <button className="project-object__advanced" type="button" onClick={enterAdvancedEditing}>进入高级编辑</button>}
           </div>}
           {selectedSurface && <div className="project-object project-surface" data-testid="selected-surface-details">
             <div><span>{selectedSurface.id}</span><strong>演示饰面</strong></div>
@@ -1856,25 +1714,11 @@ function ProjectDemoPage() {
               <div><dt>当前饰面</dt><dd>{materialLabels[selectedSurface.materialId] ?? selectedSurface.materialId}</dd></div>
               <div><dt>来源</dt><dd>source: {selectedSurface.source}</dd></div>
             </dl>
-            <div className="project-edit" aria-label={`${entityName('surface', selectedSurface)}饰面工具`}>
-              <div className="project-edit__materials" aria-label="兼容饰面">
-                <span>可用饰面</span>
-                {currentScene.materials.filter((material) => material.appliesTo.includes(selectedSurface.kind)).map((material) => <button key={material.id} type="button" aria-label={`切换为${material.name}`} aria-pressed={selectedSurface.materialId === material.id} onClick={() => executeCommand({ type: 'surface.setMaterial', surfaceId: selectedSurface.id, materialId: material.id }, `${entityName('surface', selectedSurface)}已切换为${material.name}`)}><i style={{ background: material.color }} />{material.name}</button>)}
-              </div>
-            </div>
+            <p className="project-object__quick-note">住户侧只查看装修表面；墙、地、顶方案由 Agent 生成并进入版本确认。</p>
           </div>}
-          <div className="project-rules" aria-label="设计规则检查" data-layer={advancedEditing ? 'advanced' : 'summary'}>
+          <div className="project-rules" aria-label="设计规则检查" data-layer="summary">
             <div className="project-rules__header"><span>规则检查</span><strong data-status={lastRejected ? 'blocked' : designEvaluation.status}>{lastRejected ? '刚才已阻止' : (ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status)}</strong></div>
             <p className="project-rules__scope">适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。</p>
-            {advancedEditing && <ul>
-              {lastRejected && <li data-status="blocked"><span>未写入</span><p>{lastRejected.message}</p><small>刚才尝试没有改变 2D / 3D 场景 · source: {lastRejected.source}</small></li>}
-              {visibleRuleChecks.map((check) => <li key={`${check.code}-${check.ruleId}-${check.objectIds.join('-')}`} data-status={check.status}>
-                <span>{ruleStatusLabels[check.status] ?? check.status}</span>
-                <p>{check.message}</p>
-                {check.suggestion && <small>可这样调整：{check.suggestion}</small>}
-                {check.applicability && <small>适用边界：{check.applicability} · source: {check.source}</small>}
-              </li>)}
-            </ul>}
           </div>
           <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
@@ -1897,7 +1741,6 @@ function ProjectDemoPage() {
           <div className="agent-task-actions" aria-label="当前设计动作">
             <button type="button" onClick={() => setAgentInput(`请先看看${selectedLabel}，给出一个改进方向，不要直接修改。`)}>让 Agent 调整</button>
             <button type="button" onClick={() => setSidecarMode('space')}>快速微调</button>
-            <button type="button" onClick={enterAdvancedEditing}>高级编辑</button>
           </div>
 
           <div className="agent-quick" aria-label="快速真实任务">
