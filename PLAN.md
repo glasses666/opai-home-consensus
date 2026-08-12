@@ -1128,6 +1128,38 @@ V1.1 不新增消费者页面，也不把现有能力拆成多个应用。`/proj
 - 不引入 GSAP、Lenis、Framer Motion 或新的 UI 框架；现有 CSS / Web Animations 足以支撑本 Gate。
 - 不在用户选定方向前把某一套样机散布到复核页、交接页或企业后台。
 
+### Gate 25：无渲染房屋 CLI、文件树与 Agent Harness 调试面
+
+**状态：已实现并验证，等待用户验收后提交。基线 `a638630`，分支 `codex/pascal-frontend`；未修改网页编辑器。证据见 `GATE-25-REVIEW.md`。**
+
+**目的**
+
+把 Agent Harness 从浏览器和 3D 渲染中独立出来。终端以同一 canonical scene 为唯一数据源，显示房间、全部墙地顶、门窗、固定装修、家具、保护区与坐标；Aily 只产生受约束工具调用，CLI 校验后形成提案，显式应用时才创建新版本。
+
+**构建什么**
+
+- 使用 Node 标准库实现 `home` CLI，不加载 React、Three.js 或 Pascal，不增加依赖。
+- 将 canonical scene 拆为可审阅文件树：房间、表面、对象、门窗、材质、规则、镜头与保护区各自为 JSON 叶节点；清单保存原数组顺序，装配后必须通过现有 `validateScene`。
+- 全局毫米坐标仍是唯一存储真相；房间相对坐标和墙面 `U/V` 定义域由 CLI 计算，不创建第二份可漂移状态。
+- 文件树使用不可变版本目录与原子 current 指针；Agent 回合先写 `proposal`，只有 `apply` 或显式 `--apply` 才通过现有 `SceneCommand` 重放并创建下一版本。
+- 默认使用现有 Local Harness；显式 `--aily` 且现有飞书环境可用时复用同一 `callAily` provider，失败继续由 Harness 安全降级。
+- 提供 `init`、`tree`、`show`、`validate`、`agent`、`apply`、`diff` 命令，输出保持终端可读并可用 `--json` 取得机器结果。
+
+**验收证据**
+
+- `canonical scene → 文件树 → canonical scene` 序列化字节一致；全部墙面和每个房间唯一地面 / 顶面均可寻址。
+- `tree` 默认按 `空间 → 表面 / 门窗 / 固定装修 / 家具 / 保护区` 展开，并显示对象全局坐标与房间相对坐标、墙面长度和高度定义域。
+- 未应用 Agent 提案时 current version 与 scene 字节不变；错误、越权或规则失败整轮不写；应用合法提案后旧版本仍可读取。
+- CLI / round-trip / proposal tests、现有 Agent tests、全仓 `npm test` 与 `npm run build` 通过。
+
+**明确不做**
+
+- 不渲染 2D / 3D，不启动网页，不把 Pascal 或 Three.js 引入 CLI。
+- 不在本 Gate 迁移共享墙建筑实体、MEP、梁柱或真实欧派数据；当前墙面合同足够无损复刻 V1 scene，结构拓扑升级另行验收。
+- 不让图片预览或 ImageGen 结果成为空间状态；实景预览在 CLI Gate 验收后单独接入。
+
+---
+
 ## 5. 旧实现处理结果
 
 - 用户于 2026-08-08 验收 Gate 0，并明确要求丢弃此前错误版本、修复 Git 状态并 commit。

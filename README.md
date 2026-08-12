@@ -35,6 +35,7 @@
 - [Gate 22 审阅包](./GATE-22-REVIEW.md)
 - [Gate 23 审阅包](./GATE-23-REVIEW.md)
 - [Gate 24 审阅包](./GATE-24-REVIEW.md)
+- [Gate 25 CLI 审阅包](./GATE-25-REVIEW.md)
 - [5 分钟演示脚本](./DEMO-SCRIPT.md)
 - [设计 QA](./design-qa.md)
 
@@ -48,7 +49,21 @@ npm run dev -- --port 5173
 
 导航首页为 `http://127.0.0.1:5173/`，四方向比较页为 `/directions`，主工作台为 `/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`。`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 
-当前 V1.1 验证基线：179 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；住户前端保留 Pascal 开源 2D / 3D 编辑器地基，但手动权限只有移动、旋转与宽深高。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+当前验证基线：183 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；住户前端保留 Pascal 开源 2D / 3D 编辑器地基，但手动权限只有移动、旋转与宽深高。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
+
+无渲染房屋 CLI：
+
+```bash
+cd app
+npm run home -- init
+npm run home -- tree --room room-living-dining
+npm run home -- edit object-sofa move --dx 100
+npm run home -- agent '把沙发向右移动20厘米'
+npm run home -- apply latest
+npm run home -- diff v0001 v0002
+```
+
+CLI 默认写入被 Git 忽略的 `app/.data/house-cli/`，使用同一 canonical scene、SceneCommand、规则和 Agent Harness，不加载网页或 3D 编辑器。显式增加 `--aily` 才调用真实 Aily；默认只产生 pending proposal，只有 `apply` 或 `--apply` 才创建下一版本。
 
 后端能力门与 Agent Harness：
 
@@ -63,7 +78,7 @@ CLI 服务默认将本地演示项目写入 `app/.data/project-demo.json`；可�
 
 团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。本机 `app/.env.local` 已配置已发布的项目智能体且被 Git 忽略；两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
 
-本次交付前的实测能力口径为 Base `ready`、Aily `api_unavailable`；页面最多等待 10 秒后自动降级到本地 planner。真实欧派 SKU、报价、BOM、工期、施工与生产 API 仍保持 `pending` 适配边界。
+2026-08-12 的 CLI 实测已完成一次真实 Aily 工具回合；这是当前 provider 证据，不代表网页、Base 或企业接口永久可用。任何实时失败仍由 Harness 降级到本地 planner。真实欧派 SKU、报价、BOM、工期、施工与生产 API 继续保持 `pending` 适配边界。
 
 ## Git 规则
 

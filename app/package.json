@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "server": "node --env-file-if-exists=.env.local server/index.mjs",
     "build": "vite build",
+    "home": "node --env-file-if-exists=.env.local scripts/home-cli.mjs",
     "test": "node --test",
     "test:backend": "node --test tests/backend-domain.test.mjs tests/agent-harness.test.mjs tests/agent-eval.test.mjs tests/catalog-import.test.mjs tests/catalog-prompt.test.mjs tests/design-impact.test.mjs tests/project-store.test.mjs tests/server.test.mjs",
     "eval:agent": "node scripts/eval_agent_prompt.mjs",
