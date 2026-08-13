@@ -14,6 +14,12 @@
     "eval:agent:live": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live",
     "eval:agent:live:style": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live --suite=style",
     "eval:agent:live:golden": "node --env-file-if-exists=.env.local scripts/eval_agent_prompt.mjs --live --suite=golden",
+    "eval:design:standards": "node scripts/eval_standard_design_plans.mjs",
+    "eval:design:standards:live": "node --env-file-if-exists=.env.local scripts/eval_standard_design_plans.mjs --live --publish",
+    "eval:design:standards:dev": "node scripts/eval_standard_design_plans.mjs --suite=development",
+    "eval:design:standards:dev:live": "node --env-file-if-exists=.env.local scripts/eval_standard_design_plans.mjs --live --suite=development",
+    "eval:design:standards:acceptance": "node scripts/eval_standard_design_plans.mjs --suite=acceptance",
+    "eval:design:standards:acceptance:live": "node --env-file-if-exists=.env.local scripts/eval_standard_design_plans.mjs --live --suite=acceptance",
     "live:agent": "node --env-file-if-exists=.env.local server/agent-live.mjs",
     "eval:style": "node scripts/eval_style_retrieval.mjs"
   },

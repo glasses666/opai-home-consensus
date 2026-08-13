@@ -109,6 +109,54 @@ test('Aily adapter prefers the official team-agent chat chain when agent ID is a
   ]);
 });
 
+test('Aily adapter accepts a trusted structured prompt without rebuilding it', async () => {
+  let sentPrompt;
+  const fakeRun = async (args) => {
+    if (args[1] === 'POST') {
+      const data = JSON.parse(args[args.indexOf('--data') + 1]);
+      sentPrompt = data.user_message.content[0].text;
+      return { data: { agent_chat_id: 'chat_structured' } };
+    }
+    return {
+      data: {
+        status: 'Completed',
+        content: [{ type: 'text', text: '{"toolCalls":[],"standardPlan":{"ok":true}}' }],
+      },
+    };
+  };
+  const result = await callAily({ prompt: '{"custom":true}', tools: [{ name: 'noop', writes: false }] }, {
+    agentId: 'agent_test',
+    run: fakeRun,
+    pollMs: 0,
+    timeoutMs: 100,
+  });
+  assert.equal(sentPrompt, '{"custom":true}');
+  assert.deepEqual(result.standardPlan, { ok: true });
+});
+
+test('structured Aily prompts still require JSON toolCalls', async () => {
+  const fakeRun = async (args) => args[1] === 'POST'
+    ? { data: { agent_chat_id: 'chat_plain' } }
+    : { data: { status: 'Completed', content: [{ type: 'text', text: 'plain text should fail' }] } };
+
+  await assert.rejects(
+    callAily({ prompt: '{"custom":true}', tools: [{ name: 'noop', writes: false }] }, {
+      agentId: 'agent_test',
+      run: fakeRun,
+      pollMs: 0,
+      timeoutMs: 100,
+      maxAttempts: 1,
+    }),
+    (error) => error.message === 'AILY_RESPONSE_INVALID'
+      && error.providerTrace?.provider === 'aily_team'
+      && error.providerTrace?.chatId === 'chat_plain',
+  );
+  await assert.rejects(
+    callAily({ prompt: '' }, { agentId: 'agent_test', run: fakeRun, maxAttempts: 1 }),
+    /AILY_PROMPT_INVALID/,
+  );
+});
+
 test('team-agent adapter waits when Completed arrives before its text content', async () => {
   let reads = 0;
   const fakeRun = async (args) => {
@@ -156,6 +204,46 @@ test('team-agent adapter retries one malformed response', async () => {
   }, { agentId: 'agent_test', run: fakeRun, pollMs: 0, timeoutMs: 100, maxAttempts: 2 });
   assert.equal(creates, 2);
   assert.equal(result.assistantReply, '已恢复。');
+});
+
+test('team-agent adapter resumes the same chat after a polling timeout', async () => {
+  let creates = 0;
+  let reads = 0;
+  const fakeRun = async (args) => {
+    if (args[1] === 'POST') {
+      creates += 1;
+      return { data: { agent_chat_id: 'chat_slow' } };
+    }
+    reads += 1;
+    return reads === 1
+      ? { data: { status: 'Processing', content: [] } }
+      : { data: { status: 'Completed', content: [{ type: 'text', text: '{"assistantReply":"已续接。","toolCalls":[]}' }] } };
+  };
+
+  const result = await callAily({
+    input: '检查客餐厅', scene: {}, selectedObjectId: null, tools: [],
+  }, {
+    agentId: 'agent_test', run: fakeRun, pollMs: 10, timeoutMs: 5, maxAttempts: 2,
+  });
+
+  assert.equal(creates, 1);
+  assert.equal(reads, 2);
+  assert.equal(result.assistantReply, '已续接。');
+});
+
+test('team-agent timeout exposes a resumable provider trace', async () => {
+  const fakeRun = async (args) => args[1] === 'POST'
+    ? { data: { agent_chat_id: 'chat_pending' } }
+    : { data: { status: 'Processing', content: [] } };
+
+  await assert.rejects(
+    callAily({ input: '检查客餐厅', scene: {}, selectedObjectId: null, tools: [] }, {
+      agentId: 'agent_test', run: fakeRun, pollMs: 0, timeoutMs: 0, maxAttempts: 1,
+    }),
+    (error) => error.message === 'AILY_TIMEOUT'
+      && error.providerTrace?.provider === 'aily_team'
+      && error.providerTrace?.chatId === 'chat_pending',
+  );
 });
 
 test('health reports only verified capabilities as ready', async () => {

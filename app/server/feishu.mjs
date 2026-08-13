@@ -35,19 +35,35 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const dataOf = (envelope) => envelope?.data ?? {};
 const firstString = (...values) => values.find((value) => typeof value === 'string' && value.length > 0) ?? null;
 
-function parseToolCalls(text, { allowTextReply = false } = {}) {
+function parseToolCalls(text, { allowTextReply = false, captureRawResponse = false } = {}) {
   const cleaned = String(text ?? '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  const invalid = () => {
+    const error = new Error('AILY_RESPONSE_INVALID');
+    if (captureRawResponse) Object.defineProperty(error, 'rawResponse', { value: cleaned });
+    return error;
+  };
   let parsed;
   try {
     parsed = JSON.parse(cleaned);
   } catch {
     if (allowTextReply && cleaned) return { assistantReply: cleaned, toolCalls: [] };
-    throw new Error('AILY_RESPONSE_INVALID');
+    throw invalid();
   }
   if (!Array.isArray(parsed?.toolCalls) && !Array.isArray(parsed?.tool_calls)) {
-    throw new Error('AILY_RESPONSE_INVALID');
+    throw invalid();
   }
   return parsed;
+}
+
+function promptForContext(context) {
+  if (context?.prompt !== undefined) {
+    if (typeof context.prompt !== 'string' || !context.prompt.trim() || context.prompt.length > 60_000) {
+      throw new Error('AILY_PROMPT_INVALID');
+    }
+    return context.prompt;
+  }
+  const { input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence } = context ?? {};
+  return buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
 }
 
 function apiArgs(method, path, { data, params } = {}) {
@@ -57,7 +73,7 @@ function apiArgs(method, path, { data, params } = {}) {
   return args;
 }
 
-async function callAilyOnce({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
+async function callAilyOnce(context, {
   appId,
   run = runLarkCli,
   id = randomUUID,
@@ -73,7 +89,7 @@ async function callAilyOnce({ input, mode, scene, selectedObjectId, tools, catal
   const sessionId = firstString(session.id, session.session_id);
   if (!sessionId) throw new Error('AILY_SESSION_INVALID');
 
-  const prompt = buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
+  const prompt = promptForContext(context);
   await run(apiArgs('POST', `/open-apis/aily/v1/sessions/${sessionId}/messages`, {
     data: { idempotent_id: id(), content_type: 'TEXT', content: prompt },
   }));
@@ -115,26 +131,34 @@ async function callAilyOnce({ input, mode, scene, selectedObjectId, tools, catal
   if (!content) throw new Error('AILY_RESPONSE_MISSING');
 
   lastAilySuccessAt = new Date().toISOString();
-  return parseToolCalls(content);
+  const parsed = parseToolCalls(content, { captureRawResponse: Boolean(context?.prompt) });
+  if (context?.prompt) Object.defineProperty(parsed, 'providerTrace', { value: { provider: 'aily_legacy', sessionId, runId } });
+  return parsed;
 }
 
-async function callTeamAgentOnce({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence }, {
+async function callTeamAgentOnce(context, {
   agentId,
+  resumeChatId,
   run = runLarkCli,
   pollMs = 250,
   timeoutMs = 12_000,
 } = {}) {
   if (!/^agent_[A-Za-z0-9_-]{1,59}$/.test(agentId ?? '')) throw new Error('AILY_AGENT_ID_INVALID');
   const safeAgentId = encodeURIComponent(agentId);
-  const prompt = buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief, styleEvidence });
-  const created = await run(apiArgs('POST', `/open-apis/aily/v1/agents/${safeAgentId}/chats`, {
-    data: {
-      stream: false,
-      user_message: { content: [{ type: 'text', text: prompt }] },
-    },
-  }));
-  const chatId = firstString(dataOf(created).agent_chat_id);
-  if (!chatId) throw new Error('AILY_CHAT_INVALID');
+  let chatId = firstString(resumeChatId);
+  if (chatId && (chatId.length > 256 || /\s/.test(chatId))) throw new Error('AILY_CHAT_ID_INVALID');
+  if (!chatId) {
+    const prompt = promptForContext(context);
+    const created = await run(apiArgs('POST', `/open-apis/aily/v1/agents/${safeAgentId}/chats`, {
+      data: {
+        stream: false,
+        user_message: { content: [{ type: 'text', text: prompt }] },
+      },
+    }));
+    chatId = firstString(dataOf(created).agent_chat_id);
+    if (!chatId) throw new Error('AILY_CHAT_INVALID');
+  }
+  const providerTrace = { provider: 'aily_team', agentId, chatId };
 
   const deadline = Date.now() + timeoutMs;
   let completedWithoutContent = false;
@@ -147,28 +171,46 @@ async function callTeamAgentOnce({ input, mode, scene, selectedObjectId, tools, 
       .join('\n');
     if ((result.finish_reason || ['completed', 'succeeded', 'success', 'finished'].includes(state)) && text) {
       lastAilySuccessAt = new Date().toISOString();
-      return parseToolCalls(text, { allowTextReply: tools.every((tool) => tool.writes !== true) });
+      let parsed;
+      try {
+        parsed = parseToolCalls(text, {
+          allowTextReply: !context?.prompt && (context?.tools ?? []).every((tool) => tool.writes !== true),
+          captureRawResponse: Boolean(context?.prompt),
+        });
+      } catch (error) {
+        error.providerTrace = providerTrace;
+        throw error;
+      }
+      if (context?.prompt) Object.defineProperty(parsed, 'providerTrace', { value: providerTrace });
+      return parsed;
     }
     if (result.finish_reason || ['completed', 'succeeded', 'success', 'finished'].includes(state)) completedWithoutContent = true;
-    if (['failed', 'expired', 'cancelled'].includes(state)) throw new Error(`AILY_CHAT_${state.toUpperCase()}`);
+    if (['failed', 'expired', 'cancelled'].includes(state)) {
+      const error = new Error(`AILY_CHAT_${state.toUpperCase()}`);
+      error.providerTrace = providerTrace;
+      throw error;
+    }
     await sleep(pollMs);
   }
   const error = new Error(completedWithoutContent ? 'AILY_RESPONSE_MISSING' : 'AILY_TIMEOUT');
   error.retryable = true;
+  error.providerTrace = providerTrace;
   throw error;
 }
 
 export async function callAily(context, options = {}) {
   const maxAttempts = options.maxAttempts ?? 2;
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 2) throw new Error('AILY_ATTEMPTS_INVALID');
+  let resumeChatId = options.resumeChatId;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     try {
       return options.agentId
-        ? await callTeamAgentOnce(context, options)
+        ? await callTeamAgentOnce(context, { ...options, resumeChatId })
         : await callAilyOnce(context, options);
     } catch (error) {
       const retryable = error?.retryable || error?.message === 'AILY_RESPONSE_INVALID';
       if (attempt === maxAttempts - 1 || !retryable) throw error;
+      resumeChatId = error?.message === 'AILY_RESPONSE_INVALID' ? null : error?.providerTrace?.chatId;
     }
   }
   throw new Error('AILY_UNAVAILABLE');
