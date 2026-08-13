@@ -577,7 +577,7 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .experience-primary, .experience-secondary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; border: 1px solid #29261f; border-radius: 999px; font-size: 12px; font-weight: 740; text-decoration: none; }
 .experience-primary { background: #29261f; color: #fff; }
 .experience-secondary { background: transparent; color: #29261f; }
-.experience-hero__copy > small { margin-top: 13px; color: #8a8277; font-size: 10px; }
+.experience-hero__copy > small { display: inline-flex; align-items: center; gap: 6px; margin-top: 13px; color: #8a8277; font-size: 10px; }
 .experience-hero__scene { position: relative; min-height: 520px; overflow: hidden; border: 1px solid #cfc5b8; border-radius: 42% 42% 18px 18px; background: linear-gradient(155deg, #dfd1bd, #f8f3e9 68%); box-shadow: 0 32px 80px rgb(72 58 39 / 16%); }
 .experience-hero__plan { position: absolute; inset: 11% 8% 8%; transform: perspective(900px) rotateX(58deg) rotateZ(-22deg); transform-origin: 50% 54%; }
 .experience-hero__plan i { position: absolute; display: block; border: 12px solid #f8f5ef; background: linear-gradient(145deg, #c89d66, #eacb9e); box-shadow: 18px 24px 35px rgb(76 56 34 / 18%); }
@@ -591,6 +591,19 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .experience-hero__agent strong { font-family: var(--display-font); font-size: 20px; font-weight: 540; }
 .experience-hero__agent p { margin: 0; color: #6d675e; font-size: 11px; line-height: 1.5; }
 .experience-hero__agent em { margin-top: 6px; color: #81786d; font-size: 9px; font-style: normal; }
+.experience-how { width: min(1500px, 100%); margin: 0 auto; padding: clamp(56px, 8vw, 112px) 0 48px; scroll-margin-top: 24px; border-top: 1px solid #cfc5b8; }
+.experience-how > header { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); align-items: end; gap: clamp(36px, 7vw, 100px); }
+.experience-how h2 { max-width: 850px; margin: 0; font-family: var(--display-font); font-size: clamp(38px, 5vw, 72px); font-weight: 500; letter-spacing: -.05em; line-height: 1.02; }
+.experience-how > header p { max-width: 520px; margin: 0; color: #6d675e; font-size: 13px; line-height: 1.8; }
+.experience-how ol { display: grid; margin: clamp(48px, 7vw, 86px) 0 0; padding: 0; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #cfc5b8; list-style: none; }
+.experience-how li { display: grid; min-height: 220px; align-content: space-between; gap: 42px; padding: 22px clamp(18px, 2.5vw, 36px) 30px; border-right: 1px solid #cfc5b8; }
+.experience-how li:first-child { padding-left: 0; }
+.experience-how li:last-child { padding-right: 0; border-right: 0; }
+.experience-how li > span { color: #8d5c46; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.experience-how li strong { font-family: var(--display-font); font-size: clamp(22px, 2vw, 31px); font-weight: 550; letter-spacing: -.025em; }
+.experience-how li p { max-width: 360px; margin: 12px 0 0; color: #716a60; font-size: 12px; line-height: 1.7; }
+.experience-how__action { display: flex; align-items: center; gap: 18px; margin-top: 28px; }
+.experience-how__action > span { color: #8a8277; font-size: 10px; }
 .direction-section { width: min(1500px, 100%); margin: 0 auto; }
 .experience-shell[data-page="directions"] .direction-section { margin-top: clamp(76px, 12vh, 150px); }
 .direction-section__heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 480px); align-items: end; gap: 40px; margin-bottom: 24px; }
@@ -683,6 +696,12 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
   .experience-hero { margin-block: 50px; gap: 36px; }
   .experience-hero h1 { font-size: clamp(44px, 14vw, 70px); }
   .experience-hero__scene { min-height: 360px; }
+  .experience-how > header, .experience-how ol { grid-template-columns: 1fr; }
+  .experience-how > header { align-items: start; gap: 22px; }
+  .experience-how ol { margin-top: 42px; }
+  .experience-how li, .experience-how li:first-child, .experience-how li:last-child { min-height: 0; grid-template-columns: 32px 1fr; align-items: start; gap: 14px; padding: 24px 0; border-right: 0; border-bottom: 1px solid #cfc5b8; }
+  .experience-how li:last-child { border-bottom: 0; }
+  .experience-how__action { align-items: flex-start; flex-direction: column; }
   .direction-section__heading, .direction-grid { grid-template-columns: 1fr; }
   .direction-section__heading { gap: 18px; }
   .direction-boundary { grid-template-columns: auto 1fr; }
