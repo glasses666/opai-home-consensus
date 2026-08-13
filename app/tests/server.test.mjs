@@ -101,7 +101,7 @@ test('Aily adapter prefers the official team-agent chat chain when agent ID is a
     pollMs: 0,
   });
   assert.equal(result.toolCalls[0].tool, 'inspect_room');
-  assert.equal(sentPrompt.promptVersion, 'oppein-harness-v2.3');
+  assert.equal(sentPrompt.promptVersion, 'oppein-harness-v2.4');
   assert.equal(sentPrompt.rules.some((rule) => rule.includes('层板')), true);
   assert.deepEqual(paths, [
     'POST /open-apis/aily/v1/agents/agent_test/chats',

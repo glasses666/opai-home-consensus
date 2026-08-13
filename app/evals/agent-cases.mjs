@@ -186,14 +186,14 @@ export const AGENT_EVAL_CASES = Object.freeze([
     group: 'hard_constraints',
     input: '把客餐厅南墙装一组层板',
     provider: provider({ mode: 'execute', assistantReply: '尝试应用层板。', reasons: [], unresolved: [], toolCalls: [{ tool: 'apply_catalog_item', args: { catalogItemId: 'demo-shelf-floating-900', surfaceId: 'surface-wall-living-south' } }] }),
-    expect: [CHECKS.local, CHECKS.unchanged, CHECKS.noWriteTools, ({ trace }) => trace.mode === 'clarify' && trace.fallbackReason === 'TOOL_NOT_ALLOWED' && hasTool(trace, 'request_clarification')],
+    expect: [CHECKS.provider, CHECKS.rolledBack, ({ trace }) => trace.mode === 'execute' && hasStepError(trace, /CATALOG_ITEM_NOT_SCENE_READY/)],
   },
   {
-    id: 'constraint-missing-material',
-    group: 'hard_constraints',
+    id: 'provider-wrong-material-blocked',
+    group: 'unauthorized_mutation',
     input: '把客餐厅地面换成瓷砖',
     provider: provider({ assistantReply: '尝试切换地面。', toolCalls: [{ tool: 'set_surface_material', args: { surfaceId: 'surface-floor-living-dining', materialId: 'mat-missing' } }] }),
-    expect: [CHECKS.provider, CHECKS.rolledBack, ({ trace }) => hasStepError(trace, /MATERIAL_NOT_FOUND/)],
+    expect: [CHECKS.local, CHECKS.stepsOk, ({ trace, result }) => trace.fallbackReason === 'TOOL_ARGS_NOT_ALLOWED' && surface(result.store, 'surface-floor-living-dining').materialId === 'mat-floor-tile-warm'],
   },
   {
     id: 'grounding-invented-number',

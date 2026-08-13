@@ -6,7 +6,11 @@ import { compareVersionHistory } from '../domain/design-version.js';
 import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/design-rules.js';
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
-const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动))/;
+const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|只?(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|不许|不能|不想|先不|暂不|暂时不).{0,16}(?:改|修改|调整|动|移动|挪|旋转|删|删除|移除|应用|安装|换|执行|实施|落地|保存)|(?:只|仅)(?:看|预览))/;
+const SCOPED_PRESERVE_PATTERN = /(?:其他|其它|其余|别的|剩下|除.+?外|除了.+?之外).{0,12}(?:不要|别|先不|暂不|暂时不)|(?:不要|别|先不|暂不|暂时不).{0,8}(?:其他|其它|其余|别的|剩下)/;
+const CONDITIONAL_NO_WRITE_PATTERN = /(?:如果|若|要是|一旦|越界|不合法|不合适|有问题).{0,12}(?:就|则)?.{0,8}(?:不要|别|先不|暂不|暂时不)(?:直接)?(?:改|修改|调整|动)/;
+const POSITIVE_WRITE_PATTERN = /(?:改成|换成|设为|设置为|应用|铺成|刷成|移动|挪|右移|左移|上移|下移|南移|北移|旋转|删除|移除)/;
+const ENTITY_SCOPE_PATTERN = /(?:沙发|床|餐桌|餐台|电视柜|书桌|衣柜|鞋柜|橱柜|层板|架子|隔断|背景墙|墙面|地面|地板|顶面|天花)/;
 const CONSTRUCTION_CLAIMS = ['膨胀螺栓', '自攻螺丝', '结构胶', '龙骨', '混凝土', '砖墙', '石膏板'];
 const BEDROOM_OPEN_STORAGE_PATTERN = /主卧.*(?:太满|拥挤|开阔|动线).*(?:收纳)|主卧.*收纳.*(?:太满|拥挤|开阔|动线)/;
 
@@ -143,7 +147,28 @@ function findById(records, id) {
 }
 
 function hasNoWriteIntent(input) {
-  return NO_WRITE_INTENT_PATTERN.test(input);
+  const text = String(input ?? '');
+  const hasPositiveWrite = text.split(/[，,。；;！？!?\n]+/).some((clause) =>
+    POSITIVE_WRITE_PATTERN.test(clause) && !NO_WRITE_INTENT_PATTERN.test(clause));
+  return text
+    .split(/[，,。；;！？!?\n]+/)
+    .map((clause) => clause.trim())
+    .filter(Boolean)
+    .some((clause) => NO_WRITE_INTENT_PATTERN.test(clause) &&
+      !SCOPED_PRESERVE_PATTERN.test(clause) &&
+      !CONDITIONAL_NO_WRITE_PATTERN.test(clause) &&
+      !(hasPositiveWrite && ENTITY_SCOPE_PATTERN.test(clause)));
+}
+
+function namedObjectIds(input) {
+  return [...new Set(OBJECT_NOUNS.filter(([noun]) => input.includes(noun)).map(([, id]) => id))];
+}
+
+function writeTargetObjectIds(input) {
+  return [...new Set(String(input ?? '')
+    .split(/[，,。；;！？!?\n：:]+/)
+    .filter((clause) => POSITIVE_WRITE_PATTERN.test(clause) && !NO_WRITE_INTENT_PATTERN.test(clause))
+    .flatMap(namedObjectIds))];
 }
 
 function roomIdForSelected(scene, selectedId) {
@@ -154,8 +179,10 @@ function roomIdForSelected(scene, selectedId) {
 
 function selectedOrNamedObjectId(input, selectedId, scene = null) {
   const selectedObject = typeof selectedId === 'string' && selectedId.startsWith('object-') ? findById(scene?.objects, selectedId) ?? { id: selectedId } : null;
-  const explicit = OBJECT_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
-  if (explicit) return explicit;
+  const actionIds = writeTargetObjectIds(input);
+  const explicitIds = actionIds.length ? actionIds : namedObjectIds(input);
+  if (explicitIds.length === 1) return explicitIds[0];
+  if (explicitIds.length > 1) return null;
   if (input.includes('床')) {
     const roomId = namedRoomId(input) ?? roomIdForSelected(scene, selectedId) ?? selectedObject?.roomId;
     if (roomId === 'room-flex') return 'object-flex-bed';
@@ -219,7 +246,7 @@ function summarizeScene(scene, input, selectedObjectId) {
   });
 }
 
-function toolsForInput(input) {
+function toolsForInput(input, noWrite = hasNoWriteIntent(input)) {
   const names = new Set(['request_clarification']);
   if (BEDROOM_OPEN_STORAGE_PATTERN.test(input)) {
     names.add('inspect_room');
@@ -248,7 +275,7 @@ function toolsForInput(input) {
     names.add('inspect_room');
     names.add('search_catalog');
   }
-  return TOOL_REGISTRY.filter((tool) => names.has(tool.name) && (!hasNoWriteIntent(input) || !tool.writes));
+  return TOOL_REGISTRY.filter((tool) => names.has(tool.name) && (!noWrite || !tool.writes));
 }
 
 function selectedOrNamedSurfaceId(input, selectedObjectId, scene) {
@@ -280,6 +307,11 @@ function namedSurfaceMaterialId(input, kind) {
   return SURFACE_MATERIAL_NOUNS[kind]?.find(([pattern]) => pattern.test(input))?.[1] ?? null;
 }
 
+function namedCatalogItemId(input) {
+  if (/(层板|悬浮层板)/.test(input)) return 'demo-shelf-floating-900';
+  return null;
+}
+
 function amountMm(input) {
   const match = input.match(/(-?\d+(?:\.\d+)?)\s*(毫米|厘米|cm|mm|米)?/i);
   if (!match) return null;
@@ -291,6 +323,22 @@ function amountMm(input) {
   return Math.round(amount);
 }
 
+function movementMm(input, direction) {
+  const directionPattern = direction === 'right' ? '(?:右|右边)'
+    : direction === 'left' ? '(?:左|左边)'
+      : direction === 'down' ? '(?:下|下边|南)'
+        : '(?:上|上边|北)';
+  const patterns = [
+    new RegExp(`(?:向|往|朝)?${directionPattern}(?:移动|挪|移)?\\s*(-?\\d+(?:\\.\\d+)?)\\s*(毫米|厘米|cm|mm|米)?`, 'i'),
+    new RegExp(`(?:移动|挪|移)\\s*(-?\\d+(?:\\.\\d+)?)\\s*(毫米|厘米|cm|mm|米)?\\s*(?:到|向|往|朝)?${directionPattern}`, 'i'),
+  ];
+  for (const pattern of patterns) {
+    const match = input.match(pattern);
+    if (match) return amountMm(`${match[1]}${match[2] ?? '毫米'}`);
+  }
+  return null;
+}
+
 function degrees(input) {
   const match = input.match(/(-?\d+(?:\.\d+)?)\s*度/);
   return match ? Number(match[1]) : null;
@@ -299,8 +347,18 @@ function degrees(input) {
 export function parseLocalToolCalls({ input, selectedObjectId = null, versionHistory = null, scene = null }) {
   const text = String(input ?? '').trim();
   if (!text) return [];
+  if (writeTargetObjectIds(text).length > 1) {
+    return [{
+      tool: 'request_clarification',
+      args: { question: '这次要修改哪一件家具？', reason: '同一句话包含多个家具目标' },
+    }];
+  }
   const objectId = selectedOrNamedObjectId(text, selectedObjectId, scene);
   const surfaceId = selectedOrNamedSurfaceId(text, selectedObjectId, scene);
+
+  if (/(应用|安装|装一组|装上)/.test(text) && namedCatalogItemId(text) && surfaceId) {
+    return [{ tool: 'apply_catalog_item', args: { catalogItemId: namedCatalogItemId(text), surfaceId } }];
+  }
 
   if (BEDROOM_OPEN_STORAGE_PATTERN.test(text)) {
     return [
@@ -353,30 +411,33 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
 
   if (!objectId) return [];
 
+  const calls = [];
+  if (/(改成|换成|设为|设置为)/.test(text)) {
+    const materialId = namedMaterialId(text);
+    if (materialId) calls.push({ tool: 'set_object_material', args: { objectId, materialId } });
+  }
+
   if (/(移动|挪|移)/.test(text)) {
-    const mm = amountMm(text);
-    if (!mm) return [];
-    if (text.includes('向右')) return [{ tool: 'move_object', args: { objectId, dx: mm } }];
-    if (text.includes('向左')) return [{ tool: 'move_object', args: { objectId, dx: -mm } }];
-    if (text.includes('向下') || text.includes('向南')) return [{ tool: 'move_object', args: { objectId, dz: mm } }];
-    if (text.includes('向上') || text.includes('向北')) return [{ tool: 'move_object', args: { objectId, dz: -mm } }];
+    const right = movementMm(text, 'right');
+    const left = movementMm(text, 'left');
+    const down = movementMm(text, 'down');
+    const up = movementMm(text, 'up');
+    if (right) calls.push({ tool: 'move_object', args: { objectId, dx: right } });
+    else if (left) calls.push({ tool: 'move_object', args: { objectId, dx: -left } });
+    else if (down) calls.push({ tool: 'move_object', args: { objectId, dz: down } });
+    else if (up) calls.push({ tool: 'move_object', args: { objectId, dz: -up } });
   }
 
   if (text.includes('旋转')) {
     const value = degrees(text);
-    if (Number.isFinite(value)) return [{ tool: 'rotate_object', args: { objectId, degrees: value, mode: 'delta' } }];
+    if (Number.isFinite(value)) calls.push({ tool: 'rotate_object', args: { objectId, degrees: value, mode: 'delta' } });
   }
 
   if (/(删除|移除|不要了)/.test(text)) {
     return [{ tool: 'delete_object', args: { objectId } }];
   }
 
-  if (/(改成|换成|设为|设置为)/.test(text)) {
-    const materialId = namedMaterialId(text);
-    if (materialId) return [{ tool: 'set_object_material', args: { objectId, materialId } }];
-  }
-
-  return [];
+  return calls;
 }
 
 function normalizeToolCall(call) {
@@ -387,11 +448,48 @@ function normalizeToolCall(call) {
     throw new Error('TOOL_CALL_INVALID');
   }
   const normalizedArgs = stableJsonValue(args);
+  const contract = TOOL_REGISTRY.find((entry) => entry.name === tool);
+  const allowedArgs = new Set([...(contract?.requiredArgs ?? []), ...(contract?.optionalArgs ?? [])]);
+  if (Object.keys(normalizedArgs).some((key) => !allowedArgs.has(key))) throw new Error('TOOL_CALL_INVALID');
   if (tool === 'request_clarification' && typeof normalizedArgs.question === 'string') {
     const body = normalizedArgs.question.replace(/[？?]+/g, '，').replace(/[，,\s]+$/, '').slice(0, 179).trim();
     normalizedArgs.question = `${body}？`;
   }
   return { tool, args: normalizedArgs };
+}
+
+function writeIntentSignature(call, scene) {
+  const object = call.args.objectId ? findById(scene.objects, call.args.objectId) : null;
+  if (call.tool === 'move_object') {
+    return stableJsonValue({
+      tool: call.tool,
+      objectId: call.args.objectId,
+      x: call.args.x ?? object?.transform.x + (call.args.dx ?? 0),
+      z: call.args.z ?? object?.transform.z + (call.args.dz ?? 0),
+    });
+  }
+  if (call.tool === 'rotate_object') {
+    const radians = call.args.degrees * Math.PI / 180;
+    return stableJsonValue({
+      tool: call.tool,
+      objectId: call.args.objectId,
+      rotationY: call.args.mode === 'absolute' ? radians : object?.transform.rotationY + radians,
+    });
+  }
+  return stableJsonValue(call);
+}
+
+function assertProviderWriteCallsMatchIntent(toolCalls, expectedCalls, scene) {
+  const expectedWrites = expectedCalls.filter((call) => WRITE_TOOL_NAMES.has(call.tool));
+  const actualWrites = toolCalls.filter((call) => WRITE_TOOL_NAMES.has(call.tool));
+  if (expectedWrites.length !== actualWrites.length) throw new Error('TOOL_ARGS_NOT_ALLOWED');
+  const remaining = expectedWrites.map((call) => writeIntentSignature(call, scene));
+  for (const actual of actualWrites) {
+    const signature = writeIntentSignature(actual, scene);
+    const index = remaining.findIndex((expected) => JSON.stringify(expected) === JSON.stringify(signature));
+    if (index < 0) throw new Error('TOOL_ARGS_NOT_ALLOWED');
+    remaining.splice(index, 1);
+  }
 }
 
 function inferAgentMode(input, localToolCalls) {
@@ -526,6 +624,7 @@ function providerFailureCode(error) {
   if (message === 'PROVIDER_REPLY_UNGROUNDED') return message;
   if (message === 'TOOL_CALL_INVALID') return message;
   if (message === 'TOOL_NOT_ALLOWED') return message;
+  if (message === 'TOOL_ARGS_NOT_ALLOWED') return message;
   if (message === 'PROVIDER_MODE_INVALID') return message;
   return 'PROVIDER_FAILED';
 }
@@ -542,6 +641,46 @@ function localFallbackReply(input) {
     return '已按演示目录提交浅橡木木饰面变更，实际材料、报价与施工条件仍需复核。';
   }
   return '';
+}
+
+function labelForToolTarget(call, scene) {
+  if (call.args.objectId) return findById(scene.objects, call.args.objectId)?.name ?? call.args.objectId;
+  if (call.args.surfaceId) {
+    const surface = findById(scene.surfaces, call.args.surfaceId);
+    const room = findById(scene.rooms, surface?.roomId);
+    const kind = surface?.kind === 'wall' ? '墙面' : surface?.kind === 'floor' ? '地面' : surface?.kind === 'ceiling' ? '顶面' : '表面';
+    return `${room?.name ?? ''}${kind}`;
+  }
+  return '当前对象';
+}
+
+function truthfulExecutionReply({ rolledBack, steps, toolCalls, scene }) {
+  if (rolledBack) {
+    const error = steps.find((step) => !step.ok)?.error ?? '本地规则未通过';
+    const message = error.includes('OBJECT_FOOTPRINT_OUTSIDE_ROOM') || error.includes('ROOM_BOUNDARY')
+      ? '会超出房间边界。'
+      : error.includes('OBJECT_COLLISION')
+        ? '会与其他家具发生碰撞。'
+        : error.includes('CLEARANCE_OCCUPIED')
+          ? '会侵占需要保留的通行空间。'
+          : error.includes('NOT_MOVABLE') || error.includes('LOCKED')
+            ? '该对象不允许这样修改。'
+            : error.includes('NOT_SCENE_READY')
+              ? '该组件尚未接入可写场景。'
+              : '本地场景或规则校验未通过。';
+    return `没有修改：${message}`;
+  }
+  const writes = toolCalls.filter((call) => WRITE_TOOL_NAMES.has(call.tool));
+  if (!writes.length) return null;
+  if (writes.length > 1) return `已通过本地规则校验并应用 ${writes.length} 项变更。`;
+  const call = writes[0];
+  const target = labelForToolTarget(call, scene);
+  const action = call.tool === 'move_object' ? '移动'
+    : call.tool === 'rotate_object' ? '旋转'
+      : call.tool === 'delete_object' ? '删除'
+        : call.tool === 'set_object_material' ? '材质修改'
+          : '饰面修改';
+  return `已通过本地规则校验并应用${target}的${action}。`;
 }
 
 async function normalizeCatalogToolCalls(toolCalls, catalogPlugin) {
@@ -578,7 +717,7 @@ function optionalString(args, key) {
 
 function optionalStringArray(args, key) {
   if (args[key] === undefined || args[key] === null) return undefined;
-  if (!Array.isArray(args[key]) || args[key].length > 4) {
+  if (!Array.isArray(args[key]) || args[key].length > 8) {
     throw new Error(`ARG_INVALID: ${key}`);
   }
   const values = args[key].map((value) => typeof value === 'string' ? value : value?.label);
@@ -815,6 +954,7 @@ export async function runAgentTurn({
       );
       ({ assistantReply, toolCalls, providerReplyIssue, providerModeExplicit, providerDeclaredMode, reasons, unresolved } = normalizeProviderResult(providerResult, providerContext));
       toolCalls = await normalizeCatalogToolCalls(toolCalls, catalogPlugin);
+      assertProviderWriteCallsMatchIntent(toolCalls, deterministicToolCalls, store.currentScene);
       source = 'provider';
     } catch (error) {
       fallbackReason = providerFailureCode(error);
@@ -844,6 +984,8 @@ export async function runAgentTurn({
 
   const clarification = steps.find((step) => step.ok && step.tool === 'request_clarification')?.result;
   if (clarification?.question && !/[？?]/.test(assistantReply)) assistantReply = clarification.question;
+  const executionReply = mode === 'execute' ? truthfulExecutionReply({ rolledBack, steps, toolCalls, scene: store.currentScene }) : null;
+  if (executionReply) assistantReply = executionReply;
 
   const nextBrief = evolveDesignBrief(currentBrief, {
     input: inputText,

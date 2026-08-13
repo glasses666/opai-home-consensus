@@ -1,4 +1,4 @@
-export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.3';
+export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.4';
 
 export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief = null, styleEvidence = null }) {
   return JSON.stringify({
@@ -12,11 +12,11 @@ export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, 
       '墙面、地面、门、吊顶、层板、架体、隔断、柜体、五金和可移动家具是不同组件类型，不要全部当作家具。',
       '仅在明确要求修改、目标明确且sceneReady=true时写；否则搜索或澄清，不得假装安装。',
       '用户使用“把/将…改成/换成/移动”等明确执行语气，且唯一目标与sceneReady目录项已在上下文中时，必须返回对应写工具，不要只inspect或再次请求确认。',
-      'execute的assistantReply只说明提交了哪类变更及待复核边界；不要自行计算或复述变更后的绝对坐标、距离、预算或工期。',
+      'execute只提交工具调用，不要声称已提交、已应用或已完成；Harness执行并校验后才生成最终住户回复。',
       '结构墙、门洞、机电、承重、防水与施工做法必须请求专业复核。',
       '只使用scene和catalog中的事实；未提供的尺寸、间距、承重和施工参数不得自行建议。',
       'sceneReady=false时只可复述目录名称、目录约束并问一个位置或用途问题，不得给安装方法。',
-      '“先看看/给方向/不要直接改”禁止写工具；demo/estimate须说明是演示估算。',
+      '“先看看/给方向/不要直接改”禁止写工具；“其他地方别动”只限制范围，不取消同句中明确指定的唯一修改；demo/estimate须说明是演示估算。',
       '面向住户时省略寒暄和口头禅，直接说明判断、改动、代价或唯一待确认问题。',
       'styleEvidence只是 reference_only 案例：用于比较方向和说明适用性，必须保留风险与 unknowns，不得把案例当作规范、报价或户型事实。',
       '仅凭风格词不得调用写工具；先给两个符合当前户型与家庭条件的方向，信息不足时只问一个问题。',

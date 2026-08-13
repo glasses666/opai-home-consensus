@@ -113,6 +113,8 @@ test('a failed multi-tool turn rolls back earlier writes', async () => {
   assert.equal(serializeScene(result.store.currentScene), beforeScene);
   assert.equal(result.store.commands.length, 0);
   assert.equal(result.trace.rolledBack, true);
+  assert.match(result.trace.assistantReply, /^没有修改：/);
+  assert.doesNotMatch(result.trace.assistantReply, /已提交|已完成|已修改/);
 });
 
 test('provider receives a scene summary, not the live raw scene', async () => {
@@ -145,6 +147,148 @@ test('provider tool calls are limited to the current turn allowlist', async () =
   assert.equal(result.trace.fallbackReason, 'TOOL_NOT_ALLOWED');
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
   assert.equal(objectById(result.store, 'object-sofa').transform.rotationY, 0);
+});
+
+test('provider write arguments are bound to the resident target and amount', async () => {
+  const wrongTarget = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({
+      mode: 'execute', assistantReply: '移动家具。', reasons: [], unresolved: [],
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-primary-bed', dx: 200 } }],
+    }),
+  });
+  assert.equal(wrongTarget.trace.source, 'local');
+  assert.equal(wrongTarget.trace.fallbackReason, 'TOOL_ARGS_NOT_ALLOWED');
+  assert.equal(objectById(wrongTarget.store, 'object-sofa').transform.x, 2400);
+  assert.equal(objectById(wrongTarget.store, 'object-primary-bed').transform.x, 1500);
+
+  const wrongAmount = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({
+      mode: 'execute', assistantReply: '移动沙发。', reasons: [], unresolved: [],
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 2000 } }],
+    }),
+  });
+  assert.equal(wrongAmount.trace.source, 'local');
+  assert.equal(wrongAmount.trace.fallbackReason, 'TOOL_ARGS_NOT_ALLOWED');
+  assert.equal(objectById(wrongAmount.store, 'object-sofa').transform.x, 2400);
+});
+
+test('provider may express the same move as an absolute coordinate', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({
+      mode: 'execute', assistantReply: '准备移动沙发。', reasons: [], unresolved: [],
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', x: 2400, z: 5600 } }],
+    }),
+  });
+
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.fallbackReason, null);
+  assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
+});
+
+test('provider cannot smuggle undeclared write arguments', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => ({
+      mode: 'execute', assistantReply: '准备移动沙发。', reasons: [], unresolved: [],
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200, force: true } }],
+    }),
+  });
+
+  assert.equal(result.trace.source, 'local');
+  assert.equal(result.trace.fallbackReason, 'TOOL_CALL_INVALID');
+  assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
+});
+
+test('scoped preserve clauses do not cancel the one explicit edit', async () => {
+  for (const input of [
+    '把开放客餐厅南墙改成浅橡木木饰面，其他地方先别动',
+    '其他墙面不要改，只把开放客餐厅南墙改成浅橡木木饰面',
+  ]) {
+    const result = await runAgentTurn({ store: freshStore(), input });
+    assert.equal(result.trace.mode, 'execute', input);
+    assert.equal(surfaceById(result.store, 'surface-wall-living-south').materialId, 'mat-wall-oak-panel', input);
+  }
+
+  const globalNoWrite = await runAgentTurn({ store: freshStore(), input: '开放客餐厅南墙先别动，只给我两个方向' });
+  assert.equal(globalNoWrite.trace.mode, 'propose');
+  assert.equal(globalNoWrite.store.commands.length, 0);
+});
+
+test('a previous blocked action does not swallow the next clarification turn', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '越界就不要改了。我还想在客餐厅加一组悬浮层板。',
+  });
+  assert.equal(result.trace.mode, 'clarify');
+  assert.deepEqual(result.trace.toolCalls.map(({ tool }) => tool), ['search_catalog', 'request_clarification']);
+  assert.equal(result.store.commands.length, 0);
+});
+
+test('ambiguous multi-object write asks instead of guessing a target', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发和餐桌向右移动20厘米',
+  });
+  assert.equal(result.trace.mode, 'clarify');
+  assert.deepEqual(result.trace.toolCalls.map(({ tool }) => tool), ['request_clarification']);
+  assert.equal(result.store.commands.length, 0);
+});
+
+test('chatty context cannot redirect an explicit furniture edit', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '餐桌先保持现在这样。对了，沙发往右挪20厘米就行。',
+  });
+  assert.equal(result.trace.mode, 'execute');
+  assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
+  assert.equal(objectById(result.store, 'object-dining-table').transform.x, 6200);
+});
+
+test('a five-turn resident session survives provider drift without corrupting state', async () => {
+  const turns = [
+    '先给我两个客餐厅方向，不要改房屋',
+    '把开放客餐厅南墙改成浅橡木木饰面，其他地方先别动',
+    '把沙发向右移动20厘米，餐桌保持原位',
+    '把沙发向左移动10000毫米',
+    '越界就不要改了。我还想在客餐厅加一组悬浮层板',
+  ];
+  let store = freshStore();
+  const results = [];
+  for (const input of turns) {
+    const result = await runAgentTurn({
+      store,
+      input,
+      provider: () => ({ mode: 'execute', assistantReply: '已完成。', reasons: [], unresolved: [], toolCalls: [] }),
+    });
+    store = result.store;
+    results.push(result);
+  }
+
+  assert.deepEqual(results.map((result) => result.trace.mode), ['propose', 'execute', 'execute', 'execute', 'clarify']);
+  assert.equal(surfaceById(store, 'surface-wall-living-south').materialId, 'mat-wall-oak-panel');
+  assert.equal(objectById(store, 'object-sofa').transform.x, 2400);
+  assert.equal(results[3].trace.rolledBack, true);
+  assert.equal(store.commands.length, 2);
+});
+
+test('no-write paraphrases stay read-only', async () => {
+  for (const input of [
+    '沙发右移20厘米，但这轮不许执行，只告诉我会发生什么',
+    '别保存任何调整，先预览沙发右移20厘米的影响',
+    '我只想看方案，沙发往右挪20厘米先不要落地',
+  ]) {
+    const result = await runAgentTurn({ store: freshStore(), input });
+    assert.equal(result.trace.mode, 'propose', input);
+    assert.equal(result.store.commands.length, 0, input);
+    assert.equal(result.trace.toolCalls.some((call) => ['move_object', 'rotate_object', 'delete_object'].includes(call.tool)), false, input);
+  }
 });
 
 test('delete_object is a write tool and no-write intent blocks it', async () => {

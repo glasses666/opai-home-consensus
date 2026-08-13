@@ -81,7 +81,7 @@ test('non-scene-ready shelving cannot be installed by a provider', async () => {
   const before = freshStore();
   const result = await runAgentTurn({
     store: before,
-    input: '直接把开放客餐厅南墙应用木饰面',
+    input: '直接把开放客餐厅南墙应用悬浮层板',
     provider: () => ({
       assistantReply: '我直接装。',
       toolCalls: [{
@@ -211,7 +211,7 @@ test('a grounded provider tool survives an ungrounded explanation', async () => 
   });
   assert.equal(result.trace.source, 'provider');
   assert.equal(result.trace.providerReplyIssue, 'PROVIDER_REPLY_UNGROUNDED');
-  assert.equal(result.trace.assistantReply, '已生成修改预览，最终结果以本地规则校验为准。');
+  assert.equal(result.trace.assistantReply, '已通过本地规则校验并应用Sofa的移动。');
   assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
 });
 
@@ -271,7 +271,7 @@ test('provider may return null for an omitted clarification options array', asyn
   assert.deepEqual(result.trace.steps[0].result.options, []);
 });
 
-test('provider may offer four bounded clarification options', async () => {
+test('provider may offer bounded clarification options', async () => {
   const store = createSceneStore(createDemoScene());
   const result = await runAgentTurn({
     store,
@@ -290,6 +290,20 @@ test('provider may offer four bounded clarification options', async () => {
 
   assert.equal(result.trace.steps[0].ok, true);
   assert.equal(result.trace.steps[0].result.options.length, 4);
+});
+
+test('provider may offer up to eight clarification options', async () => {
+  const options = ['玄关', '厨房', '客厅', '餐厅', '主卧', '次卧', '书房', '全屋'];
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '家里收纳不够，但还没决定先改哪个房间',
+    provider: () => ({
+      mode: 'clarify', assistantReply: '你想先改哪个房间？', reasons: [], unresolved: ['房间'],
+      toolCalls: [{ tool: 'request_clarification', args: { question: '你想先改哪个房间？', options } }],
+    }),
+  });
+
+  assert.deepEqual(result.trace.steps[0].result.options, options);
 });
 
 test('provider clarification option objects are reduced to resident labels', async () => {

@@ -109,7 +109,9 @@ if (!live) {
       result.trace.providerModeExplicit === true &&
       result.trace.fallbackReason === null &&
       [null, 'PROVIDER_MODE_CORRECTED', 'PROVIDER_CLARIFICATION_REPAIRED'].includes(result.trace.providerReplyIssue) &&
-      result.trace.steps.every((step) => step.ok || result.trace.rolledBack) &&
+      (entry.id === 'golden-block-boundary'
+        ? result.trace.rolledBack && result.trace.steps.some((step) => !step.ok)
+        : !result.trace.rolledBack && result.trace.steps.every((step) => step.ok)) &&
       entry.check(result),
   }));
   const suites = { smoke: smokeCases, style: styleCases, golden: goldenCases };
