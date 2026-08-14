@@ -6,6 +6,8 @@ final result: passed
 
 ## 审核范围
 
+- `/projects/new`：Gate 34 六步新建项目设置，覆盖资料来源、户型确认、预算、成员、图片偏好和摘要。
+
 - `/project/demo`：消费者工作台、2D / 3D 同源浏览、对象编辑、Agent、家庭共识、版本面板。
 - `/review/project-demo`：设计师复核页。
 - `/handoff/version-demo-initial`：共识交接页。
@@ -28,6 +30,11 @@ final result: passed
 
 ## 验证证据
 
+- Gate 34 浏览器黑盒复核：Demo 户型六步前进 / 后退、必填项拦截、条件字段、摘要回显、开始设计保存、刷新续接均通过；控制台 0 error。
+- Gate 34 层级过渡：只有首次处理或当前页输入改变后向前时显示对应业务状态；未修改重进和返回即时。处理完成后按方向滑入下一页，重复点击受禁用态保护，减弱动效偏好下无动画。
+- Gate 34 响应式证据：`.omx/audits/gate34/desktop-start.png`、`.omx/audits/gate34/mobile-start.png`；390×844 无横向溢出，原生表单语义和键盘焦点保留。
+- Gate 34 回归：`cd app && npm test` 254 / 254 通过；`cd app && npm run build` 通过，保留既有大 chunk warning。
+
 - `cd app && npm test`：179/179 通过。
 - `cd app && npm run test:backend`：81/81 通过。
 - `cd app && npm run build`：通过；保留 Vite 大 chunk 警告。
@@ -44,7 +51,7 @@ final result: passed
 - Gate 24 方向样机本地复核：`/`、`/directions` 与四种 `/project/demo?style=...` 均完成 1440×900 / 1024×768 截图；8 秒方向页动态样本及四帧接触表确认状态会变化，且 `prefers-reduced-motion` 有静止降级。
 - Gate 24 回归：177 项全量测试、81 项后端专项测试、28 案例 Agent 评测与生产构建通过。
 - Gate 24 验收修正：Agent 浏览态与住户微调态都只有一个 Pascal canvas；微调态可见操作只有拖动 / 100 mm 微移、旋转和宽深高。截图：`.omx/audits/gate24-editor-scope/browse-capture-probe.png`、`.omx/audits/gate24-editor-scope/quick-final.png`。
-- 本轮最终回归：179 项全量测试、81 项后端专项测试、28 案例 Agent 评测和生产构建通过。
+- 本轮最终回归：254 项全量测试和生产构建通过。
 
 ## 已知视觉 / 体验边界
 

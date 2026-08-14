@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Armchair, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
+import { Armchair, ArrowLeft, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FileArrowUp, FloppyDisk, FolderOpen, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
 import { createDesignBrief, deserializeDesignBrief, normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
@@ -37,6 +37,7 @@ import {
 } from './domain/scene.js';
 import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 import { resolveInteractionLayer, resolveRenderProfile } from './domain/render-profile.js';
+import { createProjectSetup, deserializeProjectSetup, normalizeProjectSetup, projectSetupFingerprint, serializeProjectSetup } from './domain/project-setup.js';
 import {
   DEFAULT_EXPERIENCE_STYLE,
   EXPERIENCE_STYLES,
@@ -540,7 +541,6 @@ function ProjectPlanPreview({ mode = 'overlay', label }) {
 
 function ProjectsPage() {
   const dialogRef = useRef(null);
-  const [newProjectNotice, setNewProjectNotice] = useState(false);
 
   const openProject = useCallback(() => {
     const dialog = dialogRef.current;
@@ -572,13 +572,11 @@ function ProjectsPage() {
           <span className="project-tile__meta"><span>7 个空间</span><span>当前版本 V4</span><ArrowRight size={17} aria-hidden="true" /></span>
         </button>
 
-        <button className="project-tile project-tile--new" type="button" onClick={() => setNewProjectNotice(true)}>
+        <a className="project-tile project-tile--new" href="/projects/new">
           <span className="project-tile__add"><Plus size={24} weight="regular" aria-hidden="true" /></span>
           <span><b>新建项目</b><small>从户型图或 Demo 户型开始</small></span>
-        </button>
+        </a>
       </div>
-
-      {newProjectNotice && <div className="project-library__notice" role="status"><span>下一步将从户型资料开始。</span><button type="button" onClick={() => setNewProjectNotice(false)} aria-label="关闭提示"><X size={15} /></button></div>}
     </section>
 
     <dialog className="project-detail" ref={dialogRef} onClose={() => window.history.replaceState({}, '', '/projects')} onClick={(event) => { if (event.target === event.currentTarget) closeProject(); }}>
@@ -598,6 +596,193 @@ function ProjectsPage() {
         <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><span className="project-detail__enter" aria-disabled="true">进入项目 <ArrowRight size={16} aria-hidden="true" /></span></footer>
       </div>
     </dialog>
+  </main>;
+}
+
+const PROJECT_SETUP_KEY = 'oppein.project-setup.v1';
+const PROJECT_SETUP_PROCESS_KEY = 'oppein.project-setup.processed.v1';
+const setupSteps = [
+  ['source', '房屋资料'],
+  ['floorplan', '确认户型'],
+  ['budget', '预算'],
+  ['household', '成员'],
+  ['style', '喜好'],
+  ['summary', '确认'],
+];
+const budgetOptions = ['20 万以内', '20–35 万', '35–50 万', '50 万以上', '暂时没有概念'];
+const memberOptions = [
+  ['self', '我自己'], ['partner', '伴侣'], ['child', '孩子'], ['parent', '父母'], ['pet', '宠物'],
+];
+const styleOptions = [
+  ['scandinavian', '自然浅木', '/assets/styles/scandinavian.jpg'],
+  ['quiet-luxury', '暖白克制', '/assets/styles/quiet-luxury.jpg'],
+  ['japandi', '安静留白', '/assets/styles/japandi.jpg'],
+  ['mid-century-modern', '复古木质', '/assets/styles/mid-century-modern.jpg'],
+  ['new-chinese', '东方秩序', '/assets/styles/new-chinese.jpg'],
+  ['wabi-sabi', '自然肌理', '/assets/styles/wabi-sabi.jpg'],
+];
+const setupTransitionCopy = {
+  floorplan: '正在读取户型资料',
+  budget: '正在保存户型确认',
+  household: '正在建立预算边界',
+  style: '正在整理家庭成员',
+  summary: '正在生成设置摘要',
+};
+
+function loadProjectSetup() {
+  try {
+    const saved = window.localStorage.getItem(PROJECT_SETUP_KEY);
+    return saved ? deserializeProjectSetup(saved) : createProjectSetup();
+  } catch {
+    window.localStorage.removeItem(PROJECT_SETUP_KEY);
+    return createProjectSetup();
+  }
+}
+
+function loadProcessedSetupTransitions() {
+  try {
+    const value = JSON.parse(window.sessionStorage.getItem(PROJECT_SETUP_PROCESS_KEY) ?? '{}');
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).filter(([key, fingerprint]) => key.includes('->') && typeof fingerprint === 'string'))
+      : {};
+  } catch { return {}; }
+}
+
+function ProjectSetupPage() {
+  const [setup, setSetup] = useState(loadProjectSetup);
+  const [notice, setNotice] = useState('');
+  const [transition, setTransition] = useState('');
+  const [slideDirection, setSlideDirection] = useState('forward');
+  const transitionTimer = useRef(null);
+  const processedTransitions = useRef(loadProcessedSetupTransitions());
+  const stepIndex = setupSteps.findIndex(([id]) => id === setup.step);
+  const updateSetup = (patch) => setSetup((current) => normalizeProjectSetup({ ...current, ...patch, ready: false }));
+  const toggleMember = (member) => updateSetup({ members: setup.members.includes(member) ? setup.members.filter((id) => id !== member) : [...setup.members, member] });
+  const toggleStyle = (style) => updateSetup({ styles: setup.styles.includes(style) ? setup.styles.filter((id) => id !== style) : setup.styles.length < 3 ? [...setup.styles, style] : setup.styles });
+  const canContinue = setup.step === 'source' ? Boolean(setup.sourceType)
+    : setup.step === 'floorplan' ? setup.floorplanConfirmed
+      : setup.step === 'budget' ? Boolean(setup.budget)
+        : setup.step === 'household' ? setup.members.length > 0
+          : setup.step === 'style' ? setup.styles.length >= 2
+            : true;
+
+  useEffect(() => {
+    try { window.localStorage.setItem(PROJECT_SETUP_KEY, serializeProjectSetup(setup)); } catch { /* local resume is best effort */ }
+  }, [setup]);
+  useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
+
+  const moveStep = (offset) => {
+    const next = setupSteps[Math.max(0, Math.min(setupSteps.length - 1, stepIndex + offset))][0];
+    if (offset > 0) {
+      const edge = `${setup.step}->${next}`;
+      const fingerprint = projectSetupFingerprint(setup);
+      if (processedTransitions.current[edge] === fingerprint) {
+        setSlideDirection('forward');
+        updateSetup({ step: next });
+        setNotice('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      setTransition(setupTransitionCopy[next]);
+      transitionTimer.current = window.setTimeout(() => {
+        processedTransitions.current[edge] = fingerprint;
+        try { window.sessionStorage.setItem(PROJECT_SETUP_PROCESS_KEY, JSON.stringify(processedTransitions.current)); } catch { /* processing cache is best effort */ }
+        setSlideDirection('forward');
+        updateSetup({ step: next });
+        setTransition('');
+        setNotice('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 620);
+      return;
+    }
+    setSlideDirection('backward');
+    updateSetup({ step: next });
+    setNotice('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const finishSetup = () => {
+    setSetup((current) => normalizeProjectSetup({ ...current, ready: true }));
+    setNotice('基础设置已保存。下一 Gate 会从这里进入真实方案生成。');
+  };
+
+  return <main className="experience-shell project-setup" data-page="project-setup">
+    <ExperienceNav projects />
+    <section className="project-setup__shell" aria-labelledby="setup-title">
+      <a className="project-setup__exit" href="/projects"><ArrowLeft size={15} /> 返回我的设计</a>
+      <ol className="project-setup__progress" aria-label="新建项目进度">
+        {setupSteps.map(([id, label], index) => <li key={id} data-state={index < stepIndex ? 'done' : index === stepIndex ? 'current' : 'upcoming'}><span>{index < stepIndex ? <Check size={12} weight="bold" /> : index + 1}</span><b>{label}</b></li>)}
+      </ol>
+
+      <div className="project-setup__question" data-loading={Boolean(transition)} aria-busy={Boolean(transition)}>
+        <div className={`project-setup__step project-setup__step--${slideDirection}`} key={setup.step}>
+        {setup.step === 'source' && <>
+          <header><p className="experience-kicker">新建项目</p><h1 id="setup-title">先把你的家带进来</h1><p>选择一种房屋资料来源。装修偏好会在后面逐步设置。</p></header>
+          <div className="project-source-grid">
+            <label className="setup-choice setup-choice--source" data-selected={setup.sourceType === 'upload'}>
+              <FileArrowUp size={27} weight="light" /><b>上传户型图</b><span>开发商户型图、CAD 导出或量房图</span><small>JPG / PNG / PDF</small>
+              <input type="file" accept="image/png,image/jpeg,application/pdf" onChange={(event) => { const file = event.target.files?.[0]; if (file) updateSetup({ sourceType: 'upload', fileName: file.name }); }} />
+              <em>{setup.sourceType === 'upload' ? setup.fileName : '选择文件'}</em>
+            </label>
+            <button className="setup-choice setup-choice--source" type="button" disabled><FolderOpen size={27} weight="light" /><b>导入已有项目</b><span>等待企业项目接口接入</span><small>暂不可用</small></button>
+            <button className="setup-choice setup-choice--source" type="button" data-selected={setup.sourceType === 'demo'} onClick={() => updateSetup({ sourceType: 'demo', fileName: '城市三口之家 Demo' })}><HouseLine size={27} weight="light" /><b>使用 Demo 户型</b><span>直接体验完整的新建设计流程</span><small>7 个空间</small></button>
+          </div>
+        </>}
+
+        {setup.step === 'floorplan' && <>
+          <header><p className="experience-kicker">确认户型</p><h1 id="setup-title">这份户型草稿可以继续吗？</h1><p>{setup.sourceType === 'upload' ? `已读取：${setup.fileName}` : '当前使用城市三口之家 Demo 户型。'}</p></header>
+          <div className="floorplan-confirm">
+            <ProjectPlanPreview mode="overlay" label={setup.sourceType === 'upload' ? '演示识别草稿' : 'Demo 户型草稿'} />
+            <fieldset><legend>房间分区和门窗关系是否基本正确？</legend>
+              {setup.sourceType === 'upload' && <p className="setup-truth-note">V1 暂未接入通用户型识别服务，这里使用 Demo 草稿验证确认流程，不宣称已准确识别你的文件。</p>}
+              <label><input type="radio" name="floorplan" checked={setup.floorplanConfirmed && setup.floorplanNote === '关系正确'} onChange={() => updateSetup({ floorplanConfirmed: true, floorplanNote: '关系正确' })} /><span><b>基本正确</b><small>可以继续设置需求</small></span></label>
+              <label><input type="radio" name="floorplan" checked={setup.floorplanConfirmed && setup.floorplanNote === '需要复核'} onChange={() => updateSetup({ floorplanConfirmed: true, floorplanNote: '需要复核' })} /><span><b>有一处需要复核</b><small>先记录，生成前由设计师确认</small></span></label>
+            </fieldset>
+          </div>
+        </>}
+
+        {setup.step === 'budget' && <>
+          <header><p className="experience-kicker">基础设置 · 1 / 3</p><h1 id="setup-title">这次装修准备投入多少？</h1><p>先选一个大致范围，后续方案不会把估算当成正式报价。</p></header>
+          <fieldset className="setup-option-grid"><legend className="sr-only">装修预算</legend>{budgetOptions.map((option) => <label className="setup-choice" key={option} data-selected={setup.budget === option}><input type="radio" name="budget" checked={setup.budget === option} onChange={() => updateSetup({ budget: option })} /><span>{option}</span></label>)}</fieldset>
+        </>}
+
+        {setup.step === 'household' && <>
+          <header><p className="experience-kicker">基础设置 · 2 / 3</p><h1 id="setup-title">谁会住在这里？</h1><p>可多选。只补充会影响空间安全与尺度的信息。</p></header>
+          <fieldset className="setup-option-grid setup-option-grid--members"><legend className="sr-only">家庭成员</legend>{memberOptions.map(([id, label]) => <label className="setup-choice" key={id} data-selected={setup.members.includes(id)}><input type="checkbox" checked={setup.members.includes(id)} onChange={() => toggleMember(id)} /><span>{label}</span></label>)}</fieldset>
+          <div className="member-details">
+            {setup.members.includes('child') && <label><span>孩子年龄</span><select value={setup.memberDetails.child ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, child: event.target.value } })}><option value="">暂不确定</option><option>幼儿</option><option>学龄</option><option>青少年</option></select></label>}
+            {setup.members.includes('parent') && <label><span>适老需求</span><select value={setup.memberDetails.parent ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, parent: event.target.value } })}><option value="">无特殊要求</option><option>需要无障碍照顾</option><option>需要夜间照明</option></select></label>}
+            {setup.members.includes('pet') && <label><span>宠物</span><select value={setup.memberDetails.pet ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, pet: event.target.value } })}><option value="">暂不确定</option><option>猫</option><option>狗</option><option>其他</option></select></label>}
+          </div>
+        </>}
+
+        {setup.step === 'style' && <>
+          <header><p className="experience-kicker">基础设置 · 3 / 3</p><h1 id="setup-title">你喜欢怎样的家？</h1><p>选择 2–3 张有感觉的空间，不需要先知道风格名称。</p></header>
+          <fieldset className="style-choice-grid"><legend className="sr-only">空间风格图片</legend>{styleOptions.map(([id, label, image]) => <label key={id} data-selected={setup.styles.includes(id)}><input type="checkbox" checked={setup.styles.includes(id)} onChange={() => toggleStyle(id)} /><img src={image} alt="" /><span>{label}</span>{setup.styles.includes(id) && <i><Check size={13} weight="bold" /></i>}</label>)}</fieldset>
+          <p className="style-choice-count">已选择 {setup.styles.length} / 3</p>
+        </>}
+
+        {setup.step === 'summary' && <>
+          <header><p className="experience-kicker">开始设计前</p><h1 id="setup-title">确认这次设计的基础信息</h1><p>这些信息会交给 Agent 建立第一版全屋方案，之后仍可调整。</p></header>
+          <dl className="setup-summary">
+            <div><dt>户型资料</dt><dd>{setup.sourceType === 'demo' ? '城市三口之家 Demo' : setup.fileName}<small>{setup.floorplanNote}</small></dd></div>
+            <div><dt>预算范围</dt><dd>{setup.budget}</dd></div>
+            <div><dt>家庭成员</dt><dd>{setup.members.map((id) => memberOptions.find(([value]) => value === id)?.[1]).join('、')}</dd></div>
+            <div><dt>空间喜好</dt><dd>{setup.styles.map((id) => styleOptions.find(([value]) => value === id)?.[1]).join('、')}</dd></div>
+          </dl>
+        </>}
+        </div>
+        {transition && <div className="project-setup__transition" role="status" aria-live="polite"><div><span aria-hidden="true" /><b>{transition}</b></div></div>}
+      </div>
+
+      <footer className="project-setup__actions">
+        {stepIndex > 0 ? <button type="button" onClick={() => moveStep(-1)}>上一步</button> : <a href="/projects">取消</a>}
+        {setup.step === 'summary'
+          ? <button className="project-setup__primary" type="button" onClick={finishSetup}>开始设计</button>
+          : <button className="project-setup__primary" type="button" disabled={!canContinue || Boolean(transition)} onClick={() => moveStep(1)}>{transition ? '处理中' : '继续'} {!transition && <ArrowRight size={15} />}</button>}
+      </footer>
+      {notice && <p className="project-setup__notice" role="status">{notice}</p>}
+    </section>
   </main>;
 }
 
@@ -2152,6 +2337,8 @@ export default function App() {
   const isLabRoute = pathname.startsWith('/lab/scene');
   const page = pathname === '/' || pathname === '/index.html'
     ? <ExperienceLandingPage />
+    : pathname === '/projects/new'
+      ? <ProjectSetupPage />
     : pathname.startsWith('/projects')
       ? <ProjectsPage />
     : pathname === '/directions'
