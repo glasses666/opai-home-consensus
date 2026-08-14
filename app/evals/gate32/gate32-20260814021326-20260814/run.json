@@ -1,0 +1,23 @@
+{
+  "runId": "gate32-20260814021326-20260814",
+  "seed": "20260814",
+  "startedAt": "2026-08-14T02:13:26.066Z",
+  "promptVersion": "oppein-standard-master-plan-v1.20",
+  "inputContract": "gate31-segment-contract-v1",
+  "testMode": "black_box_no_harness_adjustment",
+  "retryFrom": null,
+  "retrySourceRunId": null,
+  "styleCount": 1,
+  "variantCount": 3,
+  "layoutCount": 4,
+  "expectedCalls": 12,
+  "concurrency": 4,
+  "fixedLayoutIds": [
+    "fixed-baseline-family",
+    "fixed-family-flex-work"
+  ],
+  "randomLayoutIds": [
+    "random-1-20260814",
+    "random-2-20260814"
+  ]
+}

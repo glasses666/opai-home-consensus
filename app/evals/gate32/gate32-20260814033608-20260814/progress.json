@@ -1,0 +1,28 @@
+{
+  "runId": "gate32-20260814033608-20260814",
+  "completed": 1,
+  "expected": 1,
+  "last": "art-deco__budget-maintenance__random-2-20260814",
+  "summary": {
+    "total": 1,
+    "providerResponses": 0,
+    "providerContractPasses": 0,
+    "providerContractFailures": 0,
+    "evaluatorFailures": 0,
+    "serviceFailures": 1,
+    "byVariant": {
+      "balanced": 0,
+      "budget-maintenance": 0,
+      "family-storage": 0
+    },
+    "byLayout": {
+      "fixed-baseline-family": 0,
+      "fixed-family-flex-work": 0,
+      "random-1-20260814": 0,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "AILY_RESPONSE_INVALID": 1
+    }
+  }
+}

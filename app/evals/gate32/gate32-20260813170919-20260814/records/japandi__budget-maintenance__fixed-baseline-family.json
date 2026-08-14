@@ -1,0 +1,126 @@
+{
+  "id": "japandi__budget-maintenance__fixed-baseline-family",
+  "styleId": "japandi",
+  "variantId": "budget-maintenance",
+  "layoutId": "fixed-baseline-family",
+  "layoutKind": "fixed",
+  "layoutSeed": null,
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider",
+  "providerTrace": {
+    "provider": "aily_team",
+    "agentId": "agent_4kt39w75byxw5cf",
+    "chatId": "7673564496920693705"
+  },
+  "prompt": "你是住宅设计规划 Agent。请基于给定风格档案，为同一套固定户型生成一套标准母方案。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。第一个字符必须是 {，toolCalls 必须是空数组。根对象只含 toolCalls 与 standardPlanDraft。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可直接生产安装。\n只写设计意图与材料、色彩、体量、光环境和维护方向。禁止颜色号、色温、照度、尺寸数值、防水高度、线路/燃气/水槽/烟机位置、螺栓/预埋/锚固方式等施工细节。\nroomId 与 basisIds 必须从上下文逐字复制；referenceCases 为空时不得伪造案例。\nhouse 是当前住宅唯一事实来源。风格档案中的壁炉、庭院、拱门、露梁、岛台或其他原型元素若不在 house 中，只能转译为抽象设计语言，不得写成当前住宅已有事实或结构改造。\n不得提议新增、拆除或移动任何隔断，即使描述为轻质、活动、非固定或装饰性；只能利用 house 中已有家具、表面和开口表达分区。\nstandardPlanDraft 九段顺序固定为 summary、spatial、rooms、renovation、furniture、lighting、materials、storage、decisions。不得改成对象。\n严格输出形状中的空字符串与空 basisIds 都必须替换为本次设计内容；不得原样复制空值、字段名、英文说明或示例句。roomId 与 decision area 是固定标识，不得替换。\n提议方向不得描述成现状。错误或无法核验的住户前提只能在第一段 summary 第三项 resolutionNote 中说明需要核验。\ndecisions 必须恰好四项，首项依次为 spatial、envelope、furniture、lighting。每项格式为 [area,decision,basisIds,tradeoff]，至少引用一个 style:* 依据和一个 room/object/brief:* 事实依据。不得写“营造高级感”等空话。\nbrief.knownFacts 中的每个 ID 都必须至少在某一项 decisions 的 basisIds 中以 brief:ID 原样引用一次，不能只在文字里复述。\nstyle basis ID 只能从 style:japandi:layout, style:japandi:palette, style:japandi:materials, style:japandi:envelope, style:japandi:furniture, style:japandi:lighting, style:japandi:methods, style:japandi:avoid 中选择，必须逐字复制 ID，禁止在冒号后拼接锚点文字。其他 basis ID 也只能逐字复制 context 中已有的 ID。\n第三段 rooms 每项严格为 [roomId,intent,envelope,furnitureAndStorage,lighting]，每个房间恰好出现一次。所有文字值不超过 40 个汉字。固定身份、事实引用、规则、未知项和产品边界由本地适配器注入，不要输出这些字段。\n涉及高柜防倾倒、固定安装或墙体关系时，只写“待专业复核”，不得给锚固方法。\n严格保持定长数组顺序；materials 的三项和 storage 第二项都是非空字符串数组。不得增加对象键或改变数组顺序。\n上下文：{\"style\":{\"id\":\"japandi\",\"names\":{\"zh\":\"日式北欧\",\"en\":\"Japandi\"},\"sourceIds\":[\"ad-japandi\"],\"characteristics\":{\"layout\":\"留白、低矮、重视室内外联系\",\"palette\":[\"米灰\",\"土褐\",\"墨色点缀\"],\"materials\":[\"木\",\"石\",\"纸\",\"棉麻\",\"藤\"],\"envelope\":[\"石灰洗墙\",\"哑光木地面\"],\"furniture\":[\"低矮\",\"有机轮廓\",\"手工感\"],\"lighting\":[\"自然光\",\"低眩光\"],\"methods\":[\"减少物件\",\"保留材料不完美\"],\"avoid\":[\"高亮表面\",\"无目的装饰\"]}},\"referenceCases\":[{\"caseId\":\"japandi-01\",\"designMoves\":[\"sliding doors\",\"round Japanese-style window\",\"raised tatami platform with storage\"],\"applicability\":[\"small urban apartments\",\"1-2 person homes that still need calm and storage\"],\"risks\":[\"theme can feel literal if every Japanese cue is copied too directly\"]},{\"caseId\":\"japandi-02\",\"designMoves\":[\"subdued colors\",\"warm wood tone\",\"bedroom buffered by dressing/work zone\"],\"applicability\":[\"small apartments that need privacy zoning without heavy partitions\"],\"risks\":[\"if the wood and white balance is too neutral, the interior can go flat\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-baseline-family\",\"residentRequest\":\"两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"priority:durability\",\"text\":\"耐用性优先\"},{\"id\":\"priority:maintainability\",\"text\":\"易维护性优先\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力优先\"},{\"id\":\"priority:clear-circulation\",\"text\":\"通畅动线优先\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanDraft\":[[\"\",\"\",\"\"],[\"\",\"\",\"\",\"\"],[[\"room-primary-bedroom\",\"\",\"\",\"\",\"\"],[\"room-bathroom\",\"\",\"\",\"\",\"\"],[\"room-flex\",\"\",\"\",\"\",\"\"],[\"room-hall\",\"\",\"\",\"\",\"\"],[\"room-living-dining\",\"\",\"\",\"\",\"\"],[\"room-kitchen\",\"\",\"\",\"\",\"\"],[\"room-entry\",\"\",\"\",\"\",\"\"]],[\"\",\"\",\"\",\"\"],[\"\",\"\",\"\"],[\"\",\"\",\"\"],[[\"\"],[\"\"],[\"\"]],[\"\",[\"\"]],[[\"spatial\",\"\",[],\"\"],[\"envelope\",\"\",[],\"\"],[\"furniture\",\"\",[],\"\"],[\"lighting\",\"\",[],\"\"]]]}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回原 standardPlanDraft 合同。",
+  "providerResponse": {
+    "toolCalls": [],
+    "standardPlanDraft": [
+      [
+        "日式北欧克制美学贯穿全屋，以低矮家具、天然材质和留白构建松弛感。收纳系统向固定高柜集中，减少活动储物以降低维护频率。两位成人与一名儿童的日常动线以通畅为首要原则，开放区保持视觉联络。",
+        "基于日式北欧风格核心语言与当前固定户型，克制高维护装饰表达，优先选择耐用哑光表面与易清洁材料，核心锚点保留完整。",
+        "需现场核验儿童年龄段与作息特征，以确认第二卧室低矮就寝区的安全性与动线适配性。"
+      ],
+      [
+        "留白与低矮构建空间节奏，室内外保持温和联结。开放区以低视点家具界定功能，避免新增固定隔断。利用现有木格栅界定开放餐区与客厅的软性分区，不做拆改。"
+      ],
+      [
+        [
+          "room-primary-bedroom",
+          "以留白与暖木烘托静谧低矮的就寝氛围，墙面素净",
+          "哑光木地板通铺，石灰洗墙保留墙面呼吸感",
+          "低矮床架配合固定衣柜，收纳集中于封闭储物",
+          "漫射暖光为主，可调明暗，保持低眩光氛围"
+        ],
+        [
+          "room-bathroom",
+          "中性石材色调呼应全屋土褐暖灰调，简洁易打理",
+          "防滑石材砖低光表面，缝隙少便于清洁维护",
+          "收纳归入墙龛与浴室柜，洁具周边不留杂物",
+          "防潮漫射灯，无直射眩光"
+        ],
+        [
+          "room-flex",
+          "兼作书房与备用就寝，低矮平台界定睡眠区",
+          "现有飘窗延续为平台框架，不增固定隔断",
+          "浮动层架用于展示，不作高柜占用墙面",
+          "柔和阅读灯配自然光，低眩光处理"
+        ],
+        [
+          "room-hall",
+          "走廊保持原宽，不设阻挡与装饰面",
+          "素净墙面维护便利，地面与邻区统一材质",
+          "利用固定鞋柜完成收纳，过道无临时物件",
+          "基础漫射照明，维持通行亮度"
+        ],
+        [
+          "room-living-dining",
+          "全家核心区以低矮沙发与木格栅界定，保持开放通透",
+          "哑光木地板延伸铺装，无新增隔断",
+          "现有电视柜与餐桌完成功能落位，收纳集中于封闭柜体",
+          "暖调漫射主光，餐桌上方不加高亮度装饰灯"
+        ],
+        [
+          "room-kitchen",
+          "连续操作台面构成烹饪区，连续界面降低清洁盲区",
+          "现有台面不变，耐污石材表面优先",
+          "嵌入式厨柜承担主要存储，不外添活动架",
+          "均匀防潮照明，操作台面无阴影"
+        ],
+        [
+          "room-entry",
+          "落尘区与室内区分明，地面材质界定过渡",
+          "耐磨石材收边，墙面免装饰",
+          "固定鞋柜收纳当季鞋履，台上无杂物",
+          "简洁感应灯，过道保持留白"
+        ]
+      ],
+      [
+        "全屋墙面采用石灰洗墙，保留手工感纹理同时降低表面维护频率。地面以哑光木纹砖或原色木地板为主，非湿区避免高亮抛光表面。浴室石材砖减少缝隙以降低清洁难度。",
+        "全屋统一哑光木纹基调，开放区低矮有机轮廓家具与全屋风格呼应。固定柜体选用低光泽木皮饰面或哑光烤漆，避免亮面与金属配件突兀。",
+        "全屋以低眩光暖调漫射光为主，灯具选用亚麻或纸质灯罩消减直射光感。客厅主灯低挂，餐厅选用宽幅散射光源，避免亮面材质产生反射光斑。",
+        "表面以防水防污为优先选型，石灰洗墙透气且耐擦洗，地面哑光木纹砖防滑且日常维护仅需干湿擦拭。收纳集中于固定封闭柜体，减少开放层架以降低积灰频率。"
+      ],
+      [
+        [
+          "spatial",
+          "开放区以低矮家具界定功能边界，利用现有木格栅界定餐区与客厅，不做固定隔断",
+          "style:japandi:layout",
+          "空间保持视觉通透，儿童活动区域在开放视线内，无视线遮挡风险"
+        ],
+        [
+          "envelope",
+          "全屋墙面石灰洗墙，地面哑光木纹砖，回归材料质感同时减少高亮表面维护频率",
+          "style:japandi:envelope",
+          "现有地面与墙面材质基础可承接哑光处理，改造成本可控"
+        ],
+        [
+          "furniture",
+          "全屋固定柜体与低矮家具统一选用哑光木纹饰面，活动家具控制在最低数量",
+          "style:japandi:furniture",
+          "现有电视柜与鞋柜为固定基础，新增低矮床架与餐桌统一轮廓语言"
+        ],
+        [
+          "lighting",
+          "全屋暖调漫射光，无直射高亮灯具，灯具形式简洁与留白美学一致",
+          "style:japandi:lighting",
+          "现有可调明暗灯具资源可复用，灯光改造限于光源替换而非布线调整"
+        ]
+      ]
+    ]
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "CONTRACT_VALIDATOR_EXCEPTION",
+        "path": "$",
+        "message": "Cannot read properties of undefined (reading 'basisIds')"
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 81110,
+  "completedAt": "2026-08-13T17:13:03.817Z"
+}

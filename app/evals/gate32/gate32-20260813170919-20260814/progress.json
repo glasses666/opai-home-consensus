@@ -1,0 +1,49 @@
+{
+  "runId": "gate32-20260813170919-20260814",
+  "completed": 105,
+  "expected": 336,
+  "last": "quiet-luxury__family-storage__fixed-family-flex-work",
+  "summary": {
+    "total": 105,
+    "providerResponses": 18,
+    "providerContractPasses": 0,
+    "providerContractFailures": 18,
+    "serviceFailures": 87,
+    "byVariant": {
+      "balanced": 0,
+      "budget-maintenance": 0,
+      "family-storage": 0
+    },
+    "byLayout": {
+      "fixed-baseline-family": 0,
+      "fixed-family-flex-work": 0,
+      "random-1-20260814": 0,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "TRANSPORT": 19,
+      "AILY_RESPONSE_INVALID": 68,
+      "DRAFT_SPATIAL_SHAPE": 6,
+      "DRAFT_RENOVATION_SHAPE": 7,
+      "SPATIAL_PLAN_EMPTY": 6,
+      "RENOVATION_PLAN_EMPTY": 7,
+      "FURNITURE_PLAN_EMPTY": 5,
+      "LIGHTING_PLAN_EMPTY": 6,
+      "CONTRACT_VALIDATOR_EXCEPTION": 11,
+      "DRAFT_FURNITURE_SHAPE": 3,
+      "DRAFT_LIGHTING_SHAPE": 4,
+      "DRAFT_MATERIALS_SHAPE": 4,
+      "DRAFT_STORAGE_SHAPE": 4,
+      "DRAFT_ROOM_COVERAGE": 2,
+      "EMPTY_SUMMARY": 2,
+      "BRIEF_GROUNDING": 1,
+      "MATERIAL_PLAN_EMPTY": 4,
+      "STORAGE_PLAN_EMPTY": 6,
+      "DECISION_GROUNDING": 16,
+      "UNSUPPORTED_CLAIM": 2,
+      "DRAFT_ROOM_SHAPE": 7,
+      "ROOM_COVERAGE": 1,
+      "ROOM_PLAN_EMPTY": 7
+    }
+  }
+}

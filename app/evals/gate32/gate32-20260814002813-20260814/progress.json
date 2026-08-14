@@ -1,0 +1,33 @@
+{
+  "runId": "gate32-20260814002813-20260814",
+  "completed": 14,
+  "expected": 14,
+  "last": "spanish-colonial__balanced__fixed-baseline-family",
+  "summary": {
+    "total": 14,
+    "providerResponses": 1,
+    "providerContractPasses": 1,
+    "providerContractFailures": 10,
+    "evaluatorFailures": 0,
+    "serviceFailures": 3,
+    "byVariant": {
+      "balanced": 0,
+      "budget-maintenance": 1,
+      "family-storage": 0
+    },
+    "byLayout": {
+      "fixed-baseline-family": 0,
+      "fixed-family-flex-work": 0,
+      "random-1-20260814": 1,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "TRANSPORT": 3,
+      "SEGMENT_OVERVIEW_CONTENT": 4,
+      "SEGMENT_STORAGE_SHAPE": 3,
+      "SEGMENT_UNSUPPORTED_CLAIM": 6,
+      "SEGMENT_DECISION_GROUNDING": 6,
+      "SEGMENT_BRIEF_FACT_UNUSED": 3
+    }
+  }
+}

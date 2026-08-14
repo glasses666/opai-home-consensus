@@ -1,0 +1,208 @@
+{
+  "id": "japandi__balanced__random-1-20260814",
+  "styleId": "japandi",
+  "variantId": "balanced",
+  "layoutId": "random-1-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider_contract_failure",
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。18、19、20、22 用 || 分隔至少两个短项，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"japandi\",\"names\":{\"zh\":\"日式北欧\",\"en\":\"Japandi\"},\"sourceIds\":[\"ad-japandi\"],\"characteristics\":{\"layout\":\"留白、低矮、重视室内外联系\",\"palette\":[\"米灰\",\"土褐\",\"墨色点缀\"],\"materials\":[\"木\",\"石\",\"纸\",\"棉麻\",\"藤\"],\"envelope\":[\"石灰洗墙\",\"哑光木地面\"],\"furniture\":[\"低矮\",\"有机轮廓\",\"手工感\"],\"lighting\":[\"自然光\",\"低眩光\"],\"methods\":[\"减少物件\",\"保留材料不完美\"],\"avoid\":[\"高亮表面\",\"无目的装饰\"]}},\"referenceCases\":[{\"caseId\":\"japandi-01\",\"designMoves\":[\"sliding doors\",\"round Japanese-style window\",\"raised tatami platform with storage\"],\"applicability\":[\"small urban apartments\",\"1-2 person homes that still need calm and storage\"],\"risks\":[\"theme can feel literal if every Japanese cue is copied too directly\"]},{\"caseId\":\"japandi-02\",\"designMoves\":[\"subdued colors\",\"warm wood tone\",\"bedroom buffered by dressing/work zone\"],\"applicability\":[\"small apartments that need privacy zoning without heavy partitions\"],\"risks\":[\"if the wood and white balance is too neutral, the interior can go flat\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 28 的二字段数字槽位。每个房间连续四槽，依次填写空间意图、墙地顶方向、家具与收纳、照明方向。房间顺序为：1=room-primary-bedroom，2=room-bathroom，3=room-flex，4=room-hall，5=room-living-dining，6=room-kitchen，7=room-entry。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"japandi\",\"names\":{\"zh\":\"日式北欧\",\"en\":\"Japandi\"},\"sourceIds\":[\"ad-japandi\"],\"characteristics\":{\"layout\":\"留白、低矮、重视室内外联系\",\"palette\":[\"米灰\",\"土褐\",\"墨色点缀\"],\"materials\":[\"木\",\"石\",\"纸\",\"棉麻\",\"藤\"],\"envelope\":[\"石灰洗墙\",\"哑光木地面\"],\"furniture\":[\"低矮\",\"有机轮廓\",\"手工感\"],\"lighting\":[\"自然光\",\"低眩光\"],\"methods\":[\"减少物件\",\"保留材料不完美\"],\"avoid\":[\"高亮表面\",\"无目的装饰\"]}},\"referenceCases\":[{\"caseId\":\"japandi-01\",\"designMoves\":[\"sliding doors\",\"round Japanese-style window\",\"raised tatami platform with storage\"],\"applicability\":[\"small urban apartments\",\"1-2 person homes that still need calm and storage\"],\"risks\":[\"theme can feel literal if every Japanese cue is copied too directly\"]},{\"caseId\":\"japandi-02\",\"designMoves\":[\"subdued colors\",\"warm wood tone\",\"bedroom buffered by dressing/work zone\"],\"applicability\":[\"small apartments that need privacy zoning without heavy partitions\"],\"risks\":[\"if the wood and white balance is too neutral, the interior can go flat\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>@@23##<填写内容>@@24##<填写内容>@@25##<填写内容>@@26##<填写内容>@@27##<填写内容>@@28##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。依据槽位只填 X001 形式的允许短码，用 || 分隔；每个至少选择一个风格依据和一个事实依据，所有必须覆盖的住户事实短码至少选择一次；其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:japandi:layout, X002=style:japandi:palette, X003=style:japandi:materials, X004=style:japandi:envelope, X005=style:japandi:furniture, X006=style:japandi:lighting, X007=style:japandi:methods, X008=style:japandi:avoid, X009=room:room-primary-bedroom, X010=room:room-bathroom, X011=room:room-flex, X012=room:room-hall, X013=room:room-living-dining, X014=room:room-kitchen, X015=room:room-entry, X016=object:object-primary-bed, X017=object:object-primary-wardrobe, X018=object:object-flex-bed, X019=object:object-flex-desk, X020=object:object-sofa, X021=object:object-tv-console, X022=object:object-dining-table, X023=object:object-kitchen-counter, X024=object:object-shoe-cabinet, X025=object:object-flex-floating-shelf, X026=object:object-living-slat-partition, X027=object:object-primary-feature-wall, X028=opening:opening-entry-exterior, X029=opening:opening-primary-hall, X030=opening:opening-bathroom-hall, X031=opening:opening-flex-hall, X032=opening:opening-hall-living, X033=opening:opening-living-kitchen, X034=opening:opening-living-entry, X035=opening:opening-kitchen-entry, X036=opening:opening-primary-window, X037=opening:opening-bathroom-window, X038=opening:opening-flex-window, X039=opening:opening-living-west-window, X040=opening:opening-living-south-window, X041=opening:opening-kitchen-window, X042=rule:deterministic:object-collision, X043=rule:rule-bedside-600, X044=rule:rule-cabinet-front-900, X045=rule:rule-child-activity-clearance, X046=rule:rule-fixed-equipment-wall-relation, X047=rule:rule-kitchen-aisle-1000, X048=rule:rule-main-circulation-900, X049=rule:rule-opening-clearance, X050=rule:rule-room-boundary, X051=rule:rule-tall-storage-anchored, X052=rule:rule-tv-distance-1800-3600, X053=brief:household:one-adult-one-child, X054=brief:priority:quiet-privacy, X055=brief:site:limited-daylight。必须覆盖的住户事实短码：X053, X054, X055。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"japandi\",\"names\":{\"zh\":\"日式北欧\",\"en\":\"Japandi\"},\"sourceIds\":[\"ad-japandi\"],\"characteristics\":{\"layout\":\"留白、低矮、重视室内外联系\",\"palette\":[\"米灰\",\"土褐\",\"墨色点缀\"],\"materials\":[\"木\",\"石\",\"纸\",\"棉麻\",\"藤\"],\"envelope\":[\"石灰洗墙\",\"哑光木地面\"],\"furniture\":[\"低矮\",\"有机轮廓\",\"手工感\"],\"lighting\":[\"自然光\",\"低眩光\"],\"methods\":[\"减少物件\",\"保留材料不完美\"],\"avoid\":[\"高亮表面\",\"无目的装饰\"]}},\"referenceCases\":[{\"caseId\":\"japandi-01\",\"designMoves\":[\"sliding doors\",\"round Japanese-style window\",\"raised tatami platform with storage\"],\"applicability\":[\"small urban apartments\",\"1-2 person homes that still need calm and storage\"],\"risks\":[\"theme can feel literal if every Japanese cue is copied too directly\"]},{\"caseId\":\"japandi-02\",\"designMoves\":[\"subdued colors\",\"warm wood tone\",\"bedroom buffered by dressing/work zone\"],\"applicability\":[\"small apartments that need privacy zoning without heavy partitions\"],\"risks\":[\"if the wood and white balance is too neutral, the interior can go flat\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673677319801834426"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##日式北欧·留白低奢@@02##留白与低矮体块保持视线通透，自然材质与手工感注入温度，安静私密且满足成人与儿童的日常起居@@03##安静私密：空间布局与材质选择共同营造低声压级居家氛围；一成人一儿童：动线不交叉，收纳分区清晰，儿童区可独立管理@@04##全屋留白低矮，减少视觉噪音；软过渡代替硬隔断，维持视线连贯与自然光漫射；固定物件通长水平布置，统一体量感@@05##经由走廊连接各区，避免穿越起居核心；灵活区作为缓冲，区分成人私密区与儿童活跃区的日常动线；视线通透，情绪松弛@@06##主卧为安静核心区；衣柜等固定件提供心理围护；通过地毯与软帘实现软过渡而非硬分割；灵活区为儿童活动提供可管理边界@@07##低矮家具保持视觉延续感；开放布局留出呼吸空间；负空间即设计语言，大面积留白强化开阔感受@@08##墙面留白连续，哑光石灰洗或矿物涂料，暖白淡米灰调@@09##全屋通铺哑光木地板，客厅与灵活区可局部铺纤维毯过渡@@10##顶面极简，哑光暖白，延续留白原则@@11##全屋固定台面、衣柜、沙发边几均保持低矮水平线条，洞口关系待专业复核@@12##低矮紧凑，留出流通宽度；主卧床面窗，儿童区书桌靠墙；餐起区家具围合松弛，保持动线@@13##天然纤维棉麻织物、哑光质感；陶土器皿与藤编小品增添手工感与温度；可随季节更替软装层次@@14##高光表面┃过度日式符号┃强对比色┃纯装饰物件┃无意义细节┃开放式搁架堆叠@@15##自然采光一般，浅暖调放大反射；儿童活动区优先补光，成人区柔和氛围@@16##分层照明：环境光柔和基底，工作光精准补位，重点光点缀层次；低色温暖光，低眩光设计@@17##眩光控制：漫射光源与遮光角设计；维护：哑光材质易清洁，干布擦拭为主，避免强化学清洁剂损伤表面漆膜@@18##暖白墙顶面┃米灰┃淡米┃燕麦┃土褐┃墨色点缀||全哑┃柔光┃自然纹理@@19##实木复合地板┃天然大理石或仿石砖┃石灰洗墙┃棉麻帘布┃藤编与陶瓷装饰件@@20##软装布艺定期除螨┃实木表面干布擦拭┃石材台面中性清洁剂┃定期检查固定件连接@@21##全屋固定衣柜与台面为主锚；灵活区低矮柜辅助；开放搁架随取随用；儿童物品就近分区@@22##玄关鞋柜||主卧衣柜||厨房台面||客厅低矮柜||灵活区衣柜||卫生间镜柜"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673677458814897135"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##安静私密主卧，低矮床靠实墙布置，留白延续@@02##石灰洗墙+哑光木地板；天然纸棉麻软装点缀@@03##低矮木框架床+哑光木衣柜；儿童安全优先，不堆满@@04##柔和侧入自然光+低眩光隐藏灯带；床头暖光补充@@05##防潮简洁卫生间，干湿分离留白@@06##哑光防滑砖+防水石膏板；延续留白@@07##哑光木浴室柜+低矮收纳；天然石材点缀；固定安装待专业复核@@08##低眩光防水筒灯+自然光引导@@09##灵活书房卧室，收纳与儿童活动平衡；低矮有机轮廓@@10##石灰洗墙+哑光木地板；天然纸棉麻软装点缀@@11##悬浮书架+书桌椅+低矮收纳筐；留白不堆满@@12##自然光优先+低眩光台灯补充@@13##简洁过渡廊道，保留私密层次感@@14##石灰洗墙+哑光木地板；极简门框延续@@15##少量挂钩或低矮边柜；不阻碍通行动线@@16##柔和引导光+自然采光补充@@17##开放客餐厅融合，木格栅延续私密与空间层次@@18##石灰洗墙+哑光木地板；木格栅屏风延续留白@@19##低矮沙发+可移动茶几+哑光木收纳柜；儿童安全优先@@20##自然光+低眩光分散照明；氛围层次补充@@21##简洁烹饪空间，功能留白不堆满@@22##哑光防潮墙砖+哑光木地板；哑光石材台面延续@@23##哑光木框吊柜+地柜；不增加装饰性储物@@24##低眩光工作灯+自然光引导@@25##简洁迎宾入口，私密过渡优先@@26##石灰洗墙+哑光木地板；天然石材或木板落尘区@@27##哑光木鞋柜+低矮挂钩；儿童物品收纳；不增加装饰性储物@@28##低眩光引导光+自然光补充"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673677673181334503"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##留白布局，低矮陈设，主要固定家具靠墙，动静分区清晰@@02##X001留白低矮重视室内外联系||X009主卧需安静私密||X011弹性空间兼顾儿童活动与成人工作||X013起居室承载家庭核心区与过道@@03##低矮家具释出层高，避免过度陈设保持动线宽敞@@04##墙面石灰洗墙延续质感，地面哑光木地板，天花素白处理@@05##X002米灰土褐呼应Japandi调性||X004石灰洗墙哑光木地面||X055采光有限宜柔化表面避免高光@@06##哑光材质不抢光，不加重暗区沉闷感@@07##低矮有机轮廓木框架布艺或藤编坐面，扶手椅或矮榻@@08##X005低矮有机手工感||X053一成人一儿童，储物与儿童活动并重||X054安静私密优先，减少繁复装饰||X042||X043||X052@@09##低矮省层高但储藏量受限；固定墙体关系待专业复核@@10##自然光引入为主，辅助低眩光漫射灯具@@11##X006自然光低眩光||X055采光有限，灯具需柔和不刺眼||X054安静私密忌强光@@12##低眩光维持静谧氛围；人工光补充量待核验"
+      },
+      "validation": {
+        "ok": false,
+        "errors": [
+          {
+            "code": "SEGMENT_DECISION_GROUNDING",
+            "path": "standardPlanSegment[0]",
+            "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+          },
+          {
+            "code": "SEGMENT_DECISION_GROUNDING",
+            "path": "standardPlanSegment[1]",
+            "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+          },
+          {
+            "code": "SEGMENT_DECISION_GROUNDING",
+            "path": "standardPlanSegment[2]",
+            "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+          },
+          {
+            "code": "SEGMENT_DECISION_GROUNDING",
+            "path": "standardPlanSegment[3]",
+            "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+          },
+          {
+            "code": "SEGMENT_BRIEF_FACT_UNUSED",
+            "path": "standardPlanSegment",
+            "message": "Known brief fact was not used: household:one-adult-one-child"
+          },
+          {
+            "code": "SEGMENT_BRIEF_FACT_UNUSED",
+            "path": "standardPlanSegment",
+            "message": "Known brief fact was not used: priority:quiet-privacy"
+          },
+          {
+            "code": "SEGMENT_BRIEF_FACT_UNUSED",
+            "path": "standardPlanSegment",
+            "message": "Known brief fact was not used: site:limited-daylight"
+          },
+          {
+            "code": "SEGMENT_UNSUPPORTED_CLAIM",
+            "path": "standardPlanSegment",
+            "message": "Remove unsupported claims: 002米"
+          }
+        ]
+      }
+    }
+  ],
+  "error": {
+    "name": "Error",
+    "message": "PROVIDER_CONTRACT_FAILURE",
+    "retryable": false,
+    "evaluator": false,
+    "validationErrors": [
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[0]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[1]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[2]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[3]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: household:one-adult-one-child"
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: priority:quiet-privacy"
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: site:limited-daylight"
+      },
+      {
+        "code": "SEGMENT_UNSUPPORTED_CLAIM",
+        "path": "standardPlanSegment",
+        "message": "Remove unsupported claims: 002米"
+      }
+    ],
+    "rawResponse": null,
+    "providerTrace": null
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[0]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[1]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[2]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[3]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: household:one-adult-one-child"
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: priority:quiet-privacy"
+      },
+      {
+        "code": "SEGMENT_BRIEF_FACT_UNUSED",
+        "path": "standardPlanSegment",
+        "message": "Known brief fact was not used: site:limited-daylight"
+      },
+      {
+        "code": "SEGMENT_UNSUPPORTED_CLAIM",
+        "path": "standardPlanSegment",
+        "message": "Remove unsupported claims: 002米"
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 146759,
+  "completedAt": "2026-08-14T00:30:40.600Z"
+}

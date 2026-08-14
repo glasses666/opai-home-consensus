@@ -197,6 +197,29 @@ test('segmented provider contract accepts an equivalent numeric record boundary'
   assert.equal(result.ok, true);
 });
 
+test('segmented provider contract accepts newline-delimited numeric records', () => {
+  const values = Array.from({ length: 22 }, (_, index) => `方向${String.fromCharCode(65 + (index % 20))}`);
+  values[17] = '暖白||浅木';
+  values[18] = '木饰面||亚麻';
+  values[19] = '耐擦洗||易维护';
+  values[21] = '玄关||客厅';
+  const payload = values.map((value, index) => `${String(index + 1).padStart(2, '0')}##${value}`).join('\n');
+  const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: payload }, { segment: 'overview', scene, style: standardPlanStyle('scandinavian') });
+  assert.equal(result.ok, true);
+});
+
+test('segmented provider contract accepts directly adjacent numeric records', () => {
+  const grouped = scene.rooms.map((room, index) => `${String(index + 1).padStart(2, '0')}##${room.name}意图##墙地顶方向##家具方向##照明方向`).join('');
+  const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: grouped }, { segment: 'rooms', scene, style: standardPlanStyle('scandinavian') });
+  assert.equal(result.ok, true);
+});
+
+test('segmented provider contract accepts grouped room fields separated by record tokens', () => {
+  const grouped = scene.rooms.map((room, index) => `${String(index + 1).padStart(2, '0')}##${room.name}意图@@墙地顶方向@@家具方向@@照明方向`).join('@@');
+  const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: grouped }, { segment: 'rooms', scene, style: standardPlanStyle('scandinavian') });
+  assert.equal(result.ok, true);
+});
+
 test('segmented provider contract accepts lossless grouped room records', () => {
   const grouped = scene.rooms.map((room, roomIndex) => [
     `${String(roomIndex + 1).padStart(2, '0')}##${room.name}空间意图##墙地顶方向##家具与收纳方向##照明方向`,
@@ -207,11 +230,24 @@ test('segmented provider contract accepts lossless grouped room records', () => 
   assert.deepEqual(result.value[0].slice(1), [`${scene.rooms[0].name}空间意图`, '墙地顶方向', '家具与收纳方向', '照明方向']);
 });
 
+test('segmented provider contract accepts lossless overview list separators', () => {
+  const values = Array.from({ length: 22 }, (_, index) => `方向${String.fromCharCode(65 + (index % 20))}`);
+  values[17] = '暖白##浅木##烟灰';
+  values[18] = '木饰面、亚麻、哑光石材';
+  values[19] = '耐擦洗｜｜易维护';
+  values[21] = '玄关、客厅、主卧';
+  const payload = values.map((value, index) => `${String(index + 1).padStart(2, '0')}##${value}`).join('@@');
+  const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: payload }, { segment: 'overview', scene, style: standardPlanStyle('scandinavian') });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value[5][0], ['暖白', '浅木', '烟灰']);
+  assert.deepEqual(result.value[6][1], ['玄关', '客厅', '主卧']);
+});
+
 test('segmented provider contract ignores only trailing empty decision fields', () => {
   const style = standardPlanStyle('scandinavian');
   const rows = STANDARD_PLAN_DECISION_AREAS.flatMap((area, areaIndex) => [
     `${area}决定`,
-    `X${String(areaIndex + 1).padStart(3, '0')}||X053`,
+    `X${String(areaIndex + 1).padStart(3, '0')}||X009`,
     `${area}代价`,
   ]).map((value, index) => `${String(index + 1).padStart(2, '0')}##${value}##`).join('@@');
   const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: rows }, { segment: 'decisions', scene, style });
@@ -222,11 +258,27 @@ test('segmented provider contract accepts codebook entries with their canonical 
   const style = standardPlanStyle('scandinavian');
   const rows = STANDARD_PLAN_DECISION_AREAS.flatMap((area, areaIndex) => [
     `${area}决定`,
-    `X${String(areaIndex + 1).padStart(3, '0')}=style:scandinavian:layout||X053=brief:priority:durability`,
+    `X${String(areaIndex + 1).padStart(3, '0')}=style:scandinavian:layout||X009=brief:household:two-adults-one-child`,
     `${area}代价`,
   ]).map((value, index) => `${String(index + 1).padStart(2, '0')}##${value}`).join('@@');
   const result = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: rows }, { segment: 'decisions', scene, style });
   assert.equal(result.ok, true);
+});
+
+test('segmented provider contract accepts only lossless decision grouping and basis separators', () => {
+  const style = standardPlanStyle('scandinavian');
+  const grouped = STANDARD_PLAN_DECISION_AREAS.map((area, index) => `${String(index + 1).padStart(2, '0')}##${area}决定##X${String(index + 1).padStart(3, '0')}##X009##${area}代价`).join('@@');
+  const groupedResult = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: grouped }, { segment: 'decisions', scene, style });
+  assert.equal(groupedResult.ok, true);
+
+  const flat = STANDARD_PLAN_DECISION_AREAS.flatMap((area, index) => [`${area}决定`, `X${String(index + 1).padStart(3, '0')}##X009`, `${area}代价`])
+    .map((value, index) => `${String(index + 1).padStart(2, '0')}##${value}`).join('@@');
+  const flatResult = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: flat }, { segment: 'decisions', scene, style });
+  assert.equal(flatResult.ok, true);
+
+  const unsafe = grouped.replace('X009##spatial代价', '未登记依据##spatial代价');
+  const unsafeResult = validateStandardDesignPlanSegmentResponse({ toolCalls: [], standardPlanSegment: unsafe }, { segment: 'decisions', scene, style });
+  assert.equal(unsafeResult.errors.some((error) => error.code === 'SEGMENT_DECISION_SHAPE'), true);
 });
 
 test('segmented provider contract rejects malformed DSL and unknown grounding IDs', () => {
@@ -263,8 +315,15 @@ test('standard design plan validator rejects provider drift and false claims', (
 test('standard design plan validator permits explicit no-demolition constraints', () => {
   const constrained = samplePlan();
   constrained.designDecisions.spatial.decision = '保持现有边界，不新增或拆除隔断，无需新建隔断。';
+  constrained.renovationPlan.walls = '浅色墙面扩大空间感，不变动防水层，以屏风替代新建隔断而非封闭隔断，拒绝欧派 SKU，避免在固定结构上新增洞口或拆除隔断。';
   const result = validateStandardDesignPlan(constrained, { scene });
   assert.equal(result.errors.some((error) => error.code === 'UNSUPPORTED_CLAIM'), false);
+
+  constrained.renovationPlan.walls = '扩大现有洞口。';
+  assert.equal(validateStandardDesignPlan(constrained, { scene }).errors.some((error) => error.code === 'UNSUPPORTED_CLAIM'), true);
+
+  constrained.renovationPlan.walls = '新增封闭隔断。';
+  assert.equal(validateStandardDesignPlan(constrained, { scene }).errors.some((error) => error.code === 'UNSUPPORTED_CLAIM'), true);
 });
 
 test('standard design plan validator rejects undeclared fields and hidden writes', () => {

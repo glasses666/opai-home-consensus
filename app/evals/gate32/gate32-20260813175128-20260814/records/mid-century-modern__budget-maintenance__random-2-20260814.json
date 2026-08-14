@@ -1,0 +1,137 @@
+{
+  "id": "mid-century-modern__budget-maintenance__random-2-20260814",
+  "styleId": "mid-century-modern",
+  "variantId": "budget-maintenance",
+  "layoutId": "random-2-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider_contract_failure",
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。18、19、20、22 用 || 分隔至少两个短项，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"mid-century-modern\",\"names\":{\"zh\":\"中世纪现代\",\"en\":\"Mid-century modern\"},\"sourceIds\":[\"ad-midcentury\"],\"characteristics\":{\"layout\":\"开阔视线、室内外联系\",\"palette\":[\"胡桃木色\",\"芥末黄\",\"橄榄绿\",\"砖红\"],\"materials\":[\"柚木\",\"胡桃木\",\"皮革\",\"玻璃\"],\"envelope\":[\"木地板\",\"大窗\"],\"furniture\":[\"低矮\",\"锥形腿\",\"几何曲线\"],\"lighting\":[\"球形或雕塑灯具\"],\"methods\":[\"复古单品与现代壳体搭配\"],\"avoid\":[\"全套复刻成主题空间\"]}},\"referenceCases\":[{\"caseId\":\"mcm-01-north-vancouver-remodel\",\"designMoves\":[\"add glazing\",\"expand kitchen-dining\",\"preserve fireplace\",\"rework carport\",\"add steel stair\"],\"applicability\":[\"strong family retrofit reference\",\"good for view-oriented mid-century houses\"],\"risks\":[\"high custom-envelope cost\",\"thermal detailing complexity\"]},{\"caseId\":\"mcm-02-stanford-mid-century-remodel-addition\",\"designMoves\":[\"expand the home\",\"update the envelope\",\"keep original character legible\"],\"applicability\":[\"good retrofit pattern for intact mid-century houses\",\"useful when the shell has good bones\"],\"risks\":[\"energy upgrade can be costly\",\"preservation and modernization can fight each other\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-2-20260814\",\"residentRequest\":\"两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-two-children\",\"text\":\"住户为两位成人和两名儿童\"},{\"id\":\"priority:flexibility\",\"text\":\"家具和活动区域需要可变\"},{\"id\":\"budget:unknown\",\"text\":\"预算尚未确定\"}],\"unresolvedInputIds\":[\"budget:unknown\"]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 28 的二字段数字槽位。每个房间连续四槽，依次填写空间意图、墙地顶方向、家具与收纳、照明方向。房间顺序为：1=room-primary-bedroom，2=room-bathroom，3=room-flex，4=room-hall，5=room-living-dining，6=room-kitchen，7=room-entry。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"mid-century-modern\",\"names\":{\"zh\":\"中世纪现代\",\"en\":\"Mid-century modern\"},\"sourceIds\":[\"ad-midcentury\"],\"characteristics\":{\"layout\":\"开阔视线、室内外联系\",\"palette\":[\"胡桃木色\",\"芥末黄\",\"橄榄绿\",\"砖红\"],\"materials\":[\"柚木\",\"胡桃木\",\"皮革\",\"玻璃\"],\"envelope\":[\"木地板\",\"大窗\"],\"furniture\":[\"低矮\",\"锥形腿\",\"几何曲线\"],\"lighting\":[\"球形或雕塑灯具\"],\"methods\":[\"复古单品与现代壳体搭配\"],\"avoid\":[\"全套复刻成主题空间\"]}},\"referenceCases\":[{\"caseId\":\"mcm-01-north-vancouver-remodel\",\"designMoves\":[\"add glazing\",\"expand kitchen-dining\",\"preserve fireplace\",\"rework carport\",\"add steel stair\"],\"applicability\":[\"strong family retrofit reference\",\"good for view-oriented mid-century houses\"],\"risks\":[\"high custom-envelope cost\",\"thermal detailing complexity\"]},{\"caseId\":\"mcm-02-stanford-mid-century-remodel-addition\",\"designMoves\":[\"expand the home\",\"update the envelope\",\"keep original character legible\"],\"applicability\":[\"good retrofit pattern for intact mid-century houses\",\"useful when the shell has good bones\"],\"risks\":[\"energy upgrade can be costly\",\"preservation and modernization can fight each other\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-2-20260814\",\"residentRequest\":\"两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-two-children\",\"text\":\"住户为两位成人和两名儿童\"},{\"id\":\"priority:flexibility\",\"text\":\"家具和活动区域需要可变\"},{\"id\":\"budget:unknown\",\"text\":\"预算尚未确定\"}],\"unresolvedInputIds\":[\"budget:unknown\"]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>@@23##<填写内容>@@24##<填写内容>@@25##<填写内容>@@26##<填写内容>@@27##<填写内容>@@28##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。依据槽位只填 X001 形式的允许短码，用 || 分隔；每个至少选择一个风格依据和一个事实依据，所有必须覆盖的住户事实短码至少选择一次；其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:mid-century-modern:layout, X002=style:mid-century-modern:palette, X003=style:mid-century-modern:materials, X004=style:mid-century-modern:envelope, X005=style:mid-century-modern:furniture, X006=style:mid-century-modern:lighting, X007=style:mid-century-modern:methods, X008=style:mid-century-modern:avoid, X009=room:room-primary-bedroom, X010=room:room-bathroom, X011=room:room-flex, X012=room:room-hall, X013=room:room-living-dining, X014=room:room-kitchen, X015=room:room-entry, X016=object:object-primary-bed, X017=object:object-primary-wardrobe, X018=object:object-flex-bed, X019=object:object-flex-desk, X020=object:object-sofa, X021=object:object-tv-console, X022=object:object-dining-table, X023=object:object-kitchen-counter, X024=object:object-shoe-cabinet, X025=object:object-flex-floating-shelf, X026=object:object-living-slat-partition, X027=object:object-primary-feature-wall, X028=opening:opening-entry-exterior, X029=opening:opening-primary-hall, X030=opening:opening-bathroom-hall, X031=opening:opening-flex-hall, X032=opening:opening-hall-living, X033=opening:opening-living-kitchen, X034=opening:opening-living-entry, X035=opening:opening-kitchen-entry, X036=opening:opening-primary-window, X037=opening:opening-bathroom-window, X038=opening:opening-flex-window, X039=opening:opening-living-west-window, X040=opening:opening-living-south-window, X041=opening:opening-kitchen-window, X042=rule:deterministic:object-collision, X043=rule:rule-bedside-600, X044=rule:rule-cabinet-front-900, X045=rule:rule-child-activity-clearance, X046=rule:rule-fixed-equipment-wall-relation, X047=rule:rule-kitchen-aisle-1000, X048=rule:rule-main-circulation-900, X049=rule:rule-opening-clearance, X050=rule:rule-room-boundary, X051=rule:rule-tall-storage-anchored, X052=rule:rule-tv-distance-1800-3600, X053=brief:household:two-adults-two-children, X054=brief:priority:flexibility, X055=brief:budget:unknown。必须覆盖的住户事实短码：X053, X054, X055。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"mid-century-modern\",\"names\":{\"zh\":\"中世纪现代\",\"en\":\"Mid-century modern\"},\"sourceIds\":[\"ad-midcentury\"],\"characteristics\":{\"layout\":\"开阔视线、室内外联系\",\"palette\":[\"胡桃木色\",\"芥末黄\",\"橄榄绿\",\"砖红\"],\"materials\":[\"柚木\",\"胡桃木\",\"皮革\",\"玻璃\"],\"envelope\":[\"木地板\",\"大窗\"],\"furniture\":[\"低矮\",\"锥形腿\",\"几何曲线\"],\"lighting\":[\"球形或雕塑灯具\"],\"methods\":[\"复古单品与现代壳体搭配\"],\"avoid\":[\"全套复刻成主题空间\"]}},\"referenceCases\":[{\"caseId\":\"mcm-01-north-vancouver-remodel\",\"designMoves\":[\"add glazing\",\"expand kitchen-dining\",\"preserve fireplace\",\"rework carport\",\"add steel stair\"],\"applicability\":[\"strong family retrofit reference\",\"good for view-oriented mid-century houses\"],\"risks\":[\"high custom-envelope cost\",\"thermal detailing complexity\"]},{\"caseId\":\"mcm-02-stanford-mid-century-remodel-addition\",\"designMoves\":[\"expand the home\",\"update the envelope\",\"keep original character legible\"],\"applicability\":[\"good retrofit pattern for intact mid-century houses\",\"useful when the shell has good bones\"],\"risks\":[\"energy upgrade can be costly\",\"preservation and modernization can fight each other\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-2-20260814\",\"residentRequest\":\"两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-two-children\",\"text\":\"住户为两位成人和两名儿童\"},{\"id\":\"priority:flexibility\",\"text\":\"家具和活动区域需要可变\"},{\"id\":\"budget:unknown\",\"text\":\"预算尚未确定\"}],\"unresolvedInputIds\":[\"budget:unknown\"]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673578845505571823"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##中世纪现代·克制耐用方案@@02##克制、耐用、易维护的中世纪现代风格，通过经典比例与自然材质营造温馨家庭空间@@03##灵活家具满足家庭成长需求，优先耐用材料降低长期维护成本@@04##以开阔视线为框架，用低矮家具与锥形腿建立风格识别度，避免过度装饰@@05##儿童动线短且安全，主要路径连接开放区域，成人监护无盲区@@06##弹性房间可随儿童成长调整为主卧扩展或独立儿童区@@07##低矮家具保持层高感，窗台高度维持以优化自然采光@@08##主卧特征墙材质对撞，客厅简洁几何线条，弹性房间用浅色放大空间感@@09##耐磨胡桃木色木地板，兼顾风格与耐用性@@10##保留原顶高度，线脚简洁或无装饰@@11##现有鞋柜、厨房台面、电视柜维持不动，功能补充待评估@@12##低矮锥形腿家具便于清洁，客厅灵活布局支持多种家庭场景@@13##中性色布艺与几何图案兼顾易清洗，造型灯具作为风格锚点@@14##避免全屋主题化、避免难以清洁的复杂线条与镂空@@15##保留大开窗，优化窗帘选择以控制眩光与能耗@@16##球形或雕塑造型主灯搭配功能照明，层次分明@@17##灯具选择易清洁款式，窗帘调节眩光，维护便利@@18##胡桃木色||芥末黄||橄榄绿||砖红@@19##胡桃木||皮革||玻璃||易清洁布料@@20##防污布料||耐磨木地板||易清洁玻璃||皮革定期护理@@21##分类集中收纳，减少分散置物，降低维护负担@@22##入口鞋柜||厨房台面储物||主卧衣柜||弹性房间模块化收纳"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673579027126733762"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧定位为静谧休憩空间，契合中世纪现代克制美学，强调私密与舒适平衡@@02##墙地顶以木色、胡桃木质感为主调，背景墙选砖红色点缀呼应整体色系@@03##固定衣柜与床构成核心关系，床头柜与梳妆台预留灵活位置@@04##选球形或雕塑感吊灯搭配局部台灯，简洁不冗余@@05##卫生间定位为耐用易洁空间，注重防潮与日常维护便捷@@06##墙地顶以浅暖灰调为主，配合易清洁饰面@@07##洗漱与如厕区干湿分离，储物功能优先@@08##局部柔和照明满足化妆需求，采用壁灯或镜前灯@@09##灵活书房定位为可变空间，满足儿童活动与未来功能转换@@10##墙地顶与主卧协调，整体留白便于软装调整@@11##书桌可移动，灵活床位布局，满足成长变化需求@@12##台灯满足读写需求，整体无复杂固定装饰@@13##走廊定位为流畅过渡空间，保持克制简洁@@14##墙地顶整体统一木色调，视觉连贯温暖@@15##无复杂装饰，预留墙面灵活布置可能@@16##基础照明为主，满足通行亮度需求即可@@17##客餐厅定位为开阔家庭核心区，保留开阔视线与室内外联系@@18##木地板延续整体基调，墙面以暖白为主保留灵活性@@19##沙发、电视柜、餐桌关系可变，留出儿童活动弹性@@20##选用低矮、锥形腿家具呼应风格特征，吊灯可选球形或几何款@@21##厨房定位为高效实用空间，注重操作便利与清洁@@22##台面与橱柜以耐用为主，木色与中性色调配合@@23##橱柜储物功能优先，满足日常收纳需求@@24##基础照明配合操作区局部功能照明@@25##玄关定位为简洁过渡区，注重收纳与整洁第一印象@@26##地面可选水磨石或瓷砖方便清洁，墙面保持简洁@@27##鞋柜为固定收纳核心，满足一家人进出收纳需求@@28##基础照明简洁明了，配合穿衣镜局部照明"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673580018458446790"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##中世纪现代住宅规划@@02##以克制耐用的现代主义语汇回应弹性居住需求，通过开阔视线与低矮家具保留MCM可辨识核心，规避全套复刻主题化@@03##两位成人两名儿童的弹性活动需求由可变家具与开阔布局承载；预算未确定时优先克制选材，维护便捷性贯穿全篇@@04##全屋以低饱和暖色系为基调，墙面以纯白浅灰为底，地面以浅色木纹或水曲柳色为统一介质，照明以雕塑感球形灯具为风格锚点@@05##客餐厅一体通厅保留开敞对流；玄关至厨房形成连续功能带；走廊作为动静分区过渡；主卧与弹性房间通过灵活隔断保持弹性@@06##卫生间与走廊适度分隔；弹性房间可在不同时间段切换为儿童游戏与成人工作模式@@07##以低矮家具保持层高通透感，客厅不设高柜，保持视线层高优势@@08##客厅沙发墙与主卧背景墙为风格锚点墙面，局部点缀胡桃木饰面板或浅灰色；其余墙面以浅白为主@@09##全屋地面通铺浅色水曲柳木纹或浅木色复合地板，厨房可局部采用防水基层+哑光灰地砖过渡带@@10##顶面以纯白乳胶漆为主，不做复杂吊顶；局部梁体保留原色或刷深色以框出结构层次@@11##固定柜体统一胡桃木色或浅木色柜门，客厅电视柜与主卧衣柜为风格锚点；洞口关系不变@@12##客厅以低矮三人沙发+锥形腿茶几为核心；餐厅用锥形腿餐桌；主卧以低矮床架+简约床头柜为主；弹性房间以可变家具应对@@13##软装以皮革、棉麻为主，抱枕点缀芥末黄或橄榄绿；球形或雕塑感台灯作为风格锚点；整体克制装饰@@14##规避全套主题化复刻、规避高光白色亮面柜门、规避密集开放式层板、规避低价塑料层压板、规避复杂造型线条天花@@15##客厅大窗引入自然光为主；弹性房间以侧窗补光；主卧以原有门窗引入光线；窗帘以浅色透光帘为主@@16##主照明以嵌入式筒灯或轨道灯保证基础亮度；客厅茶几上方可设置雕塑感吊灯；卧室用球形台灯或壁灯作为氛围光；无眩光直射@@17##灯具选哑光或漫反射材质；易清洁光源结构；减少复杂装饰性灯具降低维护频次@@18##浅白墙面色||浅灰墙面色||深胡桃木色||浅水曲柳木色@@19##水曲柳或橡木复合木地板||胡桃木饰面板||哑光灰防滑砖||棉麻布艺||头层皮革||磨砂玻璃||黑色金属@@20##木地板定期清洁养护||皮革家具避免暴晒||金属件保持干燥||窗帘定期清洗@@21##全屋收纳以固定胡桃木衣柜为主，玄关鞋柜、客厅电视柜、主卧衣柜统一风格；弹性房间以可变收纳为主@@22##主卧衣柜||客厅电视柜||玄关鞋柜||弹性房间浮动层板||厨房台面收纳||厨房吊柜"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673580099341765595"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##两位成人私密主卧，安静围合感强，窗侧布置床位保证采光睡眠@@02##木地板通铺，墙面浅色留白保持明亮，大窗引入自然光不设复杂装饰@@03##低矮木框架床配锥形腿，嵌入式衣柜靠墙固定，窗边不堆放大件保证动线灵活@@04##球形或雕塑壁灯提供柔和环境光，床头阅读壁灯低色温柔和@@05##简约干湿分区卫生间，满足日常洗漱需求，无高维护装饰件@@06##瓷砖墙面地面便于清洁，铝扣板或防水石膏吊顶简洁处理@@07##悬挂洗手台加镜柜，台下盆减少清洁死角，壁挂式收纳最大化地面空间@@08##防雾筒灯基础照明，镜前灯补充，功能优先不设装饰性灯具@@09##弹性多功能空间，可作儿童房或书房，适应家庭成员变化灵活调整@@10##木地板延续保持全屋统一，墙面留白不设固定装饰，为家具变动留余@@11##活动床架配合书桌和墙上搁板，收纳以灵活组合为主，不做固定高柜@@12##基础筒灯加可移动台灯，满足多功能需求不设固定射灯@@13##走廊连接各功能区，视觉简洁导向清晰@@14##地板与相邻空间通铺收口，墙面简化处理减少积灰面@@15##小型壁龛或挂墙收纳柜满足日常零碎收纳，克制设置避免拥堵@@16##嵌入式筒灯均匀照明，不设装饰壁灯减少维护@@17##开敞客厅餐厅一体，强调视野开阔和室内外联系，适合家庭活动弹性@@18##木地板通铺与落地窗结合，墙面保持简洁线条不设复杂造型，内外通透@@19##低矮沙发配合锥形腿，圆餐桌可兼容用餐与临时办公，竖条分隔保留视线穿透@@20##球形或金属雕塑吊灯作为空间视觉锚点，克制装饰强化风格辨识度@@21##现代简洁厨房，功能操作流线清晰@@22##瓷砖或防水墙面与木地板分区处理，台面靠窗保证烹饪采光简洁@@23##固定橱柜靠墙L型布局，台面延展满足操作，嵌入式电器减少表面清洁@@24##集成吊灯或基础筒灯，局部工作灯补充操作台照明，功能优先@@25##简洁入口过渡，区分室内外缓冲空间@@26##木地板通铺与室内一致，墙面简单处理保留明亮不设复杂装饰@@27##壁挂鞋柜靠墙固定满足收纳，窗侧留空保持进门开阔不堆砌@@28##壁灯或基础筒灯提供进门照明，简洁不设装饰性灯具减少维护"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673580109287050204"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##保持现有房间边界与隔断；主卧承载睡眠与收纳，次卧兼作儿童灵活活动与书房，入户承担收纳与过渡，客餐厅维持开放一体，厨房保持独立操作区@@02##X009||X010||X011||X012||X013||X014||X015||X053||X054||X055@@03##空间不增不减，功能弹性通过家具可移实现，不动固定隔断@@04##地面沿用木地板或同类温润自然材质；墙面以纯色涂料为主，不做过度造型，局部可用木质感材质点缀；顶面保持简洁，不做复杂吊顶@@05##X001||X002||X003||X004||X008||X053||X055@@06##优先选择耐久易清洁的材料，避免高维护特殊工艺@@07##选用低矮锥形腿家具，保持视线通透；床、沙发、餐桌等大件保持可移位，衣柜、鞋柜等固定柜体维持原位；儿童活动区留出灵活空地@@08##X001||X005||X006||X016||X018||X020||X022||X053||X054||X055@@09##家具数量精简，优先可变形、多用途款式；固定安装关系待专业复核@@10##局部使用中世纪现代风格的球形或雕塑感灯具作为风格锚点；其余区域采用基础功能性照明，不做过度装饰性灯具@@11##X006||X008||X055@@12##灯具选型克制，优先耐用易更换光源的款式"
+      },
+      "validation": {
+        "ok": false,
+        "errors": [
+          {
+            "code": "SEGMENT_DECISION_GROUNDING",
+            "path": "standardPlanSegment[0]",
+            "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+          }
+        ]
+      }
+    }
+  ],
+  "error": {
+    "name": "Error",
+    "message": "PROVIDER_CONTRACT_FAILURE",
+    "retryable": false,
+    "evaluator": false,
+    "validationErrors": [
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[0]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      }
+    ],
+    "rawResponse": null,
+    "providerTrace": null
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "SEGMENT_DECISION_GROUNDING",
+        "path": "standardPlanSegment[0]",
+        "message": "Each decision requires one allowed style basis, one factual basis, and a tradeoff."
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 240237,
+  "completedAt": "2026-08-13T18:12:14.146Z"
+}

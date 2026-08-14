@@ -1,0 +1,409 @@
+{
+  "id": "scandinavian__budget-maintenance__random-2-20260814",
+  "styleId": "scandinavian",
+  "variantId": "budget-maintenance",
+  "layoutId": "random-2-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider",
+  "providerTrace": {
+    "provider": "aily_team",
+    "agentId": "agent_4kt39w75byxw5cf",
+    "chatId": "7673562033388243955"
+  },
+  "prompt": "你是住宅设计规划 Agent。请基于给定风格档案，为同一套固定户型生成一套标准母方案。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。第一个字符必须是 {，toolCalls 必须是空数组。根对象只含 toolCalls 与 standardPlanDraft。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可直接生产安装。\n只写设计意图与材料、色彩、体量、光环境和维护方向。禁止颜色号、色温、照度、尺寸数值、防水高度、线路/燃气/水槽/烟机位置、螺栓/预埋/锚固方式等施工细节。\nroomId 与 basisIds 必须从上下文逐字复制；referenceCases 为空时不得伪造案例。\nhouse 是当前住宅唯一事实来源。风格档案中的壁炉、庭院、拱门、露梁、岛台或其他原型元素若不在 house 中，只能转译为抽象设计语言，不得写成当前住宅已有事实或结构改造。\n不得提议新增、拆除或移动任何隔断，即使描述为轻质、活动、非固定或装饰性；只能利用 house 中已有家具、表面和开口表达分区。\nstandardPlanDraft 九段顺序固定为 summary、spatial、rooms、renovation、furniture、lighting、materials、storage、decisions。不得改成对象。\n严格输出形状中的空字符串与空 basisIds 都必须替换为本次设计内容；不得原样复制空值、字段名、英文说明或示例句。roomId 与 decision area 是固定标识，不得替换。\n提议方向不得描述成现状。错误或无法核验的住户前提只能在第一段 summary 第三项 resolutionNote 中说明需要核验。\ndecisions 必须恰好四项，首项依次为 spatial、envelope、furniture、lighting。每项格式为 [area,decision,basisIds,tradeoff]，至少引用一个 style:* 依据和一个 room/object/brief:* 事实依据。不得写“营造高级感”等空话。\nbrief.knownFacts 中的每个 ID 都必须至少在某一项 decisions 的 basisIds 中以 brief:ID 原样引用一次，不能只在文字里复述。\nstyle basis ID 只能从 style:scandinavian:layout, style:scandinavian:palette, style:scandinavian:materials, style:scandinavian:envelope, style:scandinavian:furniture, style:scandinavian:lighting, style:scandinavian:methods, style:scandinavian:avoid 中选择，必须逐字复制 ID，禁止在冒号后拼接锚点文字。其他 basis ID 也只能逐字复制 context 中已有的 ID。\n第三段 rooms 每项严格为 [roomId,intent,envelope,furnitureAndStorage,lighting]，每个房间恰好出现一次。所有文字值不超过 40 个汉字。固定身份、事实引用、规则、未知项和产品边界由本地适配器注入，不要输出这些字段。\n涉及高柜防倾倒、固定安装或墙体关系时，只写“待专业复核”，不得给锚固方法。\n严格保持定长数组顺序；materials 的三项和 storage 第二项都是非空字符串数组。不得增加对象键或改变数组顺序。\n上下文：{\"style\":{\"id\":\"scandinavian\",\"names\":{\"zh\":\"北欧风\",\"en\":\"Scandinavian\"},\"sourceIds\":[\"denmark-design\"],\"characteristics\":{\"layout\":\"通透、功能优先、减少视觉阻挡\",\"palette\":[\"暖白\",\"浅灰\",\"浅木\"],\"materials\":[\"白橡木\",\"羊毛\",\"亚麻\",\"玻璃\"],\"envelope\":[\"浅色墙顶\",\"浅木地面\"],\"furniture\":[\"轻体量\",\"清晰线条\",\"人体工学\"],\"lighting\":[\"自然光\",\"漫射暖光\"],\"methods\":[\"隐藏收纳\",\"少量耐用单品\"],\"avoid\":[\"只有白色而无纹理\",\"深色重家具堆叠\"]}},\"referenceCases\":[{\"caseId\":\"scandinavian-01\",\"designMoves\":[\"compact Nordic cabin massing\",\"careful view framing\",\"openness moderated by shelter\"],\"applicability\":[\"coastal second homes\",\"small sites where the landscape should stay dominant\"],\"risks\":[\"can drift into generic cabin styling if the view logic is not tight\"]},{\"caseId\":\"scandinavian-02\",\"designMoves\":[\"intersecting volumes\",\"smaller guest-house counterpart\",\"shaped sheltered rooms\"],\"applicability\":[\"multi-volume holiday houses\",\"sites that need both openness and wind protection\"],\"risks\":[\"the architecture can become too formal if the sheltered spaces feel over-designed\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-2-20260814\",\"residentRequest\":\"两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-two-children\",\"text\":\"住户为两位成人和两名儿童\"},{\"id\":\"priority:flexibility\",\"text\":\"家具和活动区域需要可变\"},{\"id\":\"budget:unknown\",\"text\":\"预算尚未确定\"}],\"unresolvedInputIds\":[\"budget:unknown\"]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanDraft\":[[\"\",\"\",\"\"],[\"\",\"\",\"\",\"\"],[[\"room-primary-bedroom\",\"\",\"\",\"\",\"\"],[\"room-bathroom\",\"\",\"\",\"\",\"\"],[\"room-flex\",\"\",\"\",\"\",\"\"],[\"room-hall\",\"\",\"\",\"\",\"\"],[\"room-living-dining\",\"\",\"\",\"\",\"\"],[\"room-kitchen\",\"\",\"\",\"\",\"\"],[\"room-entry\",\"\",\"\",\"\",\"\"]],[\"\",\"\",\"\",\"\"],[\"\",\"\",\"\"],[\"\",\"\",\"\"],[[\"\"],[\"\"],[\"\"]],[\"\",[\"\"]],[[\"spatial\",\"\",[],\"\"],[\"envelope\",\"\",[],\"\"],[\"furniture\",\"\",[],\"\"],[\"lighting\",\"\",[],\"\"]]]}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回原 standardPlanDraft 合同。",
+  "providerResponse": {
+    "toolCalls": [],
+    "standardPlanDraft": [
+      [
+        "北欧克制设计：利用浅白与浅木塑造温暖底色，通过轻体量家具与隐藏收纳保持空间弹性，适配两位成人与两名儿童的活动需求",
+        "家庭成员两位成人与两名儿童，多功能空间和公共区域采用可变换家具排布；固定高柜均设防倾倒约束，待专业复核",
+        "预算尚未确定，维护优先的设计方向要求主材和家具优先选择耐用、易清洁、不易过时的克制方案，具体选型需待预算明确后确定"
+      ],
+      [
+        "空间整体以开敞为原则，减少视觉阻挡；通过地面材质分区和可移动家具实现弹性分区，不新增或拆除任何隔断",
+        "核心活动区集中于客餐一体的开放空间，灵活容纳家庭聚会与儿童活动；主卧与多功能房通过固定家具围合保证私密性",
+        "移动家具采用轻体量设计，可随儿童成长或家庭需求重新排布；固定收纳与可移动家具比例优先保证藏多露少",
+        "预算未定阶段，优先以设计逻辑而非价格区间驱动材料与家具决策，维护成本与耐用性作为主要筛选标准"
+      ],
+      [
+        [
+          "room-primary-bedroom",
+          "主卧以白橡木系为主调，营造温润沉静的休息氛围",
+          "暖白墙面与浅木地面定调，固定高柜保持整洁立面，可移动床品和边几保留弹性",
+          "浅木边几与小型阅读壁灯，配合漫射暖光灯具"
+        ],
+        [
+          "room-bathroom",
+          "浴室以防水白砖和浅灰地砖保持明亮整洁",
+          "防水浅白墙砖、浅灰防滑地砖、玻璃隔断淋浴区，固定台盆柜提供基础收纳",
+          "防水筒灯配合防雾镜前漫射灯，光线均匀柔和"
+        ],
+        [
+          "room-flex",
+          "多功能空间满足可变需求，适应家庭成长阶段变化",
+          "浅色墙面配浅木地板，固定书架墙作为功能锚点，可移动床与书桌满足灵活切换",
+          "壁挂书架配可调角度射灯，配合台灯补充读写照明"
+        ],
+        [
+          "room-hall",
+          "走廊作为过渡空间，保持动线通透与视觉整洁",
+          "浅色墙面与浅木地面走廊，墙面预留简洁挂衣钩与换鞋区",
+          "柔和漫射顶灯或壁灯，光线温柔不抢视线"
+        ],
+        [
+          "room-living-dining",
+          "客餐一体空间以灵活性为核心，承载家庭核心活动",
+          "浅木地面配合浅白墙面，通过可移动沙发与餐桌实现可变分区；固定电视柜与木栅隔断作为空间锚点",
+          "自然光引入为主，配合漫射暖光主灯与落地阅读灯，层次分明"
+        ],
+        [
+          "room-kitchen",
+          "厨房以耐用易清洁为导向，减少复杂装饰",
+          "防水白砖或浅灰墙砖、浅木柜体、白色台面，动线基于现有固定橱柜",
+          "充足漫射顶灯配合操作台补充照明，明亮舒适"
+        ],
+        [
+          "room-entry",
+          "玄关保持简洁，高效完成收纳与过渡功能",
+          "浅色墙面与浅木地面，固定鞋柜满足日常收纳，换鞋凳与穿衣镜灵活配置",
+          "小型壁灯或筒灯提供柔和照明，温馨迎宾"
+        ]
+      ],
+      [
+        "以克制为原则，通过材质本身的纹理而非装饰符号塑造空间层次感",
+        "墙面与顶面统一浅白色系，地面统一浅木色系，局部屋梁或顶面结构保持原状不做修饰",
+        "不做结构改造不开洞，保持机电管线可维护性"
+      ],
+      [
+        "轻体量、可移动、单品功能明确为选型原则",
+        "沙发与餐桌优先选择布艺和木材等温润材质，不选体量笨重或装饰繁复的款式",
+        "固定高柜设计需考虑防倾倒约束，标注待专业复核"
+      ],
+      [
+        "以自然采光为主，人工照明以漫射暖光为核心，避免直射和复杂层次",
+        "客厅主灯选用柔和漫射型，配合落地灯补充暖调；卧室以小型壁灯和台灯为主，避免刺眼顶光",
+        "厨房和浴室采用均匀漫射照明，满足功能需求而不喧闹"
+      ],
+      [
+        [
+          "白橡木地板",
+          "亚麻布艺沙发",
+          "羊毛材质抱枕与毯类"
+        ],
+        [
+          "防水亚光白砖",
+          "浅灰防滑地砖",
+          "白色防水乳胶漆"
+        ]
+      ],
+      [
+        "客厅与主卧以固定电视柜与高衣柜为锚点实现藏多露少；厨房与浴室以固定橱柜满足大容量收纳；玄关鞋柜与多功能房书架墙提供分区收纳；全屋收纳体系以隐藏为主，保持视觉整洁",
+        "固定收纳与可移动家具比例优先保证藏多露少，易清洁易维护"
+      ],
+      [
+        [
+          "spatial",
+          "全屋采用开敞布局减少视觉阻挡，通过地面材质分界和可移动家具实现弹性分区，客餐一体空间承载家庭核心活动，固定高柜均设防倾倒约束",
+          "['style:scandinavian:layout', 'style:scandinavian:envelope', 'brief:household:two-adults-two-children', 'brief:priority:flexibility']",
+          "在极简北欧框架内，克制装饰投入换来更大的空间弹性与后期改造余地，维护与改造成本均较低"
+        ],
+        [
+          "envelope",
+          "墙面顶面统一浅白，地面统一浅木，通过材质本色而非色彩符号塑造温暖底色，结构与机电管线保持原状不做修饰",
+          "['style:scandinavian:palette', 'style:scandinavian:envelope', 'style:scandinavian:avoid']",
+          "浅白浅木体系维护简便但需定期清洁以保持质感，去除多余装饰符号后整体感更强"
+        ],
+        [
+          "furniture",
+          "以轻体量、可移动、单品功能明确为选型原则，沙发与餐桌优先布艺和温润木材，固定柜体设计防倾倒约束并待专业复核",
+          "['style:scandinavian:furniture', 'brief:household:two-adults-two-children', 'brief:priority:flexibility']",
+          "轻体量家具采购成本可控且易于更换，但需注意材质耐用性以降低长期更换频率"
+        ],
+        [
+          "lighting",
+          "自然采光为主，人工照明以漫射暖光为核心，客厅柔和漫射主灯配合落地灯，卧室以壁灯台灯为主，厨房浴室均匀漫射顶灯",
+          "['style:scandinavian:lighting', 'style:scandinavian:palette']",
+          "漫射暖光体系灯具选择多、更换成本低，暖色调光环境维护简单且不易过时"
+        ]
+      ]
+    ]
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "DRAFT_RENOVATION_SHAPE",
+        "path": "standardPlanDraft[3]",
+        "message": "Expected an array with exactly 4 items."
+      },
+      {
+        "code": "DRAFT_MATERIALS_SHAPE",
+        "path": "standardPlanDraft[6]",
+        "message": "Expected an array with exactly 3 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[0]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[1]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[2]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[3]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[4]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[5]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[6]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_COVERAGE",
+        "path": "standardPlanDraft[2]",
+        "message": "Every canonical room must appear exactly once."
+      },
+      {
+        "code": "ROOM_COVERAGE",
+        "path": "spatialPlan.rooms",
+        "message": "Every canonical room must appear exactly once."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[0]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[1]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[2]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[3]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[4]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[5]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[6]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "RENOVATION_PLAN_EMPTY",
+        "path": "renovationPlan",
+        "message": "Wall, floor, ceiling, and fixed-installation direction is required."
+      },
+      {
+        "code": "MATERIAL_PLAN_EMPTY",
+        "path": "materialPlan",
+        "message": "Material plan requires a non-empty string array per section."
+      },
+      {
+        "code": "STORAGE_PLAN_EMPTY",
+        "path": "storagePlan",
+        "message": "Storage strategy is incomplete."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.spatial",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.envelope",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.furniture",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.lighting",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      }
+    ]
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.16",
+    "planKind": "standard_master_plan",
+    "styleId": "scandinavian",
+    "variantOf": null,
+    "title": "北欧克制设计：利用浅白与浅木塑造温暖底色，通过轻体量家具与隐藏收纳保持空间弹性，适配两位成人与两名儿童的活动需求",
+    "designIntent": "家庭成员两位成人与两名儿童，多功能空间和公共区域采用可变换家具排布；固定高柜均设防倾倒约束，待专业复核",
+    "briefResponse": {
+      "briefId": "random-2-20260814",
+      "acknowledgedFactIds": [
+        "household:two-adults-two-children",
+        "priority:flexibility",
+        "budget:unknown"
+      ],
+      "unresolvedInputIds": [
+        "budget:unknown"
+      ],
+      "resolutionNote": "预算尚未确定，维护优先的设计方向要求主材和家具优先选择耐用、易清洁、不易过时的克制方案，具体选型需待预算明确后确定"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "denmark-design"
+      ],
+      "caseIds": [
+        "scandinavian-01",
+        "scandinavian-02"
+      ],
+      "layoutAnchor": "通透、功能优先、减少视觉阻挡",
+      "paletteAnchors": [
+        "暖白",
+        "浅灰",
+        "浅木"
+      ],
+      "materialAnchors": [
+        "白橡木",
+        "羊毛",
+        "亚麻"
+      ],
+      "avoidAnchors": [
+        "只有白色而无纹理",
+        "深色重家具堆叠"
+      ]
+    },
+    "spatialPlan": {
+      "wholeHome": "空间整体以开敞为原则，减少视觉阻挡；通过地面材质分区和可移动家具实现弹性分区，不新增或拆除任何隔断",
+      "circulation": "核心活动区集中于客餐一体的开放空间，灵活容纳家庭聚会与儿童活动；主卧与多功能房通过固定家具围合保证私密性",
+      "privacy": "移动家具采用轻体量设计，可随儿童成长或家庭需求重新排布；固定收纳与可移动家具比例优先保证藏多露少",
+      "scaleFit": "预算未定阶段，优先以设计逻辑而非价格区间驱动材料与家具决策，维护成本与耐用性作为主要筛选标准",
+      "rooms": [
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        }
+      ]
+    },
+    "renovationPlan": {},
+    "furniturePlan": {
+      "placementAndScale": "轻体量、可移动、单品功能明确为选型原则",
+      "softFurnishings": "沙发与餐桌优先选择布艺和木材等温润材质，不选体量笨重或装饰繁复的款式",
+      "avoid": "固定高柜设计需考虑防倾倒约束，标注待专业复核"
+    },
+    "lightingPlan": {
+      "daylight": "以自然采光为主，人工照明以漫射暖光为核心，避免直射和复杂层次",
+      "layers": "客厅主灯选用柔和漫射型，配合落地灯补充暖调；卧室以小型壁灯和台灯为主，避免刺眼顶光",
+      "glareAndMaintenance": "厨房和浴室采用均匀漫射照明，满足功能需求而不喧闹"
+    },
+    "materialPlan": {},
+    "storagePlan": {
+      "wholeHome": "客厅与主卧以固定电视柜与高衣柜为锚点实现藏多露少；厨房与浴室以固定橱柜满足大容量收纳；玄关鞋柜与多功能房书架墙提供分区收纳；全屋收纳体系以隐藏为主，保持视觉整洁",
+      "roomPriorities": "固定收纳与可移动家具比例优先保证藏多露少，易清洁易维护"
+    },
+    "designDecisions": {
+      "spatial": {
+        "decision": "全屋采用开敞布局减少视觉阻挡，通过地面材质分界和可移动家具实现弹性分区，客餐一体空间承载家庭核心活动，固定高柜均设防倾倒约束",
+        "basisIds": "['style:scandinavian:layout', 'style:scandinavian:envelope', 'brief:household:two-adults-two-children', 'brief:priority:flexibility']",
+        "tradeoff": "在极简北欧框架内，克制装饰投入换来更大的空间弹性与后期改造余地，维护与改造成本均较低"
+      },
+      "envelope": {
+        "decision": "墙面顶面统一浅白，地面统一浅木，通过材质本色而非色彩符号塑造温暖底色，结构与机电管线保持原状不做修饰",
+        "basisIds": "['style:scandinavian:palette', 'style:scandinavian:envelope', 'style:scandinavian:avoid']",
+        "tradeoff": "浅白浅木体系维护简便但需定期清洁以保持质感，去除多余装饰符号后整体感更强"
+      },
+      "furniture": {
+        "decision": "以轻体量、可移动、单品功能明确为选型原则，沙发与餐桌优先布艺和温润木材，固定柜体设计防倾倒约束并待专业复核",
+        "basisIds": "['style:scandinavian:furniture', 'brief:household:two-adults-two-children', 'brief:priority:flexibility']",
+        "tradeoff": "轻体量家具采购成本可控且易于更换，但需注意材质耐用性以降低长期更换频率"
+      },
+      "lighting": {
+        "decision": "自然采光为主，人工照明以漫射暖光为核心，客厅柔和漫射主灯配合落地灯，卧室以壁灯台灯为主，厨房浴室均匀漫射顶灯",
+        "basisIds": "['style:scandinavian:lighting', 'style:scandinavian:palette']",
+        "tradeoff": "漫射暖光体系灯具选择多、更换成本低，暖色调光环境维护简单且不易过时"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 77046,
+  "completedAt": "2026-08-13T17:03:30.858Z"
+}

@@ -2,7 +2,7 @@ import { designStyleCases } from '../catalog/design-style-cases.js';
 import { designStyleCorpus } from '../catalog/design-style-corpus.js';
 import { evaluateDesignRules } from '../domain/design-rules.js';
 
-export const STANDARD_PLAN_PROMPT_VERSION = 'oppein-standard-master-plan-v1.16';
+export const STANDARD_PLAN_PROMPT_VERSION = 'oppein-standard-master-plan-v1.21';
 export const STANDARD_PLAN_UNKNOWN_IDS = Object.freeze([
   'homeowner_preferences',
   'site_measurement',
@@ -42,8 +42,15 @@ const sameSet = (actual, expected) => Array.isArray(actual) && actual.length ===
 const textFields = (value, keys) => isRecord(value) && keys.every((key) => isText(value[key]));
 const issue = (errors, code, path, message) => errors.push(Object.freeze({ code, path, message }));
 const unsupportedClaimsIn = (value) => {
-  const designText = JSON.stringify(value).replace(/(?:不|不得|禁止|无需)(?:(?:新增|新建|拆除|去除|移动|扩大|缩小|封闭|打通)(?:或|、)?)+.{0,4}(?:墙|隔断|门窗|洞口|管线|水槽|灶)/g, '');
-  return [...new Set(designText.match(/[¥￥$]\s*\d|#[0-9a-f]{3,8}|\d+(?:\.\d+)?\s*(?:mm|cm|m²?|㎡|lux|k|毫米|厘米|米|英寸|度|元|万元|万\/|元\/|天完工|天交付)|(?:SKU|BOM|欧派.{0,8}(?:型号|产品|报价|工艺))|(?:可直接施工|施工图|生产下单|不是承重|结构安全|消防合规|机电可行|防水层|防水高度|膨胀螺栓|预埋件|实心墙|燃气热水器|排油烟机|线路调整|锚固于|防倾倒连接件)|(?:拆除|去除|新建|扩大|缩小|封闭|打通).{0,8}(?:墙|隔断|门窗|洞口|管线|水槽|灶)|移动(?:墙|隔断|门窗|洞口|管线|水槽|灶)|(?:替代.{0,4}实墙|全屋.{0,8}开放格局)|(?:现有|原有|保留).{0,6}(?:壁炉|庭院|露梁|拱门|岛台|步入式衣柜)/ig) ?? [])];
+  const designText = JSON.stringify(value)
+    .replace(/(?:不|不得|禁止|无需)(?:(?:新增|新建|拆除|去除|移动|扩大|缩小|封闭|打通)(?:或|、)?)+.{0,4}(?:墙|隔断|门窗|洞口|管线|水槽|灶)/g, '')
+    .replace(/(?:避免|拒绝).{0,8}(?:(?:新增|新建|拆除|去除|移动|扩大|缩小|封闭|打通)(?:或|、)?)+.{0,4}(?:墙|隔断|门窗|洞口|管线|水槽|灶)/g, '')
+    .replace(/(?:避免|拒绝).{0,8}(?:(?:新增|新建|拆除|去除|移动|扩大|缩小|封闭|打通)(?:现有|原有|局部|一处)?(?:的)?(?:墙|隔断|门窗|洞口|管线|水槽|灶)(?:或|、)?)+/g, '')
+    .replace(/(?:而非|替代)(?:新增|新建|封闭)?(?:墙|隔断|门窗|洞口)/g, '')
+    .replace(/(?:不|无需)(?:指定|给出|提供|声称|改动|改变|调整|涉及|更换|变动).{0,8}(?:防水层|防水高度|地漏|管线|燃气|烟机|锚固)/g, '')
+    .replace(/(?:不|不得|禁止|无需|避免|拒绝).{0,8}(?:SKU|BOM|欧派.{0,8}(?:型号|产品|报价|工艺))/gi, '')
+    .replace(/避免(?:增设|新增|新建).{0,4}(?:墙|隔断|门窗|洞口|管线)/g, '');
+  return [...new Set(designText.match(/[¥￥$]\s*\d|#[0-9a-f]{3,8}|\d+(?:\.\d+)?\s*(?:mm|cm|m²?|㎡|lux|k|毫米|厘米|米|英寸|度|元|万元|万\/|元\/|天完工|天交付)|(?:SKU|BOM|欧派.{0,8}(?:型号|产品|报价|工艺))|(?:可直接施工|施工图|生产下单|不是承重|结构安全|消防合规|机电可行|防水层|防水高度|膨胀螺栓|预埋件|实心墙|燃气热水器|排油烟机|线路调整|锚固于|防倾倒连接件)|(?:拆除|去除|新建|扩大|缩小|封闭|打通)(?:现有|原有|局部|一处)?(?:的)?(?:墙|隔断|门窗|洞口|管线|水槽|灶)|移动(?:墙|隔断|门窗|洞口|管线|水槽|灶)|(?:替代.{0,4}实墙|全屋.{0,8}开放格局)|(?:现有|原有|保留).{0,6}(?:壁炉|庭院|露梁|拱门|岛台|步入式衣柜)/ig) ?? [])];
 };
 const rejectUnknown = (errors, value, allowed, path) => {
   if (!isRecord(value)) return;
@@ -104,9 +111,12 @@ function allowedBasisIds(style, scene, brief) {
 
 function basisCodebook(style, scene, brief) {
   const canonicalRules = new Set(standardPlanRuleIds(scene).map((id) => `rule:${id}`));
-  const rawBriefIds = new Set(brief.knownFacts.map((fact) => fact.id));
-  return [...allowedBasisIds(style, scene, brief)]
-    .filter((id) => !rawBriefIds.has(id) && (!id.startsWith('rule:') || canonicalRules.has(id)))
+  return [
+    ...Object.keys(style.characteristics).map((facet) => `style:${style.id}:${facet}`),
+    ...brief.knownFacts.map((fact) => `brief:${fact.id}`),
+    ...scene.rooms.map((room) => `room:${room.id}`),
+    ...canonicalRules,
+  ]
     .map((id, index) => [`X${String(index + 1).padStart(3, '0')}`, id]);
 }
 
@@ -173,7 +183,7 @@ export function buildStandardDesignPlanPrompt({ styleId, scene, brief: rawBrief 
 
 function segmentShape(segment, style, scene) {
   if (segment === 'overview') return Array.from({ length: 22 }, (_, index) => `${String(index + 1).padStart(2, '0')}##<填写内容>`).join('@@');
-  if (segment === 'rooms') return Array.from({ length: scene.rooms.length * 4 }, (_, index) => `${String(index + 1).padStart(2, '0')}##<填写内容>`).join('@@');
+  if (segment === 'rooms') return scene.rooms.map((_, index) => `${String(index + 1).padStart(2, '0')}##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>`).join('@@');
   if (segment === 'decisions') return Array.from({ length: 12 }, (_, index) => `${String(index + 1).padStart(2, '0')}##<填写内容>`).join('@@');
   throw new Error(`STANDARD_PLAN_SEGMENT_UNKNOWN: ${segment}`);
 }
@@ -182,10 +192,12 @@ export function buildStandardDesignPlanSegmentPrompt({ segment, styleId, scene, 
   const style = standardPlanStyle(styleId, corpus);
   const brief = normalizeBrief(rawBrief);
   const context = standardPlanContext(style, scene, brief, cases);
+  const codebook = basisCodebook(style, scene, brief);
+  const styleCodes = Object.fromEntries(codebook.filter(([, id]) => id.startsWith(`style:${style.id}:`)).map(([code, id]) => [id.split(':').at(-1), code]));
   const instructions = {
-    overview: '严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。18、19、20、22 用 || 分隔至少两个短项，其他值不得含分隔符。',
-    rooms: `严格输出 01 至 ${String(scene.rooms.length * 4).padStart(2, '0')} 的二字段数字槽位。每个房间连续四槽，依次填写空间意图、墙地顶方向、家具与收纳、照明方向。房间顺序为：${scene.rooms.map((room, index) => `${index + 1}=${room.id}`).join('，')}。`,
-    decisions: `严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。依据槽位只填 X001 形式的允许短码，用 || 分隔；每个至少选择一个风格依据和一个事实依据${brief.id === STANDARD_PLAN_BASELINE_BRIEF.id ? '' : '，所有必须覆盖的住户事实短码至少选择一次'}；其他槽位不得含分隔符。`,
+    overview: '严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。',
+    rooms: `严格输出 01 至 ${String(scene.rooms.length).padStart(2, '0')} 共 ${scene.rooms.length} 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：${scene.rooms.map((room, index) => `${String(index + 1).padStart(2, '0')}=${room.id}`).join('，')}。不得省略任何房间或字段。`,
+    decisions: `严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据${brief.id === STANDARD_PLAN_BASELINE_BRIEF.id ? '' : '，四个依据槽位合计必须覆盖全部住户事实短码'}。空间依据必须含 ${styleCodes.layout}；墙地顶依据必须含 ${[styleCodes.palette, styleCodes.materials, styleCodes.envelope].filter(Boolean).join('、')} 之一；家具依据必须含 ${styleCodes.furniture}；照明依据必须含 ${styleCodes.lighting}。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。`,
   }[segment];
   return [
     `你是住宅设计规划 Agent。只完成标准母方案的 ${segment} 片段。`,
@@ -194,9 +206,10 @@ export function buildStandardDesignPlanSegmentPrompt({ segment, styleId, scene, 
     instructions,
     '不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。',
     'house 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。',
-    '不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水高度、线路、燃气、锚固等施工细节。固定安装关系只写“待专业复核”。',
-    '严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。所有文字值不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。',
-    segment === 'decisions' ? `允许依据短码：${basisCodebook(style, scene, brief).map(([code, id]) => `${code}=${id}`).join(', ')}。${brief.id === STANDARD_PLAN_BASELINE_BRIEF.id ? '' : `必须覆盖的住户事实短码：${basisCodebook(style, scene, brief).filter(([, id]) => id.startsWith('brief:')).map(([code]) => code).join(', ')}。`}依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。` : '',
+    '不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。',
+    '每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。',
+    '严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。',
+    segment === 'decisions' ? `允许依据短码：${codebook.map(([code, id]) => `${code}=${id}`).join(', ')}。${brief.id === STANDARD_PLAN_BASELINE_BRIEF.id ? '' : `必须覆盖的住户事实短码：${codebook.filter(([, id]) => id.startsWith('brief:')).map(([code]) => code).join(', ')}。`}依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。` : '',
     `上下文：${JSON.stringify(context)}`,
     `严格输出形状：${JSON.stringify({ toolCalls: [], standardPlanSegment: segmentShape(segment, style, scene) })}`,
   ].join('\n');
@@ -209,17 +222,19 @@ export function validateStandardDesignPlanSegmentResponse(response, { segment, s
     issue(errors, 'SEGMENT_ROOT_INVALID', '$', 'Expected empty toolCalls and one standardPlanSegment string.');
     return { ok: false, errors, value: null };
   }
-  const rawRows = response.standardPlanSegment.split(/(?:@@|##)(?=\d{2}##)/).map((row) => row.split('##'));
-  const segmentText = (value) => isText(value) && value.length <= 80 && !/^[A-Z_]+$/.test(value);
+  const rawRows = response.standardPlanSegment.split(/(?:@@|##|\r?\n)(?=\d{2}##)|(?<!X\d)(?=\d{2}##)/).filter(Boolean).map((row) => row.split('##'));
+  const segmentText = (value) => isText(value) && value.length <= 160 && !/^[A-Z_]+$/.test(value);
   let value = null;
   if (segment === 'overview') {
     const keys = Array.from({ length: 22 }, (_, index) => String(index + 1).padStart(2, '0'));
-    if (rawRows.length !== keys.length || rawRows.some((row, index) => row.length !== 2 || row[0] !== keys[index])) issue(errors, 'SEGMENT_OVERVIEW_SHAPE', 'standardPlanSegment', 'Overview DSL must contain keys 01 through 22 in order, with one value each.');
+    const listIndexes = new Set([17, 18, 19, 21]);
+    const normalizedRows = rawRows.map((row, index) => listIndexes.has(index) && row.length > 2 ? [row[0], row.slice(1).join('||')] : row);
+    if (normalizedRows.length !== keys.length || normalizedRows.some((row, index) => row.length !== 2 || row[0] !== keys[index])) issue(errors, 'SEGMENT_OVERVIEW_SHAPE', 'standardPlanSegment', 'Overview DSL must contain keys 01 through 22 in order, with one value each.');
     else {
-      const fields = rawRows.map((row) => row[1]);
+      const fields = normalizedRows.map((row) => row[1]);
       value = [fields.slice(0, 3), fields.slice(3, 7), fields.slice(7, 11), fields.slice(11, 14), fields.slice(14, 17), fields.slice(17, 20), fields.slice(20, 22)];
-      value[5] = value[5].map((items) => items.split('||').filter(Boolean));
-      value[6][1] = value[6][1].split('||').filter(Boolean);
+      value[5] = value[5].map((items) => items.split(/\|\||｜｜|、/).filter(Boolean));
+      value[6][1] = value[6][1].split(/\|\||｜｜|、/).filter(Boolean);
       if (!value.slice(0, 5).flat().every(segmentText)) issue(errors, 'SEGMENT_OVERVIEW_CONTENT', 'standardPlanSegment', 'Overview contains empty, placeholder, or overlong text.');
       if (!value[5].every((items) => items.length > 0 && items.every(isToken))) issue(errors, 'SEGMENT_MATERIAL_SHAPE', 'standardPlanSegment', 'Material sections must be non-empty lists.');
       if (!segmentText(value[6][0]) || value[6][1].length < 1 || !value[6][1].every(segmentText)) issue(errors, 'SEGMENT_STORAGE_SHAPE', 'standardPlanSegment', 'Storage must contain one whole-home string and one non-empty priority list.');
@@ -227,14 +242,15 @@ export function validateStandardDesignPlanSegmentResponse(response, { segment, s
   }
   if (segment === 'rooms') {
     const keys = Array.from({ length: scene.rooms.length * 4 }, (_, index) => String(index + 1).padStart(2, '0'));
+    const roomRows = rawRows.map((row) => row.length === 2 && row[1].split('@@').length === 4 ? [row[0], ...row[1].split('@@')] : row);
     // Aily occasionally groups the four fields under one room key even after
     // being asked for flat slots. It is the same lossless DSL, so normalize
     // that shape locally while keeping room order and field count strict.
-    const groupedRows = rawRows.length === scene.rooms.length
-      && rawRows.every((row, index) => row.length === 5 && row[0] === String(index + 1).padStart(2, '0'));
+    const groupedRows = roomRows.length === scene.rooms.length
+      && roomRows.every((row, index) => row.length === 5 && row[0] === String(index + 1).padStart(2, '0'));
     const normalizedRows = groupedRows
-      ? rawRows.flatMap((row, roomIndex) => row.slice(1).map((field, fieldIndex) => [keys[roomIndex * 4 + fieldIndex], field]))
-      : rawRows;
+      ? roomRows.flatMap((row, roomIndex) => row.slice(1).map((field, fieldIndex) => [keys[roomIndex * 4 + fieldIndex], field]))
+      : roomRows;
     if (normalizedRows.length !== keys.length || normalizedRows.some((row, index) => row.length !== 2 || row[0] !== keys[index])) issue(errors, 'SEGMENT_ROOM_SHAPE', 'standardPlanSegment', 'Rooms DSL must contain ordered numeric keys with one value each.');
     else {
       const fields = normalizedRows.map((row) => row[1]);
@@ -247,7 +263,21 @@ export function validateStandardDesignPlanSegmentResponse(response, { segment, s
     // Some provider replies leave a trailing empty field after the final
     // separator ("value##@@next"). Strip only that lossless formatting noise;
     // any non-empty extra field remains invalid.
-    const normalizedRows = rawRows.map((row) => row.length === 3 && row[2] === '' ? row.slice(0, 2) : row);
+    const trimmedRows = rawRows.map((row) => row.length === 3 && row[2] === '' ? row.slice(0, 2) : row);
+    const isBasisCode = (token) => /^X\d{3}(?:=[^#]+)?$/.test(token);
+    const groupedRows = trimmedRows.length === STANDARD_PLAN_DECISION_AREAS.length
+      && trimmedRows.every((row, index) => row.length >= 4 && row[0] === String(index + 1).padStart(2, '0') && row.slice(2, -1).flatMap((field) => field.split('||')).every(isBasisCode));
+    const normalizedRows = groupedRows
+      ? trimmedRows.flatMap((row, areaIndex) => [
+        [keys[areaIndex * 3], row[1]],
+        [keys[areaIndex * 3 + 1], row.slice(2, -1).flatMap((field) => field.split('||')).join('||')],
+        [keys[areaIndex * 3 + 2], row.at(-1)],
+      ])
+      : trimmedRows.map((row, index) => {
+        if (index % 3 !== 1 || !/X\d{3}/.test(row.slice(1).join('||'))) return row;
+        const fields = row.flatMap((field, fieldIndex) => fieldIndex === 0 ? [field] : field.replace(/^[^X]*?(?=X\d{3})/, '').split('||'));
+        return fields.length > 2 && fields.slice(1).every(isBasisCode) ? [fields[0], fields.slice(1).join('||')] : fields;
+      });
     if (normalizedRows.length !== keys.length || normalizedRows.some((row, index) => row.length !== 2 || row[0] !== keys[index])) issue(errors, 'SEGMENT_DECISION_SHAPE', 'standardPlanSegment', 'Decisions DSL must contain keys 01 through 12 in order, with one value each.');
     else {
       const fields = normalizedRows.map((row) => row[1]);

@@ -1,0 +1,400 @@
+{
+  "id": "brutalist__balanced__fixed-family-flex-work",
+  "styleId": "brutalist",
+  "variantId": "balanced",
+  "layoutId": "fixed-family-flex-work",
+  "layoutKind": "fixed",
+  "layoutSeed": null,
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider",
+  "providerTrace": {
+    "provider": "aily_team",
+    "agentId": "agent_4kt39w75byxw5cf",
+    "chatId": "7673569377237650360"
+  },
+  "prompt": "你是住宅设计规划 Agent。请基于给定风格档案，为同一套固定户型生成一套标准母方案。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。第一个字符必须是 {，toolCalls 必须是空数组。根对象只含 toolCalls 与 standardPlanDraft。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可直接生产安装。\n只写设计意图与材料、色彩、体量、光环境和维护方向。禁止颜色号、色温、照度、尺寸数值、防水高度、线路/燃气/水槽/烟机位置、螺栓/预埋/锚固方式等施工细节。\nroomId 与 basisIds 必须从上下文逐字复制；referenceCases 为空时不得伪造案例。\nhouse 是当前住宅唯一事实来源。风格档案中的壁炉、庭院、拱门、露梁、岛台或其他原型元素若不在 house 中，只能转译为抽象设计语言，不得写成当前住宅已有事实或结构改造。\n不得提议新增、拆除或移动任何隔断，即使描述为轻质、活动、非固定或装饰性；只能利用 house 中已有家具、表面和开口表达分区。\nstandardPlanDraft 九段顺序固定为 summary、spatial、rooms、renovation、furniture、lighting、materials、storage、decisions。不得改成对象。\n严格输出形状中的空字符串与空 basisIds 都必须替换为本次设计内容；不得原样复制空值、字段名、英文说明或示例句。roomId 与 decision area 是固定标识，不得替换。\n提议方向不得描述成现状。错误或无法核验的住户前提只能在第一段 summary 第三项 resolutionNote 中说明需要核验。\ndecisions 必须恰好四项，首项依次为 spatial、envelope、furniture、lighting。每项格式为 [area,decision,basisIds,tradeoff]，至少引用一个 style:* 依据和一个 room/object/brief:* 事实依据。不得写“营造高级感”等空话。\nbrief.knownFacts 中的每个 ID 都必须至少在某一项 decisions 的 basisIds 中以 brief:ID 原样引用一次，不能只在文字里复述。\nstyle basis ID 只能从 style:brutalist:layout, style:brutalist:palette, style:brutalist:materials, style:brutalist:envelope, style:brutalist:furniture, style:brutalist:lighting, style:brutalist:methods, style:brutalist:avoid 中选择，必须逐字复制 ID，禁止在冒号后拼接锚点文字。其他 basis ID 也只能逐字复制 context 中已有的 ID。\n第三段 rooms 每项严格为 [roomId,intent,envelope,furnitureAndStorage,lighting]，每个房间恰好出现一次。所有文字值不超过 40 个汉字。固定身份、事实引用、规则、未知项和产品边界由本地适配器注入，不要输出这些字段。\n涉及高柜防倾倒、固定安装或墙体关系时，只写“待专业复核”，不得给锚固方法。\n严格保持定长数组顺序；materials 的三项和 storage 第二项都是非空字符串数组。不得增加对象键或改变数组顺序。\n上下文：{\"style\":{\"id\":\"brutalist\",\"names\":{\"zh\":\"粗野主义\",\"en\":\"Brutalist\"},\"sourceIds\":[\"moma-brutalist\"],\"characteristics\":{\"layout\":\"强调体块、结构和阴影\",\"palette\":[\"混凝土灰\",\"石色\",\"黑\"],\"materials\":[\"清水混凝土\",\"粗石\",\"钢\",\"厚木\"],\"envelope\":[\"大连续质感面\"],\"furniture\":[\"厚重几何\",\"雕塑体块\"],\"lighting\":[\"侧光\",\"窄角强调材质\"],\"methods\":[\"局部材料真实表达\"],\"avoid\":[\"低层高小空间照搬纪念性体量\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-family-flex-work\",\"residentRequest\":\"两位成人和一名儿童共同居住，其中一人在家办公。希望空间耐用、易维护，保留清楚的工作与活动边界，收纳不能牺牲日常动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"household:home-office\",\"text\":\"一位成人有稳定的居家办公需求\"},{\"id\":\"priority:maintainability\",\"text\":\"高频区域易维护\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力不能被工作区挤占\"},{\"id\":\"priority:clear-circulation\",\"text\":\"工作、活动和通行边界清楚\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanDraft\":[[\"\",\"\",\"\"],[\"\",\"\",\"\",\"\"],[[\"room-primary-bedroom\",\"\",\"\",\"\",\"\"],[\"room-bathroom\",\"\",\"\",\"\",\"\"],[\"room-flex\",\"\",\"\",\"\",\"\"],[\"room-hall\",\"\",\"\",\"\",\"\"],[\"room-living-dining\",\"\",\"\",\"\",\"\"],[\"room-kitchen\",\"\",\"\",\"\",\"\"],[\"room-entry\",\"\",\"\",\"\",\"\"]],[\"\",\"\",\"\",\"\"],[\"\",\"\",\"\"],[\"\",\"\",\"\"],[[\"\"],[\"\"],[\"\"]],[\"\",[\"\"]],[[\"spatial\",\"\",[],\"\"],[\"envelope\",\"\",[],\"\"],[\"furniture\",\"\",[],\"\"],[\"lighting\",\"\",[],\"\"]]]}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回原 standardPlanDraft 合同。",
+  "providerResponse": {
+    "toolCalls": [],
+    "standardPlanDraft": [
+      [
+        "粗野主义风格通过清水混凝土质面与石色构建整体沉稳基调，强调体块结构感与侧光阴影，在小空间内克制使用纪念性体量，保留居住松弛感",
+        "三位成人与一名儿童共用固定户型，需在工作区、儿童活动与日常通行之间保持边界清晰，同时收纳不能挤占动线，高频接触面须耐久易洁",
+        "resolutionNote: 需确认各高频区域的清洁频率偏好与儿童活动时段，以进一步校核收纳方案优先级"
+      ],
+      [
+        "通过现有家具与固定隔断的布置自然划分工作区、儿童活动区与通行区，不新增或移动任何隔断",
+        "利用object-living-slat-partition的木质横条体块制造区域暗示",
+        "将object-flex-desk与object-flex-floating-shelf组合为独立工作站，object-tv-console形成客厅视觉锚点",
+        "整体保持层高与开窗结构不变"
+      ],
+      [
+        [
+          "room-primary-bedroom",
+          "以清水混凝土质面与object-primary-feature-wall打造私密庇护感，厚重几何床架界定睡眠区，衣柜靠墙提供收纳基础",
+          "利用object-primary-wardrobe靠墙设置，配合混凝土质感饰面",
+          "侧光强调材质肌理，床头采用窄角光营造氛围，避免强光直射睡眠区"
+        ],
+        [
+          "room-bathroom",
+          "以石色瓷砖与钢制五金构建防水易洁界面，强调功能体块的实用性",
+          "台盆与洁具沿墙布置，最大化湿区操作面",
+          "基础照明提供均匀功能光，镜柜上方采用防潮灯具"
+        ],
+        [
+          "room-flex",
+          "组合工作台与书架形成独立居家办公区，壁挂层板增加垂直收纳，床区与工作区通过家具间距自然分隔",
+          "利用object-flex-desk与object-flex-floating-shelf组合为工作站",
+          "吊灯或台灯提供工作照明，与睡眠区形成亮度差异"
+        ],
+        [
+          "room-hall",
+          "混凝土质感延续至走廊，墙面体块造型强化结构感，为家庭动线提供视觉引导",
+          "沿墙设置简约挂钩或壁龛，承接日常过渡功能",
+          "柔和侧光避免狭长走廊的压抑感"
+        ],
+        [
+          "room-living-dining",
+          "木质横条隔断暗示客厅与餐厅区域划分，object-sofa与object-dining-table形成家庭核心区",
+          "沙发与餐桌保持足够间距保障通行，电视柜靠墙不阻碍动线",
+          "侧光强调object-living-slat-partition的木质肌理，客厅与餐厅采用分区照明"
+        ],
+        [
+          "room-kitchen",
+          "台面沿墙布置形成高效操作动线，钢制五金与石材台面强调耐用易洁",
+          "现有object-kitchen-counter保持原位，操作流程不跨越主要交通区",
+          "基础照明提供均匀工作光，水槽与灶台区域采用功能照明"
+        ],
+        [
+          "room-entry",
+          "落尘区以石色地砖区分室内外质感，鞋柜靠墙提供日常收纳与换鞋功能",
+          "利用object-shoe-cabinet最大化入口收纳，壁挂区便于随手置物",
+          "基础照明满足进出门需求，可增设壁灯提供柔和迎宾光"
+        ]
+      ],
+      [
+        "整体以混凝土、石与钢为主要材料基调，局部采用厚木与石色饰面呼应粗野主义温度，小空间内克制纪念性体量表达，转译为尺度适宜的质感面",
+        "承重结构面与新建面在视觉上做材质区分，原结构保留混凝土本色，新建表面采用石色或钢灰色过渡",
+        "高频接触面选用耐磨耐刮的粗石或仿石材质，降低日常维护频率"
+      ],
+      [
+        "强调厚重几何体块与雕塑感，所有家具选用实心厚木或钢木结合，尺度克制避免压缩层高",
+        "主卧床架采用实心厚木框架，object-sofa为沉稳布艺或皮质",
+        "object-flex-desk与object-flex-floating-shelf采用钢木结合，工作区整体感强"
+      ],
+      [
+        "侧光与窄角光强调材质肌理为主要手法，利用窗户侧光与定向射灯突出混凝土、石、木的质感",
+        "客厅通过侧光强化object-living-slat-partition的木纹阴影",
+        "主卧床头采用窄角光避免强光，儿童活动区采用柔和散射光保障安全"
+      ],
+      [
+        [
+          "混凝土本色或仿混凝土质感涂料",
+          "石色瓷砖或仿石饰面",
+          "钢灰色或黑色金属配件"
+        ]
+      ],
+      [
+        "各房间收纳沿墙布置，确保主要通道宽度不少于六十厘米，工作区、儿童区与通行区边界清晰",
+        "主卧衣柜靠墙不阻通行，多功能室利用object-flex-floating-shelf垂直收纳，客厅object-tv-console与object-sofa保持间距，玄关object-shoe-cabinet靠门侧墙面收纳常换鞋履"
+      ],
+      [
+        [
+          "spatial",
+          "各功能区通过现有固定家具自然划分，不新增隔断，保持开放通透的动线",
+          "household:home-office,priority:clear-circulation,object-living-slat-partition,object-flex-desk",
+          "平衡居家办公边界需求与家庭成员活动空间的通透感，避免隔断压缩层高或阻断视线"
+        ],
+        [
+          "envelope",
+          "整体采用混凝土本色与石色质感面，钢与厚木为辅，营造粗野主义的结构体块感",
+          "style:brutalist:palette,style:brutalist:materials,priority:maintainability",
+          "在强调材料真实表达的同时优选耐污耐磨饰面，降低高频区域的维护负担"
+        ],
+        [
+          "furniture",
+          "选用厚重几何体块家具，克制尺度以适配小空间，强调雕塑感与功能并存",
+          "style:brutalist:furniture,household:two-adults-one-child",
+          "儿童活动区边缘采用圆角或软包过渡，保障安全同时保持粗野风格的整体基调"
+        ],
+        [
+          "lighting",
+          "以侧光与窄角强调光为主，突出材质肌理与体块阴影，避免强光破坏粗野氛围",
+          "style:brutalist:lighting,object-living-slat-partition,object-primary-feature-wall",
+          "客厅与主卧强调光优先服务于材质表现，工作区与儿童区补足功能照明，整体光环境不过亮以维持风格氛围"
+        ]
+      ]
+    ]
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "DRAFT_RENOVATION_SHAPE",
+        "path": "standardPlanDraft[3]",
+        "message": "Expected an array with exactly 4 items."
+      },
+      {
+        "code": "DRAFT_MATERIALS_SHAPE",
+        "path": "standardPlanDraft[6]",
+        "message": "Expected an array with exactly 3 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[0]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[1]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[2]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[3]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[4]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[5]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_SHAPE",
+        "path": "standardPlanDraft.rooms[6]",
+        "message": "Expected an array with exactly 5 items."
+      },
+      {
+        "code": "DRAFT_ROOM_COVERAGE",
+        "path": "standardPlanDraft[2]",
+        "message": "Every canonical room must appear exactly once."
+      },
+      {
+        "code": "ROOM_COVERAGE",
+        "path": "spatialPlan.rooms",
+        "message": "Every canonical room must appear exactly once."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[0]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[1]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[2]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[3]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[4]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[5]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "ROOM_PLAN_EMPTY",
+        "path": "spatialPlan.rooms[6]",
+        "message": "Each room requires envelope, furniture/storage, and lighting direction."
+      },
+      {
+        "code": "RENOVATION_PLAN_EMPTY",
+        "path": "renovationPlan",
+        "message": "Wall, floor, ceiling, and fixed-installation direction is required."
+      },
+      {
+        "code": "MATERIAL_PLAN_EMPTY",
+        "path": "materialPlan",
+        "message": "Material plan requires a non-empty string array per section."
+      },
+      {
+        "code": "STORAGE_PLAN_EMPTY",
+        "path": "storagePlan",
+        "message": "Storage strategy is incomplete."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.spatial",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.envelope",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.furniture",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      },
+      {
+        "code": "DECISION_GROUNDING",
+        "path": "designDecisions.lighting",
+        "message": "Each design decision needs one style basis, one factual basis, and an explicit tradeoff."
+      }
+    ]
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.16",
+    "planKind": "standard_master_plan",
+    "styleId": "brutalist",
+    "variantOf": null,
+    "title": "粗野主义风格通过清水混凝土质面与石色构建整体沉稳基调，强调体块结构感与侧光阴影，在小空间内克制使用纪念性体量，保留居住松弛感",
+    "designIntent": "三位成人与一名儿童共用固定户型，需在工作区、儿童活动与日常通行之间保持边界清晰，同时收纳不能挤占动线，高频接触面须耐久易洁",
+    "briefResponse": {
+      "briefId": "fixed-family-flex-work",
+      "acknowledgedFactIds": [
+        "household:two-adults-one-child",
+        "household:home-office",
+        "priority:maintainability",
+        "priority:storage",
+        "priority:clear-circulation"
+      ],
+      "unresolvedInputIds": [],
+      "resolutionNote": "resolutionNote: 需确认各高频区域的清洁频率偏好与儿童活动时段，以进一步校核收纳方案优先级"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "moma-brutalist"
+      ],
+      "caseIds": [],
+      "layoutAnchor": "强调体块、结构和阴影",
+      "paletteAnchors": [
+        "混凝土灰",
+        "石色",
+        "黑"
+      ],
+      "materialAnchors": [
+        "清水混凝土",
+        "粗石",
+        "钢"
+      ],
+      "avoidAnchors": [
+        "低层高小空间照搬纪念性体量"
+      ]
+    },
+    "spatialPlan": {
+      "wholeHome": "通过现有家具与固定隔断的布置自然划分工作区、儿童活动区与通行区，不新增或移动任何隔断",
+      "circulation": "利用object-living-slat-partition的木质横条体块制造区域暗示",
+      "privacy": "将object-flex-desk与object-flex-floating-shelf组合为独立工作站，object-tv-console形成客厅视觉锚点",
+      "scaleFit": "整体保持层高与开窗结构不变",
+      "rooms": [
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        },
+        {
+          "existingRefs": []
+        }
+      ]
+    },
+    "renovationPlan": {},
+    "furniturePlan": {
+      "placementAndScale": "强调厚重几何体块与雕塑感，所有家具选用实心厚木或钢木结合，尺度克制避免压缩层高",
+      "softFurnishings": "主卧床架采用实心厚木框架，object-sofa为沉稳布艺或皮质",
+      "avoid": "object-flex-desk与object-flex-floating-shelf采用钢木结合，工作区整体感强"
+    },
+    "lightingPlan": {
+      "daylight": "侧光与窄角光强调材质肌理为主要手法，利用窗户侧光与定向射灯突出混凝土、石、木的质感",
+      "layers": "客厅通过侧光强化object-living-slat-partition的木纹阴影",
+      "glareAndMaintenance": "主卧床头采用窄角光避免强光，儿童活动区采用柔和散射光保障安全"
+    },
+    "materialPlan": {},
+    "storagePlan": {
+      "wholeHome": "各房间收纳沿墙布置，确保主要通道宽度不少于六十厘米，工作区、儿童区与通行区边界清晰",
+      "roomPriorities": "主卧衣柜靠墙不阻通行，多功能室利用object-flex-floating-shelf垂直收纳，客厅object-tv-console与object-sofa保持间距，玄关object-shoe-cabinet靠门侧墙面收纳常换鞋履"
+    },
+    "designDecisions": {
+      "spatial": {
+        "decision": "各功能区通过现有固定家具自然划分，不新增隔断，保持开放通透的动线",
+        "basisIds": "household:home-office,priority:clear-circulation,object-living-slat-partition,object-flex-desk",
+        "tradeoff": "平衡居家办公边界需求与家庭成员活动空间的通透感，避免隔断压缩层高或阻断视线"
+      },
+      "envelope": {
+        "decision": "整体采用混凝土本色与石色质感面，钢与厚木为辅，营造粗野主义的结构体块感",
+        "basisIds": "style:brutalist:palette,style:brutalist:materials,priority:maintainability",
+        "tradeoff": "在强调材料真实表达的同时优选耐污耐磨饰面，降低高频区域的维护负担"
+      },
+      "furniture": {
+        "decision": "选用厚重几何体块家具，克制尺度以适配小空间，强调雕塑感与功能并存",
+        "basisIds": "style:brutalist:furniture,household:two-adults-one-child",
+        "tradeoff": "儿童活动区边缘采用圆角或软包过渡，保障安全同时保持粗野风格的整体基调"
+      },
+      "lighting": {
+        "decision": "以侧光与窄角强调光为主，突出材质肌理与体块阴影，避免强光破坏粗野氛围",
+        "basisIds": "style:brutalist:lighting,object-living-slat-partition,object-primary-feature-wall",
+        "tradeoff": "客厅与主卧强调光优先服务于材质表现，工作区与儿童区补足功能照明，整体光环境不过亮以维持风格氛围"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 179160,
+  "completedAt": "2026-08-13T17:34:05.304Z"
+}

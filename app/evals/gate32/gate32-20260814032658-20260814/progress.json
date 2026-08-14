@@ -1,0 +1,30 @@
+{
+  "runId": "gate32-20260814032658-20260814",
+  "completed": 12,
+  "expected": 12,
+  "last": "art-deco__family-storage__random-1-20260814",
+  "summary": {
+    "total": 12,
+    "providerResponses": 9,
+    "providerContractPasses": 9,
+    "providerContractFailures": 2,
+    "evaluatorFailures": 0,
+    "serviceFailures": 1,
+    "byVariant": {
+      "balanced": 2,
+      "budget-maintenance": 3,
+      "family-storage": 4
+    },
+    "byLayout": {
+      "fixed-baseline-family": 3,
+      "fixed-family-flex-work": 2,
+      "random-1-20260814": 2,
+      "random-2-20260814": 2
+    },
+    "failureCodes": {
+      "SEGMENT_UNSUPPORTED_CLAIM": 2,
+      "SEGMENT_DECISION_SHAPE": 1,
+      "AILY_RESPONSE_INVALID": 1
+    }
+  }
+}

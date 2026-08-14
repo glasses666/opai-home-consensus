@@ -1,0 +1,38 @@
+{
+  "runId": "gate32-20260813170042-20260814",
+  "completed": 7,
+  "expected": 336,
+  "last": "scandinavian__budget-maintenance__fixed-baseline-family",
+  "summary": {
+    "total": 7,
+    "providerResponses": 1,
+    "providerContractPasses": 0,
+    "providerContractFailures": 1,
+    "serviceFailures": 6,
+    "byVariant": {
+      "balanced": 0,
+      "budget-maintenance": 0,
+      "family-storage": 0
+    },
+    "byLayout": {
+      "fixed-baseline-family": 0,
+      "fixed-family-flex-work": 0,
+      "random-1-20260814": 0,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "AILY_RESPONSE_INVALID": 3,
+      "Cannot read properties of undefined (reading 'basisIds')": 3,
+      "DRAFT_RENOVATION_SHAPE": 1,
+      "DRAFT_MATERIALS_SHAPE": 1,
+      "DRAFT_ROOM_SHAPE": 7,
+      "DRAFT_ROOM_COVERAGE": 1,
+      "ROOM_COVERAGE": 1,
+      "ROOM_PLAN_EMPTY": 7,
+      "RENOVATION_PLAN_EMPTY": 1,
+      "MATERIAL_PLAN_EMPTY": 1,
+      "STORAGE_PLAN_EMPTY": 1,
+      "DECISION_GROUNDING": 4
+    }
+  }
+}

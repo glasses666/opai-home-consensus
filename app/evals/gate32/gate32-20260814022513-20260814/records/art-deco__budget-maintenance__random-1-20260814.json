@@ -1,0 +1,330 @@
+{
+  "id": "art-deco__budget-maintenance__random-1-20260814",
+  "styleId": "art-deco",
+  "variantId": "budget-maintenance",
+  "layoutId": "random-1-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider",
+  "providerTrace": {
+    "overview": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673707879929367822"
+    },
+    "rooms": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673708092203093254"
+    },
+    "decisions": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673708307165334734"
+    }
+  },
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"art-deco\",\"names\":{\"zh\":\"装饰艺术\",\"en\":\"Art Deco\"},\"sourceIds\":[\"vam-art-deco\"],\"characteristics\":{\"layout\":\"强轴线、对称、序列感\",\"palette\":[\"黑金\",\"祖母绿\",\"奶油\",\"宝石色\"],\"materials\":[\"黄铜\",\"漆面\",\"镜面\",\"大理石\",\"深木\"],\"envelope\":[\"阶梯线脚\",\"几何镶嵌\"],\"furniture\":[\"流线与几何并用\"],\"lighting\":[\"对称壁灯\",\"雕塑吊灯\"],\"methods\":[\"金属收边\",\"放射纹\",\"精细镶嵌\"],\"avoid\":[\"高光与金色无层次堆叠\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 07 共 7 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：01=room-primary-bedroom，02=room-bathroom，03=room-flex，04=room-hall，05=room-living-dining，06=room-kitchen，07=room-entry。不得省略任何房间或字段。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"art-deco\",\"names\":{\"zh\":\"装饰艺术\",\"en\":\"Art Deco\"},\"sourceIds\":[\"vam-art-deco\"],\"characteristics\":{\"layout\":\"强轴线、对称、序列感\",\"palette\":[\"黑金\",\"祖母绿\",\"奶油\",\"宝石色\"],\"materials\":[\"黄铜\",\"漆面\",\"镜面\",\"大理石\",\"深木\"],\"envelope\":[\"阶梯线脚\",\"几何镶嵌\"],\"furniture\":[\"流线与几何并用\"],\"lighting\":[\"对称壁灯\",\"雕塑吊灯\"],\"methods\":[\"金属收边\",\"放射纹\",\"精细镶嵌\"],\"avoid\":[\"高光与金色无层次堆叠\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@02##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@03##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@04##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@05##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@06##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@07##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据，四个依据槽位合计必须覆盖全部住户事实短码。空间依据必须含 X001；墙地顶依据必须含 X002、X003、X004 之一；家具依据必须含 X005；照明依据必须含 X006。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:art-deco:layout, X002=style:art-deco:palette, X003=style:art-deco:materials, X004=style:art-deco:envelope, X005=style:art-deco:furniture, X006=style:art-deco:lighting, X007=style:art-deco:methods, X008=style:art-deco:avoid, X009=brief:household:one-adult-one-child, X010=brief:priority:quiet-privacy, X011=brief:site:limited-daylight, X012=room:room-primary-bedroom, X013=room:room-bathroom, X014=room:room-flex, X015=room:room-hall, X016=room:room-living-dining, X017=room:room-kitchen, X018=room:room-entry, X019=rule:deterministic:object-collision, X020=rule:rule-bedside-600, X021=rule:rule-cabinet-front-900, X022=rule:rule-child-activity-clearance, X023=rule:rule-fixed-equipment-wall-relation, X024=rule:rule-kitchen-aisle-1000, X025=rule:rule-main-circulation-900, X026=rule:rule-opening-clearance, X027=rule:rule-room-boundary, X028=rule:rule-tall-storage-anchored, X029=rule:rule-tv-distance-1800-3600。必须覆盖的住户事实短码：X009, X010, X011。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"art-deco\",\"names\":{\"zh\":\"装饰艺术\",\"en\":\"Art Deco\"},\"sourceIds\":[\"vam-art-deco\"],\"characteristics\":{\"layout\":\"强轴线、对称、序列感\",\"palette\":[\"黑金\",\"祖母绿\",\"奶油\",\"宝石色\"],\"materials\":[\"黄铜\",\"漆面\",\"镜面\",\"大理石\",\"深木\"],\"envelope\":[\"阶梯线脚\",\"几何镶嵌\"],\"furniture\":[\"流线与几何并用\"],\"lighting\":[\"对称壁灯\",\"雕塑吊灯\"],\"methods\":[\"金属收边\",\"放射纹\",\"精细镶嵌\"],\"avoid\":[\"高光与金色无层次堆叠\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673707879929367822"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##Art Deco 装饰艺术全屋概述@@02##以几何韵律与材质对比建立全屋统一基调，克制表达突出 Art Deco 秩序美，兼顾耐用易维护@@03##安静私密优先于通透，儿童成长空间需安全边界；采光一般依赖层次照明@@04##全屋强调轴线序列与对称排布，以黑金祖母绿点缀建立风格锚点，克制装饰密度@@05##动静分区明确，私密区走廊轴线引导动线，公区以家具对称布置强化序列感@@06##卧室与书房为静区，客厅餐厅为动区，儿童区靠内墙布置保障安全边界@@07##公区保持原有开阔尺度，私区靠比例控制与家具尺度营造紧凑舒适感@@08##深色墙裙搭配几何线条或阶梯线脚，浅墙配合祖母绿或奶油色镶边@@09##深色木地板或仿石纹瓷砖为主，表面耐擦洗，公共区同材质通铺统一视觉@@10##局部石膏板叠级或金属嵌条装饰，保留 Art Deco 阶梯感，避免繁复雕花@@11##现有门窗洞口保持原位，洞口周边以金属收边或几何镶条点缀，收边待专业复核@@12##全屋家具以对称排布为主，尺度稳健避免纤细易损件，选圆润收边保障儿童安全@@13##黄铜金属配件点缀漆面或镜面家具，祖母绿或宝石色靠垫少量点睛，控制布艺占比降低清洁难度@@14##避免高光金色无层次堆叠、避免全屋密集几何镶嵌导致视觉疲劳、避免石材大面积铺贴增加维护@@15##自然采光一般，重点依赖人工照明层次营造温暖氛围，窗帘选透光纱帘保留隐私同时引光@@16##对称壁灯提供氛围基础光，雕塑感吊灯聚焦公区焦点，嵌入式筒灯补充功能照明全屋低眩光@@17##灯具选哑光或磨砂玻璃灯罩降低眩光，黄铜件定期干布擦拭即可，漆面家具防潮清洁@@18##黑金||深木||奶油白||祖母绿||黄铜@@19##深木地板或仿石纹瓷砖||黄铜金属收边||漆面或镜面家具||耐磨石膏板@@20##黄铜配件定期干擦||漆面湿布轻拭||地面扫地机日常维护||窗纱定期更换@@21##全屋隐藏收纳为主，入墙柜体表面简洁呼应几何主题，客厅电视柜为深色固定收纳，儿童区安全收纳靠下@@22##Primary Bedroom 优先||Flex 书房次之||客厅餐厅第三||厨房功能收纳||玄关鞋柜兜底"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673708092203093254"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧安静私密核心，对称强轴线布局##浅暖墙与连续几何线脚，黄铜几何镶嵌或镜面分割##哑光漆面定制衣柜几何收边，隐藏收纳##雕塑感几何吊灯居中，对称壁灯主次分明@@02##私密安静主卫##仿大理石瓷砖整铺或浅暖墙配深色勾缝##入墙几何台盆柜，干湿分区几何挡水##镜柜上下环绕均光，暗装排气换气@@03##安静书房兼儿童弹性空间##浅暖墙几何书架墙，留白克制##墙挂几何层板与下柜，满足儿童安全取放##双头几何台灯为主，墙面几何壁灯辅助阅读角@@04##安静序列过渡走廊##几何线脚护墙板或几何挂镜延伸轴线感##通高几何镜面或几何墙板延续深木地板##连续几何线性灯带或极简几何吸顶灯@@05##公区对称开放起居餐厅##深木地板几何拼花或几何地毯分区##几何面板电视墙与镜面装饰，收纳入墙##雕塑几何主吊灯居中，对称几何壁灯与灯带@@06##耐用易清洁厨房##几何门板哑光烤漆，上下柜比例克制##深色台面几何挡水条，墙面哑光易洁砖##厨房作业灯入柜底均光，辅助几何吊灯@@07##第一印象仪式玄关##几何线脚门套与地面几何拼花##几何鞋柜内置分层，镜面或挂钩墙##几何壁灯或嵌入式天花灯均光迎宾"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673708307165334734"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧以固定衣柜与固定床中线建立强轴线对称呼床位；灵活空间供儿童日常活动，私密度通过家具布置实现非隔断分区@@02##X001||X009||X010||X011@@03##强轴线需占用一定灵活区域，儿童活动空间随之收窄；克制方案避免新建隔断，故灵活区功能密度提升@@04##固定背景墙采用阶梯线脚与几何嵌板为主视觉；墙顶统一深色面漆，墙裙配合黄铜收边条带@@05##X002||X003||X004||X011@@06##克制方案不设全墙金箔或大面积镜面；宝石色仅在局部点缀，避免多层高光叠加导致维护负担@@07##床居中低矮扁bed框配几何黄铜床头板；对称双床头柜与嵌入式衣柜均用简洁几何门板，黄铜点睛把手@@08##X005||X009||X010@@09##Art Deco精品家具成本较高，克制方案简化雕花体量，保留比例与黄铜细节，在预算与风格间取平衡@@10##主灯用几何放射状阶梯吊灯居中；壁灯沿主背景墙对称布置，镜面或黄铜反光罩提升暗区亮度@@11##X006||X010||X011@@12##雕塑吊灯体量克制，避免全屋堆叠同量级装饰灯具；暖白光避免高色温破坏Art Deco沉稳氛围"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    }
+  ],
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.20",
+    "planKind": "standard_master_plan",
+    "styleId": "art-deco",
+    "variantOf": null,
+    "title": "Art Deco 装饰艺术全屋概述",
+    "designIntent": "以几何韵律与材质对比建立全屋统一基调，克制表达突出 Art Deco 秩序美，兼顾耐用易维护",
+    "briefResponse": {
+      "briefId": "random-1-20260814",
+      "acknowledgedFactIds": [
+        "household:one-adult-one-child",
+        "priority:quiet-privacy",
+        "site:limited-daylight"
+      ],
+      "unresolvedInputIds": [],
+      "resolutionNote": "安静私密优先于通透，儿童成长空间需安全边界；采光一般依赖层次照明"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "vam-art-deco"
+      ],
+      "caseIds": [],
+      "layoutAnchor": "强轴线、对称、序列感",
+      "paletteAnchors": [
+        "黑金",
+        "祖母绿",
+        "奶油"
+      ],
+      "materialAnchors": [
+        "黄铜",
+        "漆面",
+        "镜面"
+      ],
+      "avoidAnchors": [
+        "高光与金色无层次堆叠"
+      ]
+    },
+    "spatialPlan": {
+      "wholeHome": "全屋强调轴线序列与对称排布，以黑金祖母绿点缀建立风格锚点，克制装饰密度",
+      "circulation": "动静分区明确，私密区走廊轴线引导动线，公区以家具对称布置强化序列感",
+      "privacy": "卧室与书房为静区，客厅餐厅为动区，儿童区靠内墙布置保障安全边界",
+      "scaleFit": "公区保持原有开阔尺度，私区靠比例控制与家具尺度营造紧凑舒适感",
+      "rooms": [
+        {
+          "roomId": "room-primary-bedroom",
+          "intent": "主卧安静私密核心，对称强轴线布局",
+          "envelope": "浅暖墙与连续几何线脚，黄铜几何镶嵌或镜面分割",
+          "furnitureAndStorage": "哑光漆面定制衣柜几何收边，隐藏收纳",
+          "lighting": "雕塑感几何吊灯居中，对称壁灯主次分明",
+          "existingRefs": [
+            "object-primary-bed",
+            "object-primary-wardrobe",
+            "object-primary-feature-wall"
+          ]
+        },
+        {
+          "roomId": "room-bathroom",
+          "intent": "私密安静主卫",
+          "envelope": "仿大理石瓷砖整铺或浅暖墙配深色勾缝",
+          "furnitureAndStorage": "入墙几何台盆柜，干湿分区几何挡水",
+          "lighting": "镜柜上下环绕均光，暗装排气换气",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-flex",
+          "intent": "安静书房兼儿童弹性空间",
+          "envelope": "浅暖墙几何书架墙，留白克制",
+          "furnitureAndStorage": "墙挂几何层板与下柜，满足儿童安全取放",
+          "lighting": "双头几何台灯为主，墙面几何壁灯辅助阅读角",
+          "existingRefs": [
+            "object-flex-bed",
+            "object-flex-desk",
+            "object-flex-floating-shelf"
+          ]
+        },
+        {
+          "roomId": "room-hall",
+          "intent": "安静序列过渡走廊",
+          "envelope": "几何线脚护墙板或几何挂镜延伸轴线感",
+          "furnitureAndStorage": "通高几何镜面或几何墙板延续深木地板",
+          "lighting": "连续几何线性灯带或极简几何吸顶灯",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-living-dining",
+          "intent": "公区对称开放起居餐厅",
+          "envelope": "深木地板几何拼花或几何地毯分区",
+          "furnitureAndStorage": "几何面板电视墙与镜面装饰，收纳入墙",
+          "lighting": "雕塑几何主吊灯居中，对称几何壁灯与灯带",
+          "existingRefs": [
+            "object-sofa",
+            "object-tv-console",
+            "object-dining-table",
+            "object-living-slat-partition"
+          ]
+        },
+        {
+          "roomId": "room-kitchen",
+          "intent": "耐用易清洁厨房",
+          "envelope": "几何门板哑光烤漆，上下柜比例克制",
+          "furnitureAndStorage": "深色台面几何挡水条，墙面哑光易洁砖",
+          "lighting": "厨房作业灯入柜底均光，辅助几何吊灯",
+          "existingRefs": [
+            "object-kitchen-counter"
+          ]
+        },
+        {
+          "roomId": "room-entry",
+          "intent": "第一印象仪式玄关",
+          "envelope": "几何线脚门套与地面几何拼花",
+          "furnitureAndStorage": "几何鞋柜内置分层，镜面或挂钩墙",
+          "lighting": "几何壁灯或嵌入式天花灯均光迎宾",
+          "existingRefs": [
+            "object-shoe-cabinet"
+          ]
+        }
+      ]
+    },
+    "renovationPlan": {
+      "walls": "深色墙裙搭配几何线条或阶梯线脚，浅墙配合祖母绿或奶油色镶边",
+      "floors": "深色木地板或仿石纹瓷砖为主，表面耐擦洗，公共区同材质通铺统一视觉",
+      "ceilings": "局部石膏板叠级或金属嵌条装饰，保留 Art Deco 阶梯感，避免繁复雕花",
+      "fixedAndOpenings": "现有门窗洞口保持原位，洞口周边以金属收边或几何镶条点缀，收边待专业复核"
+    },
+    "furniturePlan": {
+      "placementAndScale": "全屋家具以对称排布为主，尺度稳健避免纤细易损件，选圆润收边保障儿童安全",
+      "softFurnishings": "黄铜金属配件点缀漆面或镜面家具，祖母绿或宝石色靠垫少量点睛，控制布艺占比降低清洁难度",
+      "avoid": "避免高光金色无层次堆叠、避免全屋密集几何镶嵌导致视觉疲劳、避免石材大面积铺贴增加维护"
+    },
+    "lightingPlan": {
+      "daylight": "自然采光一般，重点依赖人工照明层次营造温暖氛围，窗帘选透光纱帘保留隐私同时引光",
+      "layers": "对称壁灯提供氛围基础光，雕塑感吊灯聚焦公区焦点，嵌入式筒灯补充功能照明全屋低眩光",
+      "glareAndMaintenance": "灯具选哑光或磨砂玻璃灯罩降低眩光，黄铜件定期干布擦拭即可，漆面家具防潮清洁"
+    },
+    "materialPlan": {
+      "palette": [
+        "黑金",
+        "深木",
+        "奶油白",
+        "祖母绿",
+        "黄铜"
+      ],
+      "materials": [
+        "深木地板或仿石纹瓷砖",
+        "黄铜金属收边",
+        "漆面或镜面家具",
+        "耐磨石膏板"
+      ],
+      "maintenance": [
+        "黄铜配件定期干擦",
+        "漆面湿布轻拭",
+        "地面扫地机日常维护",
+        "窗纱定期更换"
+      ]
+    },
+    "storagePlan": {
+      "wholeHome": "全屋隐藏收纳为主，入墙柜体表面简洁呼应几何主题，客厅电视柜为深色固定收纳，儿童区安全收纳靠下",
+      "roomPriorities": [
+        "Primary Bedroom 优先",
+        "Flex 书房次之",
+        "客厅餐厅第三",
+        "厨房功能收纳",
+        "玄关鞋柜兜底"
+      ]
+    },
+    "designDecisions": {
+      "spatial": {
+        "decision": "主卧以固定衣柜与固定床中线建立强轴线对称呼床位；灵活空间供儿童日常活动，私密度通过家具布置实现非隔断分区",
+        "basisIds": [
+          "style:art-deco:layout",
+          "brief:household:one-adult-one-child",
+          "brief:priority:quiet-privacy",
+          "brief:site:limited-daylight"
+        ],
+        "tradeoff": "强轴线需占用一定灵活区域，儿童活动空间随之收窄；克制方案避免新建隔断，故灵活区功能密度提升"
+      },
+      "envelope": {
+        "decision": "固定背景墙采用阶梯线脚与几何嵌板为主视觉；墙顶统一深色面漆，墙裙配合黄铜收边条带",
+        "basisIds": [
+          "style:art-deco:palette",
+          "style:art-deco:materials",
+          "style:art-deco:envelope",
+          "brief:site:limited-daylight"
+        ],
+        "tradeoff": "克制方案不设全墙金箔或大面积镜面；宝石色仅在局部点缀，避免多层高光叠加导致维护负担"
+      },
+      "furniture": {
+        "decision": "床居中低矮扁bed框配几何黄铜床头板；对称双床头柜与嵌入式衣柜均用简洁几何门板，黄铜点睛把手",
+        "basisIds": [
+          "style:art-deco:furniture",
+          "brief:household:one-adult-one-child",
+          "brief:priority:quiet-privacy"
+        ],
+        "tradeoff": "Art Deco精品家具成本较高，克制方案简化雕花体量，保留比例与黄铜细节，在预算与风格间取平衡"
+      },
+      "lighting": {
+        "decision": "主灯用几何放射状阶梯吊灯居中；壁灯沿主背景墙对称布置，镜面或黄铜反光罩提升暗区亮度",
+        "basisIds": [
+          "style:art-deco:lighting",
+          "brief:priority:quiet-privacy",
+          "brief:site:limited-daylight"
+        ],
+        "tradeoff": "雕塑吊灯体量克制，避免全屋堆叠同量级装饰灯具；暖白光避免高色温破坏Art Deco沉稳氛围"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 132084,
+  "completedAt": "2026-08-14T02:28:29.636Z"
+}

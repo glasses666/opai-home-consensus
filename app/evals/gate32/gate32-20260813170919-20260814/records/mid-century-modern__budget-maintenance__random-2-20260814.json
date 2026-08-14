@@ -1,0 +1,438 @@
+{
+  "id": "mid-century-modern__budget-maintenance__random-2-20260814",
+  "styleId": "mid-century-modern",
+  "variantId": "budget-maintenance",
+  "layoutId": "random-2-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider",
+  "providerTrace": {
+    "provider": "aily_team",
+    "agentId": "agent_4kt39w75byxw5cf",
+    "chatId": "7673567094467103712"
+  },
+  "prompt": "你是住宅设计规划 Agent。请基于给定风格档案，为同一套固定户型生成一套标准母方案。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。第一个字符必须是 {，toolCalls 必须是空数组。根对象只含 toolCalls 与 standardPlanDraft。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可直接生产安装。\n只写设计意图与材料、色彩、体量、光环境和维护方向。禁止颜色号、色温、照度、尺寸数值、防水高度、线路/燃气/水槽/烟机位置、螺栓/预埋/锚固方式等施工细节。\nroomId 与 basisIds 必须从上下文逐字复制；referenceCases 为空时不得伪造案例。\nhouse 是当前住宅唯一事实来源。风格档案中的壁炉、庭院、拱门、露梁、岛台或其他原型元素若不在 house 中，只能转译为抽象设计语言，不得写成当前住宅已有事实或结构改造。\n不得提议新增、拆除或移动任何隔断，即使描述为轻质、活动、非固定或装饰性；只能利用 house 中已有家具、表面和开口表达分区。\nstandardPlanDraft 九段顺序固定为 summary、spatial、rooms、renovation、furniture、lighting、materials、storage、decisions。不得改成对象。\n严格输出形状中的空字符串与空 basisIds 都必须替换为本次设计内容；不得原样复制空值、字段名、英文说明或示例句。roomId 与 decision area 是固定标识，不得替换。\n提议方向不得描述成现状。错误或无法核验的住户前提只能在第一段 summary 第三项 resolutionNote 中说明需要核验。\ndecisions 必须恰好四项，首项依次为 spatial、envelope、furniture、lighting。每项格式为 [area,decision,basisIds,tradeoff]，至少引用一个 style:* 依据和一个 room/object/brief:* 事实依据。不得写“营造高级感”等空话。\nbrief.knownFacts 中的每个 ID 都必须至少在某一项 decisions 的 basisIds 中以 brief:ID 原样引用一次，不能只在文字里复述。\nstyle basis ID 只能从 style:mid-century-modern:layout, style:mid-century-modern:palette, style:mid-century-modern:materials, style:mid-century-modern:envelope, style:mid-century-modern:furniture, style:mid-century-modern:lighting, style:mid-century-modern:methods, style:mid-century-modern:avoid 中选择，必须逐字复制 ID，禁止在冒号后拼接锚点文字。其他 basis ID 也只能逐字复制 context 中已有的 ID。\n第三段 rooms 每项严格为 [roomId,intent,envelope,furnitureAndStorage,lighting]，每个房间恰好出现一次。所有文字值不超过 40 个汉字。固定身份、事实引用、规则、未知项和产品边界由本地适配器注入，不要输出这些字段。\n涉及高柜防倾倒、固定安装或墙体关系时，只写“待专业复核”，不得给锚固方法。\n严格保持定长数组顺序；materials 的三项和 storage 第二项都是非空字符串数组。不得增加对象键或改变数组顺序。\n上下文：{\"style\":{\"id\":\"mid-century-modern\",\"names\":{\"zh\":\"中世纪现代\",\"en\":\"Mid-century modern\"},\"sourceIds\":[\"ad-midcentury\"],\"characteristics\":{\"layout\":\"开阔视线、室内外联系\",\"palette\":[\"胡桃木色\",\"芥末黄\",\"橄榄绿\",\"砖红\"],\"materials\":[\"柚木\",\"胡桃木\",\"皮革\",\"玻璃\"],\"envelope\":[\"木地板\",\"大窗\"],\"furniture\":[\"低矮\",\"锥形腿\",\"几何曲线\"],\"lighting\":[\"球形或雕塑灯具\"],\"methods\":[\"复古单品与现代壳体搭配\"],\"avoid\":[\"全套复刻成主题空间\"]}},\"referenceCases\":[{\"caseId\":\"mcm-01-north-vancouver-remodel\",\"designMoves\":[\"add glazing\",\"expand kitchen-dining\",\"preserve fireplace\",\"rework carport\",\"add steel stair\"],\"applicability\":[\"strong family retrofit reference\",\"good for view-oriented mid-century houses\"],\"risks\":[\"high custom-envelope cost\",\"thermal detailing complexity\"]},{\"caseId\":\"mcm-02-stanford-mid-century-remodel-addition\",\"designMoves\":[\"expand the home\",\"update the envelope\",\"keep original character legible\"],\"applicability\":[\"good retrofit pattern for intact mid-century houses\",\"useful when the shell has good bones\"],\"risks\":[\"energy upgrade can be costly\",\"preservation and modernization can fight each other\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-2-20260814\",\"residentRequest\":\"两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-two-children\",\"text\":\"住户为两位成人和两名儿童\"},{\"id\":\"priority:flexibility\",\"text\":\"家具和活动区域需要可变\"},{\"id\":\"budget:unknown\",\"text\":\"预算尚未确定\"}],\"unresolvedInputIds\":[\"budget:unknown\"]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanDraft\":[[\"\",\"\",\"\"],[\"\",\"\",\"\",\"\"],[[\"room-primary-bedroom\",\"\",\"\",\"\",\"\"],[\"room-bathroom\",\"\",\"\",\"\",\"\"],[\"room-flex\",\"\",\"\",\"\",\"\"],[\"room-hall\",\"\",\"\",\"\",\"\"],[\"room-living-dining\",\"\",\"\",\"\",\"\"],[\"room-kitchen\",\"\",\"\",\"\",\"\"],[\"room-entry\",\"\",\"\",\"\",\"\"]],[\"\",\"\",\"\",\"\"],[\"\",\"\",\"\"],[\"\",\"\",\"\"],[[\"\"],[\"\"],[\"\"]],[\"\",[\"\"]],[[\"spatial\",\"\",[],\"\"],[\"envelope\",\"\",[],\"\"],[\"furniture\",\"\",[],\"\"],[\"lighting\",\"\",[],\"\"]]]}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回原 standardPlanDraft 合同。",
+  "providerResponse": {
+    "toolCalls": [],
+    "standardPlanDraft": [
+      [
+        "两位成人与两名儿童共居，功能弹性与耐维护为首要原则。整体以中世纪现代风格为参照，利用现有固定隔断和木地板限定区域，不改动门窗洞口和结构边界。通过低矮家具与可变布局适配多孩家庭成长需求。预算未定时优先选择克制方案，避免依赖高成本或易损装饰。",
+        "四位住户的日常动线以客餐厅为中心，多孩家庭需要可快速切换的活动分区。现有固定隔断界定客厅与餐区边界，减少额外隔断需求。卧室区保证私密与安静，面向核心区的房间可弹性转为儿童活动或成人工作区。入口与走廊保持视线通透，便于看护。",
+        "预算未确定前暂不承诺整体翻新范围，方案基于现有固定界面与可变家具两层叠加实施。具体材料替换和防水基层修复需现场核查后确定。"
+      ],
+      [
+        "利用现有固定木质隔断界定客厅与餐区边界，维持视线通透，减少新增隔断带来的材料与维护成本。主卧特征墙作为风格锚点保留。多孩家庭以低矮沙发和活动餐桌为区域中心，可按需重组。"
+      ],
+      [
+        [
+          "room-primary-bedroom",
+          "主卧以墙面为视觉锚点，低矮床具与墙面形成体量对比，衣柜保持简洁线条不变动。",
+          "现有特征墙保留为风格锚点，不做拆除或覆盖。低柜体避免墙面倒伏风险，无需新增固定件。",
+          "低矮双人床、简约边几为主，保留现有衣柜，床品选用哑光皮革或棉麻材质，克制点缀。",
+          "保留现有天花与墙面，床头局部以球形或锥形灯具作为风格锚点，色温自然为主。"
+        ],
+        [
+          "room-bathroom",
+          "卫浴满足基本功能，维持现状，不提出地面或防水改造。",
+          "现有防水层与洁具不动，管道不调整。",
+          "保持现有台盆与收纳，不新增固定高柜。",
+          "保持现有基础照明，不增加装饰灯具。"
+        ],
+        [
+          "room-flex",
+          "多功能空间以书桌与浮搁架限定功能区，床具可随儿童成长调整位置。",
+          "现有浮搁架保留，不新增固定柜体；书桌与床具均为可移动件。",
+          "可移动床具与书桌为灵活组合，浮搁架提供开放收纳。",
+          "保留现有基础照明，增加局部台灯作为灵活补光。"
+        ],
+        [
+          "room-hall",
+          "走廊保持简洁通透，不新增装饰性隔断或固定装置。",
+          "现有门洞与墙面边界不变，地面通铺现有木地板。",
+          "仅保留现有功能件，不增加陈设。",
+          "基础照明为主，不增加装饰灯具。"
+        ],
+        [
+          "room-living-dining",
+          "客餐厅一体以沙发与活动餐桌为中心，现有木质隔断界定区域，不新增固定隔断。",
+          "现有隔断与木地板保留，窗户不动，利用自然光界定区域。",
+          "低矮锥形腿沙发与圆形餐桌为灵活组合，可快速重组；电视柜为现有固定件，电视可随需求调位。",
+          "球形或雕塑吊灯为主灯焦点，餐桌上方设置局部下照光，客厅角落以落地灯补足，克制装饰灯具数量。"
+        ],
+        [
+          "room-kitchen",
+          "厨房保持现有台面与固定柜不动，功能与收纳以简洁为主。",
+          "现有台面与固定柜保留，管道与燃气位置不变。",
+          "现有固定柜维持功能，台上仅添置必要收纳容器，不新增高柜或吊挂装置。",
+          "保持现有基础照明，增加台面操作补光灯，克制灯具数量。"
+        ],
+        [
+          "room-entry",
+          "入口以现有鞋柜满足基本收纳，保持地面整洁。",
+          "现有鞋柜位置与边界不变，入口动线不动。",
+          "仅保留现有鞋柜，不新增固定装置或装饰。",
+          "保持现有基础照明，不增加装饰灯具。"
+        ]
+      ],
+      [
+        "基于现有固定界面与木地板，修缮聚焦于面层老化与破损部位的局部修复，暂不进行整体翻新。地面以保护性清洁与自然油脂养护为主，不做打磨重涂。墙面保留现有特征墙，其余墙面以清洁与局部修补为主。卫浴与厨房基础保持不动，管道与防水问题待现场核查后专项处理。",
+        "不动现有防水层与管道结构，局部破损仅做临时性保护处理。地面养护以自然油脂为主，减少化学涂层维护频次。"
+      ],
+      [
+        "以低矮锥形腿为核心体量特征，材质优先实木整板与哑光皮革，避免过多软包或镂空雕刻增加清洁难度。餐桌选用圆形或椭圆形台面，减少尖角磕碰风险，适配儿童活动为主的家庭。沙发保持低靠背，不做高背或全包裹式贵妃位，保留中庭通透感。"
+      ],
+      [
+        "球形或雕塑吊灯为全屋风格焦点灯具，每区仅设一处，其余为克制的基础照明或台面补光。避免在全屋满布筒灯或射灯，减少调校与更换频次。选型以经典耐看为首，不追潮流易过时款式。"
+      ],
+      [
+        [
+          "柚木与胡桃木本色保留，以自然油脂养护为主，减少化学漆面维护频次。"
+        ],
+        [
+          "哑光棉麻与真皮为软装主材，耐磨耐洗，不做天鹅绒或长毛绒等高维护面料。"
+        ],
+        [
+          "玻璃仅用于必要采光面或小型装饰件，不选用大面积玻璃隔断或玻璃家具，减少清洁成本。"
+        ]
+      ],
+      [
+        "现有固定柜体承担主力收纳，不新增定制高柜或全墙收纳件。儿童物品以低矮开放架与移动收纳箱为主，便于日常清洁与灵活调整。入口鞋柜与厨房台面保持简洁，避免台面堆物增加清洁负担。",
+        [
+          "利用客厅现有隔断与台面下方空间做分区收纳，减少额外购买收纳件。儿童衣物与玩具以低矮推车式收纳为主，可随动线灵活归位。"
+        ],
+        [
+          "现有衣柜内以简单层板划分，不新增定制内胆或功能五金。玄关保持简洁，不增加挂钩或壁挂收纳。"
+        ]
+      ],
+      [
+        [
+          "spatial",
+          "利用现有固定木质隔断界定客餐厅功能边界，减少新增隔断的材料与维护成本；可移动沙发与餐桌保持家庭空间弹性。",
+          [
+            "style:mid-century-modern:layout",
+            "style:mid-century-modern:methods",
+            "room:room-living-dining",
+            "object:object-living-slat-partition",
+            "brief:priority:flexibility"
+          ],
+          "保留固定隔断避免新增固定件，减少未来维护节点；开放格局适配多孩家庭日常看护动线。"
+        ],
+        [
+          "envelope",
+          "现有木地板与门窗洞口保持不动，修缮以清洁养护替代整体更换，降低施工频次与长期维护成本。",
+          [
+            "style:mid-century-modern:envelope",
+            "style:mid-century-modern:methods",
+            "room:room-entry",
+            "room:room-living-dining"
+          ],
+          "保留原始木地板与自然采光面，减少更换与清洁频次；特征墙不动避免拆改成本。"
+        ],
+        [
+          "furniture",
+          "低矮锥形腿家具与可移动组合为核心，材质优先实木与哑光皮革，减少软包与复杂雕刻的清洁负担。",
+          [
+            "style:mid-century-modern:furniture",
+            "style:mid-century-modern:materials",
+            "object:object-sofa",
+            "object:object-dining-table",
+            "object:object-primary-bed",
+            "brief:priority:flexibility",
+            "brief:household:two-adults-two-children"
+          ],
+          "低矮家具降低磕碰风险并保持视线通透；可移动件减少重新布局时的更换成本；哑光皮革与实木表面耐污易清洁。"
+        ],
+        [
+          "lighting",
+          "以球形或雕塑灯具为全屋风格锚点，克制布设灯具数量，减少调校与更换频次。",
+          [
+            "style:mid-century-modern:lighting",
+            "style:mid-century-modern:methods",
+            "room:room-living-dining",
+            "room:room-primary-bedroom",
+            "brief:budget:unknown"
+          ],
+          "经典灯具一次投入，长期使用不过时；减少灯具数量降低电力与更换维护成本；局部补光以台灯为主，可随需求灵活调整。"
+        ]
+      ]
+    ]
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "DRAFT_SPATIAL_SHAPE",
+        "path": "standardPlanDraft[1]",
+        "message": "Expected an array with exactly 4 items."
+      },
+      {
+        "code": "DRAFT_RENOVATION_SHAPE",
+        "path": "standardPlanDraft[3]",
+        "message": "Expected an array with exactly 4 items."
+      },
+      {
+        "code": "DRAFT_FURNITURE_SHAPE",
+        "path": "standardPlanDraft[4]",
+        "message": "Expected an array with exactly 3 items."
+      },
+      {
+        "code": "DRAFT_LIGHTING_SHAPE",
+        "path": "standardPlanDraft[5]",
+        "message": "Expected an array with exactly 3 items."
+      },
+      {
+        "code": "DRAFT_STORAGE_SHAPE",
+        "path": "standardPlanDraft[7]",
+        "message": "Expected an array with exactly 2 items."
+      },
+      {
+        "code": "SPATIAL_PLAN_EMPTY",
+        "path": "spatialPlan",
+        "message": "Whole-home and room plans are required."
+      },
+      {
+        "code": "RENOVATION_PLAN_EMPTY",
+        "path": "renovationPlan",
+        "message": "Wall, floor, ceiling, and fixed-installation direction is required."
+      },
+      {
+        "code": "FURNITURE_PLAN_EMPTY",
+        "path": "furniturePlan",
+        "message": "Furniture direction is required."
+      },
+      {
+        "code": "LIGHTING_PLAN_EMPTY",
+        "path": "lightingPlan",
+        "message": "Lighting direction is required."
+      },
+      {
+        "code": "STORAGE_PLAN_EMPTY",
+        "path": "storagePlan",
+        "message": "Storage strategy is incomplete."
+      },
+      {
+        "code": "UNSUPPORTED_CLAIM",
+        "path": "$",
+        "message": "Remove unsupported claims: 防水层"
+      }
+    ]
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.16",
+    "planKind": "standard_master_plan",
+    "styleId": "mid-century-modern",
+    "variantOf": null,
+    "title": "两位成人与两名儿童共居，功能弹性与耐维护为首要原则。整体以中世纪现代风格为参照，利用现有固定隔断和木地板限定区域，不改动门窗洞口和结构边界。通过低矮家具与可变布局适配多孩家庭成长需求。预算未定时优先选择克制方案，避免依赖高成本或易损装饰。",
+    "designIntent": "四位住户的日常动线以客餐厅为中心，多孩家庭需要可快速切换的活动分区。现有固定隔断界定客厅与餐区边界，减少额外隔断需求。卧室区保证私密与安静，面向核心区的房间可弹性转为儿童活动或成人工作区。入口与走廊保持视线通透，便于看护。",
+    "briefResponse": {
+      "briefId": "random-2-20260814",
+      "acknowledgedFactIds": [
+        "household:two-adults-two-children",
+        "priority:flexibility",
+        "budget:unknown"
+      ],
+      "unresolvedInputIds": [
+        "budget:unknown"
+      ],
+      "resolutionNote": "预算未确定前暂不承诺整体翻新范围，方案基于现有固定界面与可变家具两层叠加实施。具体材料替换和防水基层修复需现场核查后确定。"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "ad-midcentury"
+      ],
+      "caseIds": [
+        "mcm-01-north-vancouver-remodel",
+        "mcm-02-stanford-mid-century-remodel-addition"
+      ],
+      "layoutAnchor": "开阔视线、室内外联系",
+      "paletteAnchors": [
+        "胡桃木色",
+        "芥末黄",
+        "橄榄绿"
+      ],
+      "materialAnchors": [
+        "柚木",
+        "胡桃木",
+        "皮革"
+      ],
+      "avoidAnchors": [
+        "全套复刻成主题空间"
+      ]
+    },
+    "spatialPlan": {
+      "rooms": [
+        {
+          "roomId": "room-primary-bedroom",
+          "intent": "主卧以墙面为视觉锚点，低矮床具与墙面形成体量对比，衣柜保持简洁线条不变动。",
+          "envelope": "现有特征墙保留为风格锚点，不做拆除或覆盖。低柜体避免墙面倒伏风险，无需新增固定件。",
+          "furnitureAndStorage": "低矮双人床、简约边几为主，保留现有衣柜，床品选用哑光皮革或棉麻材质，克制点缀。",
+          "lighting": "保留现有天花与墙面，床头局部以球形或锥形灯具作为风格锚点，色温自然为主。",
+          "existingRefs": [
+            "object-primary-bed",
+            "object-primary-wardrobe",
+            "object-primary-feature-wall"
+          ]
+        },
+        {
+          "roomId": "room-bathroom",
+          "intent": "卫浴满足基本功能，维持现状，不提出地面或防水改造。",
+          "envelope": "现有防水层与洁具不动，管道不调整。",
+          "furnitureAndStorage": "保持现有台盆与收纳，不新增固定高柜。",
+          "lighting": "保持现有基础照明，不增加装饰灯具。",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-flex",
+          "intent": "多功能空间以书桌与浮搁架限定功能区，床具可随儿童成长调整位置。",
+          "envelope": "现有浮搁架保留，不新增固定柜体；书桌与床具均为可移动件。",
+          "furnitureAndStorage": "可移动床具与书桌为灵活组合，浮搁架提供开放收纳。",
+          "lighting": "保留现有基础照明，增加局部台灯作为灵活补光。",
+          "existingRefs": [
+            "object-flex-bed",
+            "object-flex-desk",
+            "object-flex-floating-shelf"
+          ]
+        },
+        {
+          "roomId": "room-hall",
+          "intent": "走廊保持简洁通透，不新增装饰性隔断或固定装置。",
+          "envelope": "现有门洞与墙面边界不变，地面通铺现有木地板。",
+          "furnitureAndStorage": "仅保留现有功能件，不增加陈设。",
+          "lighting": "基础照明为主，不增加装饰灯具。",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-living-dining",
+          "intent": "客餐厅一体以沙发与活动餐桌为中心，现有木质隔断界定区域，不新增固定隔断。",
+          "envelope": "现有隔断与木地板保留，窗户不动，利用自然光界定区域。",
+          "furnitureAndStorage": "低矮锥形腿沙发与圆形餐桌为灵活组合，可快速重组；电视柜为现有固定件，电视可随需求调位。",
+          "lighting": "球形或雕塑吊灯为主灯焦点，餐桌上方设置局部下照光，客厅角落以落地灯补足，克制装饰灯具数量。",
+          "existingRefs": [
+            "object-sofa",
+            "object-tv-console",
+            "object-dining-table",
+            "object-living-slat-partition"
+          ]
+        },
+        {
+          "roomId": "room-kitchen",
+          "intent": "厨房保持现有台面与固定柜不动，功能与收纳以简洁为主。",
+          "envelope": "现有台面与固定柜保留，管道与燃气位置不变。",
+          "furnitureAndStorage": "现有固定柜维持功能，台上仅添置必要收纳容器，不新增高柜或吊挂装置。",
+          "lighting": "保持现有基础照明，增加台面操作补光灯，克制灯具数量。",
+          "existingRefs": [
+            "object-kitchen-counter"
+          ]
+        },
+        {
+          "roomId": "room-entry",
+          "intent": "入口以现有鞋柜满足基本收纳，保持地面整洁。",
+          "envelope": "现有鞋柜位置与边界不变，入口动线不动。",
+          "furnitureAndStorage": "仅保留现有鞋柜，不新增固定装置或装饰。",
+          "lighting": "保持现有基础照明，不增加装饰灯具。",
+          "existingRefs": [
+            "object-shoe-cabinet"
+          ]
+        }
+      ]
+    },
+    "renovationPlan": {},
+    "furniturePlan": {},
+    "lightingPlan": {},
+    "materialPlan": {
+      "palette": [
+        "柚木与胡桃木本色保留，以自然油脂养护为主，减少化学漆面维护频次。"
+      ],
+      "materials": [
+        "哑光棉麻与真皮为软装主材，耐磨耐洗，不做天鹅绒或长毛绒等高维护面料。"
+      ],
+      "maintenance": [
+        "玻璃仅用于必要采光面或小型装饰件，不选用大面积玻璃隔断或玻璃家具，减少清洁成本。"
+      ]
+    },
+    "storagePlan": {},
+    "designDecisions": {
+      "spatial": {
+        "decision": "利用现有固定木质隔断界定客餐厅功能边界，减少新增隔断的材料与维护成本；可移动沙发与餐桌保持家庭空间弹性。",
+        "basisIds": [
+          "style:mid-century-modern:layout",
+          "style:mid-century-modern:methods",
+          "room:room-living-dining",
+          "object:object-living-slat-partition",
+          "brief:priority:flexibility"
+        ],
+        "tradeoff": "保留固定隔断避免新增固定件，减少未来维护节点；开放格局适配多孩家庭日常看护动线。"
+      },
+      "envelope": {
+        "decision": "现有木地板与门窗洞口保持不动，修缮以清洁养护替代整体更换，降低施工频次与长期维护成本。",
+        "basisIds": [
+          "style:mid-century-modern:envelope",
+          "style:mid-century-modern:methods",
+          "room:room-entry",
+          "room:room-living-dining"
+        ],
+        "tradeoff": "保留原始木地板与自然采光面，减少更换与清洁频次；特征墙不动避免拆改成本。"
+      },
+      "furniture": {
+        "decision": "低矮锥形腿家具与可移动组合为核心，材质优先实木与哑光皮革，减少软包与复杂雕刻的清洁负担。",
+        "basisIds": [
+          "style:mid-century-modern:furniture",
+          "style:mid-century-modern:materials",
+          "object:object-sofa",
+          "object:object-dining-table",
+          "object:object-primary-bed",
+          "brief:priority:flexibility",
+          "brief:household:two-adults-two-children"
+        ],
+        "tradeoff": "低矮家具降低磕碰风险并保持视线通透；可移动件减少重新布局时的更换成本；哑光皮革与实木表面耐污易清洁。"
+      },
+      "lighting": {
+        "decision": "以球形或雕塑灯具为全屋风格锚点，克制布设灯具数量，减少调校与更换频次。",
+        "basisIds": [
+          "style:mid-century-modern:lighting",
+          "style:mid-century-modern:methods",
+          "room:room-living-dining",
+          "room:room-primary-bedroom",
+          "brief:budget:unknown"
+        ],
+        "tradeoff": "经典灯具一次投入，长期使用不过时；减少灯具数量降低电力与更换维护成本；局部补光以台灯为主，可随需求灵活调整。"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 83960,
+  "completedAt": "2026-08-13T17:24:20.245Z"
+}

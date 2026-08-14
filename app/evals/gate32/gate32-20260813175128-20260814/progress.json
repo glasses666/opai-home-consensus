@@ -1,0 +1,40 @@
+{
+  "runId": "gate32-20260813175128-20260814",
+  "completed": 336,
+  "expected": 336,
+  "last": "balinese-tropical__family-storage__random-2-20260814",
+  "summary": {
+    "total": 336,
+    "providerResponses": 37,
+    "providerContractPasses": 37,
+    "providerContractFailures": 230,
+    "evaluatorFailures": 0,
+    "serviceFailures": 69,
+    "byVariant": {
+      "balanced": 16,
+      "budget-maintenance": 12,
+      "family-storage": 9
+    },
+    "byLayout": {
+      "fixed-baseline-family": 5,
+      "fixed-family-flex-work": 7,
+      "random-1-20260814": 13,
+      "random-2-20260814": 12
+    },
+    "failureCodes": {
+      "SEGMENT_STORAGE_SHAPE": 52,
+      "SEGMENT_UNSUPPORTED_CLAIM": 102,
+      "SEGMENT_DECISION_GROUNDING": 63,
+      "SEGMENT_BRIEF_FACT_UNUSED": 26,
+      "SEGMENT_DECISION_SHAPE": 19,
+      "SEGMENT_ROOM_SHAPE": 29,
+      "TRANSPORT": 56,
+      "SEGMENT_OVERVIEW_CONTENT": 54,
+      "TIMEOUT": 3,
+      "SEGMENT_OVERVIEW_SHAPE": 4,
+      "SEGMENT_ROOM_CONTENT": 8,
+      "AILY_RESPONSE_INVALID": 9,
+      "AILY_TIMEOUT": 1
+    }
+  }
+}

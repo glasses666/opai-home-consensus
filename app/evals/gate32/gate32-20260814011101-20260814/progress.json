@@ -1,0 +1,32 @@
+{
+  "runId": "gate32-20260814011101-20260814",
+  "completed": 12,
+  "expected": 12,
+  "last": "scandinavian__family-storage__fixed-family-flex-work",
+  "summary": {
+    "total": 12,
+    "providerResponses": 2,
+    "providerContractPasses": 2,
+    "providerContractFailures": 8,
+    "evaluatorFailures": 0,
+    "serviceFailures": 2,
+    "byVariant": {
+      "balanced": 2,
+      "budget-maintenance": 0,
+      "family-storage": 0
+    },
+    "byLayout": {
+      "fixed-baseline-family": 0,
+      "fixed-family-flex-work": 1,
+      "random-1-20260814": 1,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "SEGMENT_OVERVIEW_SHAPE": 1,
+      "SEGMENT_BRIEF_FACT_UNUSED": 3,
+      "SEGMENT_DECISION_GROUNDING": 11,
+      "AILY_RESPONSE_INVALID": 2,
+      "SEGMENT_UNSUPPORTED_CLAIM": 1
+    }
+  }
+}

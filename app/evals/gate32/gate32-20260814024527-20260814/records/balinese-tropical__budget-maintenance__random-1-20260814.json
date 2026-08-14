@@ -1,0 +1,103 @@
+{
+  "id": "balinese-tropical__budget-maintenance__random-1-20260814",
+  "styleId": "balinese-tropical",
+  "variantId": "budget-maintenance",
+  "layoutId": "random-1-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider_contract_failure",
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"balinese-tropical\",\"names\":{\"zh\":\"巴厘热带\",\"en\":\"Balinese Tropical\"},\"sourceIds\":[\"archdaily-tropical\"],\"characteristics\":{\"layout\":\"跨通风、深檐、庭院与半室外过渡\",\"palette\":[\"木色\",\"石色\",\"植物绿\"],\"materials\":[\"柚木\",\"竹\",\"藤\",\"火山石\",\"亚麻\"],\"envelope\":[\"自然石地面\",\"木格栅\",\"大开口\"],\"furniture\":[\"低矮编织\",\"室内外兼用\"],\"lighting\":[\"过滤日光\",\"低色温灯\"],\"methods\":[\"遮阳、通风、耐湿材料\"],\"avoid\":[\"在寒冷干燥气候无条件复制开放边界\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 07 共 7 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：01=room-primary-bedroom，02=room-bathroom，03=room-flex，04=room-hall，05=room-living-dining，06=room-kitchen，07=room-entry。不得省略任何房间或字段。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"balinese-tropical\",\"names\":{\"zh\":\"巴厘热带\",\"en\":\"Balinese Tropical\"},\"sourceIds\":[\"archdaily-tropical\"],\"characteristics\":{\"layout\":\"跨通风、深檐、庭院与半室外过渡\",\"palette\":[\"木色\",\"石色\",\"植物绿\"],\"materials\":[\"柚木\",\"竹\",\"藤\",\"火山石\",\"亚麻\"],\"envelope\":[\"自然石地面\",\"木格栅\",\"大开口\"],\"furniture\":[\"低矮编织\",\"室内外兼用\"],\"lighting\":[\"过滤日光\",\"低色温灯\"],\"methods\":[\"遮阳、通风、耐湿材料\"],\"avoid\":[\"在寒冷干燥气候无条件复制开放边界\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@02##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@03##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@04##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@05##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@06##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@07##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据，四个依据槽位合计必须覆盖全部住户事实短码。空间依据必须含 X001；墙地顶依据必须含 X002、X003、X004 之一；家具依据必须含 X005；照明依据必须含 X006。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:balinese-tropical:layout, X002=style:balinese-tropical:palette, X003=style:balinese-tropical:materials, X004=style:balinese-tropical:envelope, X005=style:balinese-tropical:furniture, X006=style:balinese-tropical:lighting, X007=style:balinese-tropical:methods, X008=style:balinese-tropical:avoid, X009=brief:household:one-adult-one-child, X010=brief:priority:quiet-privacy, X011=brief:site:limited-daylight, X012=room:room-primary-bedroom, X013=room:room-bathroom, X014=room:room-flex, X015=room:room-hall, X016=room:room-living-dining, X017=room:room-kitchen, X018=room:room-entry, X019=rule:deterministic:object-collision, X020=rule:rule-bedside-600, X021=rule:rule-cabinet-front-900, X022=rule:rule-child-activity-clearance, X023=rule:rule-fixed-equipment-wall-relation, X024=rule:rule-kitchen-aisle-1000, X025=rule:rule-main-circulation-900, X026=rule:rule-opening-clearance, X027=rule:rule-room-boundary, X028=rule:rule-tall-storage-anchored, X029=rule:rule-tv-distance-1800-3600。必须覆盖的住户事实短码：X009, X010, X011。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"balinese-tropical\",\"names\":{\"zh\":\"巴厘热带\",\"en\":\"Balinese Tropical\"},\"sourceIds\":[\"archdaily-tropical\"],\"characteristics\":{\"layout\":\"跨通风、深檐、庭院与半室外过渡\",\"palette\":[\"木色\",\"石色\",\"植物绿\"],\"materials\":[\"柚木\",\"竹\",\"藤\",\"火山石\",\"亚麻\"],\"envelope\":[\"自然石地面\",\"木格栅\",\"大开口\"],\"furniture\":[\"低矮编织\",\"室内外兼用\"],\"lighting\":[\"过滤日光\",\"低色温灯\"],\"methods\":[\"遮阳、通风、耐湿材料\"],\"avoid\":[\"在寒冷干燥气候无条件复制开放边界\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673713293148097754"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##巴厘热带预算维护版·安静私密优先住宅@@02##以克制耐久易维护为前提，保留巴厘热带木石绿材料体系与低矮编织感核心锚点，减少纯装饰表达@@03##安静私密优先与儿童成长弹性并行；一般采光条件下注重自然光利用率而非放大开口@@04##全屋以柚木纹、石色与植物绿营造温暖沉稳热带基调，克制过度装饰，精简非必要层次变化@@05##入口至客厅至弹性空间形成主回环，儿童高频活动区与成人安静区保持适当中断；待专业复核动线净宽@@06##入户鞋柜与主卧衣橱形成两道视线缓冲；过厅与弹性区暗色调处理增强私密度；灵活可变可合@@07##低矮编织家具保留空间开阔感；层高充足保留原顶不做吊顶；尺度感以沉稳低矮为基调；待专业复核@@08##墙面环保涂料或质感涂料，木色或暖白为主调；不做过度分层或复杂肌理@@09##柚木纹砖或仿石砖，哑光防滑易清洁；不做无缝或亮面抛光处理@@10##保留原顶，不做吊顶处理；通过吊扇灯或低位木质灯具暗示热带感@@11##原有门窗与洞口位置均保留，不改结构机电；洞口关系与固定安装待专业复核@@12##低矮编织柚木家具为主，室内外兼用款式；客厅茶几选轻盈款式不阻碍儿童活动动线；待专业复核@@13##亚麻帘、竹编灯罩、小型蕨类与藤蔓绿植点缀；材质呼应木石绿主调，克制数量@@14##不做全开放边界在一般采光下易失衡；避免大面积黄铜金属或全镜面等高维护材质；避免仅装饰无功能冗余@@15##一般采光条件下充分利用现有开口；通过浅色地面与低矮家具减少光线遮挡@@16##暖白或暖黄球泡低位灯具为主；通过竹编或藤编灯罩柔化光源；不做氛围灯带或轨道射灯@@17##灯具选低位或漫射型，眩光风险低；柚木与藤竹亚麻均属易维护或可替换材质；地面哑光防滑@@18##哑光柚木纹砖||仿石砖||环保哑光涂料@@19##柚木||竹||藤||火山石||亚麻帘||竹编灯罩@@20##柚木定期养护||藤竹亚麻定期检查||绿植修剪@@21##主卧衣橱收纳最强；弹性空间兼顾儿童书籍与成人办公收纳；客厅电视柜收纳玩具与杂物；厨房固定台面下方收纳待核验；玄关鞋柜收纳日常鞋与背包@@22##主卧衣橱||弹性空间||客厅电视柜||厨房台下||玄关鞋柜"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673713512904314118"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##私密度优先的静谧热带卧房，适合深度睡眠与安静休憩##浅柚木饰面墙面与天花板，浅石灰基涂料防潮处理，哑光火山石地面，克制纹理不做过重##移入低矮编织平台床与藤编边几，保留原有固定衣柜避免新增固定安装##温暖漫射壁灯与床头灯组合，营造低色温柔和光感，待专业复核@@02##简洁干湿分区热带卫浴，材质易清洁且耐湿##哑光陶砖或火山石地面，石灰基抹灰墙面防潮且贴近石质感，木质天花板点缀##移入藤编收纳篮，墙面固定柚木层架收纳洗漱用品，克制不做复杂定制##漫射暖光壁灯组合，防水防潮简易天花射灯，待专业复核@@03##安静灵活的可变空间，满足成人居家办公与儿童独立活动##浅柚木色调墙面与天花板，哑光浅色自流平或浅柚木地板，避免重纹理##根据实际需求移入折叠书桌椅或儿童收纳柜，保留原有一层藤编层架##分区暖光壁灯结合漫射天花灯，补充有限采光不足，待专业复核@@04##简洁过渡的室内走廊，串联私密区与开放社交区##浅石灰基抹灰或柚木饰面墙面，哑光浅色地面，浅柚木或白色天花板##保留原有格局，墙面低维护简洁挂钩或层板，无需新增固定安装##柔和漫射低位壁灯补充走廊采光，待专业复核@@05##通透围合兼具的开敞客餐厅，围合拱形序列感保留开放流动##自然石地面延伸感，石灰基抹灰浅墙面保留热带白，原木质感天花板增添温暖##保留原有固定电视柜，移入低矮编织沙发与藤编餐椅，柚木低矮边几配套##暖色分层漫射光组合，分区布置不破坏开放流动，待专业复核@@06##功能整合的热带厨房，与开放区温暖联动且便于清洁##哑光防滑石砖地面，石灰基抹灰防潮墙面，简洁柚木或白色吊柜底板，待确认防潮方案##保留原有固定橱柜，移入藤编开放层架收纳常用品，克制新增固定安装##暖色功能灯具组合，操作台局部补充待定，待专业复核@@07##由外入内的静谧过渡门厅，建立热带归家仪式感##柚木或浅石灰基抹灰墙面，自然石或哑光浅色地面，浅色木质天花板##保留原有固定鞋柜，增加藤编换鞋凳与编织收纳篮，避免过度陈设##温暖漫射壁灯与鞋柜灯组合，柔和迎宾光，待专业复核"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673713736154844396"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧不变动，靠内置衣柜维持私密@@02##X001||X009||X010||X011@@03##开放边界表达与隐私安静目标存在张力，克制深檐语言@@04##湿区选火山石或瓷质砖，墙面保留现状或石灰洗@@05##X002||X003||X009||X011@@06##石地触感冷硬与儿童安全之间需取舍，以安全为首@@07##保留现有床组，选一件藤编或柚木边几@@08##X001||X005||X009||X010@@09##无需购入新床组，减少不必要热带装饰件@@10##统一低色温暖光灯泡，重点区域加设编织竹材吊灯@@11##X006||X010||X011@@12##全屋统一光源减少调光复杂度，热带大开口天然光受限@@01##卫浴湿区维持现状防潮优势，干区点缀竹材或藤编收纳@@02##X002||X003||X009||X010@@03##石质墙地冷感与儿童洗浴安全需平衡，避免冰冷感@@04##湿区保留现有瓷砖，干区墙面可局部柚木或藤编@@05##X002||X003||X004||X011@@06##石材高维护风险通过保留现状规避，耐湿核心锚点不打折@@07##现有洁具不动，补充一件藤编或竹材收纳篮@@08##X001||X005||X009@@09##暂不引入异域风强烈装饰件，保持克制克制热带@@10##基础暖白光源加设竹编壁灯或藤编射灯罩@@11##X006||X010@@12##减少复杂灯具数量，降低更换和维护频率@@01##书桌靠墙释放儿童活动净空，不加固定隔断@@02##X001||X009||X010||X011@@03##留白与功能并存在有限面积内存在取舍@@04##统一墙面白色或浅米色，不做强烈热带纹理@@05##X002||X003||X004||X011@@06##白墙无纹理保持简洁，避免墙面材料复杂化@@07##书桌椅选低矮柚木或藤编，原有书桌保留@@08##X001||X005||X009||X010@@09##低矮家具不堆叠，避免儿童视觉压迫感@@10##台灯选藤编或竹质灯罩，暖白光辅助采光不足@@11##X006||X010||X011@@12##台灯灵活布置避免固定灯具减少改造成本@@01##走廊作为过渡空间保持简洁，不增加任何固定装饰@@02##X001||X005||X010||X011@@03##过渡空间克制可减少过多热带装饰@@04##地面延续客厅或卧室石质或木质地材，统一调性@@05##X002||X003||X004@@06##不额外引入特殊材料以控制维护@@07##添一件藤编或竹质边几或换鞋凳，收纳兼点缀@@08##X001||X005||X009@@09##低成本热带锚点，不做大型固定装置@@10##吸顶灯或壁灯保持简洁，暖白光统一全屋@@11##X006||X010@@12##走廊照明简洁减少维护点数量@@01##客厅保留沙发和电视柜，新增一件藤编茶几@@02##X001||X005||X009||X010@@03##低矮编织家具呼应热带核心但保持克制热带@@04##木格栅维持现状，圆拱语言保留不强化@@05##X001||X002||X004||X009@@06##不过度强化圆拱以避免形式大于功能@@07##保留沙发和餐桌，加藤编或柚木茶几和单椅@@08##X001||X005||X009||X010@@09##不引入室内外兼用大体量热带家具，控制成本@@10##柚木或藤编吊灯为主光，落地藤编灯补光角落@@11##X006||X010||X011@@12##全屋统一暖白光降低维护复杂度，热带灯具点缀代替全覆盖@@01##厨房保留现有台面，不新增固定隔断@@02##X001||X005||X009||X010@@03##湿区防潮与热带自然材料存在冲突@@04##湿区台面和墙面保持瓷砖，不强加竹木贴面@@05##X003||X004||X009||X010@@06##避免竹木直接接触明水区域，减少受潮风险@@07##新增藤编吊灯或柚木挂杆，不动现有台面@@08##X005||X006||X009@@09##不做厨房大改造，仅小件点缀保持克制热带@@10##藤编或竹质吊灯提供暖光和热带氛围@@11##X006||X009||X010@@12##灯具置于远离明水位置，接线固定关系待专业复核@@01##入口玄关保持简洁，新增藤编或竹材鞋凳兼收纳@@02##X001||X005||X009||X010@@03##热带大门开口与室内隐私存在张力@@04##墙面保持现状，不做石质或木格栅整体包裹@@05##X002||X003||X004||X009@@06##入口不做过度材料表达以控制整体预算@@07##保留现有鞋柜，新增藤编或竹材换鞋凳@@08##X001||X005||X009||X010@@09##低成本热带锚点，克制不堆砌@@10##暖白光吸顶灯或壁灯保持简洁明亮@@11##X006||X009||X010@@12##灯具简洁降低维护频率和更换成本"
+      },
+      "validation": {
+        "ok": false,
+        "errors": [
+          {
+            "code": "SEGMENT_DECISION_SHAPE",
+            "path": "standardPlanSegment",
+            "message": "Decisions DSL must contain keys 01 through 12 in order, with one value each."
+          }
+        ]
+      }
+    }
+  ],
+  "error": {
+    "name": "Error",
+    "message": "PROVIDER_CONTRACT_FAILURE",
+    "retryable": false,
+    "evaluator": false,
+    "validationErrors": [
+      {
+        "code": "SEGMENT_DECISION_SHAPE",
+        "path": "standardPlanSegment",
+        "message": "Decisions DSL must contain keys 01 through 12 in order, with one value each."
+      }
+    ],
+    "rawResponse": null,
+    "providerTrace": null
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "SEGMENT_DECISION_SHAPE",
+        "path": "standardPlanSegment",
+        "message": "Decisions DSL must contain keys 01 through 12 in order, with one value each."
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 168379,
+  "completedAt": "2026-08-14T02:50:06.207Z"
+}

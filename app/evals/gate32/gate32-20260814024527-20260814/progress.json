@@ -1,0 +1,31 @@
+{
+  "runId": "gate32-20260814024527-20260814",
+  "completed": 12,
+  "expected": 12,
+  "last": "balinese-tropical__family-storage__random-1-20260814",
+  "summary": {
+    "total": 12,
+    "providerResponses": 4,
+    "providerContractPasses": 4,
+    "providerContractFailures": 8,
+    "evaluatorFailures": 0,
+    "serviceFailures": 0,
+    "byVariant": {
+      "balanced": 2,
+      "budget-maintenance": 1,
+      "family-storage": 1
+    },
+    "byLayout": {
+      "fixed-baseline-family": 2,
+      "fixed-family-flex-work": 0,
+      "random-1-20260814": 2,
+      "random-2-20260814": 0
+    },
+    "failureCodes": {
+      "SEGMENT_ROOM_SHAPE": 2,
+      "SEGMENT_DECISION_SHAPE": 3,
+      "SEGMENT_UNSUPPORTED_CLAIM": 3,
+      "SEGMENT_BRIEF_FACT_UNUSED": 1
+    }
+  }
+}

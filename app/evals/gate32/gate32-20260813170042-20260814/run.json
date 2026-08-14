@@ -1,0 +1,20 @@
+{
+  "runId": "gate32-20260813170042-20260814",
+  "seed": "20260814",
+  "startedAt": "2026-08-13T17:00:42.346Z",
+  "promptVersion": "oppein-standard-master-plan-v1.16",
+  "testMode": "black_box_no_harness_adjustment",
+  "styleCount": 28,
+  "variantCount": 3,
+  "layoutCount": 4,
+  "expectedCalls": 336,
+  "concurrency": 4,
+  "fixedLayoutIds": [
+    "fixed-baseline-family",
+    "fixed-family-flex-work"
+  ],
+  "randomLayoutIds": [
+    "random-1-20260814",
+    "random-2-20260814"
+  ]
+}

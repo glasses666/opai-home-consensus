@@ -20,6 +20,7 @@
     "eval:design:standards:dev:live": "node --env-file-if-exists=.env.local scripts/eval_standard_design_plans.mjs --live --suite=development",
     "eval:design:standards:acceptance": "node scripts/eval_standard_design_plans.mjs --suite=acceptance",
     "eval:design:standards:acceptance:live": "node --env-file-if-exists=.env.local scripts/eval_standard_design_plans.mjs --live --suite=acceptance",
+    "eval:gate32:trio": "node --env-file-if-exists=.env.local scripts/eval_gate32_trio.mjs",
     "live:agent": "node --env-file-if-exists=.env.local server/agent-live.mjs",
     "eval:style": "node scripts/eval_style_retrieval.mjs"
   },

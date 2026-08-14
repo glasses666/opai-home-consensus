@@ -1,0 +1,217 @@
+{
+  "seed": "20260814",
+  "fixed": [
+    {
+      "id": "fixed-baseline-family",
+      "kind": "fixed",
+      "seed": null,
+      "residentRequest": "两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-one-child",
+          "text": "住户为两位成人和一名儿童"
+        },
+        {
+          "id": "priority:durability",
+          "text": "耐用性优先"
+        },
+        {
+          "id": "priority:maintainability",
+          "text": "易维护性优先"
+        },
+        {
+          "id": "priority:storage",
+          "text": "收纳能力优先"
+        },
+        {
+          "id": "priority:clear-circulation",
+          "text": "通畅动线优先"
+        }
+      ],
+      "unresolvedInputIds": []
+    },
+    {
+      "id": "fixed-family-flex-work",
+      "kind": "fixed",
+      "seed": null,
+      "residentRequest": "两位成人和一名儿童共同居住，其中一人在家办公。希望空间耐用、易维护，保留清楚的工作与活动边界，收纳不能牺牲日常动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-one-child",
+          "text": "住户为两位成人和一名儿童"
+        },
+        {
+          "id": "household:home-office",
+          "text": "一位成人有稳定的居家办公需求"
+        },
+        {
+          "id": "priority:maintainability",
+          "text": "高频区域易维护"
+        },
+        {
+          "id": "priority:storage",
+          "text": "收纳能力不能被工作区挤占"
+        },
+        {
+          "id": "priority:clear-circulation",
+          "text": "工作、活动和通行边界清楚"
+        }
+      ],
+      "unresolvedInputIds": []
+    }
+  ],
+  "random": [
+    {
+      "id": "random-1-20260814",
+      "kind": "random",
+      "seed": "20260814",
+      "randomState": 219056741,
+      "residentRequest": "一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:one-adult-one-child",
+          "text": "住户为一位成人和一名儿童"
+        },
+        {
+          "id": "priority:quiet-privacy",
+          "text": "安静与私密优先"
+        },
+        {
+          "id": "site:limited-daylight",
+          "text": "住宅自然采光一般"
+        }
+      ],
+      "unresolvedInputIds": []
+    },
+    {
+      "id": "random-2-20260814",
+      "kind": "random",
+      "seed": "20260814",
+      "randomState": 3298672641,
+      "residentRequest": "两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-two-children",
+          "text": "住户为两位成人和两名儿童"
+        },
+        {
+          "id": "priority:flexibility",
+          "text": "家具和活动区域需要可变"
+        },
+        {
+          "id": "budget:unknown",
+          "text": "预算尚未确定"
+        }
+      ],
+      "unresolvedInputIds": [
+        "budget:unknown"
+      ]
+    }
+  ],
+  "all": [
+    {
+      "id": "fixed-baseline-family",
+      "kind": "fixed",
+      "seed": null,
+      "residentRequest": "两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-one-child",
+          "text": "住户为两位成人和一名儿童"
+        },
+        {
+          "id": "priority:durability",
+          "text": "耐用性优先"
+        },
+        {
+          "id": "priority:maintainability",
+          "text": "易维护性优先"
+        },
+        {
+          "id": "priority:storage",
+          "text": "收纳能力优先"
+        },
+        {
+          "id": "priority:clear-circulation",
+          "text": "通畅动线优先"
+        }
+      ],
+      "unresolvedInputIds": []
+    },
+    {
+      "id": "fixed-family-flex-work",
+      "kind": "fixed",
+      "seed": null,
+      "residentRequest": "两位成人和一名儿童共同居住，其中一人在家办公。希望空间耐用、易维护，保留清楚的工作与活动边界，收纳不能牺牲日常动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-one-child",
+          "text": "住户为两位成人和一名儿童"
+        },
+        {
+          "id": "household:home-office",
+          "text": "一位成人有稳定的居家办公需求"
+        },
+        {
+          "id": "priority:maintainability",
+          "text": "高频区域易维护"
+        },
+        {
+          "id": "priority:storage",
+          "text": "收纳能力不能被工作区挤占"
+        },
+        {
+          "id": "priority:clear-circulation",
+          "text": "工作、活动和通行边界清楚"
+        }
+      ],
+      "unresolvedInputIds": []
+    },
+    {
+      "id": "random-1-20260814",
+      "kind": "random",
+      "seed": "20260814",
+      "randomState": 219056741,
+      "residentRequest": "一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:one-adult-one-child",
+          "text": "住户为一位成人和一名儿童"
+        },
+        {
+          "id": "priority:quiet-privacy",
+          "text": "安静与私密优先"
+        },
+        {
+          "id": "site:limited-daylight",
+          "text": "住宅自然采光一般"
+        }
+      ],
+      "unresolvedInputIds": []
+    },
+    {
+      "id": "random-2-20260814",
+      "kind": "random",
+      "seed": "20260814",
+      "randomState": 3298672641,
+      "residentRequest": "两位成人和两名儿童居住，希望活动弹性优先；预算暂未确定。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。",
+      "knownFacts": [
+        {
+          "id": "household:two-adults-two-children",
+          "text": "住户为两位成人和两名儿童"
+        },
+        {
+          "id": "priority:flexibility",
+          "text": "家具和活动区域需要可变"
+        },
+        {
+          "id": "budget:unknown",
+          "text": "预算尚未确定"
+        }
+      ],
+      "unresolvedInputIds": [
+        "budget:unknown"
+      ]
+    }
+  ]
+}

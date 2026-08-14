@@ -1,0 +1,167 @@
+{
+  "id": "contemporary__budget-maintenance__fixed-family-flex-work",
+  "styleId": "contemporary",
+  "variantId": "budget-maintenance",
+  "layoutId": "fixed-family-flex-work",
+  "layoutKind": "fixed",
+  "layoutSeed": null,
+  "attempt": 1,
+  "serviceRetries": 0,
+  "source": "provider",
+  "providerTrace": {
+    "provider": "aily_team",
+    "agentId": "agent_4kt39w75byxw5cf",
+    "chatId": "7673565711881489337"
+  },
+  "prompt": "你是住宅设计规划 Agent。请基于给定风格档案，为同一套固定户型生成一套标准母方案。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。第一个字符必须是 {，toolCalls 必须是空数组。根对象只含 toolCalls 与 standardPlanDraft。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可直接生产安装。\n只写设计意图与材料、色彩、体量、光环境和维护方向。禁止颜色号、色温、照度、尺寸数值、防水高度、线路/燃气/水槽/烟机位置、螺栓/预埋/锚固方式等施工细节。\nroomId 与 basisIds 必须从上下文逐字复制；referenceCases 为空时不得伪造案例。\nhouse 是当前住宅唯一事实来源。风格档案中的壁炉、庭院、拱门、露梁、岛台或其他原型元素若不在 house 中，只能转译为抽象设计语言，不得写成当前住宅已有事实或结构改造。\n不得提议新增、拆除或移动任何隔断，即使描述为轻质、活动、非固定或装饰性；只能利用 house 中已有家具、表面和开口表达分区。\nstandardPlanDraft 九段顺序固定为 summary、spatial、rooms、renovation、furniture、lighting、materials、storage、decisions。不得改成对象。\n严格输出形状中的空字符串与空 basisIds 都必须替换为本次设计内容；不得原样复制空值、字段名、英文说明或示例句。roomId 与 decision area 是固定标识，不得替换。\n提议方向不得描述成现状。错误或无法核验的住户前提只能在第一段 summary 第三项 resolutionNote 中说明需要核验。\ndecisions 必须恰好四项，首项依次为 spatial、envelope、furniture、lighting。每项格式为 [area,decision,basisIds,tradeoff]，至少引用一个 style:* 依据和一个 room/object/brief:* 事实依据。不得写“营造高级感”等空话。\nbrief.knownFacts 中的每个 ID 都必须至少在某一项 decisions 的 basisIds 中以 brief:ID 原样引用一次，不能只在文字里复述。\nstyle basis ID 只能从 style:contemporary:layout, style:contemporary:palette, style:contemporary:materials, style:contemporary:envelope, style:contemporary:furniture, style:contemporary:lighting, style:contemporary:methods, style:contemporary:avoid 中选择，必须逐字复制 ID，禁止在冒号后拼接锚点文字。其他 basis ID 也只能逐字复制 context 中已有的 ID。\n第三段 rooms 每项严格为 [roomId,intent,envelope,furnitureAndStorage,lighting]，每个房间恰好出现一次。所有文字值不超过 40 个汉字。固定身份、事实引用、规则、未知项和产品边界由本地适配器注入，不要输出这些字段。\n涉及高柜防倾倒、固定安装或墙体关系时，只写“待专业复核”，不得给锚固方法。\n严格保持定长数组顺序；materials 的三项和 storage 第二项都是非空字符串数组。不得增加对象键或改变数组顺序。\n上下文：{\"style\":{\"id\":\"contemporary\",\"names\":{\"zh\":\"当代风\",\"en\":\"Contemporary\"},\"sourceIds\":[\"ad-contemporary\"],\"characteristics\":{\"layout\":\"随当代生活方式调整的开放或混合格局\",\"palette\":[\"中性色基底\",\"一处强调色\"],\"materials\":[\"木\",\"石\",\"金属\",\"织物混合\"],\"envelope\":[\"干净基底\",\"局部焦点墙\"],\"furniture\":[\"现代轮廓\",\"少量艺术单品\"],\"lighting\":[\"建筑光与装饰灯并用\"],\"methods\":[\"克制混搭\",\"关注当期材料\"],\"avoid\":[\"把短期趋势铺满全屋\"]}},\"referenceCases\":[{\"caseId\":\"con-01\",\"designMoves\":[\"large storage buffer\",\"quiet layout\",\"timeless composition\"],\"applicability\":[\"heritage apartment renewal\",\"quiet contemporary living\"],\"risks\":[\"can feel too restrained if the client wants iconography\",\"storage buffer must be precise\"]},{\"caseId\":\"con-02\",\"designMoves\":[\"three courts\",\"common areas treated as exterior\",\"landscape as interior extension\"],\"applicability\":[\"Vastu-led domestic planning\",\"courtyard families in hot climates\"],\"risks\":[\"large footprint\",\"courtyard upkeep\"]}],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-family-flex-work\",\"residentRequest\":\"两位成人和一名儿童共同居住，其中一人在家办公。希望空间耐用、易维护，保留清楚的工作与活动边界，收纳不能牺牲日常动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"household:home-office\",\"text\":\"一位成人有稳定的居家办公需求\"},{\"id\":\"priority:maintainability\",\"text\":\"高频区域易维护\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力不能被工作区挤占\"},{\"id\":\"priority:clear-circulation\",\"text\":\"工作、活动和通行边界清楚\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanDraft\":[[\"\",\"\",\"\"],[\"\",\"\",\"\",\"\"],[[\"room-primary-bedroom\",\"\",\"\",\"\",\"\"],[\"room-bathroom\",\"\",\"\",\"\",\"\"],[\"room-flex\",\"\",\"\",\"\",\"\"],[\"room-hall\",\"\",\"\",\"\",\"\"],[\"room-living-dining\",\"\",\"\",\"\",\"\"],[\"room-kitchen\",\"\",\"\",\"\",\"\"],[\"room-entry\",\"\",\"\",\"\",\"\"]],[\"\",\"\",\"\",\"\"],[\"\",\"\",\"\"],[\"\",\"\",\"\"],[[\"\"],[\"\"],[\"\"]],[\"\",[\"\"]],[[\"spatial\",\"\",[],\"\"],[\"envelope\",\"\",[],\"\"],[\"furniture\",\"\",[],\"\"],[\"lighting\",\"\",[],\"\"]]]}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：budget-maintenance（预算与维护优先）。只在设计取舍上落实下列目标：优先选择克制、耐用、易维护的方向，减少高维护或只承担装饰的表达，但仍保留该风格可辨识的核心锚点。不要编造价格。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回原 standardPlanDraft 合同。",
+  "providerResponse": {
+    "toolCalls": [],
+    "standardPlanDraft": [
+      [
+        "当代克制宜居方案：全屋以中性色为基底，以一处强调墙为视觉锚点；固定高柜提供大容量收纳而不挤占动线；灵活空间兼顾居家办公与临时客房。",
+        "以克制混搭实现两成人一儿童的日常宜居：功能分区通过现有家具自然界定，收纳最大化但不增加隔断；高频区域选易清洁材料；整体氛围保持当代风格的安静与可辨识。",
+        ""
+      ],
+      [
+        "全屋保持原有边界与开口，仅通过表面处理界定氛围；隔墙与机电均不动。",
+        "利用现有固定高柜与墙体界定各区；灵活空间通过家具自然划分工作角与睡眠角；不对现有结构做任何改动。",
+        "木纹、石纹、金属与织物四类当代材质混用，每区以2至3类为主，避免杂乱。",
+        ""
+      ],
+      [
+        [
+          "room-primary-bedroom",
+          "主卧以中性基调承载睡眠区，以固定高柜和墙面处理提供焦点；现有动线不受影响。",
+          "中性墙面色打底，局部焦点墙提升层次感；不动机电与结构。",
+          "固定高柜承担大件收纳；床与床头柜按原位置布置；留出衣柜前通道。",
+          "自然光为睡眠氛围主调，辅以均匀柔和的人工光；无炫光直射床位。"
+        ],
+        [
+          "room-bathroom",
+          "卫浴保持原始管线与布局，仅在表面体现易维护当代感。",
+          "耐污好清洁的石材纹理饰面；不改动管线与防水层。",
+          "保持原固定台盆柜，不新增隔板或装饰件。",
+          "防潮筒灯提供均匀基础光；洗手台区补充局部照明。"
+        ],
+        [
+          "room-flex",
+          "灵活书房兼具临时客房；通过家具自然界定工作角与睡眠角。",
+          "墙面保持干净基调；靠窗工作角以自然光为主。",
+          "现有书桌和层板定义工作区；床靠边布置留出通道；不增加固定隔断。",
+          "工作角以台灯补充；睡眠角以柔和主光满足休憩需求。"
+        ],
+        [
+          "room-hall",
+          "走廊作为安静过渡区，承接客厅与卧室的视觉延伸。",
+          "浅色墙面延伸客厅色调；保持原有门洞尺寸。",
+          "不做额外收纳挤占；利用端景小件陈设提升仪式感。",
+          "柔和暗装灯带提供引导性照明；不设复杂装饰灯具。"
+        ],
+        [
+          "room-living-dining",
+          "客餐厅开敞共处，以家具自然界定功能区；不新增任何隔断。",
+          "木纹延续至客厅背景，石纹点缀餐厅墙面；局部焦点墙为客厅提供层次。",
+          "固定电视柜与已有条形隔断保持视觉分隔；沙发与餐桌对坐而设；不改变结构。",
+          "客厅主灯为装饰性焦点，餐桌上方配简约吊灯；走廊补充建筑光。"
+        ],
+        [
+          "room-kitchen",
+          "厨房保持原固定台面布局，操作流程不变；表面体现当代克制感。",
+          "石材纹理台面与易清洁墙面砖；不改动管线与燃气位置。",
+          "原固定橱柜不变；台面保持无杂物；吊柜收纳代替新增搁板。",
+          "基础防油烟筒灯满足操作需求；无额外装饰性灯具干扰烹饪。"
+        ],
+        [
+          "room-entry",
+          "入口玄关以鞋柜固定位为锚点，提供清晰过渡。",
+          "墙面保持简洁；与客厅共享木纹元素延续入户视线。",
+          "原固定鞋柜不变；换鞋区利用现有地面空间；不增设装饰柜。",
+          "暗装感应灯满足入户基础照明；与走廊灯光联动。"
+        ]
+      ],
+      "克制表面处理优先：全屋通过墙面色与焦点墙界定氛围，不做湿作业改造；所有管线与防水层维持原状。",
+      [
+        "选用现代轮廓功能家具；少量艺术单品点缀公共区；避免短期趋势装饰满铺。",
+        "克制混搭为原则；材料当期感与耐久性并重；不过度堆砌潮流单品。"
+      ],
+      [
+        "全屋采用自然光与建筑光双层照明；客厅选一处装饰灯作为视觉焦点；其余功能区以实用灯具为主。",
+        "客厅装饰灯为全屋当代感的核心锚点；其余空间采用暗装或嵌入式灯具，简洁耐用。"
+      ],
+      [
+        [
+          "木纹",
+          "石纹",
+          "金属与织物"
+        ],
+        [
+          "木地板或木纹砖",
+          "石材纹理瓷砖或仿石板",
+          "金属装饰件与织物软饰"
+        ],
+        [
+          "金属与织物混用"
+        ]
+      ],
+      "全屋固定高柜（主卧衣柜、厨房台面、鞋柜）提供大容量隐蔽收纳；灵活区利用家具内收纳满足日常取用；儿童玩具与工作杂物分区存放，不影响通道。",
+      [
+        "全屋固定高柜为隐蔽收纳主体；灵活书房书桌与层板承载工作区收纳；客厅电视柜与餐厅墙面提供公共区储物；儿童衣物与玩具在灵活间就近收纳。"
+      ],
+      [
+        [
+          "spatial",
+          "灵活书房兼顾居家办公与临时客房，利用现有家具自然界定工作角与睡眠角，不新增隔断。",
+          [
+            "style:contemporary:layout",
+            "brief:household:home-office",
+            "room:room-flex"
+          ],
+          "保持开放布局的当代感同时满足功能分区需求。"
+        ],
+        [
+          "envelope",
+          "全屋以中性色为基底，客厅设一处焦点墙，提供视觉层次而不做满铺改造。",
+          [
+            "style:contemporary:palette",
+            "style:contemporary:envelope",
+            "brief:household:two-adults-one-child"
+          ],
+          "克制用色减少维护难度，同时保留当代风格的可辨识锚点。"
+        ],
+        [
+          "furniture",
+          "优先选耐用易清洁的功能家具；公共区以少量艺术单品点缀；不高频更换装饰件。",
+          [
+            "style:contemporary:furniture",
+            "style:contemporary:materials",
+            "priority:maintainability"
+          ],
+          "减少高维护装饰表达，保证高频区域的耐用性。"
+        ],
+        [
+          "lighting",
+          "全屋建筑光与装饰灯双层布置；客厅装饰灯为核心视觉锚点；其余功能区以实用灯具满足日常需求。",
+          [
+            "style:contemporary:lighting",
+            "style:contemporary:methods",
+            "priority:clear-circulation"
+          ],
+          "装饰灯集中于公共区焦点位置，避免全屋堆砌装饰灯具导致维护负担。"
+        ]
+      ]
+    ]
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "CONTRACT_VALIDATOR_EXCEPTION",
+        "path": "$",
+        "message": "Cannot read properties of undefined (reading 'basisIds')"
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 86617,
+  "completedAt": "2026-08-13T17:20:31.035Z"
+}
