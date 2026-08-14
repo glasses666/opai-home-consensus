@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Armchair, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
+import { Armchair, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FloppyDisk, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
 import { createDesignBrief, deserializeDesignBrief, normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
@@ -44,7 +44,7 @@ import {
   resolveExperienceStyle,
   withExperienceStyle,
 } from './domain/experience-style.js';
-import { ExperienceDirectionsPage, ExperienceLandingPage } from './DesignDirections.jsx';
+import { ExperienceDirectionsPage, ExperienceLandingPage, ExperienceNav } from './DesignDirections.jsx';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -529,6 +529,76 @@ function ScenePlan({ sceneModel = scene, mode, onModeChange, selection, onSelect
     </nav>}
     {!compact && <div className="plan__scale" aria-hidden="true"><span>1:50</span><span>单位：mm</span></div>}
   </div>;
+}
+
+function ProjectPlanPreview({ mode = 'overlay', label }) {
+  return <div className="project-plan-preview" inert>
+    <ScenePlan sceneModel={scene} mode={mode} onModeChange={() => {}} selection={null} onSelect={() => {}} showModeRail={false} compact />
+    <span>{label}</span>
+  </div>;
+}
+
+function ProjectsPage() {
+  const dialogRef = useRef(null);
+  const [newProjectNotice, setNewProjectNotice] = useState(false);
+
+  const openProject = useCallback(() => {
+    const dialog = dialogRef.current;
+    if (!dialog?.open) dialog?.showModal();
+    window.history.replaceState({}, '', '/projects?project=demo');
+  }, []);
+
+  const closeProject = useCallback(() => {
+    dialogRef.current?.close();
+    window.history.replaceState({}, '', '/projects');
+  }, []);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('project') === 'demo') openProject();
+  }, [openProject]);
+
+  return <main className="experience-shell project-library" data-page="projects">
+    <ExperienceNav projects />
+    <section className="project-library__content" aria-labelledby="projects-title">
+      <header className="project-library__heading">
+        <div><p className="experience-kicker">你的空间方案</p><h1 id="projects-title">我的设计</h1></div>
+        <p>继续已有方案，或者从一份户型资料开始。</p>
+      </header>
+
+      <div className="project-library__grid">
+        <button className="project-tile project-tile--demo" type="button" onClick={openProject}>
+          <ProjectPlanPreview label="示例住宅 · 装修布局" />
+          <span className="project-tile__body"><span><small>示例项目</small><b>城市三口之家</b></span><span className="project-status">方案讨论中</span></span>
+          <span className="project-tile__meta"><span>7 个空间</span><span>当前版本 V4</span><ArrowRight size={17} aria-hidden="true" /></span>
+        </button>
+
+        <button className="project-tile project-tile--new" type="button" onClick={() => setNewProjectNotice(true)}>
+          <span className="project-tile__add"><Plus size={24} weight="regular" aria-hidden="true" /></span>
+          <span><b>新建项目</b><small>从户型图或 Demo 户型开始</small></span>
+        </button>
+      </div>
+
+      {newProjectNotice && <div className="project-library__notice" role="status"><span>下一步将从户型资料开始。</span><button type="button" onClick={() => setNewProjectNotice(false)} aria-label="关闭提示"><X size={15} /></button></div>}
+    </section>
+
+    <dialog className="project-detail" ref={dialogRef} onClose={() => window.history.replaceState({}, '', '/projects')} onClick={(event) => { if (event.target === event.currentTarget) closeProject(); }}>
+      <div className="project-detail__sheet">
+        <header><div><p className="experience-kicker">示例项目</p><h2>城市三口之家</h2></div><button type="button" onClick={closeProject} aria-label="关闭项目详情"><X size={19} /></button></header>
+        <div className="project-detail__visuals">
+          <ProjectPlanPreview mode="cad" label="2D 户型图" />
+          <ProjectPlanPreview mode="overlay" label="装修预览" />
+        </div>
+        <dl className="project-detail__facts">
+          <div><dt>户型</dt><dd>三室两厅一厨一卫</dd></div>
+          <div><dt>建筑范围</dt><dd>11,000 × 8,000 mm</dd></div>
+          <div><dt>空间</dt><dd>{scene.rooms.length} 个</dd></div>
+          <div><dt>当前版本</dt><dd>V4</dd></div>
+          <div><dt>当前阶段</dt><dd>方案讨论</dd></div>
+        </dl>
+        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><span className="project-detail__enter" aria-disabled="true">进入项目 <ArrowRight size={16} aria-hidden="true" /></span></footer>
+      </div>
+    </dialog>
+  </main>;
 }
 
 function findEntity(sceneModel, selection) {
@@ -2082,6 +2152,8 @@ export default function App() {
   const isLabRoute = pathname.startsWith('/lab/scene');
   const page = pathname === '/' || pathname === '/index.html'
     ? <ExperienceLandingPage />
+    : pathname.startsWith('/projects')
+      ? <ProjectsPage />
     : pathname === '/directions'
       ? <ExperienceDirectionsPage />
       : pathname.startsWith('/project/demo')
@@ -2103,6 +2175,8 @@ export default function App() {
       ? '设计师复核 · 欧派 AI 共识工作台'
       : pathname.startsWith('/handoff/')
         ? '共识交接单 · 欧派 AI 共识工作台'
+        : pathname.startsWith('/projects')
+          ? '我的设计 · 欧派共创空间'
         : pathname === '/directions'
           ? '设计方向 · 欧派 AI 共识工作台'
           : pathname === '/' || pathname === '/index.html'
