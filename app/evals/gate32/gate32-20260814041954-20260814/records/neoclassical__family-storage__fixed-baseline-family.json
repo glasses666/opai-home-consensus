@@ -1,0 +1,336 @@
+{
+  "id": "neoclassical__family-storage__fixed-baseline-family",
+  "styleId": "neoclassical",
+  "variantId": "family-storage",
+  "layoutId": "fixed-baseline-family",
+  "layoutKind": "fixed",
+  "layoutSeed": null,
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider",
+  "providerTrace": {
+    "overview": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673762446809337106"
+    },
+    "rooms": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673762744163912995"
+    },
+    "decisions": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673762977090161860"
+    }
+  },
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"neoclassical\",\"names\":{\"zh\":\"新古典主义\",\"en\":\"Neoclassical\"},\"sourceIds\":[\"met-neoclassicism\"],\"characteristics\":{\"layout\":\"中轴、对称、比例秩序\",\"palette\":[\"象牙白\",\"浅灰\",\"浅蓝\",\"少量金\"],\"materials\":[\"石膏\",\"大理石\",\"深浅木\"],\"envelope\":[\"柱式\",\"壁柱\",\"檐口\",\"护墙板\"],\"furniture\":[\"正式端正\",\"古典轮廓\"],\"lighting\":[\"中心吊灯\",\"成对壁灯\"],\"methods\":[\"精确线脚与模数\"],\"avoid\":[\"小尺度空间使用过重柱式\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-baseline-family\",\"residentRequest\":\"两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"priority:durability\",\"text\":\"耐用性优先\"},{\"id\":\"priority:maintainability\",\"text\":\"易维护性优先\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力优先\"},{\"id\":\"priority:clear-circulation\",\"text\":\"通畅动线优先\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 07 共 7 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：01=room-primary-bedroom，02=room-bathroom，03=room-flex，04=room-hall，05=room-living-dining，06=room-kitchen，07=room-entry。不得省略任何房间或字段。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"neoclassical\",\"names\":{\"zh\":\"新古典主义\",\"en\":\"Neoclassical\"},\"sourceIds\":[\"met-neoclassicism\"],\"characteristics\":{\"layout\":\"中轴、对称、比例秩序\",\"palette\":[\"象牙白\",\"浅灰\",\"浅蓝\",\"少量金\"],\"materials\":[\"石膏\",\"大理石\",\"深浅木\"],\"envelope\":[\"柱式\",\"壁柱\",\"檐口\",\"护墙板\"],\"furniture\":[\"正式端正\",\"古典轮廓\"],\"lighting\":[\"中心吊灯\",\"成对壁灯\"],\"methods\":[\"精确线脚与模数\"],\"avoid\":[\"小尺度空间使用过重柱式\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-baseline-family\",\"residentRequest\":\"两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"priority:durability\",\"text\":\"耐用性优先\"},{\"id\":\"priority:maintainability\",\"text\":\"易维护性优先\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力优先\"},{\"id\":\"priority:clear-circulation\",\"text\":\"通畅动线优先\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@02##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@03##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@04##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@05##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@06##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@07##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据，四个依据槽位合计必须覆盖全部住户事实短码。空间依据必须含 X001；墙地顶依据必须含 X002、X003、X004 之一；家具依据必须含 X005；照明依据必须含 X006。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:neoclassical:layout, X002=style:neoclassical:palette, X003=style:neoclassical:materials, X004=style:neoclassical:envelope, X005=style:neoclassical:furniture, X006=style:neoclassical:lighting, X007=style:neoclassical:methods, X008=style:neoclassical:avoid, X009=brief:household:two-adults-one-child, X010=brief:priority:durability, X011=brief:priority:maintainability, X012=brief:priority:storage, X013=brief:priority:clear-circulation, X014=room:room-primary-bedroom, X015=room:room-bathroom, X016=room:room-flex, X017=room:room-hall, X018=room:room-living-dining, X019=room:room-kitchen, X020=room:room-entry, X021=rule:deterministic:object-collision, X022=rule:rule-bedside-600, X023=rule:rule-cabinet-front-900, X024=rule:rule-child-activity-clearance, X025=rule:rule-fixed-equipment-wall-relation, X026=rule:rule-kitchen-aisle-1000, X027=rule:rule-main-circulation-900, X028=rule:rule-opening-clearance, X029=rule:rule-room-boundary, X030=rule:rule-tall-storage-anchored, X031=rule:rule-tv-distance-1800-3600。必须覆盖的住户事实短码：X009, X010, X011, X012, X013。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"neoclassical\",\"names\":{\"zh\":\"新古典主义\",\"en\":\"Neoclassical\"},\"sourceIds\":[\"met-neoclassicism\"],\"characteristics\":{\"layout\":\"中轴、对称、比例秩序\",\"palette\":[\"象牙白\",\"浅灰\",\"浅蓝\",\"少量金\"],\"materials\":[\"石膏\",\"大理石\",\"深浅木\"],\"envelope\":[\"柱式\",\"壁柱\",\"檐口\",\"护墙板\"],\"furniture\":[\"正式端正\",\"古典轮廓\"],\"lighting\":[\"中心吊灯\",\"成对壁灯\"],\"methods\":[\"精确线脚与模数\"],\"avoid\":[\"小尺度空间使用过重柱式\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"fixed-baseline-family\",\"residentRequest\":\"两位成人和一名儿童共同居住，重视耐用、易维护、收纳和通畅动线。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:two-adults-one-child\",\"text\":\"住户为两位成人和一名儿童\"},{\"id\":\"priority:durability\",\"text\":\"耐用性优先\"},{\"id\":\"priority:maintainability\",\"text\":\"易维护性优先\"},{\"id\":\"priority:storage\",\"text\":\"收纳能力优先\"},{\"id\":\"priority:clear-circulation\",\"text\":\"通畅动线优先\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673762446809337106"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##新古典Family收纳规划@@02##以新古典端庄对称语汇回应两位成人与一名儿童的实用主义收纳需求@@03##两位成人与一名儿童同住；收纳能力优先；耐用与易维护优先；通畅动线优先@@04##全屋嵌入式与高柜布置优先，降低地面零散储物占比；弹性房与起居承担家庭核心收纳；地面材料以耐磨石材为主@@05##弹性房与过厅作为主要通行枢纽；起居至餐厨保持视线与动线连贯；门扇开合方向维持日常行进流畅@@06##主卧与卫浴之间设置收纳柜体作为私密缓冲；弹性房与过厅通过软装区分功能区域@@07##新古典的比例秩序贯穿全屋；各房间保留足够通道宽度与家具活动余地；不压缩原有功能区尺度@@08##新古典护墙板与石膏线框布局墙面；局部装饰点缀；留白保持新古典的典雅与呼吸感@@09##浅色系石材或仿石砖通铺；耐刮擦且易清洁；色彩与新古典浅灰象牙白基调呼应@@10##白色石膏与线脚装饰顶面；层次分明；新古典檐口细节强化整体仪式感@@11##保留全部原建门窗与隔断不变；固定安装关系一律标注待专业复核@@12##全屋家具布置遵循轴线对称原则；主卧与弹性房的床尾与对面墙保持适当间距；沙发区与餐区保持行进通畅@@13##新古典轮廓家具为主；布艺与皮革软装点缀温润家庭感；对称壁灯与框镜呼应整体风格@@14##避免过度装饰或不符合比例的古典柱式；避免零散储物堆放破坏新古典仪式感；避免不符合风格的现代单品@@15##充分利用原建落地窗与门扇开口；确保窗帘与窗扇开合无遮挡；引入自然光营造新古典光影层次@@16##主灯与辅助照明层次分明；中心吊灯提供整体氛围光；壁灯与台灯补充功能照明@@17##灯具安装角度避开门窗主视线；选用磨砂灯罩降低眩光；易清洁材质优先@@18##象牙白||浅灰||浅蓝||少量金@@19##石膏||大理石||深浅木||浅色石材@@20##石膏线脚定期检查||木作出漆面养护||石材表面密封处理@@21##全屋高柜与嵌入式柜体构成主体收纳系统；起居区电视柜与书柜分担家庭杂物；弹性房与主卧承担主要衣物与私人物品存储；厨房高柜与地柜提供餐厨用品储放；儿童物品就近弹性房布置；全屋收纳最大化利用垂直空间@@22##弹性房||主卧||起居餐厅||厨房||卫浴||过厅||入户"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673762744163912995"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧套房，两位成人就寝与私密起居，古典比例秩序##墙地顶以石膏线脚与檐口收边，中心对称布置，墙面施以浅暖调乳胶漆，地面铺设深浅木人字拼##衣柜与斗柜均靠墙布置，留出床侧与床尾完整动线，衣柜采用平板门形式减少凹凸##中心吊灯为空间主光源，床侧配对壁灯提供就寝照明，整体层次分明@@02##卫浴空间，满足日常盥洗与如厕，注重防潮耐用##墙地顶通铺浅色瓷砖或仿大理石纹砖，墙裙至腰线处设横向分缝增强比例感##台盆柜为固定收纳主体，配合镜柜增加收纳层次，地砖维持防滑功能待专业复核##主灯加镜前灯组合，布光均匀满足盥洗需求@@03##弹性多功能室，可作儿童活动、书房或临时卧房##顶面与墙面处理与主卧一致，保持新古典比例与线脚，地面通铺木地板便于儿童活动##沿墙布置书桌与书架，靠窗采光处预留大面积活动空地##主灯加台灯组合，光线柔和可调节以适应不同使用场景@@04##过厅走廊，串联各功能区，保持动线通畅##墙面以护墙板或横向线脚统一处理，形成连续韵律感##沿墙不添置大型储物，保持通道净宽，余量空间可设窄幅边几##壁灯或嵌入式筒灯提供均匀通过照明@@05##客餐厅一体，家庭核心起居与聚餐空间##立面设置柱式或壁柱界定客厅与餐厅区域，墙面以浅灰或浅蓝调乳胶漆为主，地面通铺木地板##电视柜与餐边柜均采用平板门或带框门形式，成套餐桌椅呼应古典比例##客厅中心吊灯加餐厅吊灯分区照明，沙发侧设壁灯提供阅读照明@@06##厨房烹饪空间，注重防油污与清洁便捷##墙地顶选用浅色瓷砖或石材，墙面上部至吊柜下方设瓷砖防溅区，地面防滑待专业复核##固定橱柜提供主要收纳与操作台面，吊柜与地柜组合提升收纳密度##顶灯加操作台上方补充照明，整体亮度充足@@07##入户玄关，承担换鞋、收纳与迎宾功能##墙面设对称护墙板或线脚，地面铺设瓷砖或石材落尘区便于清洁##鞋柜靠墙布置，柜门采用平板或框形门，柜顶可陈设装饰摆件##入口门侧配对壁灯或嵌入式顶灯，照亮换鞋与迎宾区域"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673762977090161860"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##以主卧为家庭核心睡眠区，弹性房兼顾儿童成长与收纳需求，过厅与起居餐厅保证一家人通畅活动动线@@02##X001||X009||X012||X013@@03##家庭成员共用空间需在收纳功能与儿童活动场地之间保持平衡，无法同时做到全开放与全封闭储物；收纳墙柜占据的面积会压缩起居活动范围@@04##新古典主义雅致灰白调为全屋底色，墙面使用浅暖白乳胶漆，地面使用浅灰大理石纹瓷砖；全屋通顶门板及窗套采用象牙白调@@05##X002||X003||X009||X010||X011@@06##大理石纹瓷砖采购与铺贴成本较高，且浅色地面需经常清洁维护；浅色主调在儿童频繁活动的家庭中易显旧@@07##全屋使用正式端正、具古典轮廓的品质实木或实木复合家具，主卧配置整体衣帽收纳柜，儿童房使用可成长型书桌与悬浮书架@@08##X005||X009||X010||X012||X013@@09##定制整体收纳柜成本显著高于标准成品柜，且固定安装关系需待专业复核；可成长型家具随儿童年龄变化需逐步更换，产生后续追加投入@@10##主卧采用中心吊灯加床头成对壁灯，弹性房使用简洁吸顶灯加书桌区域辅助灯，起居区采用中心吊灯配合嵌入式天花灯带@@11##X006||X002||X012||X013@@12##新古典中心吊灯本身价格较高，客厅与餐厅各配一只形成全屋呼应，但吊灯清洁维护较困难，需定期专业保养"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    }
+  ],
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.21",
+    "planKind": "standard_master_plan",
+    "styleId": "neoclassical",
+    "variantOf": null,
+    "title": "新古典Family收纳规划",
+    "designIntent": "以新古典端庄对称语汇回应两位成人与一名儿童的实用主义收纳需求",
+    "briefResponse": {
+      "briefId": "fixed-baseline-family",
+      "acknowledgedFactIds": [
+        "household:two-adults-one-child",
+        "priority:durability",
+        "priority:maintainability",
+        "priority:storage",
+        "priority:clear-circulation"
+      ],
+      "unresolvedInputIds": [],
+      "resolutionNote": "两位成人与一名儿童同住；收纳能力优先；耐用与易维护优先；通畅动线优先"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "met-neoclassicism"
+      ],
+      "caseIds": [],
+      "layoutAnchor": "中轴、对称、比例秩序",
+      "paletteAnchors": [
+        "象牙白",
+        "浅灰",
+        "浅蓝"
+      ],
+      "materialAnchors": [
+        "石膏",
+        "大理石",
+        "深浅木"
+      ],
+      "avoidAnchors": [
+        "小尺度空间使用过重柱式"
+      ]
+    },
+    "spatialPlan": {
+      "wholeHome": "全屋嵌入式与高柜布置优先，降低地面零散储物占比；弹性房与起居承担家庭核心收纳；地面材料以耐磨石材为主",
+      "circulation": "弹性房与过厅作为主要通行枢纽；起居至餐厨保持视线与动线连贯；门扇开合方向维持日常行进流畅",
+      "privacy": "主卧与卫浴之间设置收纳柜体作为私密缓冲；弹性房与过厅通过软装区分功能区域",
+      "scaleFit": "新古典的比例秩序贯穿全屋；各房间保留足够通道宽度与家具活动余地；不压缩原有功能区尺度",
+      "rooms": [
+        {
+          "roomId": "room-primary-bedroom",
+          "intent": "主卧套房，两位成人就寝与私密起居，古典比例秩序",
+          "envelope": "墙地顶以石膏线脚与檐口收边，中心对称布置，墙面施以浅暖调乳胶漆，地面铺设深浅木人字拼",
+          "furnitureAndStorage": "衣柜与斗柜均靠墙布置，留出床侧与床尾完整动线，衣柜采用平板门形式减少凹凸",
+          "lighting": "中心吊灯为空间主光源，床侧配对壁灯提供就寝照明，整体层次分明",
+          "existingRefs": [
+            "object-primary-bed",
+            "object-primary-wardrobe",
+            "object-primary-feature-wall"
+          ]
+        },
+        {
+          "roomId": "room-bathroom",
+          "intent": "卫浴空间，满足日常盥洗与如厕，注重防潮耐用",
+          "envelope": "墙地顶通铺浅色瓷砖或仿大理石纹砖，墙裙至腰线处设横向分缝增强比例感",
+          "furnitureAndStorage": "台盆柜为固定收纳主体，配合镜柜增加收纳层次，地砖维持防滑功能待专业复核",
+          "lighting": "主灯加镜前灯组合，布光均匀满足盥洗需求",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-flex",
+          "intent": "弹性多功能室，可作儿童活动、书房或临时卧房",
+          "envelope": "顶面与墙面处理与主卧一致，保持新古典比例与线脚，地面通铺木地板便于儿童活动",
+          "furnitureAndStorage": "沿墙布置书桌与书架，靠窗采光处预留大面积活动空地",
+          "lighting": "主灯加台灯组合，光线柔和可调节以适应不同使用场景",
+          "existingRefs": [
+            "object-flex-bed",
+            "object-flex-desk",
+            "object-flex-floating-shelf"
+          ]
+        },
+        {
+          "roomId": "room-hall",
+          "intent": "过厅走廊，串联各功能区，保持动线通畅",
+          "envelope": "墙面以护墙板或横向线脚统一处理，形成连续韵律感",
+          "furnitureAndStorage": "沿墙不添置大型储物，保持通道净宽，余量空间可设窄幅边几",
+          "lighting": "壁灯或嵌入式筒灯提供均匀通过照明",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-living-dining",
+          "intent": "客餐厅一体，家庭核心起居与聚餐空间",
+          "envelope": "立面设置柱式或壁柱界定客厅与餐厅区域，墙面以浅灰或浅蓝调乳胶漆为主，地面通铺木地板",
+          "furnitureAndStorage": "电视柜与餐边柜均采用平板门或带框门形式，成套餐桌椅呼应古典比例",
+          "lighting": "客厅中心吊灯加餐厅吊灯分区照明，沙发侧设壁灯提供阅读照明",
+          "existingRefs": [
+            "object-sofa",
+            "object-tv-console",
+            "object-dining-table",
+            "object-living-slat-partition"
+          ]
+        },
+        {
+          "roomId": "room-kitchen",
+          "intent": "厨房烹饪空间，注重防油污与清洁便捷",
+          "envelope": "墙地顶选用浅色瓷砖或石材，墙面上部至吊柜下方设瓷砖防溅区，地面防滑待专业复核",
+          "furnitureAndStorage": "固定橱柜提供主要收纳与操作台面，吊柜与地柜组合提升收纳密度",
+          "lighting": "顶灯加操作台上方补充照明，整体亮度充足",
+          "existingRefs": [
+            "object-kitchen-counter"
+          ]
+        },
+        {
+          "roomId": "room-entry",
+          "intent": "入户玄关，承担换鞋、收纳与迎宾功能",
+          "envelope": "墙面设对称护墙板或线脚，地面铺设瓷砖或石材落尘区便于清洁",
+          "furnitureAndStorage": "鞋柜靠墙布置，柜门采用平板或框形门，柜顶可陈设装饰摆件",
+          "lighting": "入口门侧配对壁灯或嵌入式顶灯，照亮换鞋与迎宾区域",
+          "existingRefs": [
+            "object-shoe-cabinet"
+          ]
+        }
+      ]
+    },
+    "renovationPlan": {
+      "walls": "新古典护墙板与石膏线框布局墙面；局部装饰点缀；留白保持新古典的典雅与呼吸感",
+      "floors": "浅色系石材或仿石砖通铺；耐刮擦且易清洁；色彩与新古典浅灰象牙白基调呼应",
+      "ceilings": "白色石膏与线脚装饰顶面；层次分明；新古典檐口细节强化整体仪式感",
+      "fixedAndOpenings": "保留全部原建门窗与隔断不变；固定安装关系一律标注待专业复核"
+    },
+    "furniturePlan": {
+      "placementAndScale": "全屋家具布置遵循轴线对称原则；主卧与弹性房的床尾与对面墙保持适当间距；沙发区与餐区保持行进通畅",
+      "softFurnishings": "新古典轮廓家具为主；布艺与皮革软装点缀温润家庭感；对称壁灯与框镜呼应整体风格",
+      "avoid": "避免过度装饰或不符合比例的古典柱式；避免零散储物堆放破坏新古典仪式感；避免不符合风格的现代单品"
+    },
+    "lightingPlan": {
+      "daylight": "充分利用原建落地窗与门扇开口；确保窗帘与窗扇开合无遮挡；引入自然光营造新古典光影层次",
+      "layers": "主灯与辅助照明层次分明；中心吊灯提供整体氛围光；壁灯与台灯补充功能照明",
+      "glareAndMaintenance": "灯具安装角度避开门窗主视线；选用磨砂灯罩降低眩光；易清洁材质优先"
+    },
+    "materialPlan": {
+      "palette": [
+        "象牙白",
+        "浅灰",
+        "浅蓝",
+        "少量金"
+      ],
+      "materials": [
+        "石膏",
+        "大理石",
+        "深浅木",
+        "浅色石材"
+      ],
+      "maintenance": [
+        "石膏线脚定期检查",
+        "木作出漆面养护",
+        "石材表面密封处理"
+      ]
+    },
+    "storagePlan": {
+      "wholeHome": "全屋高柜与嵌入式柜体构成主体收纳系统；起居区电视柜与书柜分担家庭杂物；弹性房与主卧承担主要衣物与私人物品存储；厨房高柜与地柜提供餐厨用品储放；儿童物品就近弹性房布置；全屋收纳最大化利用垂直空间",
+      "roomPriorities": [
+        "弹性房",
+        "主卧",
+        "起居餐厅",
+        "厨房",
+        "卫浴",
+        "过厅",
+        "入户"
+      ]
+    },
+    "designDecisions": {
+      "spatial": {
+        "decision": "以主卧为家庭核心睡眠区，弹性房兼顾儿童成长与收纳需求，过厅与起居餐厅保证一家人通畅活动动线",
+        "basisIds": [
+          "style:neoclassical:layout",
+          "brief:household:two-adults-one-child",
+          "brief:priority:storage",
+          "brief:priority:clear-circulation"
+        ],
+        "tradeoff": "家庭成员共用空间需在收纳功能与儿童活动场地之间保持平衡，无法同时做到全开放与全封闭储物；收纳墙柜占据的面积会压缩起居活动范围"
+      },
+      "envelope": {
+        "decision": "新古典主义雅致灰白调为全屋底色，墙面使用浅暖白乳胶漆，地面使用浅灰大理石纹瓷砖；全屋通顶门板及窗套采用象牙白调",
+        "basisIds": [
+          "style:neoclassical:palette",
+          "style:neoclassical:materials",
+          "brief:household:two-adults-one-child",
+          "brief:priority:durability",
+          "brief:priority:maintainability"
+        ],
+        "tradeoff": "大理石纹瓷砖采购与铺贴成本较高，且浅色地面需经常清洁维护；浅色主调在儿童频繁活动的家庭中易显旧"
+      },
+      "furniture": {
+        "decision": "全屋使用正式端正、具古典轮廓的品质实木或实木复合家具，主卧配置整体衣帽收纳柜，儿童房使用可成长型书桌与悬浮书架",
+        "basisIds": [
+          "style:neoclassical:furniture",
+          "brief:household:two-adults-one-child",
+          "brief:priority:durability",
+          "brief:priority:storage",
+          "brief:priority:clear-circulation"
+        ],
+        "tradeoff": "定制整体收纳柜成本显著高于标准成品柜，且固定安装关系需待专业复核；可成长型家具随儿童年龄变化需逐步更换，产生后续追加投入"
+      },
+      "lighting": {
+        "decision": "主卧采用中心吊灯加床头成对壁灯，弹性房使用简洁吸顶灯加书桌区域辅助灯，起居区采用中心吊灯配合嵌入式天花灯带",
+        "basisIds": [
+          "style:neoclassical:lighting",
+          "style:neoclassical:palette",
+          "brief:priority:storage",
+          "brief:priority:clear-circulation"
+        ],
+        "tradeoff": "新古典中心吊灯本身价格较高，客厅与餐厅各配一只形成全屋呼应，但吊灯清洁维护较困难，需定期专业保养"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 206042,
+  "completedAt": "2026-08-14T06:00:49.365Z"
+}

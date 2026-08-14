@@ -1,0 +1,23 @@
+{
+  "runId": "gate32-20260814081826-20260814",
+  "seed": "20260814",
+  "startedAt": "2026-08-14T08:18:26.598Z",
+  "promptVersion": "oppein-standard-master-plan-v1.21",
+  "inputContract": "gate31-segment-contract-v1",
+  "testMode": "black_box_service_retry_no_harness_adjustment",
+  "retryFrom": "/Users/dracoglasser/Documents/欧派家居/app/evals/gate32/gate32-20260814041954-20260814/report.json",
+  "retrySourceRunId": "gate32-20260814041954-20260814",
+  "styleCount": 28,
+  "variantCount": 3,
+  "layoutCount": 4,
+  "expectedCalls": 82,
+  "concurrency": 4,
+  "fixedLayoutIds": [
+    "fixed-baseline-family",
+    "fixed-family-flex-work"
+  ],
+  "randomLayoutIds": [
+    "random-1-20260814",
+    "random-2-20260814"
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "id": "moroccan__family-storage__random-1-20260814",
+  "styleId": "moroccan",
+  "variantId": "family-storage",
+  "layoutId": "random-1-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider_error",
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"moroccan\",\"names\":{\"zh\":\"摩洛哥风\",\"en\":\"Moroccan\"},\"sourceIds\":[\"met-moroccan-court\"],\"characteristics\":{\"layout\":\"围合、庭院、拱廊与低座交谈区\",\"palette\":[\"钴蓝\",\"绿\",\"赭红\",\"白\"],\"materials\":[\"zellige瓷砖\",\"雕花灰泥\",\"雪松\",\"黄铜\"],\"envelope\":[\"几何拼花\",\"马蹄拱\",\"雕刻墙面\"],\"furniture\":[\"低座\",\"木与皮革\"],\"lighting\":[\"穿孔金属灯影\"],\"methods\":[\"手工拼砖与雕刻\"],\"avoid\":[\"用印刷贴纸替代真实工艺\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 07 共 7 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：01=room-primary-bedroom，02=room-bathroom，03=room-flex，04=room-hall，05=room-living-dining，06=room-kitchen，07=room-entry。不得省略任何房间或字段。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"moroccan\",\"names\":{\"zh\":\"摩洛哥风\",\"en\":\"Moroccan\"},\"sourceIds\":[\"met-moroccan-court\"],\"characteristics\":{\"layout\":\"围合、庭院、拱廊与低座交谈区\",\"palette\":[\"钴蓝\",\"绿\",\"赭红\",\"白\"],\"materials\":[\"zellige瓷砖\",\"雕花灰泥\",\"雪松\",\"黄铜\"],\"envelope\":[\"几何拼花\",\"马蹄拱\",\"雕刻墙面\"],\"furniture\":[\"低座\",\"木与皮革\"],\"lighting\":[\"穿孔金属灯影\"],\"methods\":[\"手工拼砖与雕刻\"],\"avoid\":[\"用印刷贴纸替代真实工艺\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@02##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@03##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@04##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@05##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@06##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@07##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据，四个依据槽位合计必须覆盖全部住户事实短码。空间依据必须含 X001；墙地顶依据必须含 X002、X003、X004 之一；家具依据必须含 X005；照明依据必须含 X006。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:moroccan:layout, X002=style:moroccan:palette, X003=style:moroccan:materials, X004=style:moroccan:envelope, X005=style:moroccan:furniture, X006=style:moroccan:lighting, X007=style:moroccan:methods, X008=style:moroccan:avoid, X009=brief:household:one-adult-one-child, X010=brief:priority:quiet-privacy, X011=brief:site:limited-daylight, X012=room:room-primary-bedroom, X013=room:room-bathroom, X014=room:room-flex, X015=room:room-hall, X016=room:room-living-dining, X017=room:room-kitchen, X018=room:room-entry, X019=rule:deterministic:object-collision, X020=rule:rule-bedside-600, X021=rule:rule-cabinet-front-900, X022=rule:rule-child-activity-clearance, X023=rule:rule-fixed-equipment-wall-relation, X024=rule:rule-kitchen-aisle-1000, X025=rule:rule-main-circulation-900, X026=rule:rule-opening-clearance, X027=rule:rule-room-boundary, X028=rule:rule-tall-storage-anchored, X029=rule:rule-tv-distance-1800-3600。必须覆盖的住户事实短码：X009, X010, X011。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"moroccan\",\"names\":{\"zh\":\"摩洛哥风\",\"en\":\"Moroccan\"},\"sourceIds\":[\"met-moroccan-court\"],\"characteristics\":{\"layout\":\"围合、庭院、拱廊与低座交谈区\",\"palette\":[\"钴蓝\",\"绿\",\"赭红\",\"白\"],\"materials\":[\"zellige瓷砖\",\"雕花灰泥\",\"雪松\",\"黄铜\"],\"envelope\":[\"几何拼花\",\"马蹄拱\",\"雕刻墙面\"],\"furniture\":[\"低座\",\"木与皮革\"],\"lighting\":[\"穿孔金属灯影\"],\"methods\":[\"手工拼砖与雕刻\"],\"avoid\":[\"用印刷贴纸替代真实工艺\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：family-storage（家庭收纳与成长优先）。只在设计取舍上落实下列目标：优先保证家庭收纳、儿童活动和未来变化的弹性；不要把空间变成展厅，也不要改变固定户型事实。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673793423246609710"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##摩洛哥围合私密宅邸方案@@02##以围合庭院感为骨架，融入雕花灰泥与几何拼砖，回应安静私密与自然采光一般的场地条件@@03##一成人一儿童共居，收纳充足、儿童活动安全、成长弹性优先；设计围绕家庭生活展开，不改变房间边界与固定构件@@04##全屋围合格局引入低座交谈与穿孔金属灯影；儿童活动区与成人静区分离，收纳系统贯穿各空间@@05##洄游与静分区双线并存；儿童活动路径短而安全，成人静区避免穿越；入口与卧室保持视距缓冲@@06##入口与卧区设双层视觉缓冲；儿童活动区与书卧区各自独立；全屋利用低矮隔断与拱廊控制视线交汇@@07##低座区降低重心，营造围合亲切感；儿童安全区与成人静区比例约三比七；全屋尺度以人的停留为基准@@08##主卧背景墙延续雕花灰泥纹理，搭配几何分割线条；其余墙面以白色刮白为主，局部点缀摩洛哥镂空装饰@@09##客餐区采用防水防滑陶砖卧铺；卧区走廊以柔软地毯或羊毛毯收边；全屋不引入复杂拼花大板@@10##客厅卧室顶面保持简洁平顶；局部以木质横梁或浅色假梁点缀；配合穿孔金属吊灯形成光影层次@@11##固定电视柜、衣柜、玄关鞋柜、厨房台面及格栅隔断维持原位不变；格栅位置与尺度待专业复核@@12##全屋以低座沙发与木框架座椅为主；客厅餐厅座椅满足四人以上家庭用餐；儿童安全边角处理@@13##布艺以亚麻与羊毛为主，色系呼应钴蓝绿与赭红白；软装配饰点缀黄铜穿孔金属件与手工陶盘@@14##避免用印刷贴纸替代手工工艺；避免全屋密集花砖造成视觉疲劳；避免尖锐或不稳定儿童无法靠近的家具@@15##采光一般条件下，以浅色天花与镜面折射补充光感；落地窗处避免高大绿植遮挡主要光源@@16##三层照明布局：基础顶灯营造均亮氛围；低矮穿孔金属吊灯提供聚焦光影；床头与低座区补充漫射壁灯@@17##灯具避免直射人眼主要停留区；低矮吊灯设置于儿童无法触碰高度；灯具选型需便于日常维护更换@@18##钴蓝||绿||赭红||白@@19##zellige瓷砖||雕花灰泥||雪松木||黄铜@@20##雕花灰泥定期检查裂缝||瓷砖缝隙清洁||黄铜件抛光@@21##主卧衣柜与床尾收纳箱；儿童房灵活储物柜与床下抽屉；客厅电视柜与低座沙发底收纳；厨房台面与吊柜双重收纳；玄关鞋柜与墙面挂钩系统@@22##主卧衣柜||主卫洗漱与镜柜||儿童灵活柜||客厅低座底||厨房吊柜||玄关鞋柜"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673793699575106841"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##安静私密的成人休憩区兼顾未来变化弹性##几何纹样与白墙层次分明地面耐磨自然##衣柜固定收纳床区预留儿童活动边界##柔和暖光穿孔金属灯饰营造私密氛围@@02##私密清洁的卫浴空间##zellige瓷砖延续摩洛哥风地面防滑待专业复核##分区收纳满足家庭使用##防潮壁灯分区照明@@03##儿童成长与成人工作兼容的弹性空间##几何纹理融入简洁墙面层次##书桌与壁挂架可随成长调整##柔和工作光配合自然光优先@@04##私密引导的通行走廊##马蹄拱与几何纹理延续整体调性##嵌入式壁龛储物不占通行空间##序列穿孔灯柔和引导照明@@05##家庭共享与儿童活动兼容的灵活起居##几何拼花与马蹄拱呼应主体风格##低座沙发木茶几保留活动弹性边界##分层照明满足家庭与儿童活动场景@@06##安全储藏并重的家庭厨房##zellige防油瓷砖与白墙简洁##充足台面分区收纳待专业复核##功能照明覆盖操作区防潮待核@@07##家庭入口的私密缓冲玄关##马蹄拱与几何纹理呼应全屋主题##鞋柜固定收纳满足家庭日常##温暖引导光营造归家氛围"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673794138718047445"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##摩洛哥住宅美学概述：几何拼花与马蹄拱元素围合温暖生活场景@@02##通过围合布局与低座交谈区营造家庭亲密感，雕刻灰泥与手绘瓷砖呈现工艺价值@@03##针对一位成人与一名儿童的安静私密需求，在动静分区与材料声学舒适上同步回应@@04##全屋统一几何瓷砖语言，固定构件保留现状，按家庭收纳与成长弹性分区组织@@05##入口至客餐厅为主动线，动静区严格分离，儿童活动与成人休息互不干扰@@06##开放区与私密区通过格栅与矮座界定边界，卧室与书房保持声学私密@@07##尊重现有层高与洞口尺度，家具选型适配成人与儿童双尺度使用@@08##墙面以雕刻灰泥为主调，局部点缀几何瓷砖，避免印刷替代手工拼砖工艺@@09##客餐厅与卧室采用几何拼花地砖，卫生间用防水釉面砖，入口过渡用素色石板@@10##顶面维持原有高度，局部以低饱和石膏线装饰，不做复杂吊顶破坏层高@@11##全屋固定构件保留原位，电视柜与主卧衣柜仅做内部调整，格栅隔断固定不动@@12##沙发与餐桌按儿童安全圆角选型，低座茶几便于儿童使用，整体不超出固定洞口范围@@13##软装以手工织物与刺绣靠垫为主，选用温暖木色与皮革点缀，塑造家庭友好氛围@@14##避免印刷瓷砖贴纸、过度工业化纹样及破坏手工感的一切替代工艺@@15##自然采光有限时，全屋墙面统一浅色基底，最大限度漫反射现有光源@@16##环境光以黄铜穿孔灯与壁灯为主，层叠柔和光影；儿童区域增设柔和漫射辅灯@@17##灯具位置规避主卧床头与儿童活动区视线直击，玻璃罩选哑光处理待专业复核@@18##手工几何釉面砖||防水素色砖||浅色石膏||雕刻灰泥@@19##黄铜金属||雪松木||手工皮革||素色织物@@20##瓷砖定期清洁与勾缝||金属灯定期擦亮||木家具避免潮湿@@21##全屋统一分类收纳；客餐厅儿童玩具与家庭杂物分区隐藏；主卧成人与儿童衣物分层@@22##主卧优先||客厅次之||入口再次||厨房最后"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    }
+  ],
+  "error": {
+    "name": "LarkCliError",
+    "message": "TRANSPORT",
+    "retryable": true,
+    "evaluator": false,
+    "validationErrors": null,
+    "rawResponse": null,
+    "providerTrace": null
+  },
+  "validation": {
+    "ok": false,
+    "errors": [
+      {
+        "code": "TRANSPORT",
+        "path": "$"
+      }
+    ]
+  },
+  "plan": null,
+  "latencyMs": 246731,
+  "completedAt": "2026-08-14T08:02:27.414Z"
+}

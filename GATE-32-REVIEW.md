@@ -1,6 +1,6 @@
 # Gate 32 三重奏黑盒测试记录
 
-状态：数据采集、破绽分析和通用适配器调整完成；`v1.21` 已做跨风格抽样与装饰艺术端到端复验，尚未重跑全部 28 风格。
+状态：`v1.21` 完成 28 风格全量黑盒采集与一次服务失败重试；provider-only 仍未通过，未发布新基线。
 
 ## 测试合同
 
@@ -12,32 +12,27 @@
 
 ## 有效合并统计
 
-主批次：`app/evals/gate32/gate32-20260813175128-20260814/`
+主批次：`app/evals/gate32/gate32-20260814041954-20260814/`
+
+- 336 / 336 条记录，`provider` 通过 137 条，provider contract failure 117 条，服务失败 82 条，评测器异常 0 条。
+- 失败代码主要为 `SEGMENT_ROOM_SHAPE`（61）、`TRANSPORT`（63）、`SEGMENT_UNSUPPORTED_CLAIM`（27）、`SEGMENT_BRIEF_FACT_UNUSED`（21）和 `TIMEOUT`（13）。
 
 同一 seed 的服务失败重试批次：
 
-- `app/evals/gate32/gate32-20260814000946-20260814/`（69 条）
-- `app/evals/gate32/gate32-20260814002813-20260814/`（14 条）
+- `app/evals/gate32/gate32-20260814081826-20260814/`（82 条）
+- 重试后 `provider` 通过 18 条，provider contract failure 35 条，服务失败 29 条，评测器异常 0 条。
 
-以重试结果覆盖主批次中对应的 `provider_error` 后：
+以重试结果覆盖主批次中对应的 `provider_error` 后，当前有效口径为：
 
 | 结果 | 数量 |
 | --- | ---: |
-| 完整 provider 合同通过 | 49 |
-| provider 合同失败 | 284 |
-| 仍为服务层传输失败 | 3 |
+| 完整 provider 合同通过 | 155 |
+| provider 合同失败 | 152 |
+| 仍为服务层失败 | 29 |
 | 评测器异常 | 0 |
 | 总调用 | 336 |
 
-通过数按变体：`balanced` 20，`budget-maintenance` 18，`family-storage` 11。
-
-通过数按布局：`fixed-baseline-family` 6，`fixed-family-flex-work` 7，`random-1-20260814` 16，`random-2-20260814` 20。
-
-剩余 3 条服务失败已单独保留原始记录，不计入模型能力判断：
-
-- `brutalist__family-storage__fixed-baseline-family`
-- `industrial__budget-maintenance__fixed-baseline-family`
-- `minimalist__family-storage__random-1-20260814`
+重试转换：82 条服务失败中，18 条恢复为 provider pass，35 条在可用响应后暴露为 provider contract failure，29 条仍为服务失败。服务失败不被计入模型能力判断，契约失败不被重试掩盖。
 
 ## 证据目录
 
@@ -63,7 +58,7 @@
 - 适配器只归一化可证明无损的差异：换行或相邻数字记录、列表分隔符、每房间四字段分组、字段误用 `@@`、决策依据分隔符，以及明确否定语境中的禁用词。缺字段、超额记录、自造依据、真实结构/施工承诺仍失败。
 - 北欧同 seed 12 条：`v1.18` 为 5 / 12，`v1.19` 为 4 / 12，`v1.20` 为 9 / 12；`v1.20` 剩余错误均为真实内容缺失。
 - `v1.20` 跨风格抽样：北欧 9 / 12、装饰艺术 5 / 12、新中式 6 / 12、巴厘热带 4 / 12。48 条中 24 条完整通过；离线重放到 `v1.21` 后另有 8 个先前失败片段可无损通过，但因原运行在首个失败片段即停止，不能把它们宣称为完整目标通过。
-- `v1.21` 装饰艺术 fresh 端到端复验为 9 / 12：9 条完整 provider 合同通过，2 条真实合同失败，1 条 `AILY_RESPONSE_INVALID`；该服务失败按规则重试一次后仍失败。
+- `v1.21` 全量 fresh 端到端复验为 336 条：首轮 137 条 provider 合同通过；一次服务失败重试后累计 155 条通过，仍有 152 条 provider contract failure 和 29 条服务失败。该结果证明 v1.21 还不能作为全风格发布基线。
 
 关键候选证据：
 
@@ -76,4 +71,4 @@
 
 ## 当前边界
 
-`v1.21` 是经过代表风格验证的候选 Harness，不是新的 28 风格发布基线。`standard-design-plans-v2.json` 仍是历史 `v1.16` provider 证据；在完整 28 风格 fresh 重跑前，不更新该发布文件，也不宣称所有风格已通过。
+`v1.21` 是完成全量采集但 provider-only 未通过的候选 Harness，不是新的 28 风格发布基线。`standard-design-plans-v2.json` 仍是历史 `v1.16` provider 证据；在分析这批真实失败并完成必要的通用调整、再通过新的 provider-only 门槛前，不更新该发布文件，也不宣称所有风格已通过。

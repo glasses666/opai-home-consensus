@@ -1,0 +1,344 @@
+{
+  "id": "french-provincial__balanced__random-1-20260814",
+  "styleId": "french-provincial",
+  "variantId": "balanced",
+  "layoutId": "random-1-20260814",
+  "layoutKind": "random",
+  "layoutSeed": "20260814",
+  "attempt": 2,
+  "serviceRetries": 1,
+  "source": "provider",
+  "providerTrace": {
+    "overview": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673765808456633610"
+    },
+    "rooms": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673766263558442197"
+    },
+    "decisions": {
+      "provider": "aily_team",
+      "agentId": "agent_4kt39w75byxw5cf",
+      "chatId": "7673766522284199214"
+    }
+  },
+  "prompts": {
+    "overview": "你是住宅设计规划 Agent。只完成标准母方案的 overview 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格保留 01 至 22 的数字键，每条记录只有“数字键##内容”两个字段。01标题；02设计意图；03需求回应；04全屋策略；05动线；06私密；07尺度；08墙面；09地面；10顶面；11固定构件与洞口；12家具尺度与布置；13软装；14规避项；15自然光；16照明层次；17眩光与维护；18色板列表；19材料列表；20维护列表；21全屋收纳；22房间收纳优先级列表。01 至 17 及 21 每项二十至四十个汉字；18、19、20、22 各写二至四个短项，用 || 分隔，其他值不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"french-provincial\",\"names\":{\"zh\":\"法式乡村\",\"en\":\"French Provincial\"},\"sourceIds\":[\"ad-french-country\"],\"characteristics\":{\"layout\":\"松弛乡村骨架加精致焦点\",\"palette\":[\"奶油\",\"浅黄\",\"浅蓝\",\"鼠尾草绿\"],\"materials\":[\"旧木\",\"石\",\"亚麻\",\"棉\"],\"envelope\":[\"木梁\",\"石地或旧木地\"],\"furniture\":[\"弧线\",\"cabriole腿\",\"做旧柜\"],\"lighting\":[\"枝形吊灯\",\"布罩壁灯\"],\"methods\":[\"刷漆木作\",\"toile与小花纹\"],\"avoid\":[\"过度甜美或假做旧\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>@@13##<填写内容>@@14##<填写内容>@@15##<填写内容>@@16##<填写内容>@@17##<填写内容>@@18##<填写内容>@@19##<填写内容>@@20##<填写内容>@@21##<填写内容>@@22##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "rooms": "你是住宅设计规划 Agent。只完成标准母方案的 rooms 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 07 共 7 条房间记录。每条必须恰好五个字段：数字键##空间意图##墙地顶方向##家具与收纳##照明方向。房间顺序为：01=room-primary-bedroom，02=room-bathroom，03=room-flex，04=room-hall，05=room-living-dining，06=room-kitchen，07=room-entry。不得省略任何房间或字段。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n\n上下文：{\"style\":{\"id\":\"french-provincial\",\"names\":{\"zh\":\"法式乡村\",\"en\":\"French Provincial\"},\"sourceIds\":[\"ad-french-country\"],\"characteristics\":{\"layout\":\"松弛乡村骨架加精致焦点\",\"palette\":[\"奶油\",\"浅黄\",\"浅蓝\",\"鼠尾草绿\"],\"materials\":[\"旧木\",\"石\",\"亚麻\",\"棉\"],\"envelope\":[\"木梁\",\"石地或旧木地\"],\"furniture\":[\"弧线\",\"cabriole腿\",\"做旧柜\"],\"lighting\":[\"枝形吊灯\",\"布罩壁灯\"],\"methods\":[\"刷漆木作\",\"toile与小花纹\"],\"avoid\":[\"过度甜美或假做旧\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@02##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@03##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@04##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@05##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@06##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>@@07##<空间意图>##<墙地顶方向>##<家具与收纳>##<照明方向>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。",
+    "decisions": "你是住宅设计规划 Agent。只完成标准母方案的 decisions 片段。\n只返回一个 JSON 对象，不要 Markdown，不要解释，不要调用工具。根对象只含 toolCalls 与 standardPlanSegment；toolCalls 必须是空数组。\nstandardPlanSegment 必须是一个单行字符串，不是数组或对象。用 @@ 分隔记录、## 分隔字段、|| 分隔列表项；内容不得包含这些分隔符。\n严格输出 01 至 12 的二字段数字槽位。01空间决定、02空间依据、03空间代价；04墙地顶决定、05墙地顶依据、06墙地顶代价；07家具决定、08家具依据、09家具代价；10照明决定、11照明依据、12照明代价。每个依据槽位只填二至四个短码，用 || 分隔；至少一个风格依据和一个事实依据，四个依据槽位合计必须覆盖全部住户事实短码。空间依据必须含 X001；墙地顶依据必须含 X002、X003、X004 之一；家具依据必须含 X005；照明依据必须含 X006。代价必须写真实取舍，不得写“暂无”。其他槽位不得含分隔符。\n不得改变房间边界、门窗、结构或机电；不得声称欧派 SKU、精确价格、BOM、工期、施工图、施工可行、结构/消防/机电合规或可生产安装。\nhouse 是当前住宅唯一事实来源。原型元素若不在 house 中，不得写成现状。错误或无法核验的住户前提只能作为待核验内容。\n不得新增、拆除或移动隔断。禁止颜色号、色温、照度、尺寸、防水层或防水高度、地漏、管线、燃气、烟机、锚固等施工细节。固定安装关系只写“待专业复核”。\n每个内容槽位只写一个简短方向，不列备选方案。除数字键和 X 短码外，填写内容不得出现阿拉伯数字。\n严格输出形状中的尖括号占位词、全大写占位词和 FACET、FACT_ID 必须全部替换，不得原样输出。每个文字值尽量不超过 40 个汉字。固定 roomId 与 area 由本地适配器按数字键注入；basisIds 只能从允许列表逐字复制。\n允许依据短码：X001=style:french-provincial:layout, X002=style:french-provincial:palette, X003=style:french-provincial:materials, X004=style:french-provincial:envelope, X005=style:french-provincial:furniture, X006=style:french-provincial:lighting, X007=style:french-provincial:methods, X008=style:french-provincial:avoid, X009=brief:household:one-adult-one-child, X010=brief:priority:quiet-privacy, X011=brief:site:limited-daylight, X012=room:room-primary-bedroom, X013=room:room-bathroom, X014=room:room-flex, X015=room:room-hall, X016=room:room-living-dining, X017=room:room-kitchen, X018=room:room-entry, X019=rule:deterministic:object-collision, X020=rule:rule-bedside-600, X021=rule:rule-cabinet-front-900, X022=rule:rule-child-activity-clearance, X023=rule:rule-fixed-equipment-wall-relation, X024=rule:rule-kitchen-aisle-1000, X025=rule:rule-main-circulation-900, X026=rule:rule-opening-clearance, X027=rule:rule-room-boundary, X028=rule:rule-tall-storage-anchored, X029=rule:rule-tv-distance-1800-3600。必须覆盖的住户事实短码：X009, X010, X011。依据槽位只能复制等号左侧短码，不能输出右侧长 ID，也不能自造短码。\n上下文：{\"style\":{\"id\":\"french-provincial\",\"names\":{\"zh\":\"法式乡村\",\"en\":\"French Provincial\"},\"sourceIds\":[\"ad-french-country\"],\"characteristics\":{\"layout\":\"松弛乡村骨架加精致焦点\",\"palette\":[\"奶油\",\"浅黄\",\"浅蓝\",\"鼠尾草绿\"],\"materials\":[\"旧木\",\"石\",\"亚麻\",\"棉\"],\"envelope\":[\"木梁\",\"石地或旧木地\"],\"furniture\":[\"弧线\",\"cabriole腿\",\"做旧柜\"],\"lighting\":[\"枝形吊灯\",\"布罩壁灯\"],\"methods\":[\"刷漆木作\",\"toile与小花纹\"],\"avoid\":[\"过度甜美或假做旧\"]}},\"referenceCases\":[],\"house\":{\"rooms\":[{\"id\":\"room-primary-bedroom\",\"name\":\"Primary Bedroom\",\"kind\":\"bedroom\"},{\"id\":\"room-bathroom\",\"name\":\"Bathroom\",\"kind\":\"bathroom\"},{\"id\":\"room-flex\",\"name\":\"Flex Bedroom Study\",\"kind\":\"bedroom-study\"},{\"id\":\"room-hall\",\"name\":\"Hall\",\"kind\":\"circulation\"},{\"id\":\"room-living-dining\",\"name\":\"Open Living Dining\",\"kind\":\"living-dining\"},{\"id\":\"room-kitchen\",\"name\":\"Kitchen\",\"kind\":\"kitchen\"},{\"id\":\"room-entry\",\"name\":\"Entry\",\"kind\":\"entry\"}],\"objects\":[{\"id\":\"object-primary-bed\",\"roomId\":\"room-primary-bedroom\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-primary-wardrobe\",\"roomId\":\"room-primary-bedroom\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-bed\",\"roomId\":\"room-flex\",\"category\":\"bed\",\"movable\":true},{\"id\":\"object-flex-desk\",\"roomId\":\"room-flex\",\"category\":\"desk\",\"movable\":true},{\"id\":\"object-sofa\",\"roomId\":\"room-living-dining\",\"category\":\"sofa\",\"movable\":true},{\"id\":\"object-tv-console\",\"roomId\":\"room-living-dining\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-dining-table\",\"roomId\":\"room-living-dining\",\"category\":\"dining-table\",\"movable\":true},{\"id\":\"object-kitchen-counter\",\"roomId\":\"room-kitchen\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-shoe-cabinet\",\"roomId\":\"room-entry\",\"category\":\"fixed-cabinet\",\"movable\":false},{\"id\":\"object-flex-floating-shelf\",\"roomId\":\"room-flex\",\"category\":\"wall-shelf\",\"movable\":false},{\"id\":\"object-living-slat-partition\",\"roomId\":\"room-living-dining\",\"category\":\"partition\",\"movable\":false},{\"id\":\"object-primary-feature-wall\",\"roomId\":\"room-primary-bedroom\",\"category\":\"feature-wall\",\"movable\":false}]},\"brief\":{\"id\":\"random-1-20260814\",\"residentRequest\":\"一位成人和一名儿童居住，希望安静和私密优先；自然采光一般。请基于当前固定户型给出方案，不改房间边界、门窗、结构或机电。\",\"knownFacts\":[{\"id\":\"household:one-adult-one-child\",\"text\":\"住户为一位成人和一名儿童\"},{\"id\":\"priority:quiet-privacy\",\"text\":\"安静与私密优先\"},{\"id\":\"site:limited-daylight\",\"text\":\"住宅自然采光一般\"}],\"unresolvedInputIds\":[]},\"fixedConstraints\":[\"keep room boundaries\",\"keep openings\",\"no structural or MEP changes\"]}\n严格输出形状：{\"toolCalls\":[],\"standardPlanSegment\":\"01##<填写内容>@@02##<填写内容>@@03##<填写内容>@@04##<填写内容>@@05##<填写内容>@@06##<填写内容>@@07##<填写内容>@@08##<填写内容>@@09##<填写内容>@@10##<填写内容>@@11##<填写内容>@@12##<填写内容>\"}\n本轮是 Gate 32 三重奏黑盒测试。当前变体：balanced（平衡取舍）。只在设计取舍上落实下列目标：在风格表达、耐用维护、收纳和通行动线之间做平衡，不让单一目标吞掉其他目标。\n同一风格、同一固定户型和当前家庭布局必须保持事实一致；不要输出 variant 字段，不要写工具，不要调用本地 Harness，不要把变体目标当成房屋现状。测试重点是观察你在不同家庭条件下是否会露出事实漂移、风格混淆、空泛模板或过度承诺。仍严格返回当前片段合同。"
+  },
+  "segmentRecords": [
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673765431672589578"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##法式乡野静居·法式乡村风格一成人一童安静私密方案@@02##以松弛乡野骨架为基调，缀以精致细部；奶油与鼠尾草绿为主调，旧木与做旧柜呼应，点缀布艺与小花纹，柔化采光一般的沉闷感，营造温润实用的法式静谧氛围@@03##安静私密优先：公私分区明确，儿童与成人各有独立私密区；自然采光一般：浅暖色调提亮，柔和布帘柔光；一成人一童：弹性活动与收纳并存；全屋保持固定边界与结构@@04##全屋以温暖自然材质为纽带，旧木、石质感与刷漆木作贯穿全屋；功能分区明确，公私过渡自然，收纳与动线平衡，不因单一目标偏废其他生活维度@@05##入户至起居餐厅至弹性房形成主要环线，视觉上以小花纹地毯或布艺界定功能区域；避开直视私密区的路径；通过门洞高度与家具布局自然分流@@06##以软材质层次与空间递进实现私密感，不依赖实体隔断；主卧与弹性房保持独立入口层级；儿童区与成人区在视线与动线上双向弱关联@@07##整体尺度亲切低矮；家具腿形以cabriole腿为主；起居区座椅偏低；局部通过吊顶高度变化调节空间比例；全屋避免笨重体量@@08##主要墙面以亚麻壁纸或刷漆护墙板呈现；腰线与窗框以白色或米白色曲线线脚点缀；局部小花纹或toile图案用于窗帘或软装@@09##旧木地板或石质地砖为主，色泽取浅暖调；自然纹理哑光处理；走廊与入口处以不同材质自然划分区域但不造成视觉断层@@10##木梁或刷漆顶角线为主，可局部点缀金属质感花片；顶面整体偏低且温润，避免冷色或高光处理；与墙面以同色系或浅一度色衔接@@11##门窗套线与洞口周边以曲线收边；把手与铰链选用黄铜或哑光黑圆头款式；壁炉或装饰壁龛做旧漆面处理；所有固定安装关系仅标注待专业复核@@12##沙发与床架以做旧木框加软包呈现；餐区选用圆角或椭圆餐桌；低矮书桌配cabriole腿；家具间距宽松，保持环路顺畅；儿童家具与成人家具在色彩上呼应而不混杂@@13##亚麻棉麻布艺为主；窗帘以轻薄棉布或纱帘呈现；床品与靠垫取奶油、浅蓝、鼠尾草绿；小花纹点缀抱枕或桌布；金属装饰选黄铜或做旧铁艺@@14##避免过度甜美或假做旧痕迹；不使用高饱和度色彩；避免笨重深色体量；全屋禁用尖锐棱角或工业材质；避免风格混搭导致表达模糊@@15##自然采光一般，采用透光亚麻纱帘引入柔光；浅暖色调墙面与天花反光提升明亮感；避免厚重遮光帘阻挡光源；小花纹布艺在柔光下呈现微妙层次@@16##主光为枝形吊灯或布艺罩吊灯营造暖调氛围光；辅助以壁灯或台灯补充局部光；儿童区与阅读角选用柔和色温；全屋以暖白光为主，避免冷白光破坏法式柔和感@@17##选用布艺或纸罩灯具柔化眩光；全屋光源色温一致且偏低；墙面与顶面均采用哑光处理防止反射刺眼；灯具选型以封闭灯罩为主方便维护@@18##奶油||浅黄||鼠尾草绿||浅蓝||暖白@@19##旧木||石地砖||亚麻||刷漆木作||黄铜@@20##刷漆木作定期补漆||亚麻布艺可拆洗||黄铜以干布擦拭||旧木表面以天然蜡保养@@21##全屋以封闭旧木柜门为主，内部以亚麻或棉布内衬分区；客厅与餐厅以封闭电视柜与餐边柜整合；全屋收纳均衡分布，不让单一空间承载过多收纳而牺牲动线或风格@@22##弹性房>主卧>起居餐厅>入户>卫浴>厨房"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "overview",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673765808456633610"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##法式乡村·一位成人与一名儿童·平衡方案@@02##松弛乡村骨架加精致焦点，守护安静私密与采光一般条件下的居住温暖@@03##安静私密优先，儿童成长弹性兼顾；采光一般需以层次照明补偿；固定户型不变@@04##划分成人与儿童独立区域，以软装与色调过渡而非新增隔断；共享区域留出全家互动弹性@@05##公共动线串联玄关至餐客厅，私密区域独立绕行；不在动线上制造折返或穿行干扰@@06##主卧与弹性房作为安静私密核心区，与餐客厅活动区分层；夜间动线与儿童入睡区避让@@07##法式乡村骨架保持层高通透感，节点处做精致压线收口；避免过度堆砌导致压迫@@08##浅奶油、浅黄或鼠尾草绿为主色；刷漆木作线条简洁留白，墙面可做浅浅线框装饰@@09##延续石材或旧木暖调原色地面；局部可换色调统一的人字拼或鱼骨拼，需待专业复核@@10##保留原顶面结构或点缀木梁修饰；主灯低位装枝形吊灯增加仪式感，不做复杂吊顶@@11##洞口保留原状，石材窗台板或刷白窗框待专业复核；不新增或移动隔断@@12##床、沙发、餐桌等选用弧线腿或cabriole腿造型；布艺以亚麻棉麻为主；儿童区留出成长调节余地@@13##布艺与小型瓷器点缀乡村浪漫；主灯选枝形吊灯，壁灯用布罩柔光；挂画选花卉或田园主题@@14##避免过度甜美假做旧；避开深沉重色；不堆砌花色导致视觉疲劳；保证动线与维护通道@@15##自然采光一般时，以轻盈窗纱引光入室；浅色墙面反射补光；窗帘不阻截光线引入@@16##公共区层次丰富：主灯氛围光、沙发旁阅读壁灯、餐桌上方吊灯；私密区用柔和漫射@@17##避免直视眩光；吊灯高度不干扰视线；壁灯布罩保护视力；灯具定期除尘维护@@18##奶油色||浅黄色||鼠尾草绿||浅蓝色@@19##旧木||石材||亚麻||棉@@20##旧木定期保养||石材防潮检查||刷漆木作定期补色||亚麻棉布定期拆洗@@21##主卧固定衣柜为主；弹性房浮动架与床底为辅；餐客厅电视柜与餐边柜；玄关鞋柜；厨房台面待专业复核@@22##主卧衣柜||弹性房浮动架||餐边矮柜||玄关鞋柜||厨房台面"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "rooms",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673766263558442197"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##私密度高的主人休憩之所，床尾保留适当走道##浅黄或奶油色墙面配手绘小花纹装饰，温暖木地板，白色顶面局部借用于柔和日光##床品自由摆放；固定衣柜依原位不动；待专业复核##主灯以布艺灯罩壁灯营造柔光氛围@@02##明亮清爽的私密盥洗空间##浅蓝或薄荷绿墙面配小纹理瓷砖，石质地砖或仿古砖，浅色顶面##固定台盆柜保留；收纳以藤编篮亚麻布收纳为主；待专业复核##复古黄铜吊灯配防雾灯罩营造柔光氛围@@03##安静私密的弹性多功能房，兼顾偶尔留宿##奶油色或浅黄色墙面，木地板或白木纹地板，浅色顶面##灵活床组与书桌椅；壁挂搁板依原位；动线清晰不堆叠；待专业复核##布艺灯罩台灯或黄铜可调书桌灯@@04##连接公私区域的宁静过渡走廊##浅米色墙面，木地板或仿古地砖，简洁顶面##保持原有过道宽度与开口##柔和吸顶灯或小型布艺壁灯@@05##承载家人共聚的温馨起居餐厨区域##奶油或浅黄墙面，旧木地板或仿古砖，白色顶面##沙发、电视柜、餐桌依原位灵活布局；收纳以藤编与亚麻材质为主；木质镂空隔断依原位不动；待专业复核##枝形吊灯或黄铜多头吊灯作为视觉焦点@@06##温馨实用的烹饪与家务操作空间##奶油或浅蓝墙面，小纹理瓷砖或仿古砖，浅色防潮顶面##固定橱柜依原位；保留烹饪操作台面不受遮挡；待专业复核##嵌入式顶灯配局部防油污灯罩@@07##迎接归家与整理衣着的温暖入口##浅黄或奶油色墙面，石地砖或仿古砖，浅色顶面##固定鞋柜依原位；换鞋凳或矮凳视情布置；待专业复核##壁灯或小型吸顶灯提供柔和归家引导"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "segment": "decisions",
+      "source": "provider",
+      "providerTrace": {
+        "provider": "aily_team",
+        "agentId": "agent_4kt39w75byxw5cf",
+        "chatId": "7673766522284199214"
+      },
+      "response": {
+        "toolCalls": [],
+        "standardPlanSegment": "01##主卧以床为安静核心，衣柜侧置确保私密边界@@02##X001||X009||X010@@03##以衣柜侧置保持私密为代价，换取床区不被穿越的安宁布局@@04##旧木地板延续松弛骨架，墙面蛋壳白配局部石材点缀@@05##X002||X003||X011@@06##旧木与石材成本高于普通地砖，天然材质需定期养护@@07##弧线家具配cabriole腿坐具，做旧质感柜体嵌入墙面@@08##X005||X007||X009@@09##做旧工艺价格高于普通成品，嵌入式固定需专业施工@@10##枝形吊灯聚焦客厅中心，布艺壁灯柔化私密区域@@11##X006||X003||X011@@12##弥补自然采光不足是真实取舍，布艺灯罩降低光效为柔和让路"
+      },
+      "validation": {
+        "ok": true,
+        "errors": []
+      }
+    }
+  ],
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "plan": {
+    "schemaVersion": 1,
+    "promptVersion": "oppein-standard-master-plan-v1.21",
+    "planKind": "standard_master_plan",
+    "styleId": "french-provincial",
+    "variantOf": null,
+    "title": "法式乡村·一位成人与一名儿童·平衡方案",
+    "designIntent": "松弛乡村骨架加精致焦点，守护安静私密与采光一般条件下的居住温暖",
+    "briefResponse": {
+      "briefId": "random-1-20260814",
+      "acknowledgedFactIds": [
+        "household:one-adult-one-child",
+        "priority:quiet-privacy",
+        "site:limited-daylight"
+      ],
+      "unresolvedInputIds": [],
+      "resolutionNote": "安静私密优先，儿童成长弹性兼顾；采光一般需以层次照明补偿；固定户型不变"
+    },
+    "styleGrounding": {
+      "profileSource": "curated_estimate",
+      "evidenceBoundary": "reference_only",
+      "sourceIds": [
+        "ad-french-country"
+      ],
+      "caseIds": [],
+      "layoutAnchor": "松弛乡村骨架加精致焦点",
+      "paletteAnchors": [
+        "奶油",
+        "浅黄",
+        "浅蓝"
+      ],
+      "materialAnchors": [
+        "旧木",
+        "石",
+        "亚麻"
+      ],
+      "avoidAnchors": [
+        "过度甜美或假做旧"
+      ]
+    },
+    "spatialPlan": {
+      "wholeHome": "划分成人与儿童独立区域，以软装与色调过渡而非新增隔断；共享区域留出全家互动弹性",
+      "circulation": "公共动线串联玄关至餐客厅，私密区域独立绕行；不在动线上制造折返或穿行干扰",
+      "privacy": "主卧与弹性房作为安静私密核心区，与餐客厅活动区分层；夜间动线与儿童入睡区避让",
+      "scaleFit": "法式乡村骨架保持层高通透感，节点处做精致压线收口；避免过度堆砌导致压迫",
+      "rooms": [
+        {
+          "roomId": "room-primary-bedroom",
+          "intent": "私密度高的主人休憩之所，床尾保留适当走道",
+          "envelope": "浅黄或奶油色墙面配手绘小花纹装饰，温暖木地板，白色顶面局部借用于柔和日光",
+          "furnitureAndStorage": "床品自由摆放；固定衣柜依原位不动；待专业复核",
+          "lighting": "主灯以布艺灯罩壁灯营造柔光氛围",
+          "existingRefs": [
+            "object-primary-bed",
+            "object-primary-wardrobe",
+            "object-primary-feature-wall"
+          ]
+        },
+        {
+          "roomId": "room-bathroom",
+          "intent": "明亮清爽的私密盥洗空间",
+          "envelope": "浅蓝或薄荷绿墙面配小纹理瓷砖，石质地砖或仿古砖，浅色顶面",
+          "furnitureAndStorage": "固定台盆柜保留；收纳以藤编篮亚麻布收纳为主；待专业复核",
+          "lighting": "复古黄铜吊灯配防雾灯罩营造柔光氛围",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-flex",
+          "intent": "安静私密的弹性多功能房，兼顾偶尔留宿",
+          "envelope": "奶油色或浅黄色墙面，木地板或白木纹地板，浅色顶面",
+          "furnitureAndStorage": "灵活床组与书桌椅；壁挂搁板依原位；动线清晰不堆叠；待专业复核",
+          "lighting": "布艺灯罩台灯或黄铜可调书桌灯",
+          "existingRefs": [
+            "object-flex-bed",
+            "object-flex-desk",
+            "object-flex-floating-shelf"
+          ]
+        },
+        {
+          "roomId": "room-hall",
+          "intent": "连接公私区域的宁静过渡走廊",
+          "envelope": "浅米色墙面，木地板或仿古地砖，简洁顶面",
+          "furnitureAndStorage": "保持原有过道宽度与开口",
+          "lighting": "柔和吸顶灯或小型布艺壁灯",
+          "existingRefs": []
+        },
+        {
+          "roomId": "room-living-dining",
+          "intent": "承载家人共聚的温馨起居餐厨区域",
+          "envelope": "奶油或浅黄墙面，旧木地板或仿古砖，白色顶面",
+          "furnitureAndStorage": "沙发、电视柜、餐桌依原位灵活布局；收纳以藤编与亚麻材质为主；木质镂空隔断依原位不动；待专业复核",
+          "lighting": "枝形吊灯或黄铜多头吊灯作为视觉焦点",
+          "existingRefs": [
+            "object-sofa",
+            "object-tv-console",
+            "object-dining-table",
+            "object-living-slat-partition"
+          ]
+        },
+        {
+          "roomId": "room-kitchen",
+          "intent": "温馨实用的烹饪与家务操作空间",
+          "envelope": "奶油或浅蓝墙面，小纹理瓷砖或仿古砖，浅色防潮顶面",
+          "furnitureAndStorage": "固定橱柜依原位；保留烹饪操作台面不受遮挡；待专业复核",
+          "lighting": "嵌入式顶灯配局部防油污灯罩",
+          "existingRefs": [
+            "object-kitchen-counter"
+          ]
+        },
+        {
+          "roomId": "room-entry",
+          "intent": "迎接归家与整理衣着的温暖入口",
+          "envelope": "浅黄或奶油色墙面，石地砖或仿古砖，浅色顶面",
+          "furnitureAndStorage": "固定鞋柜依原位；换鞋凳或矮凳视情布置；待专业复核",
+          "lighting": "壁灯或小型吸顶灯提供柔和归家引导",
+          "existingRefs": [
+            "object-shoe-cabinet"
+          ]
+        }
+      ]
+    },
+    "renovationPlan": {
+      "walls": "浅奶油、浅黄或鼠尾草绿为主色；刷漆木作线条简洁留白，墙面可做浅浅线框装饰",
+      "floors": "延续石材或旧木暖调原色地面；局部可换色调统一的人字拼或鱼骨拼，需待专业复核",
+      "ceilings": "保留原顶面结构或点缀木梁修饰；主灯低位装枝形吊灯增加仪式感，不做复杂吊顶",
+      "fixedAndOpenings": "洞口保留原状，石材窗台板或刷白窗框待专业复核；不新增或移动隔断"
+    },
+    "furniturePlan": {
+      "placementAndScale": "床、沙发、餐桌等选用弧线腿或cabriole腿造型；布艺以亚麻棉麻为主；儿童区留出成长调节余地",
+      "softFurnishings": "布艺与小型瓷器点缀乡村浪漫；主灯选枝形吊灯，壁灯用布罩柔光；挂画选花卉或田园主题",
+      "avoid": "避免过度甜美假做旧；避开深沉重色；不堆砌花色导致视觉疲劳；保证动线与维护通道"
+    },
+    "lightingPlan": {
+      "daylight": "自然采光一般时，以轻盈窗纱引光入室；浅色墙面反射补光；窗帘不阻截光线引入",
+      "layers": "公共区层次丰富：主灯氛围光、沙发旁阅读壁灯、餐桌上方吊灯；私密区用柔和漫射",
+      "glareAndMaintenance": "避免直视眩光；吊灯高度不干扰视线；壁灯布罩保护视力；灯具定期除尘维护"
+    },
+    "materialPlan": {
+      "palette": [
+        "奶油色",
+        "浅黄色",
+        "鼠尾草绿",
+        "浅蓝色"
+      ],
+      "materials": [
+        "旧木",
+        "石材",
+        "亚麻",
+        "棉"
+      ],
+      "maintenance": [
+        "旧木定期保养",
+        "石材防潮检查",
+        "刷漆木作定期补色",
+        "亚麻棉布定期拆洗"
+      ]
+    },
+    "storagePlan": {
+      "wholeHome": "主卧固定衣柜为主；弹性房浮动架与床底为辅；餐客厅电视柜与餐边柜；玄关鞋柜；厨房台面待专业复核",
+      "roomPriorities": [
+        "主卧衣柜",
+        "弹性房浮动架",
+        "餐边矮柜",
+        "玄关鞋柜",
+        "厨房台面"
+      ]
+    },
+    "designDecisions": {
+      "spatial": {
+        "decision": "主卧以床为安静核心，衣柜侧置确保私密边界",
+        "basisIds": [
+          "style:french-provincial:layout",
+          "brief:household:one-adult-one-child",
+          "brief:priority:quiet-privacy"
+        ],
+        "tradeoff": "以衣柜侧置保持私密为代价，换取床区不被穿越的安宁布局"
+      },
+      "envelope": {
+        "decision": "旧木地板延续松弛骨架，墙面蛋壳白配局部石材点缀",
+        "basisIds": [
+          "style:french-provincial:palette",
+          "style:french-provincial:materials",
+          "brief:site:limited-daylight"
+        ],
+        "tradeoff": "旧木与石材成本高于普通地砖，天然材质需定期养护"
+      },
+      "furniture": {
+        "decision": "弧线家具配cabriole腿坐具，做旧质感柜体嵌入墙面",
+        "basisIds": [
+          "style:french-provincial:furniture",
+          "style:french-provincial:methods",
+          "brief:household:one-adult-one-child"
+        ],
+        "tradeoff": "做旧工艺价格高于普通成品，嵌入式固定需专业施工"
+      },
+      "lighting": {
+        "decision": "枝形吊灯聚焦客厅中心，布艺壁灯柔化私密区域",
+        "basisIds": [
+          "style:french-provincial:lighting",
+          "style:french-provincial:materials",
+          "brief:site:limited-daylight"
+        ],
+        "tradeoff": "弥补自然采光不足是真实取舍，布艺灯罩降低光效为柔和让路"
+      }
+    },
+    "ruleStrategy": [
+      "deterministic:object-collision",
+      "rule-bedside-600",
+      "rule-cabinet-front-900",
+      "rule-child-activity-clearance",
+      "rule-fixed-equipment-wall-relation",
+      "rule-kitchen-aisle-1000",
+      "rule-main-circulation-900",
+      "rule-opening-clearance",
+      "rule-room-boundary",
+      "rule-tall-storage-anchored",
+      "rule-tv-distance-1800-3600"
+    ],
+    "unknowns": [
+      "homeowner_preferences",
+      "site_measurement",
+      "climate_and_orientation",
+      "oppein_catalog",
+      "pricing_bom_schedule",
+      "construction_feasibility",
+      "professional_review"
+    ],
+    "boundaries": [
+      "reference_only",
+      "not_construction_standard",
+      "no_oppein_sku",
+      "no_pricing_bom_schedule",
+      "no_production_or_installation"
+    ]
+  },
+  "latencyMs": 299660,
+  "completedAt": "2026-08-14T06:14:39.554Z"
+}
