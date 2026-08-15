@@ -205,9 +205,10 @@ function addOpeningFrame(parent, wall, metrics, opening, materials) {
 }
 
 function buildArchitecture(world, scene, textures, entityRoots) {
+  const colorOf = (materialId, fallback) => scene.materials.find((candidate) => candidate.id === materialId)?.color ?? fallback;
   const floorMaterials = {
-    'mat-floor-light-oak': new THREE.MeshStandardMaterial({ color: '#cfb38a', map: textures.oak, roughness: 0.72, side: THREE.DoubleSide }),
-    'mat-floor-tile-warm': new THREE.MeshStandardMaterial({ color: '#d8d0c5', map: textures.tile, roughness: 0.64, side: THREE.DoubleSide }),
+    'mat-floor-light-oak': new THREE.MeshStandardMaterial({ color: colorOf('mat-floor-light-oak', '#cfb38a'), map: textures.oak, roughness: 0.72, side: THREE.DoubleSide }),
+    'mat-floor-tile-warm': new THREE.MeshStandardMaterial({ color: colorOf('mat-floor-tile-warm', '#d8d0c5'), map: textures.tile, roughness: 0.64, side: THREE.DoubleSide }),
   };
   const floorGroup = new THREE.Group();
   floorGroup.name = 'Canonical floors';
@@ -263,7 +264,11 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   for (const wall of scene.surfaces.filter((candidate) => candidate.kind === 'wall')) {
     const canonicalMaterial = scene.materials.find((candidate) => candidate.id === wall.materialId);
     const materials = {
-      wall: new THREE.MeshStandardMaterial({ color: canonicalMaterial?.color ?? '#f1ece3', roughness: 0.82 }),
+      wall: new THREE.MeshStandardMaterial({
+        color: canonicalMaterial?.color ?? '#f1ece3',
+        map: wall.materialId === 'mat-wall-oak-panel' ? textures.oak : null,
+        roughness: wall.materialId === 'mat-wall-oak-panel' ? 0.68 : 0.82,
+      }),
       frame: new THREE.MeshStandardMaterial({ color: '#ddd3c5', roughness: 0.64 }),
       glass: new THREE.MeshPhysicalMaterial({ color: '#b7d1d4', roughness: 0.18, transmission: 0.44, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }),
     };
@@ -438,7 +443,7 @@ async function createController(container, scene, callbacks) {
   container.append(renderer.domElement);
 
   const world = new THREE.Scene();
-  world.background = new THREE.Color('#ded8cc');
+  world.background = new THREE.Color('#ffffff');
   world.fog = new THREE.Fog('#ded8cc', 21, 36);
   const pmrem = new THREE.PMREMGenerator(renderer);
   world.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -579,6 +584,10 @@ async function createController(container, scene, callbacks) {
       const canonicalMaterial = currentScene.materials.find((candidate) => candidate.id === surface.materialId);
       if (canonicalMaterial?.color) rendered.material.color.set(canonicalMaterial.color);
       if (rendered.kind === 'floor') rendered.material.map = floorMaterials[surface.materialId]?.map ?? null;
+      if (rendered.kind === 'wall') {
+        rendered.material.map = surface.materialId === 'mat-wall-oak-panel' ? textures.oak : null;
+        rendered.material.roughness = surface.materialId === 'mat-wall-oak-panel' ? 0.68 : 0.82;
+      }
       rendered.material.needsUpdate = true;
       rendered.root.userData.materialId = surface.materialId;
     }

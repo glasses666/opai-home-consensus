@@ -16,8 +16,8 @@ const move = (objectId, transform) => ({ type: 'object.setTransform', objectId, 
 
 test('command history undoes, redoes, and replays byte-identically', () => {
   const initial = createSceneStore(createDemoScene());
-  const moved = dispatchSceneCommand(initial, move('object-sofa', { x: 2600 }));
-  const rotated = dispatchSceneCommand(moved, move('object-sofa', { rotationY: Math.PI / 2 }));
+  const moved = dispatchSceneCommand(initial, move('object-sofa', { x: 2400 }));
+  const rotated = dispatchSceneCommand(moved, move('object-sofa', { x: 2000 }));
   const undone = undoSceneCommand(rotated);
   const redone = redoSceneCommand(undone);
   const replayed = replaySceneCommands(initial.initialScene, redone.commands.slice(0, redone.cursor));
@@ -29,14 +29,14 @@ test('command history undoes, redoes, and replays byte-identically', () => {
 
 test('dispatch after undo creates a new branch and clears redo history', () => {
   const initial = createSceneStore(createDemoScene());
-  const first = dispatchSceneCommand(initial, move('object-sofa', { x: 2600 }));
-  const second = dispatchSceneCommand(first, move('object-sofa', { z: 6000 }));
+  const first = dispatchSceneCommand(initial, move('object-sofa', { x: 2400 }));
+  const second = dispatchSceneCommand(first, move('object-sofa', { x: 2000 }));
   const undone = undoSceneCommand(second);
-  const branch = dispatchSceneCommand(undone, move('object-sofa', { z: 5200 }));
+  const branch = dispatchSceneCommand(undone, move('object-sofa', { x: 2100 }));
 
   assert.equal(branch.commands.length, 2);
   assert.equal(branch.cursor, 2);
-  assert.equal(branch.currentScene.objects.find((object) => object.id === 'object-sofa').transform.z, 5200);
+  assert.equal(branch.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2100);
   assert.throws(() => redoSceneCommand(branch), /REDO_UNAVAILABLE/);
 });
 

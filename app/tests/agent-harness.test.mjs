@@ -22,8 +22,8 @@ test('local parser moves, rotates, and recolors real scene objects', async () =>
   assert.equal(objectById(moved.store, 'object-sofa').transform.x, 2400);
   assert.equal(moved.store.commands.length, 1);
 
-  const rotated = await runAgentTurn({ store: moved.store, input: '餐桌旋转90度' });
-  assert.equal(objectById(rotated.store, 'object-dining-table').transform.rotationY, Math.PI);
+  const rotated = await runAgentTurn({ store: moved.store, input: '双人床旋转90度' });
+  assert.equal(objectById(rotated.store, 'object-primary-bed').transform.rotationY, Math.PI / 2);
   assert.equal(rotated.store.commands.length, 2);
 
   const material = await runAgentTurn({ store: rotated.store, input: '沙发改成橡木色' });
@@ -182,7 +182,7 @@ test('provider may express the same move as an absolute coordinate', async () =>
     input: '把沙发向右移动20厘米',
     provider: () => ({
       mode: 'execute', assistantReply: '准备移动沙发。', reasons: [], unresolved: [],
-      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', x: 2400, z: 5600 } }],
+      toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', x: 2400, z: 5200 } }],
     }),
   });
 
@@ -248,7 +248,7 @@ test('chatty context cannot redirect an explicit furniture edit', async () => {
   });
   assert.equal(result.trace.mode, 'execute');
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
-  assert.equal(objectById(result.store, 'object-dining-table').transform.x, 6200);
+  assert.equal(objectById(result.store, 'object-dining-table').transform.x, 6300);
 });
 
 test('a five-turn resident session survives provider drift without corrupting state', async () => {

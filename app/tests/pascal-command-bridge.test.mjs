@@ -12,17 +12,17 @@ test('Pascal item transform maps to the existing SceneCommand path', () => {
   const command = pascalEditToSceneCommand({
     type: 'node.transform',
     nodeId: mapping.canonicalToPascal.object['object-sofa'],
-    position: [2.4, 0, 5.6],
+    position: [2, 0, 5],
     rotation: [0, 0.25, 0],
   }, mapping);
 
   assert.deepEqual(command, {
     type: 'object.setTransform',
     objectId: 'object-sofa',
-    transform: { x: 2400, y: 0, z: 5600, rotationY: 0.25 },
+    transform: { x: 2000, y: 0, z: 5000, rotationY: 0.25 },
   });
   const store = dispatchSceneCommand(createSceneStore(scene), command);
-  assert.equal(store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+  assert.equal(store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2000);
 });
 
 test('Pascal material changes map to object and surface commands', () => {
@@ -51,7 +51,7 @@ test('Pascal local commits become commands, and unsupported edits are ignored', 
     origin: 'local',
     before: { nodes: { [itemId]: before } },
     current: { nodes: { [itemId]: current } },
-  }, mapping), [{ type: 'object.setTransform', objectId: 'object-dining-table', transform: { x: 6400, y: 0, z: 5700, rotationY: Math.PI / 2 } }]);
+  }, mapping), [{ type: 'object.setTransform', objectId: 'object-dining-table', transform: { x: 6400, y: 0, z: 5700, rotationY: 0 } }]);
 
   assert.equal(pascalEditToSceneCommand({ type: 'node.transform', nodeId: 'item_unknown', position: [0, 0, 0] }, mapping), null);
 });

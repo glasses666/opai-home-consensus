@@ -92,8 +92,14 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
   const livingObjects = scene.objects.filter((object) => object.roomId === 'room-living-dining');
 
   assert.deepEqual(livingObjects.map((object) => object.id).sort(), [
+    'object-coffee-table',
+    'object-dining-chair-e',
+    'object-dining-chair-n',
+    'object-dining-chair-s',
+    'object-dining-chair-w',
     'object-dining-table',
     'object-living-slat-partition',
+    'object-lounge-chair',
     'object-sofa',
     'object-tv-console',
   ]);
@@ -104,6 +110,18 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
     assert.equal(object.model3D.source, 'generated');
     assert.ok(object.dimensions.width > 0 && object.dimensions.depth > 0 && object.dimensions.height > 0);
   }
+});
+
+test('selected onboarding style changes the canonical material palette', () => {
+  const lightOak = createDemoScene('scandinavian');
+  const midCentury = createDemoScene('mid-century-modern');
+  const color = (scene, materialId) => scene.materials.find((material) => material.id === materialId).color;
+
+  assert.notEqual(color(lightOak, 'mat-floor-light-oak'), color(midCentury, 'mat-floor-light-oak'));
+  assert.notEqual(color(lightOak, 'mat-fabric-warm-gray'), color(midCentury, 'mat-fabric-warm-gray'));
+  assert.equal(lightOak.surfaces.find((surface) => surface.id === 'surface-wall-living-south').materialId, 'mat-wall-oak-panel');
+  assert.equal(createDemoScene('quiet-luxury').surfaces.find((surface) => surface.id === 'surface-floor-living-dining').materialId, 'mat-floor-tile-warm');
+  assert.equal(validateScene(midCentury).ok, true);
 });
 
 test('Gate 16 fixed installations keep installation contracts and replaceable asset slots', () => {
@@ -141,7 +159,7 @@ test('Gate 5 duplicate, resize, delete, undo, and redo stay command-driven', () 
     objectId: 'object-sofa',
     newObjectId: 'object-sofa-copy-test',
     externalId: 'DEMO-FURN-001-COPY-TEST',
-    transform: { x: 2200, y: 0, z: 6800, rotationY: 0 },
+    transform: { x: 6200, y: 0, z: 6900, rotationY: 0 },
   });
   assert.equal(duplicated.currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), true);
 

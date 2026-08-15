@@ -114,6 +114,27 @@ def dining_table():
     add_plant(0, 0, 0.76, 0.68)
 
 
+def dining_chair():
+    box("CANONICAL seat", (0.48, 0.5, 0.11), (0, 0, 0.46), IVORY, 0.05, smooth=True)
+    box("CANONICAL back", (0.48, 0.12, 0.42), (0, 0.2, 0.7), IVORY, 0.055, rotation=(radians(-7), 0, 0), smooth=True)
+    for x in (-0.19, 0.19):
+        for y in (-0.18, 0.18):
+            cylinder("CANONICAL oak leg", 0.022, 0.44, (x, y, 0.22), OAK, role="canonical")
+
+
+def coffee_table():
+    box("CANONICAL rounded top", (1.2, 0.62, 0.1), (0, 0, 0.38), OAK, 0.12)
+    box("CANONICAL pedestal", (0.45, 0.3, 0.34), (0, 0, 0.17), OAK, 0.08)
+    add_plant(0.28, 0, 0.45, 0.52)
+
+
+def lounge_chair():
+    box("CANONICAL seat", (0.7, 0.72, 0.15), (0, -0.04, 0.4), IVORY, 0.08, smooth=True)
+    box("CANONICAL back", (0.7, 0.17, 0.58), (0, 0.25, 0.68), IVORY, 0.09, rotation=(radians(-10), 0, 0), smooth=True)
+    for x in (-0.27, 0.27):
+        box("CANONICAL oak rail", (0.055, 0.66, 0.055), (x, 0, 0.22), OAK, 0.018, rotation=(radians(-6), 0, 0))
+
+
 def tv_console():
     box("ACCENT oak media panel", (1.82, 0.05, 1.36), (0, 0.19, 1.08), OAK, 0.025, role="accent")
     box("ACCENT television", (1.46, 0.045, 0.82), (0, 0.15, 1.18), CHARCOAL, 0.035, role="accent")
@@ -244,6 +265,9 @@ def normalize_and_export(name, builder):
 ASSETS = {
     "sofa": sofa,
     "dining-table": dining_table,
+    "dining-chair": dining_chair,
+    "coffee-table": coffee_table,
+    "lounge-chair": lounge_chair,
     "tv-console": tv_console,
     "double-bed": lambda: bed(1.8, 2.0, 1.05),
     "single-bed": lambda: bed(1.2, 2.0, 0.9, True),
@@ -256,7 +280,7 @@ ASSETS = {
     "feature-wall": feature_wall,
 }
 
-TOP_VIEW_ASSETS = {"floating-shelf", "slat-partition", "feature-wall"}
+TOP_VIEW_ASSETS = {"floating-shelf", "slat-partition", "feature-wall", "dining-chair", "coffee-table", "lounge-chair"}
 
 requested_assets = set(sys.argv[sys.argv.index("--") + 1:]) if "--" in sys.argv else set(ASSETS)
 unknown_assets = requested_assets - ASSETS.keys()

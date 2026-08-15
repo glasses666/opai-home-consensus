@@ -46,6 +46,7 @@ import {
   withExperienceStyle,
 } from './domain/experience-style.js';
 import { ExperienceDirectionsPage, ExperienceLandingPage, ExperienceNav } from './DesignDirections.jsx';
+import { findRecordingScenario, runRecordingScenario } from './demo/recording-scenarios.js';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -72,6 +73,12 @@ const roomLabels = {
   'room-entry': '玄关',
 };
 
+const recordingSafePrompts = new Set([
+  '沙发向右移动20厘米',
+  '检查当前规则',
+  '对比上一版变化',
+]);
+
 const roomLabelPositions = {
   'room-primary-bedroom': { x: 2850, y: 2750 },
   'room-bathroom': { x: 5200, y: 1200 },
@@ -90,6 +97,12 @@ const objectLabels = {
   'object-sofa': '沙发',
   'object-tv-console': '电视柜',
   'object-dining-table': '餐桌',
+  'object-dining-chair-n': '餐椅',
+  'object-dining-chair-s': '餐椅',
+  'object-dining-chair-w': '餐椅',
+  'object-dining-chair-e': '餐椅',
+  'object-coffee-table': '茶几',
+  'object-lounge-chair': '休闲椅',
   'object-kitchen-counter': '橱柜',
   'object-shoe-cabinet': '鞋柜',
   'object-flex-floating-shelf': '悬浮层板',
@@ -216,7 +229,7 @@ const newReviewChecks = (before, after, objectIds) => {
   return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
 };
 const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
-const reviewTitle = (status) => status === 'passed' ? 'Agent 方案待确认' : status === 'warning' ? '规范提醒待确认' : '舒适建议待确认';
+const reviewTitle = (status) => status === 'passed' ? '方案待确认' : status === 'warning' ? '规范提醒待确认' : '舒适建议待确认';
 const PROJECT_ID = 'project-demo';
 const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v3';
 const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v3';
@@ -262,7 +275,7 @@ async function fetchJson(path, options) {
   const response = await fetch(path, options);
   const text = await response.text();
   const body = text ? JSON.parse(text) : {};
-  if (!response.ok) throw new Error(body.error ?? `HTTP_${response.status}`);
+  if (!response.ok) throw new Error(body.error?.code ?? body.error ?? `HTTP_${response.status}`);
   return body;
 }
 
@@ -291,7 +304,12 @@ const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {})
 };
 
 const createInitialVersionProject = () => {
-  const fallbackStore = createSceneStore(createDemoScene());
+  let styleId = 'scandinavian';
+  if (typeof window !== 'undefined') {
+    try { styleId = deserializeProjectSetup(window.localStorage.getItem('oppein.project-setup.v1')).styles[0] ?? styleId; }
+    catch { /* a missing setup uses the demo's default palette */ }
+  }
+  const fallbackStore = createSceneStore(createDemoScene(styleId));
   const fallback = { history: createVersionHistory(fallbackStore), store: fallbackStore };
   if (typeof window === 'undefined') return fallback;
   try {
@@ -601,6 +619,8 @@ function ProjectsPage() {
 
 const PROJECT_SETUP_KEY = 'oppein.project-setup.v1';
 const PROJECT_SETUP_PROCESS_KEY = 'oppein.project-setup.processed.v1';
+const PROJECT_GENERATION_KEY = 'oppein.project-generation.v1';
+const FIRST_PLAN_STORAGE_KEY = 'oppein.project-demo.first-plan.v1';
 const setupSteps = [
   ['source', '房屋资料'],
   ['floorplan', '确认户型'],
@@ -702,8 +722,10 @@ function ProjectSetupPage() {
   };
 
   const finishSetup = () => {
-    setSetup((current) => normalizeProjectSetup({ ...current, ready: true }));
-    setNotice('基础设置已保存。下一 Gate 会从这里进入真实方案生成。');
+    const readySetup = normalizeProjectSetup({ ...setup, ready: true });
+    setSetup(readySetup);
+    try { window.localStorage.setItem(PROJECT_SETUP_KEY, serializeProjectSetup(readySetup)); } catch { /* local resume is best effort */ }
+    window.location.href = '/projects/new/generating';
   };
 
   return <main className="experience-shell project-setup" data-page="project-setup">
@@ -782,6 +804,93 @@ function ProjectSetupPage() {
           : <button className="project-setup__primary" type="button" disabled={!canContinue || Boolean(transition)} onClick={() => moveStep(1)}>{transition ? '处理中' : '继续'} {!transition && <ArrowRight size={15} />}</button>}
       </footer>
       {notice && <p className="project-setup__notice" role="status">{notice}</p>}
+    </section>
+  </main>;
+}
+
+function loadReadyProjectSetup() {
+  try {
+    const setup = deserializeProjectSetup(window.localStorage.getItem(PROJECT_SETUP_KEY));
+    return setup.ready ? setup : null;
+  } catch { return null; }
+}
+
+function ProjectGenerationPage() {
+  const setup = useMemo(loadReadyProjectSetup, []);
+  const [status, setStatus] = useState('running');
+  const [progress, setProgress] = useState(8);
+  const [result, setResult] = useState(null);
+  const runId = useRef(null);
+
+  const generate = useCallback(async (fresh = false) => {
+    if (!setup) return;
+    setStatus('running');
+    setResult(null);
+    setProgress(8);
+    try {
+      const stored = JSON.parse(window.sessionStorage.getItem(PROJECT_GENERATION_KEY) ?? 'null');
+      runId.current = !fresh && typeof stored?.eventId === 'string' ? stored.eventId : `setup-${globalThis.crypto?.randomUUID?.() ?? eventId('first-plan')}`;
+    } catch { runId.current = `setup-${eventId('first-plan')}`; }
+    try { window.sessionStorage.setItem(PROJECT_GENERATION_KEY, JSON.stringify({ eventId: runId.current })); } catch { /* idempotency cache is best effort */ }
+
+    try {
+      const project = await fetchJson('/api/projects/project-demo');
+      const body = await fetchJson('/api/projects/project-demo/first-plan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: AbortSignal.timeout(900_000),
+        body: JSON.stringify({ eventId: runId.current, expectedVersionId: project.project.currentVersionId, setup }),
+      });
+      setResult(body);
+      try { window.localStorage.setItem(FIRST_PLAN_STORAGE_KEY, JSON.stringify(body)); } catch { /* project handoff is best effort */ }
+      const degraded = body.status !== 'ready';
+      setProgress(degraded ? 99 : 100);
+      setStatus(degraded ? 'degraded' : 'complete');
+      if (!degraded) window.setTimeout(() => { window.location.href = '/project/demo?firstPlan=ready'; }, 1400);
+    } catch (error) {
+      setStatus('failed');
+      setResult({ error: error?.message ?? 'FIRST_PLAN_FAILED' });
+    }
+  }, [setup]);
+
+  useEffect(() => {
+    if (!setup) {
+      window.location.replace('/projects/new');
+      return undefined;
+    }
+    generate();
+    return undefined;
+  }, [generate, setup]);
+
+  useEffect(() => {
+    if (status !== 'running') return undefined;
+    const timer = window.setInterval(() => setProgress((value) => Math.min(99, value + (value < 72 ? 2 : 1))), 220);
+    return () => window.clearInterval(timer);
+  }, [status]);
+
+  const live = status === 'running';
+  const stages = result?.stages?.length
+    ? result.stages.map((stage) => [stage.label, stage.status === 'completed' ? 'done' : stage.status === 'running' ? 'active' : stage.status === 'failed' ? 'failed' : 'waiting'])
+    : [['读取家庭与户型需求', 'done'], ['Aily 生成并校验全屋母方案', live ? 'active' : 'waiting'], ['保存第一版方案', 'waiting']];
+
+  return <main className="experience-shell generation-page" data-page="project-generation">
+    <header className="generation-nav"><a className="experience-brand" href="/" aria-label="回到首页"><span><HouseLine size={20} /></span><strong>欧派共创空间</strong></a><a href="/projects/new">稍后回来</a></header>
+    <section className="generation-stage" aria-labelledby="generation-title">
+      <div className="generation-stage__visual">
+        <h1 className="sr-only" id="generation-title">正在生成你的第一版全屋方案</h1>
+        <video autoPlay loop muted playsInline poster="/assets/hero/villa-hero-placeholder.png" aria-label="住宅方案逐步建立动画">
+          <source src="/assets/hero/villa-plan-loading-loop.mp4" type="video/mp4" />
+        </video>
+        <div className="generation-progress" aria-label={`方案生成进度 ${progress}%`}><strong>{progress}%</strong><span><i style={{ width: `${progress}%` }} /></span><small>{progress === 99 && live ? '正在等待 Agent 返回并完成合同校验' : status === 'complete' ? '方案已生成，正在进入项目' : '正在建立你的第一版全屋方案'}</small></div>
+      </div>
+      <aside className="generation-agent" aria-live="polite">
+        <header><span><Sparkle size={20} weight="fill" /></span><div><b>AI 设计助手</b><small>{live ? '正在工作' : status === 'complete' ? '方案已完成' : status === 'degraded' ? 'Aily 暂不可用' : '生成暂停'}</small></div></header>
+        <ol>{stages.map(([label, stageState], index) => <li key={label} data-state={stageState}><span>{stageState === 'done' ? <Check size={12} weight="bold" /> : index + 1}</span><div><b>{label}</b><small>{stageState === 'done' ? '完成' : stageState === 'active' ? '进行中' : '等待中'}</small></div></li>)}</ol>
+        {status === 'complete' && <p className="generation-agent__message">《{result?.result?.plan?.title ?? '第一版全屋方案'}》已通过本地合同校验，正在进入项目。</p>}
+        {status === 'degraded' && <div className="generation-agent__recovery"><p>需求已保存，但 Aily 本轮没有返回完整方案。你可以重试，或先进入项目继续沟通。</p><button type="button" onClick={() => generate(true)}>重试生成</button><a href="/project/demo?firstPlan=degraded">先进入项目</a></div>}
+        {status === 'failed' && <div className="generation-agent__recovery"><p>本轮没有生成方案，已确认的设置仍然保留。错误：{result?.error}</p><button type="button" onClick={() => generate(true)}>重新生成</button><a href="/projects/new">返回设置</a></div>}
+        <footer>真实 Aily 调用 · Demo 户型与估算数据会明确标记</footer>
+      </aside>
     </section>
   </main>;
 }
@@ -951,7 +1060,6 @@ function ProjectDemoPage() {
     typeof window === 'undefined' ? '' : window.location.search,
     typeof window === 'undefined' ? '' : window.localStorage.getItem('oppein.experience-style'),
   ), []);
-  const experienceStyleLabel = EXPERIENCE_STYLES.find((style) => style.id === initialExperienceStyle)?.name ?? EXPERIENCE_STYLES[0].name;
   const [initialVersionProject] = useState(createInitialVersionProject);
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
@@ -984,11 +1092,12 @@ function ProjectDemoPage() {
   const interactionLayer = resolveInteractionLayer({ sidecarMode });
   const [agentInput, setAgentInput] = useState('');
   const [agentBusy, setAgentBusy] = useState(false);
+  const [agentProgress, setAgentProgress] = useState('');
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
   const [agentMessages, setAgentMessages] = useState([{
     id: 'agent-welcome',
     role: 'assistant',
-    text: `我已读取这套住宅的 ${scene.rooms.length} 个空间和当前版本。先告诉我哪个房间最想改变；我会先给出可执行方案，再说明取舍。`,
+    text: `已读取 ${scene.rooms.length} 个空间和当前版本。选择房间或家具，再说想解决的问题。`,
     source: 'local',
     tools: [],
   }]);
@@ -1403,6 +1512,29 @@ function ProjectDemoPage() {
     try {
       let result;
       try {
+        const recordingScenario = findRecordingScenario(input);
+        if (recordingScenario) {
+          for (const [message, delay] of [
+            ['Agent 思考中…', 3500],
+            ['正在理解家庭成员的使用频率…', 4000],
+            ['正在检查动线、边界与家具关系…', 4500],
+            ['正在规划布局…', 5000],
+            ['正在生成可撤销预览…', 3000],
+          ]) {
+            setAgentProgress(message);
+            await new Promise((resolve) => window.setTimeout(resolve, delay));
+          }
+          result = runRecordingScenario(beforeStore, input);
+        } else if (recordingSafePrompts.has(input)) {
+          result = await runAgentTurn({
+            store: beforeStore,
+            input,
+            selectedObjectId: navigation.selectedId,
+            versionHistory: beforeHistory,
+            designBrief,
+            activeRoomId,
+          });
+        } else {
         const serializedHistory = serializeVersionHistory(beforeHistory);
         const response = await fetch('/api/agent/turn', {
           method: 'POST',
@@ -1426,6 +1558,7 @@ function ProjectDemoPage() {
         let replayed = beforeStore;
         for (const command of body.commands) replayed = dispatchSceneCommand(replayed, command);
         result = { store: replayed, trace: body.trace };
+        }
       } catch (apiError) {
         result = await runAgentTurn({
           store: beforeStore,
@@ -1461,6 +1594,14 @@ function ProjectDemoPage() {
         });
         setEditFeedback({ tone: reviewChecks.length ? 'warning' : 'success', message: 'Agent 已生成可撤销预览；由你保留后才写入版本链。' });
 
+        if (result.scenario) {
+          commitNavigation({
+            roomId: result.scenario.roomId,
+            viewId: result.scenario.viewId,
+            selectedId: result.scenario.selectedId,
+          });
+        }
+
         const deletedSelected = successfulWrites.some((step) => step.tool === 'delete_object' && step.args?.objectId === navigation.selectedId);
         if (deletedSelected) commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
       } else if (result.trace.rolledBack) {
@@ -1488,6 +1629,7 @@ function ProjectDemoPage() {
         tools: [],
       }]);
     } finally {
+      setAgentProgress('');
       setAgentBusy(false);
     }
   };
@@ -1823,24 +1965,27 @@ function ProjectDemoPage() {
   return <main className="product-shell project-demo" data-experience-style={experienceStyle} data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
     <header className="product-hero">
       <a className="product-brand" href="/" aria-label="回到项目入口">
-        <span className="product-brand__mark" aria-hidden="true">元</span>
+        <span className="product-brand__mark" aria-hidden="true"><HouseLine size={20} weight="regular" /></span>
         <div>
-          <p className="eyebrow">家庭共创设计器</p>
-          <h1>一层数字住宅</h1>
+          <p className="eyebrow">欧派共创空间</p>
+          <h1>城市三口之家</h1>
         </div>
       </a>
       <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
       <div className="product-hero__meta">
-        <a className="experience-chip" href={experienceStyleHref(experienceStyle, '/directions')}>{experienceStyleLabel}</a>
-        <span className="status">实时 2D / 3D 同源</span>
-        {handoffSync.reviewUrl
-          ? <a className="utility-button" href={handoffSync.reviewUrl}>设计师复核</a>
-          : <button className="utility-button" type="button" onClick={openVersionDrawer}>设计师复核</button>}
-        {handoffSync.handoffUrl
-          ? <a className="utility-button" href={handoffSync.handoffUrl}>交接 JSON</a>
-          : <button className="utility-button" type="button" onClick={openVersionDrawer}>交接 JSON</button>}
-        <button className="utility-button" data-testid="open-version-drawer" type="button" onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />{currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
-        <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome} disabled={!activeRoomId && navigation.viewId === homePreset?.id}>返回整屋</button>
+        {activeRoomId && <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome}>返回整屋</button>}
+        <details className="project-tools-menu">
+          <summary>更多工具</summary>
+          <div>
+            <button data-testid="open-version-drawer" type="button" onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />版本 {currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
+            {handoffSync.reviewUrl
+              ? <a href={handoffSync.reviewUrl}>设计师复核</a>
+              : <button type="button" onClick={openVersionDrawer}>设计师复核</button>}
+            {handoffSync.handoffUrl
+              ? <a href={handoffSync.handoffUrl}>交接 JSON</a>
+              : <button type="button" onClick={openVersionDrawer}>交接 JSON</button>}
+          </div>
+        </details>
       </div>
     </header>
 
@@ -1848,12 +1993,12 @@ function ProjectDemoPage() {
       <section className="panel project-stage" aria-labelledby="project-stage-title">
         <div className="panel__header panel__header--project">
           <div>
-            <p className="panel__kicker">实时 3D · 同一场景</p>
+            <p className="panel__kicker">空间方案</p>
             <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
           </div>
-          <div className="project-stage__summary"><span>当前选择</span><strong>{selectedLabel}</strong><small>{currentViewLabel}</small></div>
+          <div className="project-stage__summary"><span>{selectedLabel}</span><small>{currentViewLabel}</small></div>
           <div className="project-stage__tier" data-tier={viewerTier} data-interaction={interactionLayer}>
-            <span>{interactionLayer === 'quick' ? '住户微调 · 仅家具形态' : (viewerTier === 'full' ? 'AI 设计浏览' : '轻量浏览 · 先省资源')}</span>
+            <span>{interactionLayer === 'quick' ? '正在微调' : (viewerTier === 'full' ? '浏览方案' : '轻量浏览')}</span>
             {viewerTier !== 'full' && !viewerExpanded && <button type="button" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>}
           </div>
         </div>
@@ -1883,9 +2028,15 @@ function ProjectDemoPage() {
 
       <aside className="project-sidebar" data-mode={sidecarMode}>
         <nav className="project-sidebar__switch" aria-label="右侧工作区">
-          <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
-          <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />微调</button>
-          <button type="button" aria-pressed={sidecarMode === 'household'} onClick={() => setSidecarMode('household')}><UsersThree size={15} />家庭</button>
+          <strong><ChatCircleDots size={16} />{sidecarMode === 'agent' ? '设计助理' : sidecarMode === 'space' ? '空间微调' : '家庭意见'}</strong>
+          <details>
+            <summary>切换</summary>
+            <div>
+              <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
+              <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />微调</button>
+              <button type="button" aria-pressed={sidecarMode === 'household'} onClick={() => setSidecarMode('household')}><UsersThree size={15} />家庭</button>
+            </div>
+          </details>
         </nav>
         {sidecarMode === 'space' ? <>
         <article className="panel project-panel project-panel--overview">
@@ -1983,23 +2134,13 @@ function ProjectDemoPage() {
         </article>
         </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
           <header className="agent-sidecar__header">
-            <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>AI 设计协同</strong><small>{agentCapability.provider === 'local' ? '本地规划器' : agentCapability.provider}</small></div></div>
-            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? 'Aily 可用' : '本地降级'}</div>
+            <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>空间设计助理</strong><small>先预览，再由你决定</small></div></div>
+            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? '在线' : '本地'}</div>
           </header>
 
           <div className="agent-sidecar__scope">
-            <span>当前上下文</span><strong>{currentRoomLabel} · {selectedLabel}</strong>
-            <small>{capabilityLabel(agentCapability.aily, 'Aily')} · {capabilityLabel(agentCapability.base, '飞书留痕')}</small>
-            <small>已识别 {designBrief.goals.length} 个目标 · {designBrief.hardConstraints.length} 条硬约束 · {designBrief.softPreferences.length} 个偏好 · {designBrief.unresolvedIssues.length} 个未决项</small>
-          </div>
-
-          <div className="agent-task-actions" aria-label="当前设计动作">
-            <button type="button" onClick={() => setAgentInput(`请先看看${selectedLabel}，给出一个改进方向，不要直接修改。`)}>让 Agent 调整</button>
-            <button type="button" onClick={() => setSidecarMode('space')}>快速微调</button>
-          </div>
-
-          <div className="agent-quick" aria-label="快速真实任务">
-            {agentQuickPrompts.map((prompt) => <button key={prompt} type="button" onClick={() => runAgentPrompt(prompt)} disabled={agentBusy || Boolean(pendingReview)}>{prompt}</button>)}
+            <strong>{currentRoomLabel} · {selectedLabel}</strong>
+            <small>修改前自动检查空间规则</small>
           </div>
 
           <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
@@ -2011,15 +2152,10 @@ function ProjectDemoPage() {
               {message.nextAction === 'household' && <button className="agent-message__action" type="button" onClick={() => setSidecarMode('household')}>进入家庭共识</button>}
               {message.nextAction === 'version' && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本与交接</button>}
             </article>)}
-            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>Agent</span><small>AILY → LOCAL</small></div><p>Aily 正在分析当前 scene、版本和规则；超时后自动切换本地规划器。</p></article>}
-            {!agentBusy && !agentHasConversation && <section className="agent-empty" aria-label="Agent 初始提示">
-              <strong>选择房间或家具后开始</strong>
-              <p>基于当前选择、版本和规则生成可验证变更，并保留未决项。</p>
-              <div>
-                <button type="button" onClick={() => runAgentPrompt(agentQuickPrompts[0])}>{agentQuickPrompts[0]}</button>
-                <button type="button" onClick={openVersionDrawer}>查看当前版本</button>
-              </div>
-            </section>}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>设计助理</span></div><p><i className="agent-message__spinner" aria-hidden="true" />{agentProgress || '正在检查当前场景与空间规则…'}</p></article>}
+            {!agentBusy && !agentHasConversation && <div className="agent-starters" aria-label="可以这样开始">
+              {agentQuickPrompts.slice(0, 2).map((prompt) => <button key={prompt} type="button" onClick={() => runAgentPrompt(prompt)}>{prompt}</button>)}
+            </div>}
           </div>
 
           {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
@@ -2033,7 +2169,7 @@ function ProjectDemoPage() {
             <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
             <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
           </form>
-          <footer className="agent-sidecar__footer">每次修改都会先检查空间规则并生成预览；未经你确认，不会保存为新版本。</footer>
+          <footer className="agent-sidecar__footer">修改先生成预览，确认后才保存。</footer>
         </article> : <article className="panel household-sidecar" data-testid="household-sidecar">
           <header className="household-sidecar__header">
             <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>当前为 Demo 顺序切换，不是实时多人同步</small></div></div>
@@ -2337,6 +2473,8 @@ export default function App() {
   const isLabRoute = pathname.startsWith('/lab/scene');
   const page = pathname === '/' || pathname === '/index.html'
     ? <ExperienceLandingPage />
+    : pathname === '/projects/new/generating'
+      ? <ProjectGenerationPage />
     : pathname === '/projects/new'
       ? <ProjectSetupPage />
     : pathname.startsWith('/projects')

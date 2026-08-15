@@ -45,6 +45,7 @@ function makeInitialState({ projectId, scene, now }) {
     pendingBaseEvents: [],
     syncedBaseEventIds: [],
     handoffSnapshots: [],
+    firstPlans: [],
   };
 }
 
@@ -79,11 +80,17 @@ function normalizeState(value, fallback) {
     if (serializeScene(replay.currentScene) !== serializeScene(version.scene)) throw new Error('VERSION_REPLAY_MISMATCH');
   }
   const commandLog = Array.isArray(value.commandLog) ? value.commandLog : [];
+  const firstPlans = Array.isArray(value.firstPlans) ? value.firstPlans : [];
   const eventIds = commandLog.map((event) => event?.eventId);
   if (
     eventIds.some((eventId) => typeof eventId !== 'string' || !eventId) ||
     new Set(eventIds).size !== eventIds.length ||
     commandLog.some((event) => !versionIds.has(event.versionId))
+  ) throw new Error('PROJECT_STORE_INVALID');
+  if (
+    firstPlans.some((record) => typeof record?.eventId !== 'string' || !record.eventId || !versionIds.has(record.versionId)) ||
+    new Set(firstPlans.map((record) => record.eventId)).size !== firstPlans.length ||
+    firstPlans.some((record) => eventIds.includes(record.eventId))
   ) throw new Error('PROJECT_STORE_INVALID');
   return {
     ...fallback,
@@ -93,6 +100,7 @@ function normalizeState(value, fallback) {
     pendingBaseEvents: Array.isArray(value.pendingBaseEvents) ? value.pendingBaseEvents : [],
     syncedBaseEventIds: Array.isArray(value.syncedBaseEventIds) ? value.syncedBaseEventIds : [],
     handoffSnapshots: Array.isArray(value.handoffSnapshots) ? value.handoffSnapshots : [],
+    firstPlans,
   };
 }
 
@@ -187,6 +195,7 @@ export function createPersistentProjectStore({
   const recordVersion = ({ expectedVersionId, store, event = {} }) => {
     if (expectedVersionId && expectedVersionId !== state.project.currentVersionId) throw new Error('VERSION_CONFLICT');
     if (event.eventId) {
+      if (state.firstPlans.some((record) => record.eventId === event.eventId)) throw new Error('EVENT_ID_CONFLICT');
       const existing = state.commandLog.find((entry) => entry.eventId === event.eventId);
       if (existing) return findVersion(existing.versionId);
     }
@@ -226,6 +235,21 @@ export function createPersistentProjectStore({
     state.designBrief = clone(normalizeDesignBrief(brief));
     save();
     return clone(state.designBrief);
+  };
+
+  const saveFirstPlan = ({ eventId, setupFingerprint, versionId = state.project.currentVersionId, ...record }) => {
+    if (!eventId || !setupFingerprint) throw new Error('FIRST_PLAN_RECORD_INVALID');
+    const existing = state.firstPlans.find((candidate) => candidate.eventId === eventId);
+    if (existing && (existing.setupFingerprint !== setupFingerprint || existing.versionId !== versionId)) {
+      throw new Error('EVENT_ID_CONFLICT');
+    }
+    if (existing) return clone(existing);
+    if (state.commandLog.some((event) => event.eventId === eventId)) throw new Error('EVENT_ID_CONFLICT');
+    findVersion(versionId);
+    const saved = { eventId, setupFingerprint, versionId, ...clone(record), createdAt: now() };
+    state.firstPlans.push(saved);
+    save();
+    return clone(saved);
   };
 
   const markBaseSynced = (eventId) => {
@@ -303,6 +327,8 @@ export function createPersistentProjectStore({
     getProject: () => clone({ ...state.project, versions: state.versions.map(({ scene, commands, ...version }) => version) }),
     getDesignBrief: () => clone(state.designBrief),
     saveDesignBrief,
+    findFirstPlanByEventId: (eventId) => clone(state.firstPlans.find((record) => record.eventId === eventId) ?? null),
+    saveFirstPlan,
     getSceneStore: sceneStoreFor,
     getVersion: (versionId) => clone(findVersion(versionId)),
     listPendingBaseEvents: () => clone(state.pendingBaseEvents),

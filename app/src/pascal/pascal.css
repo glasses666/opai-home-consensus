@@ -18,9 +18,18 @@
 .pascal-stage {
   position: relative;
   overflow: hidden;
-  background: #f5f0e8;
+  background: #fff;
   contain: paint;
   transform: translateZ(0);
+}
+
+.pascal-stage > .dark,
+.pascal-stage canvas {
+  background: #fff !important;
+}
+
+.pascal-stage canvas {
+  filter: brightness(1.12) contrast(0.97);
 }
 
 /* The product owns the shell. Pascal supplies the scene and its furniture

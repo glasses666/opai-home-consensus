@@ -45,7 +45,7 @@ test('house tree round-trips the canonical scene and exposes every coordinate do
   assert.match(tree, /X\[0,11000\] Y\[0,2800\] Z\[0,8000\]/);
   assert.match(tree, /surface-floor-living-dining/);
   assert.match(tree, /surface-wall-living-south · U\[0,7600\] V\[0,2800\]/);
-  assert.match(tree, /object-sofa · global\(2200,0,5600\) · room\(2200,0,2400\)/);
+  assert.match(tree, /object-sofa · global\(2200,0,5200\) · room\(2200,0,2000\)/);
 });
 
 test('agent proposal leaves current untouched until an atomic apply creates a new version', async (t) => {

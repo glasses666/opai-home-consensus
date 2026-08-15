@@ -643,18 +643,7 @@ function localFallbackReply(input) {
   return '';
 }
 
-function labelForToolTarget(call, scene) {
-  if (call.args.objectId) return findById(scene.objects, call.args.objectId)?.name ?? call.args.objectId;
-  if (call.args.surfaceId) {
-    const surface = findById(scene.surfaces, call.args.surfaceId);
-    const room = findById(scene.rooms, surface?.roomId);
-    const kind = surface?.kind === 'wall' ? '墙面' : surface?.kind === 'floor' ? '地面' : surface?.kind === 'ceiling' ? '顶面' : '表面';
-    return `${room?.name ?? ''}${kind}`;
-  }
-  return '当前对象';
-}
-
-function truthfulExecutionReply({ rolledBack, steps, toolCalls, scene }) {
+function truthfulExecutionReply({ rolledBack, steps, toolCalls }) {
   if (rolledBack) {
     const error = steps.find((step) => !step.ok)?.error ?? '本地规则未通过';
     const message = error.includes('OBJECT_FOOTPRINT_OUTSIDE_ROOM') || error.includes('ROOM_BOUNDARY')
@@ -674,13 +663,12 @@ function truthfulExecutionReply({ rolledBack, steps, toolCalls, scene }) {
   if (!writes.length) return null;
   if (writes.length > 1) return `已通过本地规则校验并应用 ${writes.length} 项变更。`;
   const call = writes[0];
-  const target = labelForToolTarget(call, scene);
   const action = call.tool === 'move_object' ? '移动'
     : call.tool === 'rotate_object' ? '旋转'
       : call.tool === 'delete_object' ? '删除'
         : call.tool === 'set_object_material' ? '材质修改'
           : '饰面修改';
-  return `已通过本地规则校验并应用${target}的${action}。`;
+  return `规则检查通过，已生成${action}预览。`;
 }
 
 async function normalizeCatalogToolCalls(toolCalls, catalogPlugin) {

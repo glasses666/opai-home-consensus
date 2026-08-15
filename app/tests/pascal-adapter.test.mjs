@@ -23,11 +23,13 @@ test('Pascal projection keeps the whole canonical home addressable', () => {
   assert.equal(Object.values(sceneGraph.nodes).filter((node) => node.type === 'ceiling').length, scene.surfaces.filter((s) => s.kind === 'ceiling').length);
   assert.equal(Object.values(sceneGraph.nodes).filter((node) => node.type === 'door' || node.type === 'window').length, scene.openings.length);
   for (const door of Object.values(sceneGraph.nodes).filter((node) => node.type === 'door')) {
+    assert.equal(door.openingKind, 'opening');
     assert.equal(door.openingShape, 'rectangle');
-    assert.ok(['left', 'right'].includes(door.hingesSide));
-    assert.ok(['inward', 'outward'].includes(door.swingDirection));
-    assert.ok(Number.isFinite(door.swingAngle));
+    assert.equal('hingesSide' in door, false);
+    assert.equal('swingDirection' in door, false);
+    assert.equal('swingAngle' in door, false);
   }
+  assert.equal(sceneGraph.nodes[mapping.canonicalToPascal.opening['opening-hall-living']].openingKind, 'opening');
 
   for (const room of scene.rooms) assert.equal(mapping.pascalToCanonical[mapping.canonicalToPascal.room[room.id]].id, room.id);
   for (const object of scene.objects) assert.equal(mapping.pascalToCanonical[mapping.canonicalToPascal.object[object.id]].id, object.id);
@@ -36,7 +38,8 @@ test('Pascal projection keeps the whole canonical home addressable', () => {
 });
 
 test('Pascal projection emits Pascal-shaped node and material ids', () => {
-  const { sceneGraph } = projectOppeinSceneToPascal(createDemoScene());
+  const scene = createDemoScene();
+  const { sceneGraph, mapping } = projectOppeinSceneToPascal(scene);
   const allowedPrefixes = /^(site|building|level|wall|door|window|slab|ceiling|zone|item)_/;
   for (const node of Object.values(sceneGraph.nodes)) {
     assert.equal(node.object, 'node');
@@ -49,4 +52,13 @@ test('Pascal projection emits Pascal-shaped node and material ids', () => {
     assert.equal(material.material.id, material.id);
     assert.ok(material.material.properties.color.startsWith('#'));
   }
+
+  const livingFloor = sceneGraph.nodes[mapping.canonicalToPascal.surface['surface-floor-living-dining']];
+  const livingWall = sceneGraph.nodes[mapping.canonicalToPascal.surface['surface-wall-living-south']];
+  assert.equal(livingFloor.slots.surface, 'scene:mat_mat_floor_light_oak');
+  assert.equal(livingWall.slots.interior, 'scene:mat_mat_wall_oak_panel');
+  assert.equal(livingWall.slots.exterior, 'scene:mat_mat_wall_warm_white');
+  const colorOf = (id) => scene.materials.find((material) => material.id === id).color;
+  assert.equal(sceneGraph.materials.mat_mat_floor_light_oak.material.properties.color, colorOf('mat-floor-light-oak'));
+  assert.equal(sceneGraph.materials.mat_mat_wall_oak_panel.material.properties.color, colorOf('mat-wall-oak-panel'));
 });

@@ -30,6 +30,14 @@ final result: passed
 
 ## 验证证据
 
+- Gate 35：`/projects/new/generating` 已接入真实 `POST /api/projects/project-demo/first-plan`；UI 进度最多到 99%，只有服务端返回完整合规方案才进入 100% 并跳转项目，降级与失败均保留重试入口。
+- Gate 35 动画使用先前发往 Telegram、包含建立与消散两段的循环成片 `villa-plan-loading-loop.mp4`；页面不加载 3D 编辑器。
+- Gate 35 项目落点按 Agent-first 收拢：默认只显示主视图、Agent 和“更多工具”；版本、复核、交接、微调与家庭共识按需展开，底层能力未删除。
+- Gate 35 录屏收口：实时 3D 与 Pascal 宿主背景统一为白色；重复状态、装饰性标签与大面积绿色 Agent 强调已降噪。固定演示输入复用现有本地 planner 和 SceneCommand，不建立录屏专用假后端。
+- Gate 35 录屏剧本：`DEMO-SCRIPT.md`。Opus 5 先写理念叙事，再按当前 scene 收敛为客餐厅家庭动线、儿童房成长性、主卧氛围与收纳三组确定性 3D 场景；每组均为多对象/表面预览、自动飞入对应房间、保留后进入同一版本链。
+- Gate 35 浏览器证据：`.omx/audits/gate35/generation.png`、`.omx/audits/gate35/project-agent-first.png`。
+- Gate 35 回归：`cd app && npm test` 259 / 259 通过；`cd app && npm run build` 通过，保留既有大 chunk warning。
+
 - Gate 34 浏览器黑盒复核：Demo 户型六步前进 / 后退、必填项拦截、条件字段、摘要回显、开始设计保存、刷新续接均通过；控制台 0 error。
 - Gate 34 层级过渡：只有首次处理或当前页输入改变后向前时显示对应业务状态；未修改重进和返回即时。处理完成后按方向滑入下一页，重复点击受禁用态保护，减弱动效偏好下无动画。
 - Gate 34 响应式证据：`.omx/audits/gate34/desktop-start.png`、`.omx/audits/gate34/mobile-start.png`；390×844 无横向溢出，原生表单语义和键盘焦点保留。

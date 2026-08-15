@@ -4,6 +4,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runAgentTurn } from '../src/agent/harness.js';
+import { FIRST_PLAN_STAGES, firstPlanBriefFromSetup, generateFirstPlan } from '../src/agent/first-plan.js';
+import { STANDARD_PLAN_PROMPT_VERSION } from '../src/agent/standard-design-plan.js';
 import { demoCatalogPlugin } from '../src/catalog/demo-catalog.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { normalizeDesignBrief } from '../src/domain/design-brief.js';
@@ -18,8 +20,19 @@ const JSON_LIMIT = 128 * 1024;
 const SNAPSHOT_JSON_LIMIT = 1024 * 1024;
 const AILY_RESPONSE_TIMEOUT_MS = 35_000;
 const AGENT_PROVIDER_TIMEOUT_MS = 38_000;
+const FIRST_PLAN_PROVIDER_TIMEOUT_MS = 240_000;
 const DEFAULT_PROJECT_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', '.data', 'project-demo.json');
 const REVIEW_ACTIONS = new Set(['approve', 'return']);
+
+const pendingFirstPlanStages = () => FIRST_PLAN_STAGES.map((stage) => ({ ...stage, status: 'pending', attempts: 0 }));
+const firstPlanEnvelope = (record, sync, replayed = false) => ({
+  status: record.status,
+  stages: record.stages,
+  result: record.result,
+  provider: { ...record.provider, replayed },
+  sync,
+  error: record.error,
+});
 
 function sendJson(response, statusCode, value) {
   response.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
@@ -94,6 +107,14 @@ export function createAppServer({
           maxAttempts: 1,
         })
       : null,
+    firstPlanProvider = process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
+      ? (context) => callAily(context, {
+          agentId: process.env.AILY_AGENT_ID,
+          appId: process.env.AILY_APP_ID,
+          timeoutMs: FIRST_PLAN_PROVIDER_TIMEOUT_MS,
+          maxAttempts: 1,
+        })
+      : null,
     id = randomUUID,
   } = {}) {
   let store = initialStore;
@@ -152,6 +173,150 @@ export function createAppServer({
           project,
           scene: projectStore.getSceneStore(project.currentVersionId).currentScene,
         });
+        return;
+      }
+
+      const firstPlanMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/first-plan$/);
+      if (request.method === 'POST' && firstPlanMatch) {
+        const projectId = decodeURIComponent(firstPlanMatch[1]);
+        let body;
+        try {
+          body = await readJson(request);
+        } catch (error) {
+          sendJson(response, 400, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: error.message, retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+        const project = projectStore?.getProject();
+        if (!projectStore || project?.id !== projectId) {
+          sendJson(response, projectStore ? 404 : 503, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: projectStore ? 'PROJECT_NOT_FOUND' : 'PROJECT_STORE_UNAVAILABLE', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+        if (typeof body.eventId !== 'string' || !body.eventId || body.eventId.length > 128) {
+          sendJson(response, 400, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: 'EVENT_ID_INVALID', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+        if (typeof body.expectedVersionId !== 'string' || !body.expectedVersionId || body.expectedVersionId.length > 128) {
+          sendJson(response, 400, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: 'EXPECTED_VERSION_ID_INVALID', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+
+        let prepared;
+        try {
+          prepared = firstPlanBriefFromSetup(body.setup);
+        } catch (error) {
+          sendJson(response, 400, firstPlanEnvelope({
+            status: 'failed', stages: error.stages ?? pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: error.code ?? 'PROJECT_SETUP_INVALID', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+
+        const existing = projectStore.findFirstPlanByEventId(body.eventId);
+        if (existing) {
+          if (existing.setupFingerprint !== prepared.setupFingerprint || existing.versionId !== body.expectedVersionId) {
+            sendJson(response, 409, firstPlanEnvelope({
+              status: 'failed', stages: pendingFirstPlanStages(), result: null,
+              provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+              error: { code: 'EVENT_ID_CONFLICT', retryable: false },
+            }, 'not_attempted'));
+            return;
+          }
+          const syncStatus = projectStore.listPendingBaseEvents().some((event) => event.eventId === body.eventId) ? 'pending' : 'synced';
+          sendJson(response, 200, firstPlanEnvelope(existing, syncStatus, true));
+          return;
+        }
+        if (projectStore.findEventById(body.eventId)) {
+          sendJson(response, 409, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: 'EVENT_ID_CONFLICT', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+        if (body.expectedVersionId !== project.currentVersionId) {
+          sendJson(response, 409, firstPlanEnvelope({
+            status: 'failed', stages: pendingFirstPlanStages(), result: null,
+            provider: { source: 'none', status: 'not_started', promptVersion: STANDARD_PLAN_PROMPT_VERSION, reason: null },
+            error: { code: 'VERSION_CONFLICT', retryable: false },
+          }, 'not_attempted'));
+          return;
+        }
+
+        let record;
+        try {
+          const generated = await generateFirstPlan({
+            scene: projectStore.getSceneStore(body.expectedVersionId).currentScene,
+            setup: prepared.setup,
+            provider: firstPlanProvider,
+          });
+          record = projectStore.saveFirstPlan({
+            eventId: body.eventId,
+            setupFingerprint: generated.setupFingerprint,
+            versionId: body.expectedVersionId,
+            status: 'ready',
+            stages: generated.stages,
+            result: {
+              projectId,
+              versionId: body.expectedVersionId,
+              styleId: generated.styleId,
+              promptVersion: generated.promptVersion,
+              warnings: generated.warnings,
+              plan: generated.plan,
+            },
+            provider: { source: 'aily', status: 'ready', promptVersion: generated.promptVersion, reason: null },
+            error: null,
+          });
+        } catch (error) {
+          const reason = error.code ?? (error.message?.startsWith('AILY_') ? error.message : 'FIRST_PLAN_GENERATION_FAILED');
+          record = projectStore.saveFirstPlan({
+            eventId: body.eventId,
+            setupFingerprint: prepared.setupFingerprint,
+            versionId: body.expectedVersionId,
+            status: 'degraded',
+            stages: error.stages ?? pendingFirstPlanStages(),
+            result: null,
+            provider: {
+              source: firstPlanProvider ? 'aily' : 'none',
+              status: firstPlanProvider ? 'failed' : 'unavailable',
+              promptVersion: STANDARD_PLAN_PROMPT_VERSION,
+              reason,
+            },
+            error: { code: reason, retryable: error.retryable !== false },
+          });
+        }
+
+        projectStore.enqueueBaseEvent({
+          eventId: body.eventId,
+          type: record.status === 'ready' ? 'first_plan_generated' : 'first_plan_degraded',
+          projectId,
+          spaceId: 'scene-demo-whole-home',
+          versionId: body.expectedVersionId,
+          provider: record.provider.source,
+          input: 'project_setup',
+          payload: { status: record.status, styleId: record.result?.styleId ?? prepared.styleId, promptVersion: STANDARD_PLAN_PROMPT_VERSION },
+          result: record.result ? { title: record.result.plan.title } : { error: record.error.code },
+          traceId: body.eventId,
+        });
+        await flushPending();
+        const syncStatus = projectStore.listPendingBaseEvents().some((event) => event.eventId === body.eventId) ? 'pending' : 'synced';
+        sendJson(response, 200, firstPlanEnvelope(record, syncStatus));
         return;
       }
 

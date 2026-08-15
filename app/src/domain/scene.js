@@ -737,7 +737,11 @@ function applySceneCommand(scene, command) {
     const object = nextScene.objects[index];
     if (!object.capabilities.deletable) throw new Error(`OBJECT_NOT_DELETABLE: Object "${command.objectId}" cannot be deleted.`);
     nextScene.objects.splice(index, 1);
-    nextScene.cameraPresets = nextScene.cameraPresets.filter((preset) => preset.objectId !== object.id);
+    nextScene.cameraPresets = nextScene.cameraPresets.map((preset) => {
+      if (preset.objectId !== object.id) return preset;
+      const { objectId: _removedObjectId, ...roomPreset } = preset;
+      return roomPreset;
+    });
   } else if (command.type === 'surface.setMaterial') {
     const surface = nextScene.surfaces?.find((candidate) => candidate.id === command.surfaceId);
     if (!surface) throw new Error(`SURFACE_NOT_FOUND: Surface "${command.surfaceId}" does not exist.`);

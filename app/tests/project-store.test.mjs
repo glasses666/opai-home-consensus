@@ -167,7 +167,7 @@ test('a browser branch can publish without deleting a durable sibling branch', (
     const serverVersion = store.recordVersion({ expectedVersionId: store.currentVersionId, store: serverStore });
 
     const browserStore = dispatchSceneCommand(initial, {
-      type: 'object.setTransform', objectId: 'object-dining-table', transform: { x: 6400 },
+      type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2000 },
     });
     const browserHistory = saveSceneVersion(createVersionHistory(initial), browserStore, { id: 'version-browser-v2' });
     store.publishVersionHistory(browserHistory);

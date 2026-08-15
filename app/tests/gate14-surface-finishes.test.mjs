@@ -65,7 +65,7 @@ test('wall, floor, and ceiling finishes use one command and replay byte-identica
   assert.equal(surface(store.currentScene, 'surface-wall-living-south').materialId, 'mat-wall-greige');
   assert.equal(surface(store.currentScene, 'surface-floor-living-dining').materialId, 'mat-floor-tile-warm');
   assert.equal(surface(store.currentScene, 'surface-ceiling-living-dining').materialId, 'mat-ceiling-greige');
-  assert.equal(surface(initial.currentScene, 'surface-wall-living-south').materialId, 'mat-wall-warm-white');
+  assert.equal(surface(initial.currentScene, 'surface-wall-living-south').materialId, 'mat-wall-oak-panel');
 
   const undone = undoSceneCommand(store);
   const redone = redoSceneCommand(undone);

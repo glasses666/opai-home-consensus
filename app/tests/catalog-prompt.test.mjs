@@ -211,7 +211,7 @@ test('a grounded provider tool survives an ungrounded explanation', async () => 
   });
   assert.equal(result.trace.source, 'provider');
   assert.equal(result.trace.providerReplyIssue, 'PROVIDER_REPLY_UNGROUNDED');
-  assert.equal(result.trace.assistantReply, '已通过本地规则校验并应用Sofa的移动。');
+  assert.equal(result.trace.assistantReply, '规则检查通过，已生成移动预览。');
   assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
 });
 

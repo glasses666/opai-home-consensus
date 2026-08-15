@@ -90,18 +90,24 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   useEffect(() => {
     if (!(ready && editorLoaded)) return;
     const viewer = useViewer.getState();
-    viewer.setSceneTheme('paper');
+    const edgeMode = interactionMode === 'quick' ? 'soft' : 'off';
+    viewer.setSceneTheme('overcast');
     viewer.setTransparentBackground(true);
     viewer.setShading('rendered');
     viewer.setTextures(true);
     viewer.setShadows(true);
+    viewer.setEdges(edgeMode);
+    const unsubscribe = useViewer.subscribe((state) => {
+      if (state.edges !== edgeMode) useViewer.getState().setEdges(edgeMode);
+    });
     try {
       applySceneSnapshot(snapshotFromProjection(projection), { origin: 'host' });
       setStatus('canonical scene 已同步到 Pascal');
     } catch {
       // Pascal refuses snapshot replacement during pointer interactions; next scene change retries.
     }
-  }, [editorLoaded, projection, ready]);
+    return unsubscribe;
+  }, [editorLoaded, interactionMode, projection, ready]);
 
   useEffect(() => {
     if (!(ready && editorLoaded) || initialFocusAppliedRef.current) return undefined;
@@ -154,6 +160,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
         key={scene.id}
         layoutVersion="v1"
         projectId={scene.id}
+        isVersionPreviewMode={interactionMode === 'browse'}
         onLoad={onLoad}
         onSave={onSave}
         onLoaderChange={onLoaderChange}
@@ -267,11 +274,15 @@ function PascalBrowseSelectionBridge({ mapping, nodes, onSelect }) {
 
 function PascalResidentModeGuard({ interactionMode }) {
   useEffect(() => {
-    useEditor.getState().setWorkspaceMode('edit');
+    const workspaceMode = interactionMode === 'quick' ? 'edit' : 'studio';
+    useEditor.getState().setWorkspaceMode(workspaceMode);
     useEditor.getState().setCaptureMode(false);
     useEditor.getState().setMode('select');
     const unsubscribe = useEditor.subscribe((state) => {
-      if (state.mode !== 'select') useEditor.getState().setMode('select');
+      // Pascal rehydrates its own UI preferences after mount. Keep the product
+      // view authoritative so construction handles cannot leak into browsing.
+      if (state.workspaceMode !== workspaceMode) useEditor.getState().setWorkspaceMode(workspaceMode);
+      else if (state.mode !== 'select') useEditor.getState().setMode('select');
     });
     const blockHiddenEditorShortcuts = (event) => {
       const target = event.target;

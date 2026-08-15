@@ -87,13 +87,10 @@ function openingNode(opening, wallId) {
     ...(isWindow
       ? { openingKind: 'window', windowType: 'fixed', sill: opening.sillHeight > 0 }
       : {
-          openingKind: 'door',
-          doorCategory: opening.connectsExterior ? 'exterior' : 'interior',
-          doorType: 'hinged',
+          // ponytail: keep resident presentation doorways frameless until the
+          // imported door-family orientation contract is stable.
+          openingKind: 'opening',
           openingShape: 'rectangle',
-          hingesSide: opening.swing?.hinge === 'end' ? 'right' : 'left',
-          swingDirection: opening.swing?.side === -1 ? 'outward' : 'inward',
-          swingAngle: Math.PI / 2,
         }),
   };
 }
@@ -129,7 +126,16 @@ export function projectOppeinSceneToPascal(scene) {
     visible: true,
     name: scene.name ?? 'OPPEIN demo',
     metadata: metadata('scene', scene),
-    polygon: { type: 'polygon', points: [point({ x: minX, z: minZ }), point({ x: maxX, z: minZ }), point({ x: maxX, z: maxZ }), point({ x: minX, z: maxZ })] },
+    // Pascal needs a valid site polygon; keep it sub-pixel so it cannot become
+    // visible presentation terrain or an across-scene guide line.
+    polygon: {
+      type: 'polygon',
+      points: [
+        point({ x: minX, z: minZ }),
+        point({ x: minX + 1, z: minZ }),
+        point({ x: minX, z: minZ + 1 }),
+      ],
+    },
     children: ['building_oppein_demo'],
   };
 
@@ -174,19 +180,23 @@ export function projectOppeinSceneToPascal(scene) {
         height: m(surface.height ?? 2800),
         frontSide: 'unknown',
         backSide: 'unknown',
-        slots: { interior: toSceneMaterialRef(surface.materialId), exterior: toSceneMaterialRef(surface.materialId) },
+        slots: {
+          interior: toSceneMaterialRef(surface.materialId),
+          exterior: toSceneMaterialRef('mat-wall-warm-white'),
+        },
         children,
       };
     } else {
       nodes[id] = {
         ...baseNode(id, surface.kind === 'ceiling' ? 'ceiling' : 'slab', LEVEL_ID, surface, 'surface'),
+        visible: surface.kind !== 'ceiling',
         polygon: surface.polygon.map(point),
         holes: [],
         elevation: surface.kind === 'floor' ? 0 : undefined,
         thickness: surface.kind === 'floor' ? 0.12 : undefined,
         height: surface.kind === 'ceiling' ? m(surface.elevation ?? 2800) : undefined,
         autoFromWalls: false,
-        slots: { default: toSceneMaterialRef(surface.materialId) },
+        slots: { surface: toSceneMaterialRef(surface.materialId) },
       };
     }
   }
