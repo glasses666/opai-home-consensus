@@ -6,3 +6,4 @@ dist/
 .tmp/
 .omx/
 app/.data/
+__pycache__/
