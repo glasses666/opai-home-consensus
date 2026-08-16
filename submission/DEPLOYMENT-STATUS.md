@@ -12,6 +12,7 @@
 - 只读检查返回 0 个场景命令，项目仍处于初始版本 `version-demo-initial`
 - 应用由独立 `opai` 用户和 systemd 服务运行，Nginx 反向代理
 - GitHub 仓库不包含飞书/Aily 凭据；凭据只保存在服务器受限目录
+- 最终飞书文档已导入并设为互联网链接可读：<https://www.feishu.cn/docx/DnQ0dmLg1oUDbkxEsQecsxpdnWc>
 
 ## 已配置但暂不可作为入口
 

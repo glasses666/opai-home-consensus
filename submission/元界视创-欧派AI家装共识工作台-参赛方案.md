@@ -16,7 +16,7 @@
 | 一句话摘要 | AI 先理解一家人的生活，再把语言变成同一 3D 空间里的可解释修改、规则校验与版本共识。 |
 | 飞书 AI 能力 | 飞书智能伙伴 Aily（模型推理 / Agent 技能）、飞书多维表格（过程留痕与结果同步） |
 | 体验入口 | [阿里云公网体验](http://8.134.145.209/project/demo?style=agent-canvas) |
-| Demo 视频 | **待补：成片链接**（建议 3–5 分钟） |
+| Demo 视频 | [抖音｜欧派共创空间 Demo 演示](https://v.douyin.com/Wt6Qqba5cp4/) |
 
 ### 团队成员与分工
 
@@ -147,7 +147,7 @@ SceneCommand（唯一写入边界）
 - **公网体验**：[http://8.134.145.209/project/demo?style=agent-canvas](http://8.134.145.209/project/demo?style=agent-canvas)
 - **预定域名**：`https://opai.glasser.top` 已完成 Cloudflare DNS，但当前被阿里云大陆节点以 ICP 备案要求拦截，暂不作为评委入口。
 - **GitHub 维护仓库**：[github.com/glasses666/opai-home-consensus](https://github.com/glasses666/opai-home-consensus)（私有仓库，不作为评委体验入口）
-- **Demo 视频**：**待补成片链接**
+- **Demo 视频**：[抖音｜欧派共创空间 Demo 演示](https://v.douyin.com/Wt6Qqba5cp4/)
 
 建议 3–5 分钟视频结构：
 

@@ -415,7 +415,8 @@ def build():
     props = doc.core_properties
     props.title = "元界视创｜AI 家装共识工作台参赛方案"
     props.subject = "AI 先锋未来人才大赛 40 强赛"
-    props.author = "元界视创"
+    props.author = ""
+    props.last_modified_by = ""
     props.keywords = "欧派家居, 飞书 Aily, 家装共识, 3D, SceneCommand"
     props.comments = "不含任何 API 密钥、用户令牌或企业私密凭据。"
     doc.save(OUTPUT)
