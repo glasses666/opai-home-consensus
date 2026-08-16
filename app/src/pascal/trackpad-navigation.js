@@ -1,3 +1,5 @@
+import { createCameraOrbit, sampleCameraOrbit, smoothCameraProgress } from '../domain/camera-transition.js';
+
 const PIXEL_DELTA = 0;
 const TRACKPAD_DELTA_CUTOFF = 50;
 const MAX_DELTA_PER_FRAME = 80;
@@ -50,5 +52,53 @@ export function centerCameraPoseOnFloorPlan(pose, bounds) {
     ...pose,
     position: [pose.position[0] + offsetX, pose.position[1], pose.position[2] + offsetZ],
     target: [centerX, pose.target[1], centerZ],
+  };
+}
+
+export function centerCameraPoseOnRoom(pose, room) {
+  if (!pose || !room?.polygon?.length) return null;
+  const xs = room.polygon.map((point) => point.x / 1000);
+  const zs = room.polygon.map((point) => point.z / 1000);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minZ = Math.min(...zs);
+  const maxZ = Math.max(...zs);
+  const centerX = (minX + maxX) / 2;
+  const centerZ = (minZ + maxZ) / 2;
+  const diagonal = Math.hypot(maxX - minX, maxZ - minZ);
+  const horizontal = Math.max(2.4, diagonal * 0.72);
+  const height = horizontal * Math.SQRT2;
+  return {
+    ...pose,
+    position: [centerX - horizontal, height, centerZ - horizontal],
+    target: [centerX, pose.target[1], centerZ],
+    viewWidth: undefined,
+  };
+}
+
+export function cameraPresetToPose(preset, fallbackProjection = 'perspective') {
+  if (!preset?.position || !preset?.target) return null;
+  const vector = (point) => [point.x / 1000, point.y / 1000, point.z / 1000];
+  return {
+    position: vector(preset.position),
+    target: vector(preset.target),
+    projection: fallbackProjection,
+    ...(Number.isFinite(preset.fov) ? { fov: preset.fov } : {}),
+  };
+}
+
+export function interpolateCameraPose(from, to, progress) {
+  const amount = Math.max(0, Math.min(1, progress));
+  if (amount === 0) return { ...from, position: [...from.position], target: [...from.target] };
+  if (amount === 1) return { ...to, position: [...to.position], target: [...to.target] };
+  const eased = smoothCameraProgress(amount);
+  const point = (value) => ({ x: value[0], y: value[1], z: value[2] });
+  const orbit = createCameraOrbit(point(from.position), point(from.target), point(to.position), point(to.target));
+  const sampled = sampleCameraOrbit(orbit, eased);
+  return {
+    ...to,
+    position: [sampled.position.x, sampled.position.y, sampled.position.z],
+    target: [sampled.target.x, sampled.target.y, sampled.target.z],
+    ...(Number.isFinite(from.fov) && Number.isFinite(to.fov) ? { fov: from.fov + (to.fov - from.fov) * eased } : {}),
   };
 }

@@ -63,7 +63,7 @@ test('design rules use the canonical collision proxy rather than visible model b
   const scene = clone(createDemoScene());
   const sofa = scene.objects.find((object) => object.id === 'object-sofa');
   sofa.transform.x = 5000;
-  sofa.transform.z = 5700;
+  sofa.transform.z = 6000;
   assert.equal(evaluateDesignRules(scene).checks.some((check) => check.code === 'OBJECT_COLLISION' && check.objectIds.includes('object-sofa')), true);
 
   sofa.collision.source = 'manual';

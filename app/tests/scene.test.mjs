@@ -15,6 +15,7 @@ import {
 } from '../src/domain/camera-transition.js';
 import { pointInPolygon, rotatedFootprint } from '../src/domain/geometry.js';
 import { projectScene2D } from '../src/domain/projection.js';
+import { evaluateDesignRules } from '../src/domain/design-rules.js';
 import { objectNavigationPreset } from '../src/domain/view-state.js';
 import {
   assertValidScene,
@@ -93,7 +94,6 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
 
   assert.deepEqual(livingObjects.map((object) => object.id).sort(), [
     'object-coffee-table',
-    'object-dining-chair-e',
     'object-dining-chair-n',
     'object-dining-chair-s',
     'object-dining-chair-w',
@@ -110,6 +110,21 @@ test('Gate 4 living slice exposes traceable selectable 3D objects', () => {
     assert.equal(object.model3D.source, 'generated');
     assert.ok(object.dimensions.width > 0 && object.dimensions.depth > 0 && object.dimensions.height > 0);
   }
+});
+
+test('three-chair round dining group stays clear of the doorway and living route', () => {
+  const scene = createDemoScene();
+  const object = (id) => scene.objects.find((candidate) => candidate.id === id);
+  assert.deepEqual(object('object-dining-table').dimensions, { width: 1300, depth: 1300, height: 740 });
+  assert.deepEqual(object('object-dining-table').transform, { x: 6200, y: 0, z: 5600, rotationY: 0 });
+  assert.deepEqual(object('object-dining-chair-n').transform, { x: 6200, y: 0, z: 4550, rotationY: 0 });
+  assert.deepEqual(object('object-dining-chair-w').transform, { x: 5250, y: 0, z: 5600, rotationY: Math.PI / 2 });
+  assert.deepEqual(object('object-dining-chair-s').transform, { x: 6200, y: 0, z: 6650, rotationY: Math.PI });
+  assert.equal(object('object-dining-chair-e'), undefined);
+  assert.equal(evaluateDesignRules(scene).violations.some((violation) => violation.status === 'blocked'), false);
+  const diningCamera = scene.cameraPresets.find((preset) => preset.id === 'camera-living-dining');
+  assert.equal(diningCamera.target.x, object('object-dining-table').transform.x);
+  assert.equal(diningCamera.target.z, object('object-dining-table').transform.z);
 });
 
 test('selected onboarding style changes the canonical material palette', () => {
@@ -159,7 +174,7 @@ test('Gate 5 duplicate, resize, delete, undo, and redo stay command-driven', () 
     objectId: 'object-sofa',
     newObjectId: 'object-sofa-copy-test',
     externalId: 'DEMO-FURN-001-COPY-TEST',
-    transform: { x: 6200, y: 0, z: 6900, rotationY: 0 },
+    transform: { x: 1200, y: 0, z: 3700, rotationY: 0 },
   });
   assert.equal(duplicated.currentScene.objects.some((object) => object.id === 'object-sofa-copy-test'), true);
 
@@ -224,6 +239,17 @@ test('camera presets provide whole-home, room-overhead, entry, and feature views
   assert.equal(scene.objects.find((object) => object.id === 'object-primary-bed').preferredCameraPresetId, 'camera-primary-overhead');
   assert.equal(scene.objects.find((object) => object.id === 'object-tv-console').preferredCameraPresetId, 'camera-living-feature');
   assert.equal(scene.objects.find((object) => object.id === 'object-primary-wardrobe').preferredCameraPresetId, 'camera-primary-wardrobe');
+  assert.equal(scene.objects.find((object) => object.id === 'object-primary-wardrobe').transform.rotationY, -Math.PI / 2);
+  assert.deepEqual(scene.objects.find((object) => object.id === 'object-primary-feature-wall').wallArt, {
+    src: '/assets/furniture/primary-artwork-v1.png',
+    title: '暖灰矿物抽象画',
+    source: 'generated',
+    provider: 'imagegen',
+    widthMm: 1350,
+    heightMm: 900,
+    positionMm: { x: 0, y: 1560, z: 0 },
+  });
+  assert.equal(scene.objects.find((object) => object.id === 'object-primary-feature-wall').transform.rotationY, Math.PI);
   for (const [objectId, presetId] of [['object-sofa', 'camera-living-sofa'], ['object-dining-table', 'camera-living-dining']]) {
     const object = scene.objects.find((candidate) => candidate.id === objectId);
     const preset = scene.cameraPresets.find((candidate) => candidate.id === presetId);
@@ -285,6 +311,7 @@ test('the dining table canonical bounds include its legs', async () => {
     .filter((node) => node.extras?.material_role === 'canonical')
     .map((node) => node.name);
 
+  assert.equal(canonicalNames.includes('CANONICAL round table top'), true);
   assert.equal(canonicalNames.filter((name) => name.startsWith('CANONICAL table leg')).length, 4);
   assert.equal(model.nodes.some((node) => /chair/i.test(node.name)), false);
 });

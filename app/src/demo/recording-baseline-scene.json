@@ -1,0 +1,4036 @@
+{
+  "id": "scene-demo-whole-home",
+  "schemaVersion": 1,
+  "floorPlan": {
+    "id": "floor-demo-001",
+    "units": "mm",
+    "origin": "northwest-floor",
+    "axes": {
+      "x": "east",
+      "y": "up",
+      "z": "south"
+    },
+    "bounds": {
+      "x": 0,
+      "z": 0,
+      "width": 11000,
+      "depth": 8000,
+      "height": 2800
+    }
+  },
+  "rooms": [
+    {
+      "id": "room-primary-bedroom",
+      "name": "Primary Bedroom",
+      "kind": "bedroom",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 0,
+          "z": 3200
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-hall",
+        "room-living-dining"
+      ],
+      "cameraPresetIds": [
+        "camera-primary-overhead",
+        "camera-primary-entry",
+        "camera-primary-feature"
+      ]
+    },
+    {
+      "id": "room-bathroom",
+      "name": "Bathroom",
+      "kind": "bathroom",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 4000,
+          "z": 2400
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-hall"
+      ],
+      "cameraPresetIds": [
+        "camera-bathroom-overhead"
+      ]
+    },
+    {
+      "id": "room-flex",
+      "name": "Flex Bedroom Study",
+      "kind": "bedroom-study",
+      "polygon": [
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-hall",
+        "room-living-dining",
+        "room-kitchen"
+      ],
+      "cameraPresetIds": [
+        "camera-flex-overhead",
+        "camera-flex-entry",
+        "camera-flex-feature"
+      ]
+    },
+    {
+      "id": "room-hall",
+      "name": "Hall",
+      "kind": "circulation",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-primary-bedroom",
+        "room-bathroom",
+        "room-flex",
+        "room-living-dining"
+      ],
+      "cameraPresetIds": [
+        "camera-hall-overhead"
+      ]
+    },
+    {
+      "id": "room-living-dining",
+      "name": "Open Living Dining",
+      "kind": "living-dining",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        },
+        {
+          "x": 0,
+          "z": 8000
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-primary-bedroom",
+        "room-flex",
+        "room-hall",
+        "room-kitchen",
+        "room-entry"
+      ],
+      "cameraPresetIds": [
+        "camera-living-overhead",
+        "camera-living-entry",
+        "camera-living-feature"
+      ]
+    },
+    {
+      "id": "room-kitchen",
+      "name": "Kitchen",
+      "kind": "kitchen",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 7600,
+          "z": 5600
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-flex",
+        "room-living-dining",
+        "room-entry"
+      ],
+      "cameraPresetIds": [
+        "camera-kitchen-overhead"
+      ]
+    },
+    {
+      "id": "room-entry",
+      "name": "Entry",
+      "kind": "entry",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 8000
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        }
+      ],
+      "adjacentRoomIds": [
+        "room-living-dining",
+        "room-kitchen"
+      ],
+      "cameraPresetIds": [
+        "camera-entry-overhead"
+      ]
+    }
+  ],
+  "cameraPresets": [
+    {
+      "id": "camera-home-overview",
+      "roomId": null,
+      "kind": "whole_home",
+      "label": "整屋",
+      "position": {
+        "x": 14700,
+        "y": 12600,
+        "z": 15100
+      },
+      "target": {
+        "x": 5500,
+        "y": 0,
+        "z": 4100
+      },
+      "fov": 34
+    },
+    {
+      "id": "camera-primary-overhead",
+      "roomId": "room-primary-bedroom",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 2000,
+        "y": 7200,
+        "z": 1660
+      },
+      "target": {
+        "x": 2000,
+        "y": 0,
+        "z": 1600
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-bathroom-overhead",
+      "roomId": "room-bathroom",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 5200,
+        "y": 7200,
+        "z": 1260
+      },
+      "target": {
+        "x": 5200,
+        "y": 0,
+        "z": 1200
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-flex-overhead",
+      "roomId": "room-flex",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 8700,
+        "y": 8280,
+        "z": 1660
+      },
+      "target": {
+        "x": 8700,
+        "y": 0,
+        "z": 1600
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-hall-overhead",
+      "roomId": "room-hall",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 5200,
+        "y": 7200,
+        "z": 3260
+      },
+      "target": {
+        "x": 5200,
+        "y": 0,
+        "z": 3200
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-living-overhead",
+      "roomId": "room-living-dining",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 3831.045160334552,
+        "y": 13680,
+        "z": 5548.656080985164
+      },
+      "target": {
+        "x": 3800,
+        "y": 0,
+        "z": 5600
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-kitchen-overhead",
+      "roomId": "room-kitchen",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 9300,
+        "y": 7200,
+        "z": 4460
+      },
+      "target": {
+        "x": 9300,
+        "y": 0,
+        "z": 4400
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-entry-overhead",
+      "roomId": "room-entry",
+      "kind": "room_overhead",
+      "label": "俯视",
+      "position": {
+        "x": 9300,
+        "y": 7200,
+        "z": 6860
+      },
+      "target": {
+        "x": 9300,
+        "y": 0,
+        "z": 6800
+      },
+      "fov": 32
+    },
+    {
+      "id": "camera-living-entry",
+      "roomId": "room-living-dining",
+      "kind": "room_entry",
+      "label": "入口",
+      "position": {
+        "x": 4700,
+        "y": 1720,
+        "z": 4200
+      },
+      "target": {
+        "x": 3400,
+        "y": 720,
+        "z": 6350
+      },
+      "fov": 58
+    },
+    {
+      "id": "camera-primary-entry",
+      "roomId": "room-primary-bedroom",
+      "kind": "room_entry",
+      "label": "入口",
+      "position": {
+        "x": 3150,
+        "y": 2600,
+        "z": 3000
+      },
+      "target": {
+        "x": 1200,
+        "y": 300,
+        "z": 1000
+      },
+      "fov": 65
+    },
+    {
+      "id": "camera-primary-feature",
+      "roomId": "room-primary-bedroom",
+      "surfaceId": "surface-wall-primary-east",
+      "kind": "surface_feature",
+      "label": "主功能面",
+      "position": {
+        "x": 800,
+        "y": 1500,
+        "z": 1600
+      },
+      "target": {
+        "x": 3300,
+        "y": 1200,
+        "z": 1600
+      },
+      "fov": 44
+    },
+    {
+      "id": "camera-flex-entry",
+      "roomId": "room-flex",
+      "kind": "room_entry",
+      "label": "入口",
+      "position": {
+        "x": 7000,
+        "y": 1650,
+        "z": 2750
+      },
+      "target": {
+        "x": 8800,
+        "y": 720,
+        "z": 1450
+      },
+      "fov": 52
+    },
+    {
+      "id": "camera-flex-feature",
+      "roomId": "room-flex",
+      "surfaceId": "surface-wall-flex-east",
+      "kind": "surface_feature",
+      "label": "主功能面",
+      "position": {
+        "x": 8000,
+        "y": 1450,
+        "z": 1600
+      },
+      "target": {
+        "x": 10300,
+        "y": 850,
+        "z": 1600
+      },
+      "fov": 44
+    },
+    {
+      "id": "camera-living-feature",
+      "roomId": "room-living-dining",
+      "surfaceId": "surface-wall-living-south",
+      "kind": "surface_feature",
+      "label": "主功能面",
+      "position": {
+        "x": 2200,
+        "y": 1450,
+        "z": 4750
+      },
+      "target": {
+        "x": 2200,
+        "y": 820,
+        "z": 7850
+      },
+      "fov": 43
+    },
+    {
+      "id": "camera-living-sofa",
+      "roomId": "room-living-dining",
+      "objectId": "object-sofa",
+      "kind": "object_feature",
+      "label": "沙发入口",
+      "position": {
+        "x": 4700,
+        "y": 1720,
+        "z": 4200
+      },
+      "target": {
+        "x": 2200,
+        "y": 410,
+        "z": 5200
+      },
+      "fov": 52
+    },
+    {
+      "id": "camera-living-dining",
+      "roomId": "room-living-dining",
+      "objectId": "object-dining-table",
+      "kind": "object_overhead",
+      "label": "餐桌俯视",
+      "position": {
+        "x": 6330,
+        "y": 4200,
+        "z": 4950
+      },
+      "target": {
+        "x": 6300,
+        "y": 370,
+        "z": 5000
+      },
+      "fov": 38
+    },
+    {
+      "id": "camera-primary-wardrobe",
+      "roomId": "room-primary-bedroom",
+      "objectId": "object-primary-wardrobe",
+      "kind": "object_feature",
+      "label": "衣柜立面",
+      "position": {
+        "x": 900,
+        "y": 1500,
+        "z": 1600
+      },
+      "target": {
+        "x": 3500,
+        "y": 1200,
+        "z": 1200
+      },
+      "fov": 45
+    },
+    {
+      "id": "camera-flex-desk",
+      "roomId": "room-flex",
+      "objectId": "object-flex-desk",
+      "kind": "object_feature",
+      "label": "书桌工作面",
+      "position": {
+        "x": 8100,
+        "y": 1450,
+        "z": 1600
+      },
+      "target": {
+        "x": 10450,
+        "y": 850,
+        "z": 1600
+      },
+      "fov": 44
+    },
+    {
+      "id": "camera-kitchen-worktop",
+      "roomId": "room-kitchen",
+      "objectId": "object-kitchen-counter",
+      "kind": "object_feature",
+      "label": "厨房工作面",
+      "position": {
+        "x": 9300,
+        "y": 1550,
+        "z": 5250
+      },
+      "target": {
+        "x": 9300,
+        "y": 820,
+        "z": 3650
+      },
+      "fov": 47
+    },
+    {
+      "id": "camera-entry-storage",
+      "roomId": "room-entry",
+      "objectId": "object-shoe-cabinet",
+      "kind": "object_feature",
+      "label": "玄关收纳面",
+      "position": {
+        "x": 8500,
+        "y": 1450,
+        "z": 6800
+      },
+      "target": {
+        "x": 10500,
+        "y": 850,
+        "z": 6800
+      },
+      "fov": 45
+    }
+  ],
+  "materials": [
+    {
+      "id": "mat-ceiling-greige",
+      "name": "暖灰顶面",
+      "kind": "paint",
+      "appliesTo": [
+        "ceiling"
+      ],
+      "source": "demo",
+      "color": "#c7bdb0"
+    },
+    {
+      "id": "mat-ceiling-warm-white",
+      "name": "暖白顶面",
+      "kind": "paint",
+      "appliesTo": [
+        "ceiling"
+      ],
+      "source": "demo",
+      "color": "#f6f2ea"
+    },
+    {
+      "id": "mat-door-warm-white",
+      "name": "暖白门板",
+      "kind": "painted-wood",
+      "appliesTo": [
+        "opening"
+      ],
+      "source": "demo",
+      "color": "#f2ede5"
+    },
+    {
+      "id": "mat-fabric-warm-gray",
+      "name": "暖灰织物",
+      "kind": "fabric",
+      "appliesTo": [
+        "object"
+      ],
+      "source": "demo",
+      "color": "#d8cfc2"
+    },
+    {
+      "id": "mat-floor-light-oak",
+      "name": "浅橡木地板",
+      "kind": "wood",
+      "appliesTo": [
+        "floor"
+      ],
+      "source": "demo",
+      "color": "#bf9567"
+    },
+    {
+      "id": "mat-floor-tile-warm",
+      "name": "暖灰哑光砖",
+      "kind": "porcelain-tile",
+      "appliesTo": [
+        "floor"
+      ],
+      "source": "demo",
+      "color": "#ddd4c5"
+    },
+    {
+      "id": "mat-oak-veneer",
+      "name": "浅橡木饰面",
+      "kind": "wood",
+      "appliesTo": [
+        "object"
+      ],
+      "source": "demo",
+      "color": "#bf9567"
+    },
+    {
+      "id": "mat-object-warm-white",
+      "name": "暖白家具饰面",
+      "kind": "painted-wood",
+      "appliesTo": [
+        "object"
+      ],
+      "source": "demo",
+      "color": "#eee9e1"
+    },
+    {
+      "id": "mat-wall-greige",
+      "name": "暖灰微水泥墙面",
+      "kind": "microcement",
+      "appliesTo": [
+        "wall"
+      ],
+      "source": "demo",
+      "color": "#c7bdb0"
+    },
+    {
+      "id": "mat-wall-oak-panel",
+      "name": "浅橡木墙板",
+      "kind": "wood-wall-panel",
+      "appliesTo": [
+        "wall"
+      ],
+      "source": "demo",
+      "color": "#c39b6f"
+    },
+    {
+      "id": "mat-wall-warm-white",
+      "name": "暖白哑光墙面",
+      "kind": "paint",
+      "appliesTo": [
+        "wall",
+        "opening"
+      ],
+      "source": "demo",
+      "color": "#f5f0e8"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-room-boundary",
+      "kind": "boundary",
+      "severity": "error",
+      "source": "demo",
+      "applicability": "演示户型：家具不得越出所属房间"
+    },
+    {
+      "id": "rule-opening-clearance",
+      "kind": "opening-clearance",
+      "severity": "warning",
+      "source": "demo",
+      "applicability": "演示户型：门扇开启弧线需保持可用"
+    },
+    {
+      "id": "rule-main-circulation-900",
+      "kind": "circulation",
+      "severity": "error",
+      "minimumMm": 900,
+      "source": "demo",
+      "applicability": "演示户型：主通道至少保留 900 mm"
+    },
+    {
+      "id": "rule-kitchen-aisle-1000",
+      "kind": "work-aisle",
+      "severity": "error",
+      "minimumMm": 1000,
+      "source": "demo",
+      "applicability": "演示户型：厨房操作通道至少保留 1000 mm"
+    },
+    {
+      "id": "rule-bedside-600",
+      "kind": "bedside-clearance",
+      "severity": "warning",
+      "minimumMm": 600,
+      "source": "demo",
+      "applicability": "演示户型：床侧通行至少保留 600 mm"
+    },
+    {
+      "id": "rule-child-activity-clearance",
+      "kind": "child-activity-clearance",
+      "severity": "warning",
+      "minimumMm": 1600,
+      "source": "demo",
+      "applicability": "演示儿童房：床与书桌调整后保留成长活动留白"
+    },
+    {
+      "id": "rule-cabinet-front-900",
+      "kind": "cabinet-front-clearance",
+      "severity": "warning",
+      "minimumMm": 900,
+      "source": "demo",
+      "applicability": "演示户型：柜前需要保留可使用净距"
+    },
+    {
+      "id": "rule-tv-distance-1800-3600",
+      "kind": "tv-viewing-distance",
+      "severity": "recommendation",
+      "minimumMm": 1800,
+      "maximumMm": 3600,
+      "source": "demo",
+      "applicability": "演示舒适性：沙发与电视保持舒适观看距离"
+    },
+    {
+      "id": "rule-tall-storage-anchored",
+      "kind": "child-safety-antitip",
+      "severity": "warning",
+      "source": "demo",
+      "applicability": "演示儿童安全：高柜需固定或防倾倒"
+    },
+    {
+      "id": "rule-fixed-equipment-wall-relation",
+      "kind": "fixed-equipment-relation",
+      "severity": "error",
+      "source": "demo",
+      "applicability": "演示硬装构件：固定设备应贴近墙面或管线面"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "surface-floor-primary-bedroom",
+      "kind": "floor",
+      "roomId": "room-primary-bedroom",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 0,
+          "z": 3200
+        }
+      ],
+      "materialId": "mat-floor-light-oak",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-bathroom",
+      "kind": "floor",
+      "roomId": "room-bathroom",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 4000,
+          "z": 2400
+        }
+      ],
+      "materialId": "mat-floor-tile-warm",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-flex",
+      "kind": "floor",
+      "roomId": "room-flex",
+      "polygon": [
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        }
+      ],
+      "materialId": "mat-floor-light-oak",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-hall",
+      "kind": "floor",
+      "roomId": "room-hall",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        }
+      ],
+      "materialId": "mat-floor-light-oak",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-living-dining",
+      "kind": "floor",
+      "roomId": "room-living-dining",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        },
+        {
+          "x": 0,
+          "z": 8000
+        }
+      ],
+      "materialId": "mat-floor-light-oak",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-kitchen",
+      "kind": "floor",
+      "roomId": "room-kitchen",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 7600,
+          "z": 5600
+        }
+      ],
+      "materialId": "mat-floor-tile-warm",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-floor-entry",
+      "kind": "floor",
+      "roomId": "room-entry",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 8000
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        }
+      ],
+      "materialId": "mat-floor-light-oak",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-primary-bedroom",
+      "kind": "ceiling",
+      "roomId": "room-primary-bedroom",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 0,
+          "z": 3200
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-bathroom",
+      "kind": "ceiling",
+      "roomId": "room-bathroom",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 4000,
+          "z": 2400
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-flex",
+      "kind": "ceiling",
+      "roomId": "room-flex",
+      "polygon": [
+        {
+          "x": 6400,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 0
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-hall",
+      "kind": "ceiling",
+      "roomId": "room-hall",
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 2400
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-living-dining",
+      "kind": "ceiling",
+      "roomId": "room-living-dining",
+      "polygon": [
+        {
+          "x": 0,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 3200
+        },
+        {
+          "x": 4000,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 4000
+        },
+        {
+          "x": 6400,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        },
+        {
+          "x": 0,
+          "z": 8000
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-kitchen",
+      "kind": "ceiling",
+      "roomId": "room-kitchen",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 3200
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 7600,
+          "z": 5600
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-ceiling-entry",
+      "kind": "ceiling",
+      "roomId": "room-entry",
+      "polygon": [
+        {
+          "x": 7600,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 5600
+        },
+        {
+          "x": 11000,
+          "z": 8000
+        },
+        {
+          "x": 7600,
+          "z": 8000
+        }
+      ],
+      "elevation": 2800,
+      "materialId": "mat-ceiling-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ]
+    },
+    {
+      "id": "surface-wall-primary-north",
+      "kind": "wall",
+      "roomId": "room-primary-bedroom",
+      "edge": {
+        "start": {
+          "x": 0,
+          "z": 0
+        },
+        "end": {
+          "x": 4000,
+          "z": 0
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-bathroom-north",
+      "kind": "wall",
+      "roomId": "room-bathroom",
+      "edge": {
+        "start": {
+          "x": 4000,
+          "z": 0
+        },
+        "end": {
+          "x": 6400,
+          "z": 0
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-flex-north",
+      "kind": "wall",
+      "roomId": "room-flex",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 0
+        },
+        "end": {
+          "x": 11000,
+          "z": 0
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-primary-west",
+      "kind": "wall",
+      "roomId": "room-primary-bedroom",
+      "edge": {
+        "start": {
+          "x": 0,
+          "z": 3200
+        },
+        "end": {
+          "x": 0,
+          "z": 0
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-living-west",
+      "kind": "wall",
+      "roomId": "room-living-dining",
+      "edge": {
+        "start": {
+          "x": 0,
+          "z": 8000
+        },
+        "end": {
+          "x": 0,
+          "z": 3200
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-flex-east",
+      "kind": "wall",
+      "roomId": "room-flex",
+      "edge": {
+        "start": {
+          "x": 11000,
+          "z": 0
+        },
+        "end": {
+          "x": 11000,
+          "z": 3200
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-kitchen-east",
+      "kind": "wall",
+      "roomId": "room-kitchen",
+      "edge": {
+        "start": {
+          "x": 11000,
+          "z": 3200
+        },
+        "end": {
+          "x": 11000,
+          "z": 5600
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-entry-east",
+      "kind": "wall",
+      "roomId": "room-entry",
+      "edge": {
+        "start": {
+          "x": 11000,
+          "z": 5600
+        },
+        "end": {
+          "x": 11000,
+          "z": 8000
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-living-south",
+      "kind": "wall",
+      "roomId": "room-living-dining",
+      "edge": {
+        "start": {
+          "x": 7600,
+          "z": 8000
+        },
+        "end": {
+          "x": 0,
+          "z": 8000
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-oak-panel",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-entry-south",
+      "kind": "wall",
+      "roomId": "room-entry",
+      "edge": {
+        "start": {
+          "x": 11000,
+          "z": 8000
+        },
+        "end": {
+          "x": 7600,
+          "z": 8000
+        }
+      },
+      "height": 2800,
+      "thickness": 180,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-primary-east",
+      "kind": "wall",
+      "roomId": "room-primary-bedroom",
+      "edge": {
+        "start": {
+          "x": 4000,
+          "z": 0
+        },
+        "end": {
+          "x": 4000,
+          "z": 3200
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-primary-south",
+      "kind": "wall",
+      "roomId": "room-primary-bedroom",
+      "edge": {
+        "start": {
+          "x": 4000,
+          "z": 3200
+        },
+        "end": {
+          "x": 0,
+          "z": 3200
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-greige",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-bathroom-east",
+      "kind": "wall",
+      "roomId": "room-bathroom",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 0
+        },
+        "end": {
+          "x": 6400,
+          "z": 2400
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-bathroom-south",
+      "kind": "wall",
+      "roomId": "room-bathroom",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 2400
+        },
+        "end": {
+          "x": 4000,
+          "z": 2400
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-hall-west-south",
+      "kind": "wall",
+      "roomId": "room-hall",
+      "edge": {
+        "start": {
+          "x": 4000,
+          "z": 3200
+        },
+        "end": {
+          "x": 4000,
+          "z": 4000
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-hall-east",
+      "kind": "wall",
+      "roomId": "room-hall",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 2400
+        },
+        "end": {
+          "x": 6400,
+          "z": 4000
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-hall-south",
+      "kind": "wall",
+      "roomId": "room-hall",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 4000
+        },
+        "end": {
+          "x": 4000,
+          "z": 4000
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-flex-south",
+      "kind": "wall",
+      "roomId": "room-flex",
+      "edge": {
+        "start": {
+          "x": 6400,
+          "z": 3200
+        },
+        "end": {
+          "x": 11000,
+          "z": 3200
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-living-east-kitchen",
+      "kind": "wall",
+      "roomId": "room-living-dining",
+      "edge": {
+        "start": {
+          "x": 7600,
+          "z": 3200
+        },
+        "end": {
+          "x": 7600,
+          "z": 5600
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-living-east-entry",
+      "kind": "wall",
+      "roomId": "room-living-dining",
+      "edge": {
+        "start": {
+          "x": 7600,
+          "z": 5600
+        },
+        "end": {
+          "x": 7600,
+          "z": 8000
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "surface-wall-kitchen-south",
+      "kind": "wall",
+      "roomId": "room-kitchen",
+      "edge": {
+        "start": {
+          "x": 11000,
+          "z": 5600
+        },
+        "end": {
+          "x": 7600,
+          "z": 5600
+        }
+      },
+      "height": 2800,
+      "thickness": 120,
+      "materialId": "mat-wall-warm-white",
+      "source": "demo",
+      "capabilities": {
+        "materialEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-opening-clearance"
+      ]
+    }
+  ],
+  "openings": [
+    {
+      "id": "opening-entry-exterior",
+      "kind": "exterior-door",
+      "hostSurfaceId": "surface-wall-entry-south",
+      "offset": 400,
+      "width": 900,
+      "height": 2100,
+      "sillHeight": 0,
+      "materialId": "mat-door-warm-white",
+      "connectsExterior": true,
+      "swing": {
+        "hinge": "start",
+        "side": 1
+      },
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-primary-hall",
+      "kind": "interior-door",
+      "hostSurfaceId": "surface-wall-primary-east",
+      "offset": 2400,
+      "width": 800,
+      "height": 2100,
+      "sillHeight": 0,
+      "materialId": "mat-door-warm-white",
+      "connectsRoomIds": [
+        "room-primary-bedroom",
+        "room-hall"
+      ],
+      "swing": {
+        "hinge": "start",
+        "side": 1
+      },
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-bathroom-hall",
+      "kind": "interior-door",
+      "hostSurfaceId": "surface-wall-bathroom-south",
+      "offset": 800,
+      "width": 800,
+      "height": 2100,
+      "sillHeight": 0,
+      "materialId": "mat-door-warm-white",
+      "connectsRoomIds": [
+        "room-bathroom",
+        "room-hall"
+      ],
+      "swing": {
+        "hinge": "start",
+        "side": 1
+      },
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-flex-hall",
+      "kind": "interior-door",
+      "hostSurfaceId": "surface-wall-hall-east",
+      "offset": 0,
+      "width": 800,
+      "height": 2100,
+      "sillHeight": 0,
+      "materialId": "mat-door-warm-white",
+      "connectsRoomIds": [
+        "room-flex",
+        "room-hall"
+      ],
+      "swing": {
+        "hinge": "start",
+        "side": -1
+      },
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-hall-living",
+      "kind": "shared-doorway",
+      "hostSurfaceId": "surface-wall-hall-south",
+      "offset": 400,
+      "width": 1600,
+      "height": 2400,
+      "sillHeight": 0,
+      "materialId": "mat-wall-warm-white",
+      "connectsRoomIds": [
+        "room-hall",
+        "room-living-dining"
+      ],
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-living-kitchen",
+      "kind": "shared-doorway",
+      "hostSurfaceId": "surface-wall-living-east-kitchen",
+      "offset": 500,
+      "width": 1400,
+      "height": 2400,
+      "sillHeight": 0,
+      "materialId": "mat-wall-warm-white",
+      "connectsRoomIds": [
+        "room-living-dining",
+        "room-kitchen"
+      ],
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-living-entry",
+      "kind": "shared-doorway",
+      "hostSurfaceId": "surface-wall-living-east-entry",
+      "offset": 600,
+      "width": 1200,
+      "height": 2400,
+      "sillHeight": 0,
+      "materialId": "mat-wall-warm-white",
+      "connectsRoomIds": [
+        "room-living-dining",
+        "room-entry"
+      ],
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-kitchen-entry",
+      "kind": "interior-door",
+      "hostSurfaceId": "surface-wall-kitchen-south",
+      "offset": 1200,
+      "width": 900,
+      "height": 2100,
+      "sillHeight": 0,
+      "materialId": "mat-door-warm-white",
+      "connectsRoomIds": [
+        "room-kitchen",
+        "room-entry"
+      ],
+      "swing": {
+        "hinge": "start",
+        "side": 1
+      },
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-primary-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-primary-north",
+      "offset": 900,
+      "width": 2000,
+      "height": 1500,
+      "sillHeight": 900,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-bathroom-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-bathroom-north",
+      "offset": 700,
+      "width": 1000,
+      "height": 900,
+      "sillHeight": 1200,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-flex-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-flex-north",
+      "offset": 1200,
+      "width": 2200,
+      "height": 1500,
+      "sillHeight": 900,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-living-west-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-living-west",
+      "offset": 1000,
+      "width": 2400,
+      "height": 1600,
+      "sillHeight": 700,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-living-south-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-living-south",
+      "offset": 1800,
+      "width": 3000,
+      "height": 2200,
+      "sillHeight": 0,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    },
+    {
+      "id": "opening-kitchen-window",
+      "kind": "window",
+      "hostSurfaceId": "surface-wall-kitchen-east",
+      "offset": 600,
+      "width": 1200,
+      "height": 1200,
+      "sillHeight": 1000,
+      "materialId": "mat-wall-warm-white",
+      "connectsExterior": true,
+      "ruleIds": [
+        "rule-opening-clearance"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "object-primary-bed",
+      "externalId": "DEMO-FURN-002",
+      "source": "demo",
+      "name": "Double Bed",
+      "category": "bed",
+      "roomId": "room-primary-bedroom",
+      "preferredCameraPresetId": "camera-primary-overhead",
+      "dimensions": {
+        "width": 1800,
+        "depth": 2000,
+        "height": 1050
+      },
+      "transform": {
+        "x": 1500,
+        "y": 0,
+        "z": 1800,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/double-bed-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/double-bed-original.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-primary-bed",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1800,
+          "depth": 2000,
+          "height": 1050
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/double-bed.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-fabric-warm-gray",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-bedside-600"
+      ],
+      "hierarchy": {
+        "parentId": "room-primary-bedroom",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-primary-bedroom",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1800,
+          "depth": 2000,
+          "height": 1050
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-primary-wardrobe",
+      "externalId": "DEMO-CAB-002",
+      "source": "demo",
+      "name": "Wardrobe",
+      "category": "fixed-cabinet",
+      "roomId": "room-primary-bedroom",
+      "preferredCameraPresetId": "camera-primary-wardrobe",
+      "dimensions": {
+        "width": 2400,
+        "depth": 600,
+        "height": 2400
+      },
+      "transform": {
+        "x": 3600,
+        "y": 0,
+        "z": 1200,
+        "rotationY": 1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/wardrobe-v2-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/wardrobe-original.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-primary-wardrobe",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 2400,
+          "depth": 600,
+          "height": 2400
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/wardrobe.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-cabinet-front-900"
+      ],
+      "hierarchy": {
+        "parentId": "room-primary-bedroom",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-primary-bedroom",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "cabinetry",
+        "mount": "floor",
+        "hostSurfaceId": "surface-floor-primary-bedroom",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 2400,
+          "depth": 600,
+          "height": 2400
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-flex-bed",
+      "externalId": "DEMO-FURN-003",
+      "source": "demo",
+      "name": "Single Daybed",
+      "category": "bed",
+      "roomId": "room-flex",
+      "preferredCameraPresetId": "camera-flex-overhead",
+      "dimensions": {
+        "width": 1200,
+        "depth": 2000,
+        "height": 900
+      },
+      "transform": {
+        "x": 7700,
+        "y": 0,
+        "z": 1500,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/single-bed-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/single-bed.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-flex-bed",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1200,
+          "depth": 2000,
+          "height": 900
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/single-bed.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-fabric-warm-gray",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-bedside-600",
+        "rule-child-activity-clearance"
+      ],
+      "hierarchy": {
+        "parentId": "room-flex",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-flex",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1200,
+          "depth": 2000,
+          "height": 900
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-flex-desk",
+      "externalId": "DEMO-FURN-004",
+      "source": "demo",
+      "name": "Writing Desk",
+      "category": "desk",
+      "roomId": "room-flex",
+      "preferredCameraPresetId": "camera-flex-desk",
+      "dimensions": {
+        "width": 1400,
+        "depth": 650,
+        "height": 740
+      },
+      "transform": {
+        "x": 10500,
+        "y": 0,
+        "z": 1600,
+        "rotationY": 1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/desk-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/desk.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-flex-desk",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1400,
+          "depth": 650,
+          "height": 740
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/desk.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-cabinet-front-900"
+      ],
+      "hierarchy": {
+        "parentId": "room-flex",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-flex",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1400,
+          "depth": 650,
+          "height": 740
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-sofa",
+      "externalId": "DEMO-FURN-001",
+      "source": "demo",
+      "name": "Sofa",
+      "category": "sofa",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-sofa",
+      "dimensions": {
+        "width": 2200,
+        "depth": 900,
+        "height": 820
+      },
+      "transform": {
+        "x": 2200,
+        "y": 0,
+        "z": 5200,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/sofa-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/sofa.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-sofa",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 2200,
+          "depth": 900,
+          "height": 820
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/sofa.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-fabric-warm-gray",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": true,
+        "duplicable": true,
+        "materialEditable": true,
+        "parameterEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-main-circulation-900"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 2200,
+          "depth": 900,
+          "height": 820
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-tv-console",
+      "externalId": "DEMO-CAB-001",
+      "source": "demo",
+      "name": "Media Console",
+      "category": "fixed-cabinet",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-feature",
+      "dimensions": {
+        "width": 2200,
+        "depth": 450,
+        "height": 520
+      },
+      "transform": {
+        "x": 2200,
+        "y": 0,
+        "z": 7650,
+        "rotationY": 3.141592653589793
+      },
+      "media2D": {
+        "src": "/assets/furniture/tv-console-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/tv-console.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-tv-console",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 2200,
+          "depth": 450,
+          "height": 520
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/tv-console.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": false,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-cabinet-front-900",
+        "rule-tv-distance-1800-3600",
+        "rule-fixed-equipment-wall-relation"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "cabinetry",
+        "mount": "floor",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 2200,
+          "depth": 450,
+          "height": 520
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-dining-table",
+      "externalId": "DEMO-FURN-005",
+      "source": "demo",
+      "name": "Dining Table",
+      "category": "dining-table",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-dining",
+      "dimensions": {
+        "width": 1600,
+        "depth": 900,
+        "height": 740
+      },
+      "transform": {
+        "x": 6300,
+        "y": 0,
+        "z": 5000,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/dining-table-original-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/dining-table-original.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-dining-table",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1600,
+          "depth": 900,
+          "height": 740
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/dining-table.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": true,
+        "duplicable": true,
+        "materialEditable": true,
+        "parameterEditable": true
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-main-circulation-900"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1600,
+          "depth": 900,
+          "height": 740
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-dining-chair-n",
+      "externalId": "DEMO-FURN-CHAIR-N",
+      "source": "demo",
+      "name": "Dining Chair",
+      "category": "dining-chair",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-dining",
+      "dimensions": {
+        "width": 480,
+        "depth": 500,
+        "height": 820
+      },
+      "transform": {
+        "x": 6100,
+        "y": 0,
+        "z": 4250,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/dining-chair-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/dining-chair.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-dining-chair-n",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/dining-chair.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-object-warm-white",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-dining-chair-s",
+      "externalId": "DEMO-FURN-CHAIR-S",
+      "source": "demo",
+      "name": "Dining Chair",
+      "category": "dining-chair",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-dining",
+      "dimensions": {
+        "width": 480,
+        "depth": 500,
+        "height": 820
+      },
+      "transform": {
+        "x": 6400,
+        "y": 0,
+        "z": 6000,
+        "rotationY": 3.141592653589793
+      },
+      "media2D": {
+        "src": "/assets/furniture/dining-chair-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/dining-chair.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-dining-chair-s",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/dining-chair.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-object-warm-white",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-dining-chair-w",
+      "externalId": "DEMO-FURN-CHAIR-W",
+      "source": "demo",
+      "name": "Dining Chair",
+      "category": "dining-chair",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-dining",
+      "dimensions": {
+        "width": 480,
+        "depth": 500,
+        "height": 820
+      },
+      "transform": {
+        "x": 5250,
+        "y": 0,
+        "z": 5000,
+        "rotationY": 1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/dining-chair-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/dining-chair.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-dining-chair-w",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/dining-chair.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-object-warm-white",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-dining-chair-e",
+      "externalId": "DEMO-FURN-CHAIR-E",
+      "source": "demo",
+      "name": "Dining Chair",
+      "category": "dining-chair",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-dining",
+      "dimensions": {
+        "width": 480,
+        "depth": 500,
+        "height": 820
+      },
+      "transform": {
+        "x": 7350,
+        "y": 0,
+        "z": 5000,
+        "rotationY": -1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/dining-chair-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/dining-chair.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-dining-chair-e",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/dining-chair.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-object-warm-white",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": true,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 480,
+          "depth": 500,
+          "height": 820
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-coffee-table",
+      "externalId": "DEMO-FURN-006",
+      "source": "demo",
+      "name": "Coffee Table",
+      "category": "coffee-table",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-sofa",
+      "dimensions": {
+        "width": 1200,
+        "depth": 620,
+        "height": 430
+      },
+      "transform": {
+        "x": 2200,
+        "y": 0,
+        "z": 6400,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/coffee-table-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/coffee-table.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-coffee-table",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1200,
+          "depth": 620,
+          "height": 430
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/coffee-table.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1200,
+          "depth": 620,
+          "height": 430
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-lounge-chair",
+      "externalId": "DEMO-FURN-007",
+      "source": "demo",
+      "name": "Lounge Chair",
+      "category": "lounge-chair",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-sofa",
+      "dimensions": {
+        "width": 700,
+        "depth": 720,
+        "height": 920
+      },
+      "transform": {
+        "x": 3500,
+        "y": 0,
+        "z": 6600,
+        "rotationY": -1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/lounge-chair-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/lounge-chair.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-lounge-chair",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 700,
+          "depth": 720,
+          "height": 920
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/lounge-chair.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-object-warm-white",
+      "capabilities": {
+        "selectable": true,
+        "movable": true,
+        "rotatable": true,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "furniture"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 700,
+          "depth": 720,
+          "height": 920
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": false,
+        "status": "not_required",
+        "reasons": [],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-kitchen-counter",
+      "externalId": "DEMO-CAB-003",
+      "source": "demo",
+      "name": "Kitchen Run",
+      "category": "fixed-cabinet",
+      "roomId": "room-kitchen",
+      "preferredCameraPresetId": "camera-kitchen-worktop",
+      "dimensions": {
+        "width": 3000,
+        "depth": 650,
+        "height": 900
+      },
+      "transform": {
+        "x": 9300,
+        "y": 0,
+        "z": 3625,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/kitchen-counter-v2-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/kitchen-counter.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-kitchen-counter",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 3000,
+          "depth": 650,
+          "height": 900
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/kitchen-counter.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": false,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-kitchen-aisle-1000",
+        "rule-fixed-equipment-wall-relation"
+      ],
+      "hierarchy": {
+        "parentId": "room-kitchen",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-kitchen",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "cabinetry",
+        "mount": "floor",
+        "hostSurfaceId": "surface-floor-kitchen",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 3000,
+          "depth": 650,
+          "height": 900
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-shoe-cabinet",
+      "externalId": "DEMO-CAB-004",
+      "source": "demo",
+      "name": "Shoe Cabinet",
+      "category": "fixed-cabinet",
+      "roomId": "room-entry",
+      "preferredCameraPresetId": "camera-entry-storage",
+      "dimensions": {
+        "width": 1200,
+        "depth": 360,
+        "height": 1050
+      },
+      "transform": {
+        "x": 10600,
+        "y": 0,
+        "z": 6800,
+        "rotationY": 1.5707963267948966
+      },
+      "media2D": {
+        "src": "/assets/furniture/shoe-cabinet-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/shoe-cabinet.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-shoe-cabinet",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1200,
+          "depth": 360,
+          "height": 1050
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/shoe-cabinet.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": false,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-cabinet-front-900",
+        "rule-tall-storage-anchored",
+        "rule-fixed-equipment-wall-relation"
+      ],
+      "hierarchy": {
+        "parentId": "room-entry",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-entry",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "cabinetry",
+        "mount": "floor",
+        "hostSurfaceId": "surface-floor-entry",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1200,
+          "depth": 360,
+          "height": 1050
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-flex-floating-shelf",
+      "externalId": "DEMO-SHELF-001",
+      "source": "demo",
+      "name": "Floating Shelf System",
+      "category": "wall-shelf",
+      "roomId": "room-flex",
+      "preferredCameraPresetId": "camera-flex-desk",
+      "dimensions": {
+        "width": 900,
+        "depth": 260,
+        "height": 720
+      },
+      "transform": {
+        "x": 10300,
+        "y": 1300,
+        "z": 150,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/floating-shelf-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/floating-shelf.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-flex-floating-shelf",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 900,
+          "depth": 260,
+          "height": 720
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/floating-shelf.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-fixed-equipment-wall-relation"
+      ],
+      "hierarchy": {
+        "parentId": "room-flex",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-wall-flex-north",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "shelving",
+        "mount": "wall",
+        "hostSurfaceId": "surface-wall-flex-north",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 900,
+          "depth": 260,
+          "height": 720
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-living-slat-partition",
+      "externalId": "DEMO-PART-001",
+      "source": "demo",
+      "name": "Oak Slat Partition",
+      "category": "partition",
+      "roomId": "room-living-dining",
+      "preferredCameraPresetId": "camera-living-feature",
+      "dimensions": {
+        "width": 1200,
+        "depth": 120,
+        "height": 2600
+      },
+      "transform": {
+        "x": 7000,
+        "y": 0,
+        "z": 7750,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/slat-partition-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/slat-partition.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-living-slat-partition",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 1200,
+          "depth": 120,
+          "height": 2600
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/slat-partition.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary"
+      ],
+      "hierarchy": {
+        "parentId": "room-living-dining",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "partition",
+        "mount": "floor",
+        "hostSurfaceId": "surface-floor-living-dining",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 1200,
+          "depth": 120,
+          "height": 2600
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    },
+    {
+      "id": "object-primary-feature-wall",
+      "externalId": "DEMO-FEATURE-001",
+      "source": "demo",
+      "name": "Oak Feature Wall",
+      "category": "feature-wall",
+      "roomId": "room-primary-bedroom",
+      "preferredCameraPresetId": "camera-primary-feature",
+      "dimensions": {
+        "width": 3000,
+        "depth": 60,
+        "height": 2400
+      },
+      "transform": {
+        "x": 1500,
+        "y": 0,
+        "z": 3150,
+        "rotationY": 0
+      },
+      "media2D": {
+        "src": "/assets/furniture/feature-wall-original-top.png",
+        "source": "generated",
+        "view": "orthographic-top"
+      },
+      "model3D": {
+        "src": "/assets/models/feature-wall-original.glb",
+        "format": "glb",
+        "source": "generated",
+        "generator": "scripts/build_demo_assets.py",
+        "slotId": "slot-object-primary-feature-wall",
+        "revision": 1,
+        "units": "mm",
+        "upAxis": "y",
+        "forwardAxis": "z",
+        "renderBounds": {
+          "width": 3000,
+          "depth": 60,
+          "height": 2400
+        },
+        "provenance": {
+          "provider": "local-generator",
+          "generationId": "/assets/models/feature-wall.glb",
+          "humanReviewed": true
+        }
+      },
+      "materialId": "mat-oak-veneer",
+      "capabilities": {
+        "selectable": true,
+        "movable": false,
+        "rotatable": false,
+        "replaceable": true,
+        "deletable": false,
+        "duplicable": false,
+        "materialEditable": true,
+        "parameterEditable": false
+      },
+      "ruleIds": [
+        "rule-room-boundary",
+        "rule-fixed-equipment-wall-relation"
+      ],
+      "hierarchy": {
+        "parentId": "room-primary-bedroom",
+        "layer": "fixed_installation"
+      },
+      "placement": {
+        "mode": "surface_anchored",
+        "hostSurfaceId": "surface-wall-primary-south",
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "installation": {
+        "kind": "feature_wall",
+        "mount": "wall",
+        "hostSurfaceId": "surface-wall-primary-south",
+        "source": "demo"
+      },
+      "collision": {
+        "kind": "box",
+        "participates": true,
+        "source": "canonical",
+        "dimensions": {
+          "width": 3000,
+          "depth": 60,
+          "height": 2400
+        },
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      },
+      "review": {
+        "requiresProfessionalReview": true,
+        "status": "required",
+        "reasons": [
+          "installation_anchor_requires_site_verification"
+        ],
+        "source": "demo"
+      }
+    }
+  ],
+  "clearanceZones": [
+    {
+      "id": "clearance-entry-route",
+      "roomId": "room-entry",
+      "kind": "circulation",
+      "label": "入户主通道",
+      "valueMm": 1100,
+      "minimumMm": 900,
+      "polygon": [
+        {
+          "x": 8200,
+          "z": 5750
+        },
+        {
+          "x": 9300,
+          "z": 5750
+        },
+        {
+          "x": 9300,
+          "z": 7800
+        },
+        {
+          "x": 8200,
+          "z": 7800
+        }
+      ],
+      "ruleIds": [
+        "rule-main-circulation-900"
+      ]
+    },
+    {
+      "id": "clearance-living-route",
+      "roomId": "room-living-dining",
+      "kind": "circulation",
+      "label": "客餐厅主通道",
+      "valueMm": 1000,
+      "minimumMm": 900,
+      "polygon": [
+        {
+          "x": 4000,
+          "z": 4300
+        },
+        {
+          "x": 5000,
+          "z": 4300
+        },
+        {
+          "x": 5000,
+          "z": 7600
+        },
+        {
+          "x": 4000,
+          "z": 7600
+        }
+      ],
+      "ruleIds": [
+        "rule-main-circulation-900"
+      ]
+    },
+    {
+      "id": "clearance-kitchen-aisle",
+      "roomId": "room-kitchen",
+      "kind": "work-aisle",
+      "label": "厨房操作通道",
+      "valueMm": 1100,
+      "minimumMm": 1000,
+      "polygon": [
+        {
+          "x": 7800,
+          "z": 4100
+        },
+        {
+          "x": 10800,
+          "z": 4100
+        },
+        {
+          "x": 10800,
+          "z": 5200
+        },
+        {
+          "x": 7800,
+          "z": 5200
+        }
+      ],
+      "ruleIds": [
+        "rule-kitchen-aisle-1000"
+      ]
+    },
+    {
+      "id": "clearance-primary-bedside",
+      "roomId": "room-primary-bedroom",
+      "kind": "bedside-clearance",
+      "label": "床侧净距",
+      "valueMm": 600,
+      "minimumMm": 600,
+      "polygon": [
+        {
+          "x": 0,
+          "z": 800
+        },
+        {
+          "x": 600,
+          "z": 800
+        },
+        {
+          "x": 600,
+          "z": 2800
+        },
+        {
+          "x": 0,
+          "z": 2800
+        }
+      ],
+      "ruleIds": [
+        "rule-bedside-600"
+      ]
+    },
+    {
+      "id": "clearance-primary-wardrobe",
+      "roomId": "room-primary-bedroom",
+      "kind": "cabinet-front-clearance",
+      "label": "衣柜柜前净距",
+      "valueMm": 900,
+      "minimumMm": 900,
+      "polygon": [
+        {
+          "x": 2400,
+          "z": 0
+        },
+        {
+          "x": 3300,
+          "z": 0
+        },
+        {
+          "x": 3300,
+          "z": 2400
+        },
+        {
+          "x": 2400,
+          "z": 2400
+        }
+      ],
+      "ruleIds": [
+        "rule-cabinet-front-900"
+      ]
+    },
+    {
+      "id": "clearance-flex-bedside",
+      "roomId": "room-flex",
+      "kind": "bedside-clearance",
+      "label": "儿童房床侧净距",
+      "valueMm": 600,
+      "minimumMm": 600,
+      "polygon": [
+        {
+          "x": 6400,
+          "z": 500
+        },
+        {
+          "x": 7000,
+          "z": 500
+        },
+        {
+          "x": 7000,
+          "z": 2500
+        },
+        {
+          "x": 6400,
+          "z": 2500
+        }
+      ],
+      "ruleIds": [
+        "rule-bedside-600"
+      ]
+    },
+    {
+      "id": "clearance-flex-activity",
+      "roomId": "room-flex",
+      "kind": "child-activity",
+      "label": "成长活动留白",
+      "valueMm": 1600,
+      "minimumMm": 1600,
+      "polygon": [
+        {
+          "x": 8400,
+          "z": 650
+        },
+        {
+          "x": 10000,
+          "z": 650
+        },
+        {
+          "x": 10000,
+          "z": 2550
+        },
+        {
+          "x": 8400,
+          "z": 2550
+        }
+      ],
+      "ruleIds": [
+        "rule-child-activity-clearance"
+      ]
+    }
+  ]
+}

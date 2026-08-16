@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { resolveInteractionLayer, resolveRenderProfile } from '../src/domain/render-profile.js';
+import createViteConfig from '../vite.config.mjs';
 
 test('Gate 17 uses the full editor only for a visible capable desktop', () => {
   assert.deepEqual(resolveRenderProfile({ width: 1440, coarsePointer: false, deviceMemory: 8 }), {
@@ -31,4 +32,11 @@ test('the consumer workspace only becomes editable after an explicit edit choice
   assert.equal(resolveInteractionLayer(), 'browse');
   assert.equal(resolveInteractionLayer({ sidecarMode: 'space' }), 'quick');
   assert.equal(resolveInteractionLayer({ sidecarMode: 'household' }), 'browse');
+});
+
+test('the lazy Pascal editor cannot invalidate the active dependency graph', () => {
+  const config = createViteConfig({ mode: 'development' });
+  assert.equal(config.optimizeDeps.noDiscovery, true);
+  assert.ok(config.optimizeDeps.include.includes('react-dom/client'));
+  assert.ok(config.optimizeDeps.include.includes('use-sync-external-store/shim/with-selector.js'));
 });

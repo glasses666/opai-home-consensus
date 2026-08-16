@@ -38,6 +38,7 @@ import {
 import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
 import { resolveInteractionLayer, resolveRenderProfile } from './domain/render-profile.js';
 import { createProjectSetup, deserializeProjectSetup, normalizeProjectSetup, projectSetupFingerprint, serializeProjectSetup } from './domain/project-setup.js';
+import { generationProgressAt, remainingGenerationDelay } from './domain/generation-timing.js';
 import {
   DEFAULT_EXPERIENCE_STYLE,
   EXPERIENCE_STYLES,
@@ -46,7 +47,7 @@ import {
   withExperienceStyle,
 } from './domain/experience-style.js';
 import { ExperienceDirectionsPage, ExperienceLandingPage, ExperienceNav } from './DesignDirections.jsx';
-import { findRecordingScenario, runRecordingScenario } from './demo/recording-scenarios.js';
+import { createRecordingBaseline, findRecordingScenario, runRecordingScenario } from './demo/recording-scenarios.js';
 
 const PascalStage = lazy(() => import('./PascalStage.jsx'));
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -94,6 +95,7 @@ const objectLabels = {
   'object-primary-wardrobe': '衣柜',
   'object-flex-bed': '单人床',
   'object-flex-desk': '书桌',
+  'object-flex-chair': '学习椅',
   'object-sofa': '沙发',
   'object-tv-console': '电视柜',
   'object-dining-table': '餐桌',
@@ -115,6 +117,7 @@ const materialLabels = {
   'mat-ceiling-warm-white': '暖白顶面',
   'mat-door-warm-white': '暖白',
   'mat-fabric-warm-gray': '暖灰织物',
+  'mat-flex-accent-fabric': '雾绿成长织物',
   'mat-floor-light-oak': '浅橡木地板',
   'mat-floor-tile-warm': '暖灰哑光砖',
   'mat-oak-veneer': '浅橡木',
@@ -156,7 +159,7 @@ const roomBriefs = {
   'room-flex': {
     kicker: '成长型儿童房任务',
     title: '学习、活动与未来换床',
-    summary: '同一 4.6 × 3.2 m 房间里，先保留床侧与活动留白；床和书桌的每次调整都进入规则与版本。',
+    summary: '同一 4.6 × 3.2 m 房间里，把睡眠、学习和中央活动区拉开；床和书桌的每次调整都进入规则与版本。',
     checks: ['床侧 ≥ 600 mm', '成长活动留白 1.6 m', '加宽床须复核活动区'],
     shortcuts: [
       { label: '单人床', objectId: 'object-flex-bed' },
@@ -247,6 +250,10 @@ const agentToolLabels = {
   check_rules: '检查规则',
   compare_versions: '比较版本',
   delete_object: '删除对象',
+  add_object: '添加家具',
+  add_material: '添加材质',
+  resize_object: '调整尺寸',
+  replace_object_model: '更换家具款式',
   inspect_catalog_item: '读取组件',
   inspect_object: '读取对象',
   inspect_room: '读取房间',
@@ -821,12 +828,14 @@ function ProjectGenerationPage() {
   const [progress, setProgress] = useState(8);
   const [result, setResult] = useState(null);
   const runId = useRef(null);
+  const generationStartedAt = useRef(0);
 
   const generate = useCallback(async (fresh = false) => {
     if (!setup) return;
     setStatus('running');
     setResult(null);
     setProgress(8);
+    generationStartedAt.current = Date.now();
     try {
       const stored = JSON.parse(window.sessionStorage.getItem(PROJECT_GENERATION_KEY) ?? 'null');
       runId.current = !fresh && typeof stored?.eventId === 'string' ? stored.eventId : `setup-${globalThis.crypto?.randomUUID?.() ?? eventId('first-plan')}`;
@@ -841,6 +850,8 @@ function ProjectGenerationPage() {
         signal: AbortSignal.timeout(900_000),
         body: JSON.stringify({ eventId: runId.current, expectedVersionId: project.project.currentVersionId, setup }),
       });
+      const remaining = remainingGenerationDelay(generationStartedAt.current);
+      if (remaining > 0) await new Promise((resolve) => window.setTimeout(resolve, remaining));
       setResult(body);
       try { window.localStorage.setItem(FIRST_PLAN_STORAGE_KEY, JSON.stringify(body)); } catch { /* project handoff is best effort */ }
       const degraded = body.status !== 'ready';
@@ -864,7 +875,7 @@ function ProjectGenerationPage() {
 
   useEffect(() => {
     if (status !== 'running') return undefined;
-    const timer = window.setInterval(() => setProgress((value) => Math.min(99, value + (value < 72 ? 2 : 1))), 220);
+    const timer = window.setInterval(() => setProgress(generationProgressAt(Date.now() - generationStartedAt.current)), 100);
     return () => window.clearInterval(timer);
   }, [status]);
 
@@ -1060,17 +1071,20 @@ function ProjectDemoPage() {
     typeof window === 'undefined' ? '' : window.location.search,
     typeof window === 'undefined' ? '' : window.localStorage.getItem('oppein.experience-style'),
   ), []);
-  const [initialVersionProject] = useState(createInitialVersionProject);
+  const [initialVersionProject] = useState(() => {
+    const store = createRecordingBaseline();
+    return { history: createVersionHistory(store), store };
+  });
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
-  const [householdConsensus, setHouseholdConsensus] = useState(() => createInitialHouseholdProject(initialVersionProject.history));
-  const [designBrief, setDesignBrief] = useState(createInitialDesignBrief);
+  const [householdConsensus, setHouseholdConsensus] = useState(() => createDemoHouseholdConsensus(initialVersionProject.history.currentVersionId));
+  const [designBrief, setDesignBrief] = useState(createDesignBrief);
   const sceneStoreRef = useRef(sceneStore);
   const versionHistoryRef = useRef(versionHistory);
   sceneStoreRef.current = sceneStore;
   versionHistoryRef.current = versionHistory;
   const currentScene = sceneStore.currentScene;
-  const initialNavigation = useMemo(() => parseViewState(typeof window === 'undefined' ? '' : window.location.search, scene), []);
+  const initialNavigation = useMemo(() => parseViewState('', scene), []);
   const [navigation, setNavigation] = useState(initialNavigation);
   const experienceStyle = initialExperienceStyle;
   const [viewSequence, setViewSequence] = useState(1);
@@ -1093,6 +1107,7 @@ function ProjectDemoPage() {
   const [agentInput, setAgentInput] = useState('');
   const [agentBusy, setAgentBusy] = useState(false);
   const [agentProgress, setAgentProgress] = useState('');
+  const [agentCallout, setAgentCallout] = useState(null);
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
   const [agentMessages, setAgentMessages] = useState([{
     id: 'agent-welcome',
@@ -1371,6 +1386,7 @@ function ProjectDemoPage() {
         : reviewableChecksForObjects(afterEvaluation, affectedObjectIds);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setAgentCallout(null);
       setLastRejected(null);
       if (reviewChecks.length) {
         setPendingReview({
@@ -1397,6 +1413,7 @@ function ProjectDemoPage() {
       const nextStore = undoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setAgentCallout(null);
       setPendingReview(null);
       setLastRejected(null);
       setEditFeedback({ tone: 'success', message: '已撤销上一步' });
@@ -1410,6 +1427,7 @@ function ProjectDemoPage() {
       const nextStore = redoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
       setSceneStore(nextStore);
+      setAgentCallout(null);
       setPendingReview(null);
       setLastRejected(null);
       setEditFeedback({ tone: 'success', message: '已重做下一步' });
@@ -1479,6 +1497,7 @@ function ProjectDemoPage() {
     sceneStoreRef.current = nextStore;
     setSceneStore(nextStore);
     setPendingReview(null);
+    setAgentCallout(null);
     setLastRejected(null);
     if (!selectionFromId(nextStore.currentScene, navigation.selectedId)) {
       commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
@@ -1505,6 +1524,7 @@ function ProjectDemoPage() {
     setSidecarMode('agent');
     setAgentInput('');
     setAgentBusy(true);
+    setAgentCallout(null);
     setAgentMessages((messages) => [...messages, { id: `${turnId}-user`, role: 'user', text: input, source: 'resident', tools: [] }]);
     const beforeStore = sceneStoreRef.current;
     const beforeHistory = versionHistoryRef.current;
@@ -1594,11 +1614,20 @@ function ProjectDemoPage() {
         });
         setEditFeedback({ tone: reviewChecks.length ? 'warning' : 'success', message: 'Agent 已生成可撤销预览；由你保留后才写入版本链。' });
 
-        if (result.scenario) {
+        const changedEntity = result.trace.toolCalls
+          .map((call) => result.store.currentScene.objects.find((object) => object.id === call.args?.objectId)
+            ?? result.store.currentScene.surfaces.find((surface) => surface.id === call.args?.surfaceId))
+          .find(Boolean);
+        const modifiedRoomId = result.scenario?.roomId ?? changedEntity?.roomId;
+        const modifiedRoom = result.store.currentScene.rooms.find((room) => room.id === modifiedRoomId);
+        if (modifiedRoom) {
+          const reason = result.scenario?.calloutReason
+            ?? String(result.trace.assistantReply ?? input).split(/[。！？!?]/)[0].slice(0, 48);
+          setAgentCallout({ roomId: modifiedRoom.id, roomLabel: roomLabels[modifiedRoom.id] ?? modifiedRoom.name, reason });
           commitNavigation({
-            roomId: result.scenario.roomId,
-            viewId: result.scenario.viewId,
-            selectedId: result.scenario.selectedId,
+            roomId: modifiedRoom.id,
+            viewId: modifiedRoom.cameraPresetIds[0],
+            selectedId: result.scenario?.selectedId ?? changedEntity?.id ?? modifiedRoom.id,
           });
         }
 
@@ -2015,6 +2044,9 @@ function ProjectDemoPage() {
             <PascalStage
               scene={currentScene}
               selection={selection}
+              activeRoomId={activeRoomId}
+              viewRequest={viewRequest}
+              agentCallout={agentCallout}
               onSelect={selectEntity}
               onEditCommand={(command) => Boolean(executeCommand(command))}
               interactionMode={interactionLayer}
@@ -2135,7 +2167,7 @@ function ProjectDemoPage() {
         </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
           <header className="agent-sidecar__header">
             <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>空间设计助理</strong><small>先预览，再由你决定</small></div></div>
-            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? '在线' : '本地'}</div>
+            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? '在线' : '演示'}</div>
           </header>
 
           <div className="agent-sidecar__scope">
@@ -2145,7 +2177,7 @@ function ProjectDemoPage() {
 
           <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
             {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
-              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' ? 'AILY' : 'LOCAL'}{message.fallbackReason ? ' · 已自动降级' : ''}</small>}</div>
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && message.source === 'provider' && <small>AILY</small>}</div>
               <p>{message.text}</p>
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}

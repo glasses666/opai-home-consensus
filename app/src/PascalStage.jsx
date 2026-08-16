@@ -7,6 +7,9 @@ import { isResidentEditCommand, pascalCommitToSceneCommands } from './pascal/pas
 import { resolveRenderProfile } from './domain/render-profile.js';
 import {
   centerCameraPoseOnFloorPlan,
+  centerCameraPoseOnRoom,
+  cameraPresetToPose,
+  interpolateCameraPose,
   isTrackpadPanWheel,
   isTrackpadPinchWheel,
   panCameraPose,
@@ -34,13 +37,13 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand, interactionMode = 'browse', loadingFallback = null }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, activeRoomId = null, interactionMode = 'browse', loadingFallback = null, viewRequest = null, agentCallout = null }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
   const onEditCommandRef = useRef(onEditCommand);
   const restoringRef = useRef(false);
-  const initialFocusAppliedRef = useRef(false);
+  const initialFocusKeyRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
@@ -109,16 +112,52 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
     return unsubscribe;
   }, [editorLoaded, interactionMode, projection, ready]);
 
+  const activeRoom = useMemo(() => scene.rooms.find((room) => room.id === activeRoomId) ?? null, [activeRoomId, scene.rooms]);
+  const requestedPreset = useMemo(
+    () => scene.cameraPresets.find((preset) => preset.id === viewRequest?.id) ?? null,
+    [scene.cameraPresets, viewRequest?.id],
+  );
+
   useEffect(() => {
-    if (!(ready && editorLoaded) || initialFocusAppliedRef.current) return undefined;
+    if (!(ready && editorLoaded)) return undefined;
+    if (requestedPreset) return undefined;
+    const focusKey = activeRoom?.id ?? 'whole-home';
+    if (initialFocusKeyRef.current === focusKey) return undefined;
     return subscribeCameraPose((pose) => {
-      if (initialFocusAppliedRef.current) return;
-      const centeredPose = centerCameraPoseOnFloorPlan(pose, scene.floorPlan.bounds);
+      if (initialFocusKeyRef.current === focusKey) return;
+      const centeredPose = activeRoom
+        ? centerCameraPoseOnRoom(pose, activeRoom)
+        : centerCameraPoseOnFloorPlan(pose, scene.floorPlan.bounds);
       if (!centeredPose) return;
-      initialFocusAppliedRef.current = true;
+      initialFocusKeyRef.current = focusKey;
       emitter.emit('camera-controls:apply-pose', centeredPose);
     });
-  }, [editorLoaded, ready, scene.floorPlan.bounds]);
+  }, [activeRoom, editorLoaded, ready, requestedPreset, scene.floorPlan.bounds]);
+
+  useEffect(() => {
+    if (!(ready && editorLoaded && requestedPreset)) return undefined;
+    let applied = false;
+    let animationFrame = 0;
+    const unsubscribe = subscribeCameraPose((pose) => {
+      if (applied) return;
+      const requestedPose = requestedPreset.kind === 'room_overhead' && activeRoom
+        ? centerCameraPoseOnRoom(pose, activeRoom)
+        : cameraPresetToPose(requestedPreset, pose.projection);
+      if (!requestedPose) return;
+      applied = true;
+      const startedAt = performance.now();
+      const animate = (now) => {
+        const progress = Math.min(1, (now - startedAt) / 1800);
+        emitter.emit('camera-controls:apply-pose', interpolateCameraPose(pose, requestedPose, progress));
+        if (progress < 1) animationFrame = requestAnimationFrame(animate);
+      };
+      animationFrame = requestAnimationFrame(animate);
+    });
+    return () => {
+      unsubscribe();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [activeRoom, editorLoaded, ready, requestedPreset, viewRequest?.sequence]);
 
   useEffect(() => {
     if (!editorLoaded) return undefined;
@@ -153,10 +192,14 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
       {editorLoaded && interactionMode === 'quick' && <PascalSelectionBridge editableObjectIds={editableObjectIds} mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       {editorLoaded && <PascalResidentModeGuard interactionMode={interactionMode} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
+      {editorLoaded && agentCallout?.roomId === activeRoomId && <div className="pascal-agent-callout" role="status" aria-live="polite">
+        <strong>AGENT 已修改{agentCallout.roomLabel}</strong>
+        <span>理由是：{agentCallout.reason}</span>
+      </div>}
       <PascalViewSwitch renderProfile={renderProfile} />
       {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
       {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
-      <Editor
+        <Editor
         key={scene.id}
         layoutVersion="v1"
         projectId={scene.id}

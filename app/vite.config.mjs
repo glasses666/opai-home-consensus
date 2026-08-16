@@ -10,7 +10,18 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   optimizeDeps: {
     exclude: ['@pascal-app/core', '@pascal-app/nodes', '@pascal-app/viewer'],
-    include: ['howler', 'scheduler', 'stats.js', 'use-sync-external-store/shim/with-selector.js'],
+    noDiscovery: true,
+    include: [
+      'howler',
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react/jsx-dev-runtime',
+      'react/jsx-runtime',
+      'scheduler',
+      'stats.js',
+      'use-sync-external-store/shim/with-selector.js',
+    ],
     needsInterop: ['howler', 'scheduler', 'stats.js', 'use-sync-external-store/shim/with-selector.js'],
   },
   resolve: {

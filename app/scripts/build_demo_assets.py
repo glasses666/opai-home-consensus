@@ -27,10 +27,28 @@ def material(name, color, roughness=0.62, metallic=0.0):
     return value
 
 
+def image_material(name, image_path, roughness=0.92):
+    value = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    value.use_nodes = True
+    nodes = value.node_tree.nodes
+    links = value.node_tree.links
+    nodes.clear()
+    shader = nodes.new("ShaderNodeBsdfPrincipled")
+    shader.inputs["Roughness"].default_value = roughness
+    texture = nodes.new("ShaderNodeTexImage")
+    texture.image = bpy.data.images.load(str(image_path), check_existing=True)
+    output = nodes.new("ShaderNodeOutputMaterial")
+    links.new(texture.outputs["Color"], shader.inputs["Base Color"])
+    links.new(shader.outputs["BSDF"], output.inputs["Surface"])
+    return value
+
+
 IVORY = material("Warm ivory", (0.79, 0.75, 0.68), 0.78)
 OAT = material("Oat textile", (0.56, 0.51, 0.44), 0.9)
 OAK = material("Light oak", (0.58, 0.38, 0.19), 0.58)
 BURGUNDY = material("Burgundy textile", (0.28, 0.045, 0.07), 0.88)
+DUSTY_ROSE = material("Muted terracotta textile", (0.34, 0.16, 0.12), 0.9)
+TAUPE = material("Deep taupe textile", (0.31, 0.26, 0.21), 0.92)
 CHARCOAL = material("Graphite", (0.055, 0.052, 0.047), 0.5)
 BRASS = material("Brushed brass", (0.42, 0.26, 0.11), 0.3, 0.62)
 WHITE = material("Warm white", (0.9, 0.87, 0.81), 0.74)
@@ -107,9 +125,9 @@ def sofa():
 
 
 def dining_table():
-    box("CANONICAL table top", (1.6, 0.9, 0.09), (0, 0, 0.71), OAK, 0.07)
-    for x in (-0.62, 0.62):
-        for y in (-0.28, 0.28):
+    cylinder("CANONICAL round table top", 0.65, 0.09, (0, 0, 0.71), OAK, role="canonical")
+    for x in (-0.42, 0.42):
+        for y in (-0.42, 0.42):
             cylinder("CANONICAL table leg", 0.035, 0.69, (x, y, 0.345), OAK, role="canonical")
     add_plant(0, 0, 0.76, 0.68)
 
@@ -151,19 +169,32 @@ def tv_console():
 def bed(width, depth, height, single=False):
     box("CANONICAL bed frame", (width, depth, 0.18), (0, 0, 0.2), OAK, 0.045)
     box("ACCENT mattress", (width * 0.94, depth * 0.9, 0.24), (0, -0.02, 0.41), IVORY, 0.08, role="accent", smooth=True)
-    box("CANONICAL headboard", (width, 0.14, min(height, 1.05)), (0, depth * 0.45, min(height, 1.05) / 2), OAT, 0.065, smooth=True)
+    headboard_mat = OAT if single else TAUPE
+    headboard_height = min(height, 1.05)
+    box("CANONICAL headboard", (width, 0.14, headboard_height), (0, depth * 0.45, headboard_height / 2), headboard_mat, 0.065, smooth=True)
+    if not single:
+        for index in range(7):
+            x = -width * 0.36 + index * width * 0.12
+            box("ACCENT oak headboard slat", (0.035, 0.025, headboard_height * 0.86), (x, depth * 0.45 - 0.08, headboard_height * 0.52), OAK, 0.01, role="accent")
+        for side in (-1, 1):
+            x = side * (width * 0.5 + 0.18)
+            box("ACCENT bedside table", (0.28, 0.42, 0.58), (x, depth * 0.33, 0.29), OAK, 0.025, role="accent")
+            cylinder("ACCENT bedside lamp stem", 0.014, 0.2, (x, depth * 0.33, 0.7), CHARCOAL)
+            cylinder("ACCENT bedside lamp shade", 0.11, 0.09, (x, depth * 0.33, 0.84), IVORY)
     pillow_count = 1 if single else 2
     for index in range(pillow_count):
         x = 0 if single else (-width * 0.24 if index == 0 else width * 0.24)
         box("ACCENT pillow", (width * (0.56 if single else 0.42), 0.34, 0.12), (x, depth * 0.25, 0.63), IVORY, 0.075, smooth=True)
-    box("ACCENT runner", (width * 0.9, 0.42, 0.04), (0, -depth * 0.27, 0.56), BURGUNDY, 0.025, smooth=True)
+    box("ACCENT runner", (width * 0.9, 0.42, 0.04), (0, -depth * 0.27, 0.56), DUSTY_ROSE, 0.025, smooth=True)
 
 
 def wardrobe():
     box("CANONICAL carcass", (2.4, 0.6, 2.4), (0, 0, 1.2), WHITE, 0.035)
     for index, x in enumerate((-0.88, -0.29, 0.29, 0.88)):
-        box(f"CANONICAL door {index + 1}", (0.55, 0.035, 2.25), (x, -0.31, 1.18), WHITE, 0.015)
+        door_mat = IVORY if index in (1, 2) else WHITE
+        box(f"CANONICAL door {index + 1}", (0.55, 0.035, 2.25), (x, -0.31, 1.18), door_mat, 0.015)
         cylinder("ACCENT handle", 0.012, 0.34, (x + 0.19, -0.345, 1.18), BRASS)
+    box("ACCENT oak niche", (0.42, 0.04, 1.55), (0, -0.34, 1.28), OAK, 0.012, role="accent")
     box("ACCENT oak reveal", (2.2, 0.025, 0.08), (0, -0.335, 0.12), OAK, 0.01)
 
 
@@ -207,9 +238,22 @@ def slat_partition():
 
 
 def feature_wall():
-    box("CANONICAL backing", (3.0, 0.06, 2.4), (0, 0, 1.2), WHITE, 0.02)
+    box("CANONICAL backing", (3.0, 0.06, 2.1), (0, 0, 1.05), TAUPE, 0.02)
     for index, x in enumerate((-1.35, -1.05, -0.75, -0.45, -0.15, 0.15, 0.45, 0.75, 1.05, 1.35)):
-        box(f"ACCENT oak reveal {index + 1}", (0.055, 0.025, 2.26), (x, -0.043, 1.2), OAK, 0.012, role="accent")
+        box(f"ACCENT oak reveal {index + 1}", (0.055, 0.025, 1.92), (x, -0.043, 1.05), OAK, 0.012, role="accent")
+    box("ACCENT oak feature ledge", (3.0, 0.12, 0.08), (0, -0.03, 2.04), OAK, 0.016, role="accent")
+    artwork = image_material("AI mineral artwork", TOP_OUTPUT / "primary-artwork-v1.jpg")
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, -0.07, 1.32), rotation=(radians(90), 0, 0))
+    canvas = bpy.context.object
+    canvas.name = "CANONICAL AI wall artwork"
+    canvas.scale = (0.675, 0.45, 1)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    canvas.data.materials.append(artwork)
+    canvas["material_role"] = "canonical"
+    box("ACCENT artwork frame top", (1.45, 0.055, 0.045), (0, -0.075, 1.795), OAK, 0.01, role="accent")
+    box("ACCENT artwork frame bottom", (1.45, 0.055, 0.045), (0, -0.075, 0.845), OAK, 0.01, role="accent")
+    for x in (-0.7025, 0.7025):
+        box("ACCENT artwork frame side", (0.045, 0.055, 0.995), (x, -0.075, 1.32), OAK, 0.01, role="accent")
 
 
 def normalize_and_export(name, builder):
@@ -280,7 +324,7 @@ ASSETS = {
     "feature-wall": feature_wall,
 }
 
-TOP_VIEW_ASSETS = {"floating-shelf", "slat-partition", "feature-wall", "dining-chair", "coffee-table", "lounge-chair"}
+TOP_VIEW_ASSETS = {"floating-shelf", "slat-partition", "feature-wall", "dining-table", "dining-chair", "coffee-table", "lounge-chair"}
 
 requested_assets = set(sys.argv[sys.argv.index("--") + 1:]) if "--" in sys.argv else set(ASSETS)
 unknown_assets = requested_assets - ASSETS.keys()

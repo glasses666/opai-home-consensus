@@ -703,6 +703,26 @@ function applySceneCommand(scene, command) {
       slotId: object.model3D.slotId,
       revision: object.model3D.revision + 1,
     };
+    if (command.dimensions !== undefined) {
+      if (!isObject(command.dimensions) || ![command.dimensions.width, command.dimensions.depth, command.dimensions.height].every(isPositiveInteger)) {
+        throw new Error('MODEL_ASSET_INVALID: dimensions must be positive integer millimeters.');
+      }
+      object.dimensions = command.dimensions;
+      if (object.collision?.source === 'canonical') object.collision.dimensions = { ...command.dimensions };
+      object.model3D.renderBounds = { ...command.dimensions };
+    }
+    if (command.transform !== undefined) {
+      if (!isObject(command.transform)) throw new Error('MODEL_ASSET_INVALID: transform must be an object.');
+      object.transform = { ...object.transform, ...command.transform };
+    }
+    if (command.media2D !== undefined) {
+      if (!isObject(command.media2D)) throw new Error('MODEL_ASSET_INVALID: media2D must be an object.');
+      object.media2D = { ...object.media2D, ...command.media2D };
+    }
+    if (command.wallArt !== undefined) {
+      if (!isObject(command.wallArt)) throw new Error('MODEL_ASSET_INVALID: wallArt must be an object.');
+      object.wallArt = command.wallArt;
+    }
     if (object.model3D.source !== 'generated' && command.model3D.generator === undefined) delete object.model3D.generator;
     if (object.model3D.provenance.humanReviewed === false) {
       object.review = {
@@ -712,6 +732,14 @@ function applySceneCommand(scene, command) {
         source: 'estimate',
       };
     }
+  } else if (command.type === 'material.add') {
+    if (!isObject(command.material) || typeof command.material.id !== 'string' || !command.material.id) throw new Error('MATERIAL_INVALID: material.add needs a material with an id.');
+    if (nextScene.materials.some((candidate) => candidate.id === command.material.id)) throw new Error(`MATERIAL_ID_INVALID: Material "${command.material.id}" already exists.`);
+    nextScene.materials.push(command.material);
+  } else if (command.type === 'object.add') {
+    if (!isObject(command.object) || typeof command.object.id !== 'string' || !command.object.id) throw new Error('OBJECT_INVALID: object.add needs an object with an id.');
+    if (nextScene.objects.some((candidate) => candidate.id === command.object.id)) throw new Error(`OBJECT_ID_INVALID: Object "${command.object.id}" already exists.`);
+    nextScene.objects.push(command.object);
   } else if (command.type === 'object.duplicate') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);

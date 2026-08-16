@@ -248,7 +248,7 @@ test('chatty context cannot redirect an explicit furniture edit', async () => {
   });
   assert.equal(result.trace.mode, 'execute');
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
-  assert.equal(objectById(result.store, 'object-dining-table').transform.x, 6300);
+  assert.equal(objectById(result.store, 'object-dining-table').transform.x, 6200);
 });
 
 test('a five-turn resident session survives provider drift without corrupting state', async () => {

@@ -30,13 +30,23 @@ const model3D = (filename) => ({
   generator: 'scripts/build_demo_assets.py',
 });
 
+const wallArt = (filename, title) => ({
+  src: `/assets/furniture/${filename}`,
+  title,
+  source: 'generated',
+  provider: 'imagegen',
+  widthMm: 1350,
+  heightMm: 900,
+  positionMm: { x: 0, y: 1560, z: 0 },
+});
+
 const stylePalettes = {
-  scandinavian: { ceiling: '#f6f2ea', door: '#f2ede5', fabric: '#d8cfc2', oak: '#bf9567', white: '#eee9e1', greige: '#c7bdb0', panel: '#c39b6f', wall: '#f5f0e8' },
-  'quiet-luxury': { ceiling: '#f4f0e8', door: '#eee8df', fabric: '#cfc6ba', oak: '#ad8765', white: '#f0ebe4', greige: '#bdb2a5', panel: '#ae8867', wall: '#f3eee7' },
-  japandi: { ceiling: '#eee8de', door: '#e8e0d5', fabric: '#bcb1a2', oak: '#ac845b', white: '#eae3d9', greige: '#aaa092', panel: '#a77f58', wall: '#eee8de' },
-  'mid-century-modern': { ceiling: '#efe8dc', door: '#e8dfd2', fabric: '#9d8270', oak: '#875a34', white: '#eee6da', greige: '#aa9580', panel: '#855833', wall: '#f1e9dd' },
-  'new-chinese': { ceiling: '#eee8df', door: '#e8e0d6', fabric: '#8f796a', oak: '#755039', white: '#eee8df', greige: '#a99c8d', panel: '#704b35', wall: '#f1ebe2' },
-  'wabi-sabi': { ceiling: '#ebe4da', door: '#e5ddd2', fabric: '#b8ad9e', oak: '#a88966', white: '#e9e2d8', greige: '#a89e90', panel: '#a48664', wall: '#eee7de' },
+  scandinavian: { ceiling: '#f6f2ea', door: '#f2ede5', fabric: '#d8cfc2', flexAccent: '#a8b7a0', oak: '#bf9567', white: '#eee9e1', greige: '#c7bdb0', panel: '#c39b6f', wall: '#f5f0e8' },
+  'quiet-luxury': { ceiling: '#f4f0e8', door: '#eee8df', fabric: '#cfc6ba', flexAccent: '#a7b3a8', oak: '#ad8765', white: '#f0ebe4', greige: '#bdb2a5', panel: '#ae8867', wall: '#f3eee7' },
+  japandi: { ceiling: '#eee8de', door: '#e8e0d5', fabric: '#bcb1a2', flexAccent: '#b6b09a', oak: '#ac845b', white: '#eae3d9', greige: '#aaa092', panel: '#a77f58', wall: '#eee8de' },
+  'mid-century-modern': { ceiling: '#efe8dc', door: '#e8dfd2', fabric: '#9d8270', flexAccent: '#a3a77d', oak: '#875a34', white: '#eee6da', greige: '#aa9580', panel: '#855833', wall: '#f1e9dd' },
+  'new-chinese': { ceiling: '#eee8df', door: '#e8e0d6', fabric: '#8f796a', flexAccent: '#9da99f', oak: '#755039', white: '#eee8df', greige: '#a99c8d', panel: '#704b35', wall: '#f1ebe2' },
+  'wabi-sabi': { ceiling: '#ebe4da', door: '#e5ddd2', fabric: '#b8ad9e', flexAccent: '#aaa998', oak: '#a88966', white: '#e9e2d8', greige: '#a89e90', panel: '#a48664', wall: '#eee7de' },
 };
 
 const styleSurfaceFinishes = {
@@ -48,21 +58,35 @@ const styleSurfaceFinishes = {
   'wabi-sabi': { livingWall: 'mat-wall-greige', primaryWall: 'mat-wall-greige', flexWall: 'mat-wall-greige', livingFloor: 'mat-floor-tile-warm' },
 };
 
-const diningChair = (id, x, z, rotationY) => ({
+const chair = ({ id, externalId, name, category, roomId, preferredCameraPresetId, dimensions, x, z, rotationY, materialId }) => ({
+  id,
+  externalId,
+  source: 'demo',
+  name,
+  category,
+  roomId,
+  preferredCameraPresetId,
+  dimensions,
+  transform: { x, y: 0, z, rotationY },
+  media2D: media2D('dining-chair-top.png'),
+  model3D: model3D('dining-chair.glb'),
+  materialId,
+  capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }),
+  ruleIds: ['rule-room-boundary'],
+});
+
+const diningChair = (id, x, z, rotationY) => chair({
   id,
   externalId: `DEMO-FURN-CHAIR-${id.slice(-1).toUpperCase()}`,
-  source: 'demo',
   name: 'Dining Chair',
   category: 'dining-chair',
   roomId: 'room-living-dining',
   preferredCameraPresetId: 'camera-living-dining',
   dimensions: { width: 480, depth: 500, height: 820 },
-  transform: { x, y: 0, z, rotationY },
-  media2D: media2D('dining-chair-top.png'),
-  model3D: model3D('dining-chair.glb'),
+  x,
+  z,
+  rotationY,
   materialId: 'mat-object-warm-white',
-  capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }),
-  ruleIds: ['rule-room-boundary'],
 });
 
 const withObjectContract = (input) => {
@@ -266,7 +290,9 @@ const cameraPresets = [
         z: center.z + heading.z / headingLength * 60,
       },
       target: { x: center.x, y: 0, z: center.z },
-      fov: 32,
+      // Portrait browser panels need a wider horizontal read so a room-overhead
+      // view shows both the bed and storage wall instead of cropping one side.
+      fov: 50,
     };
   }),
   livingEntryCamera,
@@ -275,28 +301,28 @@ const cameraPresets = [
     roomId: 'room-primary-bedroom',
     kind: 'room_entry',
     label: '入口',
-    position: { x: 3150, y: 2600, z: 3000 },
-    target: { x: 1200, y: 300, z: 1000 },
-    fov: 65,
+    position: { x: 650, y: 2500, z: 2800 },
+    target: { x: 2350, y: 850, z: 1300 },
+    fov: 72,
   },
   {
     id: 'camera-primary-feature',
     roomId: 'room-primary-bedroom',
-    surfaceId: 'surface-wall-primary-east',
+    surfaceId: 'surface-wall-primary-south',
     kind: 'surface_feature',
     label: '主功能面',
-    position: { x: 800, y: 1500, z: 1600 },
-    target: { x: 3300, y: 1200, z: 1600 },
-    fov: 44,
+    position: { x: 1600, y: 1800, z: 800 },
+    target: { x: 1600, y: 1250, z: 3000 },
+    fov: 52,
   },
   {
     id: 'camera-flex-entry',
     roomId: 'room-flex',
     kind: 'room_entry',
     label: '入口',
-    position: { x: 7000, y: 1650, z: 2750 },
-    target: { x: 8800, y: 720, z: 1450 },
-    fov: 52,
+    position: { x: 6650, y: 2250, z: 2800 },
+    target: { x: 9000, y: 650, z: 1500 },
+    fov: 66,
   },
   {
     id: 'camera-flex-feature',
@@ -334,8 +360,8 @@ const cameraPresets = [
     objectId: 'object-dining-table',
     kind: 'object_overhead',
     label: '餐桌俯视',
-    position: { x: 6330, y: 4200, z: 4950 },
-    target: { x: 6300, y: 370, z: 5000 },
+    position: { x: 6230, y: 4200, z: 5550 },
+    target: { x: 6200, y: 370, z: 5600 },
     fov: 38,
   },
   {
@@ -405,6 +431,7 @@ export function createDemoScene(styleId = 'scandinavian') {
       { id: 'mat-ceiling-warm-white', name: '暖白顶面', kind: 'paint', appliesTo: ['ceiling'], source: 'demo', color: palette.ceiling },
       { id: 'mat-door-warm-white', name: '暖白门板', kind: 'painted-wood', appliesTo: ['opening'], source: 'demo', color: palette.door },
       { id: 'mat-fabric-warm-gray', name: '暖灰织物', kind: 'fabric', appliesTo: ['object'], source: 'demo', color: palette.fabric },
+      { id: 'mat-flex-accent-fabric', name: '雾绿成长织物', kind: 'fabric', appliesTo: ['object'], source: 'demo', color: palette.flexAccent },
       { id: 'mat-floor-light-oak', name: '浅橡木地板', kind: 'wood', appliesTo: ['floor'], source: 'demo', color: palette.oak },
       { id: 'mat-floor-tile-warm', name: '暖灰哑光砖', kind: 'porcelain-tile', appliesTo: ['floor'], source: 'demo', color: '#ddd4c5' },
       { id: 'mat-oak-veneer', name: '浅橡木饰面', kind: 'wood', appliesTo: ['object'], source: 'demo', color: palette.oak },
@@ -478,24 +505,24 @@ export function createDemoScene(styleId = 'scandinavian') {
       { id: 'opening-kitchen-window', kind: 'window', hostSurfaceId: 'surface-wall-kitchen-east', offset: 600, width: 1200, height: 1200, sillHeight: 1000, materialId: 'mat-wall-warm-white', connectsExterior: true, ruleIds: ['rule-opening-clearance'] },
     ],
     objects: [
-      { id: 'object-primary-bed', externalId: 'DEMO-FURN-002', source: 'demo', name: 'Double Bed', category: 'bed', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-overhead', dimensions: { width: 1800, depth: 2000, height: 1050 }, transform: { x: 1500, y: 0, z: 1800, rotationY: 0 }, media2D: media2D('double-bed-top.png'), model3D: model3D('double-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600'] },
-      { id: 'object-primary-wardrobe', externalId: 'DEMO-CAB-002', source: 'demo', name: 'Wardrobe', category: 'fixed-cabinet', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-wardrobe', dimensions: { width: 2400, depth: 600, height: 2400 }, transform: { x: 3600, y: 0, z: 1200, rotationY: Math.PI / 2 }, media2D: media2D('wardrobe-v2-top.png'), model3D: model3D('wardrobe.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
-      { id: 'object-flex-bed', externalId: 'DEMO-FURN-003', source: 'demo', name: 'Single Daybed', category: 'bed', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-overhead', dimensions: { width: 1200, depth: 2000, height: 900 }, transform: { x: 7700, y: 0, z: 1500, rotationY: 0 }, media2D: media2D('single-bed-top.png'), model3D: model3D('single-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600', 'rule-child-activity-clearance'] },
-      { id: 'object-flex-desk', externalId: 'DEMO-FURN-004', source: 'demo', name: 'Writing Desk', category: 'desk', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 1400, depth: 650, height: 740 }, transform: { x: 10500, y: 0, z: 1600, rotationY: Math.PI / 2 }, media2D: media2D('desk-top.png'), model3D: model3D('desk.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
+      { id: 'object-primary-bed', externalId: 'DEMO-FURN-002', source: 'demo', name: 'Double Bed', category: 'bed', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-overhead', dimensions: { width: 1800, depth: 2000, height: 1050 }, transform: { x: 1500, y: 0, z: 1500, rotationY: 0 }, media2D: media2D('double-bed-top.png'), model3D: model3D('double-bed.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600'] },
+      { id: 'object-primary-wardrobe', externalId: 'DEMO-CAB-002', source: 'demo', name: 'Wardrobe', category: 'fixed-cabinet', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-wardrobe', dimensions: { width: 2400, depth: 600, height: 2400 }, transform: { x: 3600, y: 0, z: 1200, rotationY: -Math.PI / 2 }, media2D: media2D('wardrobe-v2-top.png'), model3D: model3D('wardrobe.glb'), materialId: 'mat-object-warm-white', capabilities: allCapabilities({ materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
+      { id: 'object-flex-bed', externalId: 'DEMO-FURN-003', source: 'demo', name: 'Single Daybed', category: 'bed', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-overhead', dimensions: { width: 1200, depth: 2000, height: 900 }, transform: { x: 7700, y: 0, z: 1400, rotationY: 0 }, media2D: media2D('single-bed-top.png'), model3D: model3D('single-bed.glb'), materialId: 'mat-flex-accent-fabric', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-bedside-600', 'rule-child-activity-clearance'] },
+      { id: 'object-flex-desk', externalId: 'DEMO-FURN-004', source: 'demo', name: 'Writing Desk', category: 'desk', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 1400, depth: 650, height: 740 }, transform: { x: 10650, y: 0, z: 1600, rotationY: Math.PI / 2 }, media2D: media2D('desk-top.png'), model3D: model3D('desk.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900'] },
+      chair({ id: 'object-flex-chair', externalId: 'DEMO-FURN-FLEX-CHAIR', name: 'Study Chair', category: 'desk-chair', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-overhead', dimensions: { width: 380, depth: 400, height: 780 }, x: 10100, z: 1600, rotationY: Math.PI / 2, materialId: 'mat-flex-accent-fabric' }),
       { id: 'object-sofa', externalId: 'DEMO-FURN-001', source: 'demo', name: 'Sofa', category: 'sofa', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-sofa', dimensions: { width: 2200, depth: 900, height: 820 }, transform: { x: 2200, y: 0, z: 5200, rotationY: 0 }, media2D: media2D('sofa-top.png'), model3D: model3D('sofa.glb'), materialId: 'mat-fabric-warm-gray', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
       { id: 'object-tv-console', externalId: 'DEMO-CAB-001', source: 'demo', name: 'Media Console', category: 'fixed-cabinet', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-feature', dimensions: { width: 2200, depth: 450, height: 520 }, transform: { x: 2200, y: 0, z: 7650, rotationY: Math.PI }, media2D: media2D('tv-console-top.png'), model3D: model3D('tv-console.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900', 'rule-tv-distance-1800-3600', 'rule-fixed-equipment-wall-relation'] },
-      { id: 'object-dining-table', externalId: 'DEMO-FURN-005', source: 'demo', name: 'Dining Table', category: 'dining-table', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-dining', dimensions: { width: 1600, depth: 900, height: 740 }, transform: { x: 6300, y: 0, z: 5000, rotationY: 0 }, media2D: media2D('dining-table-top.png'), model3D: model3D('dining-table.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
-      diningChair('object-dining-chair-n', 6100, 4250, 0),
-      diningChair('object-dining-chair-s', 6400, 6000, Math.PI),
-      diningChair('object-dining-chair-w', 5250, 5000, Math.PI / 2),
-      diningChair('object-dining-chair-e', 7350, 5000, -Math.PI / 2),
+      { id: 'object-dining-table', externalId: 'DEMO-FURN-005', source: 'demo', name: 'Dining Table', category: 'dining-table', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-dining', dimensions: { width: 1300, depth: 1300, height: 740 }, transform: { x: 6200, y: 0, z: 5600, rotationY: 0 }, media2D: media2D('dining-table-top.png'), model3D: model3D('dining-table.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, duplicable: true, deletable: true, materialEditable: true, parameterEditable: true }), ruleIds: ['rule-room-boundary', 'rule-main-circulation-900'] },
+      diningChair('object-dining-chair-n', 6200, 4550, 0),
+      diningChair('object-dining-chair-w', 5250, 5600, Math.PI / 2),
+      diningChair('object-dining-chair-s', 6200, 6650, Math.PI),
       { id: 'object-coffee-table', externalId: 'DEMO-FURN-006', source: 'demo', name: 'Coffee Table', category: 'coffee-table', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-sofa', dimensions: { width: 1200, depth: 620, height: 430 }, transform: { x: 2200, y: 0, z: 6400, rotationY: 0 }, media2D: media2D('coffee-table-top.png'), model3D: model3D('coffee-table.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary'] },
       { id: 'object-lounge-chair', externalId: 'DEMO-FURN-007', source: 'demo', name: 'Lounge Chair', category: 'lounge-chair', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-sofa', dimensions: { width: 700, depth: 720, height: 920 }, transform: { x: 3500, y: 0, z: 6600, rotationY: -Math.PI / 2 }, media2D: media2D('lounge-chair-top.png'), model3D: model3D('lounge-chair.glb'), materialId: 'mat-object-warm-white', capabilities: allCapabilities({ movable: true, rotatable: true, materialEditable: true }), ruleIds: ['rule-room-boundary'] },
       { id: 'object-kitchen-counter', externalId: 'DEMO-CAB-003', source: 'demo', name: 'Kitchen Run', category: 'fixed-cabinet', roomId: 'room-kitchen', preferredCameraPresetId: 'camera-kitchen-worktop', dimensions: { width: 3000, depth: 650, height: 900 }, transform: { x: 9300, y: 0, z: 3625, rotationY: 0 }, media2D: media2D('kitchen-counter-v2-top.png'), model3D: model3D('kitchen-counter.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-kitchen-aisle-1000', 'rule-fixed-equipment-wall-relation'] },
       { id: 'object-shoe-cabinet', externalId: 'DEMO-CAB-004', source: 'demo', name: 'Shoe Cabinet', category: 'fixed-cabinet', roomId: 'room-entry', preferredCameraPresetId: 'camera-entry-storage', dimensions: { width: 1200, depth: 360, height: 1050 }, transform: { x: 10600, y: 0, z: 6800, rotationY: Math.PI / 2 }, media2D: media2D('shoe-cabinet-top.png'), model3D: model3D('shoe-cabinet.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), ruleIds: ['rule-room-boundary', 'rule-cabinet-front-900', 'rule-tall-storage-anchored', 'rule-fixed-equipment-wall-relation'] },
-      { id: 'object-flex-floating-shelf', externalId: 'DEMO-SHELF-001', source: 'demo', name: 'Floating Shelf System', category: 'wall-shelf', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 900, depth: 260, height: 720 }, transform: { x: 10300, y: 1300, z: 150, rotationY: 0 }, media2D: media2D('floating-shelf-top.png'), model3D: model3D('floating-shelf.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'shelving', mount: 'wall', hostSurfaceId: 'surface-wall-flex-north' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
+      { id: 'object-flex-floating-shelf', externalId: 'DEMO-SHELF-001', source: 'demo', name: 'Floating Shelf System', category: 'wall-shelf', roomId: 'room-flex', preferredCameraPresetId: 'camera-flex-desk', dimensions: { width: 1000, depth: 260, height: 720 }, transform: { x: 10350, y: 1350, z: 150, rotationY: 0 }, media2D: media2D('floating-shelf-top.png'), model3D: model3D('floating-shelf.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'shelving', mount: 'wall', hostSurfaceId: 'surface-wall-flex-north' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
       { id: 'object-living-slat-partition', externalId: 'DEMO-PART-001', source: 'demo', name: 'Oak Slat Partition', category: 'partition', roomId: 'room-living-dining', preferredCameraPresetId: 'camera-living-feature', dimensions: { width: 1200, depth: 120, height: 2600 }, transform: { x: 7000, y: 0, z: 7750, rotationY: 0 }, media2D: media2D('slat-partition-top.png'), model3D: model3D('slat-partition.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'partition', mount: 'floor', hostSurfaceId: 'surface-floor-living-dining' }, ruleIds: ['rule-room-boundary'] },
-      { id: 'object-primary-feature-wall', externalId: 'DEMO-FEATURE-001', source: 'demo', name: 'Oak Feature Wall', category: 'feature-wall', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-feature', dimensions: { width: 3000, depth: 60, height: 2400 }, transform: { x: 1500, y: 0, z: 3150, rotationY: 0 }, media2D: media2D('feature-wall-top.png'), model3D: model3D('feature-wall.glb'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'feature_wall', mount: 'wall', hostSurfaceId: 'surface-wall-primary-south' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
+      { id: 'object-primary-feature-wall', externalId: 'DEMO-FEATURE-001', source: 'demo', name: 'Oak Slat Feature Wall', category: 'feature-wall', roomId: 'room-primary-bedroom', preferredCameraPresetId: 'camera-primary-feature', dimensions: { width: 3000, depth: 120, height: 2100 }, transform: { x: 1500, y: 0, z: 2920, rotationY: Math.PI }, media2D: media2D('feature-wall-top.png'), model3D: model3D('feature-wall.glb'), wallArt: wallArt('primary-artwork-v1.png', '暖灰矿物抽象画'), materialId: 'mat-oak-veneer', capabilities: allCapabilities({ materialEditable: true }), allowModelReplacement: true, installation: { kind: 'feature_wall', mount: 'wall', hostSurfaceId: 'surface-wall-primary-south' }, ruleIds: ['rule-room-boundary', 'rule-fixed-equipment-wall-relation'] },
     ].map(withObjectContract),
     clearanceZones: [
       { id: 'clearance-entry-route', roomId: 'room-entry', kind: 'circulation', label: '入户主通道', valueMm: 1100, minimumMm: 900, polygon: rectangle(8200, 5750, 1100, 2050), ruleIds: ['rule-main-circulation-900'] },
@@ -504,7 +531,7 @@ export function createDemoScene(styleId = 'scandinavian') {
       { id: 'clearance-primary-bedside', roomId: 'room-primary-bedroom', kind: 'bedside-clearance', label: '床侧净距', valueMm: 600, minimumMm: 600, polygon: rectangle(0, 800, 600, 2000), ruleIds: ['rule-bedside-600'] },
       { id: 'clearance-primary-wardrobe', roomId: 'room-primary-bedroom', kind: 'cabinet-front-clearance', label: '衣柜柜前净距', valueMm: 900, minimumMm: 900, polygon: rectangle(2400, 0, 900, 2400), ruleIds: ['rule-cabinet-front-900'] },
       { id: 'clearance-flex-bedside', roomId: 'room-flex', kind: 'bedside-clearance', label: '儿童房床侧净距', valueMm: 600, minimumMm: 600, polygon: rectangle(6400, 500, 600, 2000), ruleIds: ['rule-bedside-600'] },
-      { id: 'clearance-flex-activity', roomId: 'room-flex', kind: 'child-activity', label: '成长活动留白', valueMm: 1600, minimumMm: 1600, polygon: rectangle(8400, 650, 1600, 1900), ruleIds: ['rule-child-activity-clearance'] },
+      { id: 'clearance-flex-activity', roomId: 'room-flex', kind: 'child-activity', label: '成长活动留白', valueMm: 1600, minimumMm: 1600, polygon: rectangle(8300, 650, 1600, 1900), ruleIds: ['rule-child-activity-clearance'] },
     ],
   };
 }

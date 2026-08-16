@@ -111,6 +111,47 @@
   outline-offset: 2px;
 }
 
+.pascal-agent-callout {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  z-index: 69;
+  display: grid;
+  width: min(360px, calc(100% - 48px));
+  gap: 5px;
+  padding: 12px 15px;
+  border: 1px solid rgba(143, 61, 88, 0.24);
+  border-radius: 16px;
+  color: #403936;
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: 0 18px 48px rgba(67, 48, 43, 0.18);
+  pointer-events: none;
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px);
+  animation: pascal-callout-in 360ms ease-out both;
+}
+
+.pascal-agent-callout::after {
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-right: 1px solid rgba(143, 61, 88, 0.24);
+  border-bottom: 1px solid rgba(143, 61, 88, 0.24);
+  background: rgba(255, 252, 247, 0.94);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.pascal-agent-callout strong { color: #8f3d58; font-size: 13px; letter-spacing: .01em; }
+.pascal-agent-callout span { font-size: 11px; line-height: 1.5; }
+
+@keyframes pascal-callout-in {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
 .pascal-stage-loading {
   display: grid;
   min-height: 560px;
@@ -228,7 +269,10 @@
   .pascal-loading-preview { grid-template-columns: 1fr; padding: 20px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .pascal-trackpad-hint { animation-duration: 1ms; animation-delay: 6s; } }
+@media (prefers-reduced-motion: reduce) {
+  .pascal-trackpad-hint { animation-duration: 1ms; animation-delay: 6s; }
+  .pascal-agent-callout { animation: none; }
+}
 
 @media (max-width: 520px) {
   .pascal-stage,

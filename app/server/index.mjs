@@ -81,13 +81,16 @@ const verifiedCapability = async (health) => {
 };
 
 async function readJson(request, limit = JSON_LIMIT) {
-  let body = '';
+  const chunks = [];
+  let size = 0;
   for await (const chunk of request) {
-    body += chunk;
-    if (Buffer.byteLength(body) > limit) throw new Error('REQUEST_TOO_LARGE');
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    if (size > limit) throw new Error('REQUEST_TOO_LARGE');
+    chunks.push(buffer);
   }
   try {
-    return JSON.parse(body || '{}');
+    return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
   } catch {
     throw new Error('REQUEST_JSON_INVALID');
   }

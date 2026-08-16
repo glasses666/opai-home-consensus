@@ -7,7 +7,7 @@ import { evaluateDesignRules } from '../src/domain/design-rules.js';
 import { compareDesignImpact } from '../src/domain/design-impact.js';
 import { createSceneStore, dispatchSceneCommand } from '../src/domain/scene.js';
 
-const flexObjectIds = ['object-flex-bed', 'object-flex-desk', 'object-flex-floating-shelf'];
+const flexObjectIds = ['object-flex-bed', 'object-flex-desk', 'object-flex-chair', 'object-flex-floating-shelf'];
 const objectById = (scene, id) => scene.objects.find((object) => object.id === id);
 
 test('Gate 10B flex room is a complete same-scene child study slice', () => {
@@ -21,6 +21,7 @@ test('Gate 10B flex room is a complete same-scene child study slice', () => {
   assert.deepEqual(presets.map((preset) => preset.kind), ['room_overhead', 'room_entry', 'surface_feature']);
   assert.equal(objectById(scene, 'object-flex-bed').capabilities.parameterEditable, true);
   assert.equal(objectById(scene, 'object-flex-desk').capabilities.movable, true);
+  assert.equal(objectById(scene, 'object-flex-chair').capabilities.movable, true);
   assert.deepEqual(zones.map((zone) => zone.id).sort(), ['clearance-flex-activity', 'clearance-flex-bedside']);
   assert.deepEqual(evaluateDesignRules(scene).violations.filter((check) => check.objectIds.some((id) => flexObjectIds.includes(id))), []);
 });
@@ -35,7 +36,7 @@ test('Gate 10B flex edits create child-room review signals', () => {
   const movedDesk = dispatchSceneCommand(createSceneStore(before), {
     type: 'object.setTransform',
     objectId: 'object-flex-desk',
-    transform: { x: 10300 },
+    transform: { x: 9500 },
   });
 
   for (const scene of [movedBed.currentScene, movedDesk.currentScene]) {
