@@ -5,11 +5,17 @@
 ## 已验证
 
 - 阿里云公网入口可加载应用：<http://8.134.145.209/project/demo?style=agent-canvas>
-- `/api/health` 返回 Agent provider 为 `aily`
-- Aily 状态为 `real_turn_verified`：部署环境完成真实 Agent 回合
-- 飞书多维表格状态为 `write_read_verified`：完成写入后回读
+- 当前发布版本为 Git 提交 `15f6d51`
+- 2026-08-16 16:05 CST 已用 Chrome 复查首屏和三个 3D 场景，均完成渲染且无应用控制台错误
+- 2026-08-16 较早时段，Aily 状态曾达到 `real_turn_verified`，飞书多维表格曾达到 `write_read_verified`
 - 应用由独立 `opai` 用户和 systemd 服务运行，Nginx 反向代理
 - GitHub 仓库不包含飞书/Aily 凭据；凭据只保存在服务器受限目录
+
+## 当前待恢复
+
+- 2026-08-16 15:47 CST，飞书用户令牌刷新返回 400；当前 `/api/health` 显示 `user_token_invalid`，公网界面诚实降级为“演示”
+- 已发起最小权限设备授权；用户确认后需在服务器完成设备码换取，再重新验证 Aily 回合与多维表格写入后回读
+- 之前的真实链路证据仍是有效的历史验证记录，但在重新授权完成前不描述为当前在线状态
 
 ## 已配置但暂不可作为入口
 

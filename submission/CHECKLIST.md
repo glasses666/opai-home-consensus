@@ -11,11 +11,12 @@
 | Chrome / Agent Reach 证据采集 | 完成 | 欧派、飞书、消费者调查及小红书定性案例均已固化 |
 | 私有 GitHub 维护仓库 | 完成 | `glasses666/opai-home-consensus`，凭据文件未进入 Git |
 | 阿里云公网部署 | 完成 | `http://8.134.145.209/project/demo?style=agent-canvas` |
-| Aily 与飞书多维表格真实链路 | 完成 | `real_turn_verified` / `write_read_verified`，不等于生产 SLA |
+| Aily 与飞书多维表格真实链路 | 历史验证完成、现场待重授权 | 2026-08-16 已取得 `real_turn_verified` / `write_read_verified`；15:47 令牌刷新返回 400，当前公网诚实降级为“演示” |
 | Cloudflare DNS | 已配置、外部阻塞 | `opai.glasser.top` 已解析；阿里云大陆节点因 ICP 备案返回 403 |
 | DOCX / PDF / Markdown 交付 | 完成 | DOCX 11 页、PDF 11 页；DOCX 已清除个人元数据 |
 | Opus 5 终审 | 完成 | 主机 Hermes / Superwing 会话 `20260816_143034_4d7970`；第三方 Provider 边界见 `OPUS5-REVIEW.md` |
-| 公网未登录终检 | 待本轮执行 | 首屏、三个场景和 Agent 提示需在未登录浏览器逐项确认 |
+| 公网未登录终检 | 完成 | 2026-08-16 16:05 CST 用 Chrome 检查首屏、三个场景和 Agent 状态，3D 均渲染且控制台无应用错误 |
+| 小房间 45° 镜头 | 完成 | 儿童房与主卧镜头已后移并保持 45°，发布版本 `15f6d51` |
 | 飞书最终文档及互联网可读权限 | 待提交操作 | 本地完整文档已就绪；创建/上传最终飞书文档并公开链接尚未执行 |
 | 最终参赛表提交 | 未执行 | 属于不可代替的最终对外提交动作，不在未确认情况下代点 |
 | Demo 视频链接 | 本轮忽略 | 按用户要求暂不作为阻塞项 |
