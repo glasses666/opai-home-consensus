@@ -66,7 +66,7 @@ export function centerCameraPoseOnRoom(pose, room) {
   const centerX = (minX + maxX) / 2;
   const centerZ = (minZ + maxZ) / 2;
   const diagonal = Math.hypot(maxX - minX, maxZ - minZ);
-  const horizontal = Math.max(2.4, diagonal * 0.72);
+  const horizontal = Math.max(3.2, diagonal * 1.25);
   const height = horizontal * Math.SQRT2;
   return {
     ...pose,

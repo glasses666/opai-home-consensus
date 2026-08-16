@@ -20,6 +20,7 @@ test('room navigation centers and zooms the selected child room', () => {
   });
 
   assert.deepEqual(centered.target, [8.7, 0, 1.6]);
+  assert.ok(Math.hypot(centered.position[0] - centered.target[0], centered.position[2] - centered.target[2]) >= Math.hypot(4.6, 3.2));
   assert.equal(Number(Math.abs(centered.position[0] - centered.target[0]).toFixed(3)), Number(Math.abs(centered.position[2] - centered.target[2]).toFixed(3)));
   assert.equal(Number(centered.position[1].toFixed(3)), Number(Math.hypot(centered.position[0] - centered.target[0], centered.position[2] - centered.target[2]).toFixed(3)));
   assert.equal(centered.viewWidth, undefined);
