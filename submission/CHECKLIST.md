@@ -10,9 +10,9 @@
 | 真实证据与使用边界 | 完成 | `evidence/SOURCES.md` 与 7 张截图、欧派年度报告原始 PDF |
 | Chrome / Agent Reach 证据采集 | 完成 | 欧派、飞书、消费者调查及小红书定性案例均已固化 |
 | 私有 GitHub 维护仓库 | 完成 | `glasses666/opai-home-consensus`，凭据文件未进入 Git |
-| 阿里云公网部署 | 完成 | `http://8.134.145.209/project/demo?style=agent-canvas` |
+| 阿里云公网部署 | 完成 | `https://opai.glasser.top`；Cloudflare Tunnel 已验证页面与 `/api/health` 返回 200 |
 | Aily 与飞书多维表格真实链路 | 完成 | 2026-08-16 16:18 CST 重新授权后现场取得 `real_turn_verified` / `write_read_verified`；只读检查产生 0 个场景命令、0 个待同步事件 |
-| Cloudflare DNS | 已配置、外部阻塞 | `opai.glasser.top` 已解析；阿里云大陆节点因 ICP 备案返回 403 |
+| Cloudflare DNS / Tunnel | 完成 | `opai.glasser.top` 通过 `aliyun-relay` Tunnel 接入 `127.0.0.1:8080`，已验证可用 |
 | DOCX / PDF / Markdown 交付 | 完成 | DOCX 11 页、PDF 11 页；DOCX 已清除个人元数据 |
 | Opus 5 终审 | 完成 | 主机 Hermes / Superwing 会话 `20260816_143034_4d7970`；第三方 Provider 边界见 `OPUS5-REVIEW.md` |
 | 公网未登录终检 | 完成 | 2026-08-16 16:05 CST 用 Chrome 检查首屏、三个场景和 Agent 状态，3D 均渲染且控制台无应用错误 |
@@ -23,7 +23,7 @@
 
 ## 当前可提交入口
 
-- 公网体验：<http://8.134.145.209/project/demo?style=agent-canvas>
+- 公网体验：<https://opai.glasser.top>
 - 飞书提交文档：<https://www.feishu.cn/docx/DnQ0dmLg1oUDbkxEsQecsxpdnWc>
 - Demo 视频：<https://v.douyin.com/Wt6Qqba5cp4/>
 - 私有维护仓库：<https://github.com/glasses666/opai-home-consensus>

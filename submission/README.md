@@ -2,12 +2,12 @@
 
 ## 评委入口
 
-- 公网体验：<http://8.134.145.209/project/demo?style=agent-canvas>
+- 公网体验：<https://opai.glasser.top>
 - 提交正文：`元界视创-欧派AI家装共识工作台-参赛方案.docx`
 - Demo 视频：<https://v.douyin.com/Wt6Qqba5cp4/>
 - 飞书提交文档：<https://www.feishu.cn/docx/DnQ0dmLg1oUDbkxEsQecsxpdnWc>
 
-`opai.glasser.top` 已完成 Cloudflare DNS，但阿里云大陆节点当前要求 ICP 备案，因此不作为本次评委入口。
+`opai.glasser.top` 已通过阿里云上的 Cloudflare Tunnel 接入，评委请从主页逐层进入各场景。
 
 ## 文件说明
 
