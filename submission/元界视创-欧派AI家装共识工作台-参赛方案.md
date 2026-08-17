@@ -15,7 +15,7 @@
 | 方案名称 | **AI 家装共识工作台** |
 | 一句话摘要 | AI 先理解一家人的生活，再把语言变成同一 3D 空间里的可解释修改、规则校验与版本共识。 |
 | 飞书 AI 能力 | 飞书智能伙伴 Aily（模型推理 / Agent 技能）、飞书多维表格（过程留痕与结果同步） |
-| 体验入口 | [阿里云公网体验](http://8.134.145.209/project/demo?style=agent-canvas) |
+| 体验入口 | [欧派共创空间主页](https://opai.glasser.top) |
 | Demo 视频 | [抖音｜欧派共创空间 Demo 演示](https://v.douyin.com/Wt6Qqba5cp4/) |
 
 ### 团队成员与分工
@@ -144,9 +144,9 @@ SceneCommand（唯一写入边界）
 
 ### 5. 方案体验入口与 Demo 展示视频【建议包含】
 
-- **公网体验**：[http://8.134.145.209/project/demo?style=agent-canvas](http://8.134.145.209/project/demo?style=agent-canvas)
-- **预定域名**：`https://opai.glasser.top` 已完成 Cloudflare DNS，但当前被阿里云大陆节点以 ICP 备案要求拦截，暂不作为评委入口。
-- **GitHub 维护仓库**：[github.com/glasses666/opai-home-consensus](https://github.com/glasses666/opai-home-consensus)（私有仓库，不作为评委体验入口）
+- **公网体验**：[欧派共创空间主页](https://opai.glasser.top)
+- **体验域名**：`https://opai.glasser.top` 通过现有 Cloudflare Tunnel 转发至阿里云 8080，评委请从主页进入各场景。
+- **公开源码仓库**：[github.com/glasses666/opai-home-consensus](https://github.com/glasses666/opai-home-consensus)（源码公开，评委体验仍以主页为入口）
 - **Demo 视频**：[抖音｜欧派共创空间 Demo 演示](https://v.douyin.com/Wt6Qqba5cp4/)
 
 建议 3–5 分钟视频结构：

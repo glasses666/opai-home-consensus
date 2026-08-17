@@ -11,7 +11,7 @@
 - 同一事件已写入飞书多维表格并回读；`/api/health` 显示 `write_read_verified`，pending 事件为 0
 - 只读检查返回 0 个场景命令，项目仍处于初始版本 `version-demo-initial`
 - 应用由独立 `opai` 用户和 systemd 服务运行，Nginx 反向代理
-- GitHub 仓库不包含飞书/Aily 凭据；凭据只保存在服务器受限目录
+- 公开 GitHub 仓库不包含飞书/Aily 凭据；凭据只保存在服务器受限目录：<https://github.com/glasses666/opai-home-consensus>
 - 最终飞书文档已导入并设为互联网链接可读：<https://www.feishu.cn/docx/DnQ0dmLg1oUDbkxEsQecsxpdnWc>
 
 ## Cloudflare Tunnel 公网入口
