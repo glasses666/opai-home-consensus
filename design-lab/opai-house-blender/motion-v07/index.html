@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V07 · 边画边搭 · 15秒循环</title>
+<style>body{margin:0;background:#eae5dc;color:#34362e;font:15px system-ui}main{max-width:1200px;margin:5vh auto;padding:24px}h1{font-size:22px;font-weight:500}video{display:block;width:100%;background:#ded9cf}nav{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}button{border:1px solid #b6ae9f;background:transparent;padding:10px 18px;color:inherit;cursor:pointer}p{color:#706b60;line-height:1.7}</style>
+<main><h1>边画边搭，边拆边收线。</h1>
+<video src="house-overlap-v07.mp4" autoplay muted loop playsinline controls></video>
+<nav><button data-time="0">完整循环</button><button data-time="1">描线与搭建</button><button data-time="5.4">完整房屋环绕</button><button data-time="10.2">拆解与收线</button></nav>
+<p>V07 · 15 秒（原 24 秒） · 保留逐笔描线和逐件装配，仅调整时间编排。960 × 540 动作审阅稿，尚未替换首页。</p></main>
+<script>const v=document.querySelector('video');document.querySelectorAll('button').forEach(b=>b.onclick=()=>{v.currentTime=Number(b.dataset.time);v.play()});</script></html>

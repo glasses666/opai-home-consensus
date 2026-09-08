@@ -1,3 +1,5 @@
+import { isFabPresentation, studioAssetSource } from './studio-assets.js';
+import { furniturePreviewSource } from './furniture-preview.js';
 const SCALE = 0.001;
 const LEVEL_ID = 'level_oppein_demo';
 
@@ -241,14 +243,16 @@ export function projectOppeinSceneToPascal(scene) {
         id: object.externalId,
         category: object.category,
         name: object.name,
-        thumbnail: object.media2D?.src ?? '/icons/item.webp',
-        floorPlanUrl: object.media2D?.src,
+        thumbnail: furniturePreviewSource(object.media2D?.src) ?? '/icons/item.webp',
+        floorPlanUrl: furniturePreviewSource(object.media2D?.src),
         source: 'mine',
-        src: object.model3D?.src ?? '/assets/models/placeholder.glb',
+        src: studioAssetSource(object.model3D?.src) ?? '/assets/models/placeholder.glb',
         dimensions: [m(object.dimensions.width), m(object.dimensions.height), m(object.dimensions.depth)],
         offset: [0, 0, 0],
         rotation: [0, 0, 0],
-        scale: [1, 1, 1],
+        scale: isFabPresentation(object.model3D?.src)
+          ? [m(object.dimensions.width), m(object.dimensions.height), m(object.dimensions.depth)]
+          : [1, 1, 1],
         tags: [object.source ?? 'demo', object.category],
       },
     };

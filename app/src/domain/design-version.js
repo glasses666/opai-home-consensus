@@ -119,7 +119,9 @@ export function confirmSceneVersion(history, versionId = history.currentVersionI
 
 export function reviewSceneVersion(history, versionId = history.currentVersionId, { action, actor = 'designer', note = '', now = nowIso } = {}) {
   if (!['approve', 'return'].includes(action)) throw new Error('REVIEW_ACTION_INVALID');
-  versionById(history, versionId);
+  if (versionId !== history.currentVersionId) throw new Error('VERSION_NOT_CURRENT');
+  const reviewed = versionById(history, versionId);
+  if (history.confirmedVersionId !== versionId || reviewed.status !== 'customer_confirmed') throw new Error('VERSION_NOT_CONFIRMED');
   const status = action === 'approve' ? 'designer_verified' : 'designer_returned';
   const versions = history.versions.map((version) => version.id === versionId
     ? deepFreeze({ ...version, status, review: { action, actor, note, reviewedAt: timestamp(now), source: 'demo' } })

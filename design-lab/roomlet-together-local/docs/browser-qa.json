@@ -1,0 +1,117 @@
+{
+  "browserPlugin": "not available",
+  "method": "Playwright + Chromium. Shipped single-file HTML loaded with set_content in an offline browser context. The host blocks all URL navigation, including file://; this is not a verified double-click/file-protocol test.",
+  "fileProtocolTest": {
+    "status": "not verified",
+    "reason": "Direct navigation attempted: net::ERR_BLOCKED_BY_ADMINISTRATOR."
+  },
+  "errors": [],
+  "checks": {
+    "titleAndMeaningfulContent": true,
+    "autoplay": true,
+    "pauseFreezesTime": true,
+    "resumeAdvancesTime": true,
+    "layoutB": true,
+    "layoutA": true,
+    "architectureAndSubpartsUnchanged": true,
+    "loopPixelsIdentical": true,
+    "transparentAlpha": true,
+    "dragRotates": true,
+    "wheelZooms": true,
+    "restoreDefaultView": true,
+    "zoomButtons": true,
+    "topView": true,
+    "speedChanges": true,
+    "parallaxToggle": true,
+    "checkerboardToggle": true,
+    "independentObjectSelection": true,
+    "editablePosition": true,
+    "replayRestoresTracks": true,
+    "animatedDownload": true,
+    "webGLErrorDesktop": true,
+    "mobileNoHorizontalOverflow": true,
+    "mobileControlsVisible": true,
+    "pinchZoom": true,
+    "webGLErrorMobile": true,
+    "glbVisualRoundtripMatches": true,
+    "smallEmbed320": true,
+    "keyboardPlayback": true,
+    "embedKeyboardControls": true,
+    "webGLErrorEmbed": true,
+    "reducedMotionRespected": true,
+    "zeroExternalNetworkRequests": true
+  },
+  "untested": [
+    "Safari/WebKit",
+    "Firefox",
+    "physical Mac/iPhone/iPad",
+    "hardware GPU performance or three simultaneous viewers",
+    "production website integration",
+    "Blender or other DCC animation playback",
+    "Khronos Validator (not installed; outbound package downloads unavailable)"
+  ],
+  "browserVersion": "144.0.7559.96",
+  "lastCompletedStage": "Core controls / GLB roundtrip plus fresh-process embed and reduced motion",
+  "renderer": "ANGLE (Mesa, llvmpipe (LLVM 19.1.7 256 bits), OpenGL 4.5)",
+  "alphaCoverage": 0.5467,
+  "glbVisualRoundtrip": {
+    "scope": "Project GLB read-only bridge + the same renderer / lighting. Not an external engine or pixel-parity claim for Blender/Three.js. All geometry, materials, textures and animation sampled from the exported GLB.",
+    "frames": [
+      {
+        "time": 0,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 2.5,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 4.75,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 6.6,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 9,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 12.6,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 16.9,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      },
+      {
+        "time": 18,
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "fractionDifferentPixels": 0.0
+      }
+    ]
+  },
+  "externalRequests": [],
+  "testedViewports": [
+    "1360x900",
+    "390x844",
+    "320x320"
+  ],
+  "passed": true
+}

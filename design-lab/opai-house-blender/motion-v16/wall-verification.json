@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "sampled_frames": 167,
+  "camera_clearance_m": 0.08,
+  "collision_hits": [],
+  "occluding_groups_hidden_through_frame": 137,
+  "rendered": false
+}

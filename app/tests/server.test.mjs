@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-import { createAppServer } from '../server/index.mjs';
+import { createAppServer, handoffActivitySummary } from '../server/index.mjs';
+import { callDeepSeek } from '../server/deepseek.mjs';
 import { createPersistentProjectStore } from '../server/project-store.mjs';
-import { callAily, getFeishuHealth, syncActivity } from '../server/feishu.mjs';
+import { callAily, getFeishuHealth, syncActivity, safeBaseUrl } from '../server/feishu.mjs';
 import { LarkCliError, runLarkCli } from '../server/lark-cli.mjs';
 import { createDemoHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { createVersionHistory, saveSceneVersion, serializeVersionHistory } from '../src/domain/design-version.js';
@@ -17,6 +18,110 @@ const listen = (server) => new Promise((resolve) => {
   server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${server.address().port}`));
 });
 const close = (server) => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+
+test('Feishu links accept only HTTPS official Base pages', () => {
+  assert.equal(safeBaseUrl('https://team.feishu.cn/base/Abc123'), 'https://team.feishu.cn/base/Abc123');
+  for (const value of ['javascript:alert(1)', 'https://feishu.cn.evil.test/base/abc', 'https://user:pass@team.feishu.cn/base/abc', 'https://team.feishu.cn/docx/abc']) assert.equal(safeBaseUrl(value), null);
+});
+
+test('handoff summary contains useful counts but no opinions or scene and only configured public URL', () => {
+  const history = createVersionHistory(createSceneStore(createDemoScene()));
+  const snapshot = { versionId: history.currentVersionId, versionHistory: serializeVersionHistory(history), householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(history.currentVersionId)) };
+  const summary = handoffActivitySummary(snapshot, 'project-demo', 'https://opai.glasser.top');
+  assert.equal(summary.changedFurnitureCount, 0);
+  assert.equal(typeof summary.ruleIssueCount, 'number');
+  assert.match(summary.reviewUrl, /^https:\/\/opai\.glasser\.top\/review\/project-demo\?versionId=/);
+  assert.match(summary.boundary, /demo\/estimate/);
+  assert.equal('household' in summary, false);
+  assert.equal('scene' in summary, false);
+  assert.equal(handoffActivitySummary(snapshot, 'project-demo', 'http://localhost:5180').reviewUrl, null);
+});
+
+test('restart exposes an interrupted pending handoff as failed without sending it', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-delivery-interrupted-'));
+  const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+  const history = createVersionHistory(createSceneStore(createDemoScene()));
+  const versionId = history.currentVersionId;
+  projectStore.publishVersionHistory(history);
+  projectStore.saveHandoffSnapshot({ eventId: 'evt-interrupted', versionId, versionHistory: serializeVersionHistory(history), householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(versionId)) });
+  projectStore.updateHandoffSnapshot(versionId, (saved) => ({ ...saved, feishuDelivery: { status: 'pending' } }));
+  createAppServer({ projectStore, sync: async () => { throw new Error('must not send'); } });
+  assert.equal(projectStore.getHandoffSnapshotForVersion(versionId).feishuDelivery.reason, 'BASE_SYNC_INTERRUPTED');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('fresh review delivery reads not submitted while retry requires a saved snapshot', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-delivery-fresh-'));
+  const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+  const server = createAppServer({ projectStore });
+  const origin = await listen(server);
+  try {
+    const endpoint = `${origin}/api/projects/project-demo/feishu-delivery`;
+    const read = await fetch(endpoint);
+    assert.equal(read.status, 200);
+    assert.deepEqual(await read.json(), { feishuDelivery: { status: 'not_submitted' } });
+    const retry = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    assert.equal(retry.status, 404);
+  } finally { await close(server); rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('handoff delivery is nonblocking, persisted, retryable and serialized', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-delivery-'));
+  const filePath = join(dir, 'project.json');
+  const projectStore = createPersistentProjectStore({ filePath });
+  const history = createVersionHistory(createSceneStore(createDemoScene()));
+  const versionId = history.currentVersionId;
+  let release;
+  let calls = 0;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const server = createAppServer({ projectStore, sync: async (event) => {
+    calls += 1; await gate;
+    return { eventId: event.eventId, recordId: 'rec_test', verifiedAt: new Date().toISOString(), recordUrl: 'https://team.feishu.cn/base/Abc123' };
+  } });
+  const origin = await listen(server);
+  try {
+    const saved = await fetch(`${origin}/api/projects/project-demo/snapshot`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ eventId: 'evt-delivery', versionHistory: serializeVersionHistory(history), householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(versionId)) }) });
+    assert.equal((await saved.json()).feishuDelivery.status, 'pending');
+    const endpoint = `${origin}/api/projects/project-demo/feishu-delivery`;
+    await Promise.all([1, 2].map(() => fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ versionId }) })));
+    assert.equal(calls, 1);
+    release();
+    let delivery;
+    for (let count = 0; count < 20; count += 1) {
+      delivery = (await (await fetch(`${endpoint}?versionId=${encodeURIComponent(versionId)}`)).json()).feishuDelivery;
+      if (delivery.status === 'synced') break;
+    }
+    assert.equal(delivery.status, 'synced');
+    assert.equal(delivery.recordId, 'rec_test');
+    assert.equal(createPersistentProjectStore({ filePath }).getHandoffSnapshotForVersion(versionId).feishuDelivery.status, 'synced');
+    await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ versionId }) });
+    assert.equal(calls, 1);
+  } finally { release(); await close(server); rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('delivery never claims success without a verified receipt and can recover a legacy event', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-delivery-retry-'));
+  const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+  const history = createVersionHistory(createSceneStore(createDemoScene()));
+  const versionId = history.currentVersionId;
+  projectStore.publishVersionHistory(history);
+  projectStore.saveHandoffSnapshot({ eventId: 'evt-legacy', versionId, versionHistory: serializeVersionHistory(history), householdConsensus: serializeHouseholdConsensus(createDemoHouseholdConsensus(versionId)) });
+  projectStore.markBaseSynced('evt-legacy');
+  let valid = false;
+  const server = createAppServer({ projectStore, sync: async (event) => valid ? { eventId: event.eventId, recordId: 'rec_legacy', verifiedAt: new Date().toISOString() } : {} });
+  const origin = await listen(server);
+  const endpoint = `${origin}/api/projects/project-demo/feishu-delivery`;
+  const retry = () => fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ versionId }) });
+  try {
+    await retry();
+    assert.equal((await (await fetch(`${endpoint}?versionId=${encodeURIComponent(versionId)}`)).json()).feishuDelivery.status, 'failed');
+    assert.equal(projectStore.listPendingBaseEvents().length, 1);
+    valid = true;
+    await retry();
+    assert.equal((await (await fetch(`${endpoint}?versionId=${encodeURIComponent(versionId)}`)).json()).feishuDelivery.status, 'synced');
+    assert.equal(projectStore.listPendingBaseEvents().length, 0);
+  } finally { await close(server); rmSync(dir, { recursive: true, force: true }); }
+});
 
 test('lark-cli adapter parses envelopes and never forwards raw secret errors', async () => {
   const ok = await runLarkCli(['fake'], { runner: async () => ({ stdout: '{"ok":true,"data":{"value":1}}' }) });
@@ -42,6 +147,45 @@ test('lark-cli adapter parses envelopes and never forwards raw secret errors', a
     }),
     (error) => error instanceof LarkCliError && error.message === 'INVALID_PARAMETERS' && !error.message.includes('private'),
   );
+});
+
+test('DeepSeek adapter uses the chat endpoint and returns structured provider output', async () => {
+  let request;
+  const result = await callDeepSeek({ prompt: '{"return":"json"}' }, {
+    apiKey: 'deepseek-test-key',
+    model: 'deepseek-v4-flash',
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return {
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: '```json\n{"toolCalls":[]}\n```' } }] }),
+      };
+    },
+  });
+
+  assert.equal(request.url, 'https://api.deepseek.com/chat/completions');
+  assert.equal(request.options.headers.authorization, 'Bearer deepseek-test-key');
+  const requestBody = JSON.parse(request.options.body);
+  assert.equal(requestBody.model, 'deepseek-v4-flash');
+  assert.deepEqual(requestBody.response_format, { type: 'json_object' });
+  assert.deepEqual(requestBody.thinking, { type: 'disabled' });
+  assert.equal(requestBody.temperature, 0.1);
+  assert.equal(requestBody.max_tokens, 800);
+  assert.deepEqual(result.toolCalls, []);
+  assert.deepEqual(result.providerTrace, { provider: 'deepseek', model: 'deepseek-v4-flash' });
+});
+
+test('DeepSeek gives first-plan requests a separate output budget and rejects truncated JSON', async () => {
+  let budget;
+  const options = {
+    apiKey: 'test-key', maxTokens: 4096,
+    fetchImpl: async (_url, request) => {
+      budget = JSON.parse(request.body).max_tokens;
+      return { ok: true, json: async () => ({ choices: [{ finish_reason: 'length', message: { content: '{"toolCalls":[]}' } }] }) };
+    },
+  };
+  await assert.rejects(callDeepSeek({ prompt: '{"task":"first-plan"}' }, options), /DEEPSEEK_RESPONSE_TRUNCATED/);
+  assert.equal(budget, 4096);
 });
 
 test('Aily adapter performs the official session-message-run-message chain', async () => {
@@ -101,7 +245,7 @@ test('Aily adapter prefers the official team-agent chat chain when agent ID is a
     pollMs: 0,
   });
   assert.equal(result.toolCalls[0].tool, 'inspect_room');
-  assert.equal(sentPrompt.promptVersion, 'oppein-harness-v2.4');
+  assert.equal(sentPrompt.promptVersion, 'oppein-harness-v2.5');
   assert.equal(sentPrompt.rules.some((rule) => rule.includes('层板')), true);
   assert.deepEqual(paths, [
     'POST /open-apis/aily/v1/agents/agent_test/chats',
@@ -284,6 +428,38 @@ test('BFF health identifies the active Agent provider', async () => {
     assert.equal(health.provider, 'aily');
   } finally {
     await close(server);
+  }
+});
+
+test('BFF health probes do not drain pending sync work', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-health-queue-'));
+  const projectStore = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+  projectStore.enqueueBaseEvent({ eventId: 'evt-waiting', input: 'pending' });
+  let healthCalls = 0;
+  let syncCalls = 0;
+  const server = createAppServer({
+    projectStore,
+    health: async () => {
+      healthCalls += 1;
+      return { aily: { status: 'api_unavailable' }, base: { status: 'ready' } };
+    },
+    sync: async () => { syncCalls += 1; },
+  });
+  const origin = await listen(server);
+  try {
+    const live = await (await fetch(`${origin}/api/health/live`)).json();
+    assert.equal(live.status, 'ok');
+    assert.equal(healthCalls, 0);
+    assert.equal(syncCalls, 0);
+
+    const ready = await (await fetch(`${origin}/api/health`)).json();
+    assert.equal(ready.pendingBaseEvents, 1);
+    assert.equal(projectStore.listPendingBaseEvents().length, 1);
+    assert.equal(healthCalls, 1);
+    assert.equal(syncCalls, 0);
+  } finally {
+    await close(server);
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 
@@ -652,6 +828,16 @@ test('BFF snapshot confirm review and export keep statuses and pending sync', as
       assert.equal(reviewedBody.version.status, 'designer_verified');
       assert.equal(reviewedBody.sync, 'pending');
 
+      const retried = await fetch(`${origin}/api/versions/${version.id}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ eventId: 'evt-review-http', action: 'approve', note: '可以交接' }),
+      });
+      assert.equal(retried.status, 200);
+      const retriedBody = await retried.json();
+      assert.deepEqual(retriedBody.version, reviewedBody.version);
+      assert.equal(projectStore.snapshot().handoffSnapshots.filter((entry) => entry.eventId === 'evt-review-http').length, 1);
+
       const exported = await (await fetch(`${origin}/api/projects/project-demo/export?versionId=${version.id}`)).json();
       assert.equal(exported.packet.version.id, version.id);
       assert.equal(exported.review.currentVersionId, version.id);
@@ -713,10 +899,22 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
       source: 'manual',
     });
     const consensus = createDemoHouseholdConsensus(history.currentVersionId);
+    let consensusCalls = 0;
     const server = createAppServer({
       projectStore,
       health: async () => ({ aily: { status: 'api_unavailable' }, base: { status: 'api_unavailable' } }),
       sync: async () => { throw new Error('offline'); },
+      consensusProvider: async () => {
+        consensusCalls += 1;
+        if (consensusCalls === 2) throw new Error('AILY_TIMEOUT');
+        return {
+          assistantReply: '家庭已确认当前版本，仍需复核规则与企业数据缺口。',
+          toolCalls: [],
+          agreed: ['保留当前版本', '保留通道', '保留收纳', '保留照明', '第五项不会进入展示'],
+          conflicts: [],
+          questions: ['企业目录何时接入？'],
+        };
+      },
       id: () => 'handoff',
     });
     const origin = await listen(server);
@@ -736,6 +934,35 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
       assert.equal(snapshotBody.packet.version.id, history.currentVersionId);
       assert.equal(projectStore.currentVersionId, history.currentVersionId);
       assert.equal(projectStore.getSceneStore().currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
+
+      let summarized;
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        summarized = await (await fetch(`${origin}/api/projects/project-demo/export`)).json();
+        if (summarized.consensusSummary?.status === 'ready') break;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+      assert.equal(summarized.consensusSummary.status, 'ready');
+      assert.equal(summarized.consensusSummary.provider, 'aily');
+      assert.equal(summarized.consensusSummary.agreed.length, 4);
+      assert.deepEqual(summarized.consensusSummary.questions, ['企业目录何时接入？']);
+
+      const snapshotWithFailedSummary = await fetch(`${origin}/api/projects/project-demo/snapshot`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          eventId: 'evt-handoff-http-summary-failed',
+          versionHistory: serializeVersionHistory(history),
+          householdConsensus: serializeHouseholdConsensus(consensus),
+        }),
+      });
+      assert.equal(snapshotWithFailedSummary.status, 200);
+      let failedSummary;
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        failedSummary = await (await fetch(`${origin}/api/projects/project-demo/export`)).json();
+        if (failedSummary.consensusSummary?.status === 'failed') break;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+      assert.deepEqual(failedSummary.consensusSummary, { status: 'failed', provider: 'aily', reason: 'AILY_TIMEOUT' });
 
       const confirmed = await fetch(`${origin}/api/versions/${history.currentVersionId}/confirm`, { method: 'POST' });
       const confirmedBody = await confirmed.json();

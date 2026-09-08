@@ -1,0 +1,5 @@
+# Optional source regeneration only. Browsing the delivered HTML needs none of these.
+numpy==2.3.5
+scipy==1.17.0
+Pillow==12.3.0
+cadquery==2.8.0

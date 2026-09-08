@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep OPAI Feishu authorization refreshed
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+RandomizedDelaySec=60
+Unit=opai-feishu-auth.service
+
+[Install]
+WantedBy=timers.target

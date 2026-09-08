@@ -1,0 +1,40 @@
+{
+  "roomlet-together-modified.glb": {
+    "bytes": 1045416,
+    "namedNodes": 96,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "staticLayoutCorrect": true,
+    "independentTrimeshMeshCount": "not installed"
+  },
+  "roomlet-together-original.glb": {
+    "bytes": 1045384,
+    "namedNodes": 96,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "staticLayoutCorrect": true,
+    "independentTrimeshMeshCount": "not installed"
+  },
+  "roomlet-together-loop.glb": {
+    "bytes": 1203768,
+    "namedNodes": 96,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "duration": 18.0,
+    "samples": 1081,
+    "channels": 10,
+    "htmlAndGLBAnimationByteExact": true,
+    "loopEndpointsByteExact": true,
+    "architectureNotAnimated": true,
+    "independentTrimeshMeshCount": "not installed"
+  }
+}

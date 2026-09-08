@@ -1,0 +1,3 @@
+# In addition to ../requirements.txt, for optional reproducible QA.
+trimesh==4.11.1
+playwright==1.57.0

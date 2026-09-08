@@ -298,6 +298,15 @@ export async function getFeishuHealth({
   return { aily, base };
 }
 
+export function safeBaseUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password
+      && /(^|\.)(feishu\.cn|larkoffice\.com)$/.test(url.hostname)
+      && /^\/base\/[a-zA-Z0-9]+\/?$/.test(url.pathname) ? url.href : null;
+  } catch { return null; }
+}
+
 export async function syncActivity(event, {
   run = runLarkCli,
   env = process.env,
@@ -354,5 +363,6 @@ export async function syncActivity(event, {
     eventId: event.eventId,
     recordId,
     verifiedAt: lastBaseSuccessAt,
+    recordUrl: safeBaseUrl(env.FEISHU_BASE_URL),
   };
 }

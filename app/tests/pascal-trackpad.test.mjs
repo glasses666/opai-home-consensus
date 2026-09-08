@@ -5,12 +5,24 @@ import {
   centerCameraPoseOnFloorPlan,
   centerCameraPoseOnRoom,
   cameraPresetToPose,
+  fitPortraitWholeHomePose,
   isTrackpadPanWheel,
   isTrackpadPinchWheel,
   interpolateCameraPose,
+  cameraTransitionDuration,
   panCameraPose,
   zoomCameraPose,
 } from '../src/pascal/trackpad-navigation.js';
+
+test('camera transition timing scales with travel and turn and respects reduced motion', () => {
+  const from = { position:[0,5,5], target:[0,0,0] };
+  const near = { position:[1,5,5], target:[1,0,0] };
+  const far = { position:[20,5,-5], target:[20,0,0] };
+  assert.ok(cameraTransitionDuration(from, near) < cameraTransitionDuration(from, far));
+  assert.equal(cameraTransitionDuration(from, far), 2400);
+  assert.equal(cameraTransitionDuration(from, far, true), 0);
+  assert.ok(Number.isFinite(cameraTransitionDuration({position:[0,0,0],target:[0,0,0]}, near)));
+});
 
 test('room navigation centers and zooms the selected child room', () => {
   const pose = { position: [1, 8, -5], target: [1, 0, 1], viewWidth: 12 };
@@ -48,6 +60,31 @@ test('canonical camera presets convert from millimeters to Pascal scene units', 
     projection: 'perspective',
     fov: 44,
   });
+});
+
+test('portrait whole-home framing fits house corners without changing canonical target or desktop framing', () => {
+  const pose = { position: [14.7, 12.6, 15.1], target: [5.5, 0, 4.1], fov: 34, projection: 'perspective' };
+  const bounds = { x: 0, z: 0, width: 11000, depth: 8000, height: 2800 };
+  const fitted = fitPortraitWholeHomePose(pose, bounds, { width: 334, height: 516 });
+  assert.deepEqual(fitted.target, pose.target);
+  assert.equal(fitted.fov, pose.fov);
+  assert.notDeepEqual(fitted.position, pose.position);
+  assert.equal(fitPortraitWholeHomePose(pose, bounds, { width: 1100, height: 700 }), pose);
+  assert.equal(fitPortraitWholeHomePose(pose, bounds, { width: 516, height: 334 }), pose);
+  assert.equal(fitPortraitWholeHomePose(pose, bounds, { width: 0, height: 0 }), pose);
+  const offset = fitted.position.map((v, i) => v - fitted.target[i]);
+  const distance = Math.hypot(...offset);
+  const back = offset.map((v) => v / distance);
+  const horizontal = Math.hypot(back[0], back[2]);
+  const right = [back[2] / horizontal, 0, -back[0] / horizontal];
+  const up = [back[1] * right[2], back[2] * right[0] - back[0] * right[2], -back[1] * right[0]];
+  const dot = (a, b) => a.reduce((sum, v, i) => sum + v * b[i], 0);
+  for (const x of [0, 11]) for (const y of [0, 2.8]) for (const z of [0, 8]) {
+    const point = [x, y, z].map((v, i) => v - pose.target[i]);
+    const depth = distance - dot(point, back);
+    assert.ok(Math.abs(dot(point, right)) < depth * Math.tan(34 * Math.PI / 360) * 334 / 516);
+    assert.ok(Math.abs(dot(point, up)) < depth * Math.tan(34 * Math.PI / 360));
+  }
 });
 
 test('camera pose interpolation follows the shortest orbit and stays clear of the look-at target', () => {

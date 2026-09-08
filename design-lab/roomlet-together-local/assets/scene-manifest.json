@@ -1,0 +1,2452 @@
+{
+  "meta": {
+    "title": "把不同，安放在一起",
+    "slug": "roomlet-together",
+    "scene": "together",
+    "units": "metres",
+    "upAxis": "+Y",
+    "fixedCamera": {
+      "position": [
+        6.724305103536569,
+        9.0,
+        12.200972128258966
+      ],
+      "target": [
+        0.0,
+        1.12,
+        0.0
+      ],
+      "height": 7.5,
+      "minWidth": 7.85,
+      "near": 0.1,
+      "far": 60,
+      "name": "Camera_Default_Orbit"
+    },
+    "layoutDuration": 18.0,
+    "shell": {
+      "solidValid": true,
+      "planarFaces": 94,
+      "shellTriangles": 200
+    },
+    "story": {
+      "title": "把不同，安放在一起",
+      "subtitle": "多一点收纳，也多一点从容。",
+      "english": "ROOM FOR BOTH OF YOU",
+      "number": "03",
+      "accent": "#b9c9c5",
+      "originalTitle": "各有位置，床尾稍显局促",
+      "modifiedTitle": "收纳归整，床尾留白",
+      "originalText": "两座衣柜背靠侧墙，柜门朝向房间，床尾另放斗柜。日常可以使用，但收纳分散，床尾通道偏紧。",
+      "modifiedText": "衣柜沿墙并拢，斗柜接入同一收纳区；床稍向右移，保留柜前空间，同时释放床尾。",
+      "metric": "3 组收纳，全部保留",
+      "idea": "不是少放谁的东西，而是重新安排彼此的日常。"
+    },
+    "ground": 0.08,
+    "fixedArchitecture": true,
+    "furnitureCount": 5,
+    "small": [],
+    "big": [
+      "Furniture_Dresser",
+      "Furniture_Wardrobe_A",
+      "Furniture_Wardrobe_B",
+      "Furniture_Bed",
+      "Furniture_Bedside"
+    ],
+    "designNote": "Stylized room-object, not construction/ergonomic specification. Stable shell and floor, full storage retained. Preview lighting is viewer-side PBR + SSAO, not baked into GLB."
+  },
+  "nodes": [
+    {
+      "name": "Roomlet_together",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        1,
+        2
+      ],
+      "label": "把不同，安放在一起",
+      "kind": "root"
+    },
+    {
+      "name": "Architecture_Fixed",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        89
+      ],
+      "label": "固定石壳、两墙与矩形地板",
+      "kind": "architecture"
+    },
+    {
+      "name": "Furniture_Editable",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        9,
+        24,
+        42,
+        60,
+        81
+      ],
+      "label": "五组独立家具 · 全程保留",
+      "kind": "furniture-root"
+    },
+    {
+      "name": "Shell_Stone_LowPoly",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 0,
+      "material": 0,
+      "label": "不规则棱角石质外壳",
+      "kind": "shell"
+    },
+    {
+      "name": "Wall_Left",
+      "position": [
+        -2.158,
+        1.0225,
+        0.018
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 1,
+      "material": 1,
+      "label": "左墙",
+      "kind": "wall"
+    },
+    {
+      "name": "Wall_Back",
+      "position": [
+        0.015,
+        1.0225,
+        -1.808
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 2,
+      "material": 1,
+      "label": "后墙",
+      "kind": "wall"
+    },
+    {
+      "name": "Floor_Rectangular_Oak",
+      "position": [
+        0.03,
+        0.0475,
+        0.015
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 3,
+      "material": 3,
+      "label": "矩形浅木地板",
+      "kind": "floor"
+    },
+    {
+      "name": "Wall_Left_Reveal",
+      "position": [
+        -2.113,
+        0.103,
+        0.017
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 4,
+      "material": 4
+    },
+    {
+      "name": "Wall_Back_Reveal",
+      "position": [
+        0.04,
+        0.103,
+        -1.762
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 5,
+      "material": 4
+    },
+    {
+      "name": "Furniture_Bed",
+      "position": [
+        0.4,
+        0.08,
+        -0.5
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "label": "两个人的低靠背床",
+      "kind": "furniture"
+    },
+    {
+      "name": "Bed_Foot_0_0",
+      "position": [
+        -0.72,
+        0.07,
+        -0.84
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 6,
+      "material": 2
+    },
+    {
+      "name": "Bed_Foot_0_1",
+      "position": [
+        -0.72,
+        0.07,
+        0.84
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 6,
+      "material": 2
+    },
+    {
+      "name": "Bed_Foot_1_0",
+      "position": [
+        0.72,
+        0.07,
+        -0.84
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 6,
+      "material": 2
+    },
+    {
+      "name": "Bed_Foot_1_1",
+      "position": [
+        0.72,
+        0.07,
+        0.84
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 6,
+      "material": 2
+    },
+    {
+      "name": "Bed_Oak_Platform",
+      "position": [
+        0,
+        0.225,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 7,
+      "material": 2
+    },
+    {
+      "name": "Bed_Mattress",
+      "position": [
+        0,
+        0.424,
+        0.01
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 8,
+      "material": 5
+    },
+    {
+      "name": "Bed_Upholstered_Headboard",
+      "position": [
+        0,
+        0.635,
+        -1.014
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 9,
+      "material": 11
+    },
+    {
+      "name": "Bed_Duvet",
+      "position": [
+        0,
+        0.578,
+        0.35
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 10,
+      "material": 10
+    },
+    {
+      "name": "Bed_Duvet_Fold",
+      "position": [
+        0,
+        0.682,
+        -0.23
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 11,
+      "material": 5
+    },
+    {
+      "name": "Bed_Foot_Throw",
+      "position": [
+        0,
+        0.687,
+        0.81
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 12,
+      "material": 11
+    },
+    {
+      "name": "Bed_Pillow_0",
+      "position": [
+        -0.43,
+        0.607,
+        -0.641
+      ],
+      "rotation": [
+        0.0,
+        0.017499106784510807,
+        0.0,
+        0.9998468789078377
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 13,
+      "material": 5
+    },
+    {
+      "name": "Bed_Pillow_1",
+      "position": [
+        0.43,
+        0.607,
+        -0.641
+      ],
+      "rotation": [
+        0.0,
+        -0.017499106784510807,
+        0.0,
+        0.9998468789078377
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 13,
+      "material": 5
+    },
+    {
+      "name": "Bed_Clay_Cushion",
+      "position": [
+        -0.4,
+        0.762,
+        -0.637
+      ],
+      "rotation": [
+        0.09973235236879709,
+        -0.004490987682601818,
+        -0.04476007734172934,
+        0.9939968935549967
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 14,
+      "material": 9
+    },
+    {
+      "name": "Bed_Butter_Cushion",
+      "position": [
+        0.39,
+        0.747,
+        -0.637
+      ],
+      "rotation": [
+        0.08978756252250426,
+        0.004043169821647223,
+        0.044802748484844036,
+        0.9949445010261952
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 15,
+      "material": 13
+    },
+    {
+      "name": "Furniture_Wardrobe_A",
+      "position": [
+        -1.8,
+        0.08,
+        -1.25
+      ],
+      "rotation": [
+        0.0,
+        0.7071067811865475,
+        0.0,
+        0.7071067811865476
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41
+      ],
+      "label": "独立衣柜 · A",
+      "kind": "furniture"
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Foot_0_0",
+      "position": [
+        -0.34,
+        0.05,
+        -0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Foot_0_1",
+      "position": [
+        -0.34,
+        0.05,
+        0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Foot_1_0",
+      "position": [
+        0.34,
+        0.05,
+        -0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Foot_1_1",
+      "position": [
+        0.34,
+        0.05,
+        0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Back",
+      "position": [
+        0,
+        0.825,
+        -0.2275
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 17,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Side_L",
+      "position": [
+        -0.423,
+        0.825,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 18,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Side_R",
+      "position": [
+        0.423,
+        0.825,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 18,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Bottom",
+      "position": [
+        0,
+        0.1,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 19,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Crown",
+      "position": [
+        0,
+        1.565,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 20,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Shelf_0",
+      "position": [
+        0,
+        0.56,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 21,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Shelf_1",
+      "position": [
+        0,
+        1.12,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 21,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Door_0",
+      "position": [
+        -0.21,
+        0.819,
+        0.246
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 22,
+      "material": 6
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Inset_0",
+      "position": [
+        -0.21,
+        0.819,
+        0.271
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 23,
+      "material": 5
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Handle_0",
+      "position": [
+        -0.086,
+        0.8,
+        0.291
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 24,
+      "material": 8
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Door_1",
+      "position": [
+        0.21,
+        0.819,
+        0.246
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 22,
+      "material": 6
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Inset_1",
+      "position": [
+        0.21,
+        0.819,
+        0.271
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 23,
+      "material": 5
+    },
+    {
+      "name": "Furniture_Wardrobe_A_Handle_1",
+      "position": [
+        0.086,
+        0.8,
+        0.291
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 24,
+      "material": 8
+    },
+    {
+      "name": "Furniture_Wardrobe_B",
+      "position": [
+        -1.8,
+        0.08,
+        0.2
+      ],
+      "rotation": [
+        0.0,
+        0.7071067811865475,
+        0.0,
+        0.7071067811865476
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59
+      ],
+      "label": "独立衣柜 · B",
+      "kind": "furniture"
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Foot_0_0",
+      "position": [
+        -0.34,
+        0.05,
+        -0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Foot_0_1",
+      "position": [
+        -0.34,
+        0.05,
+        0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Foot_1_0",
+      "position": [
+        0.34,
+        0.05,
+        -0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Foot_1_1",
+      "position": [
+        0.34,
+        0.05,
+        0.16
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 16,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Back",
+      "position": [
+        0,
+        0.825,
+        -0.2275
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 17,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Side_L",
+      "position": [
+        -0.423,
+        0.825,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 18,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Side_R",
+      "position": [
+        0.423,
+        0.825,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 18,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Bottom",
+      "position": [
+        0,
+        0.1,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 19,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Crown",
+      "position": [
+        0,
+        1.565,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 20,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Shelf_0",
+      "position": [
+        0,
+        0.56,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 21,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Shelf_1",
+      "position": [
+        0,
+        1.12,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 21,
+      "material": 2
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Door_0",
+      "position": [
+        -0.21,
+        0.819,
+        0.246
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 22,
+      "material": 6
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Inset_0",
+      "position": [
+        -0.21,
+        0.819,
+        0.271
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 23,
+      "material": 5
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Handle_0",
+      "position": [
+        -0.086,
+        0.8,
+        0.291
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 24,
+      "material": 8
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Door_1",
+      "position": [
+        0.21,
+        0.819,
+        0.246
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 22,
+      "material": 6
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Inset_1",
+      "position": [
+        0.21,
+        0.819,
+        0.271
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 23,
+      "material": 5
+    },
+    {
+      "name": "Furniture_Wardrobe_B_Handle_1",
+      "position": [
+        0.086,
+        0.8,
+        0.291
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 24,
+      "material": 8
+    },
+    {
+      "name": "Furniture_Dresser",
+      "position": [
+        0.25,
+        0.08,
+        1.43
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        76
+      ],
+      "label": "不再挡路的双抽斗柜",
+      "kind": "furniture"
+    },
+    {
+      "name": "Dresser_Foot_0_0",
+      "position": [
+        -0.43,
+        0.05,
+        -0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 25,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Foot_0_1",
+      "position": [
+        -0.43,
+        0.05,
+        0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 25,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Foot_1_0",
+      "position": [
+        0.43,
+        0.05,
+        -0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 25,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Foot_1_1",
+      "position": [
+        0.43,
+        0.05,
+        0.15
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 25,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Carcass",
+      "position": [
+        0,
+        0.335,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 26,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Top",
+      "position": [
+        0,
+        0.62,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 27,
+      "material": 2
+    },
+    {
+      "name": "Dresser_Drawer_0",
+      "position": [
+        0,
+        0.235,
+        0.237
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 28,
+      "material": 6
+    },
+    {
+      "name": "Dresser_Handle_0",
+      "position": [
+        0,
+        0.235,
+        0.264
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 29,
+      "material": 8
+    },
+    {
+      "name": "Dresser_Drawer_1",
+      "position": [
+        0,
+        0.459,
+        0.237
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 28,
+      "material": 6
+    },
+    {
+      "name": "Dresser_Handle_1",
+      "position": [
+        0,
+        0.459,
+        0.264
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 29,
+      "material": 8
+    },
+    {
+      "name": "Dresser_Book_1",
+      "position": [
+        0.27,
+        0.7,
+        0.0
+      ],
+      "rotation": [
+        0.0,
+        -0.024997395914712332,
+        0.0,
+        0.9996875162757026
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        72,
+        73,
+        74,
+        75
+      ],
+      "label": "独立书本",
+      "kind": "accessory"
+    },
+    {
+      "name": "Dresser_Book_1_Pages",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 30,
+      "material": 16
+    },
+    {
+      "name": "Dresser_Book_1_Cover_0",
+      "position": [
+        0,
+        -0.030959999999999998,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 31,
+      "material": 15
+    },
+    {
+      "name": "Dresser_Book_1_Cover_1",
+      "position": [
+        0,
+        0.030959999999999998,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 31,
+      "material": 15
+    },
+    {
+      "name": "Dresser_Book_1_Spine",
+      "position": [
+        -0.18,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 32,
+      "material": 15
+    },
+    {
+      "name": "Dresser_Book_2",
+      "position": [
+        0.255,
+        0.76,
+        0.0
+      ],
+      "rotation": [
+        0.0,
+        0.044984814037660234,
+        0.0,
+        0.9989876708478425
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        77,
+        78,
+        79,
+        80
+      ],
+      "label": "独立书本",
+      "kind": "accessory"
+    },
+    {
+      "name": "Dresser_Book_2_Pages",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 33,
+      "material": 16
+    },
+    {
+      "name": "Dresser_Book_2_Cover_0",
+      "position": [
+        0,
+        -0.01849,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 34,
+      "material": 9
+    },
+    {
+      "name": "Dresser_Book_2_Cover_1",
+      "position": [
+        0,
+        0.01849,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 34,
+      "material": 9
+    },
+    {
+      "name": "Dresser_Book_2_Spine",
+      "position": [
+        -0.155,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 35,
+      "material": 9
+    },
+    {
+      "name": "Furniture_Bedside",
+      "position": [
+        1.75,
+        0.08,
+        -1.19
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        82,
+        83,
+        84,
+        85
+      ],
+      "label": "一盏灯，一张小边几",
+      "kind": "furniture"
+    },
+    {
+      "name": "Bedside_Base",
+      "position": [
+        0,
+        0.0325,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 36,
+      "material": 2
+    },
+    {
+      "name": "Bedside_Stem",
+      "position": [
+        0,
+        0.255,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 37,
+      "material": 2
+    },
+    {
+      "name": "Bedside_Top",
+      "position": [
+        0,
+        0.49,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 38,
+      "material": 2
+    },
+    {
+      "name": "Bedside_Lamp",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        86,
+        87,
+        88
+      ],
+      "label": "独立小夜灯",
+      "kind": "accessory"
+    },
+    {
+      "name": "Lamp_Foot",
+      "position": [
+        0,
+        0.544,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 39,
+      "material": 8
+    },
+    {
+      "name": "Lamp_Stem",
+      "position": [
+        0,
+        0.638,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 40,
+      "material": 8
+    },
+    {
+      "name": "Lamp_Cream_Shade",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 41,
+      "material": 6
+    },
+    {
+      "name": "Wall_Art_Together",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [
+        90,
+        91,
+        92,
+        93,
+        94
+      ],
+      "label": "固定双圆壁画",
+      "kind": "decor"
+    },
+    {
+      "name": "Art_Frame",
+      "position": [
+        0.48,
+        1.64,
+        -1.731
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 42,
+      "material": 2
+    },
+    {
+      "name": "Art_Field",
+      "position": [
+        0.48,
+        1.64,
+        -1.704
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 43,
+      "material": 6
+    },
+    {
+      "name": "Art_Circle_Clay",
+      "position": [
+        0.295,
+        1.655,
+        -1.691
+      ],
+      "rotation": [
+        0.7071067811865475,
+        0.0,
+        0.0,
+        0.7071067811865476
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 44,
+      "material": 9
+    },
+    {
+      "name": "Art_Circle_Sage",
+      "position": [
+        0.64,
+        1.655,
+        -1.684
+      ],
+      "rotation": [
+        0.7071067811865475,
+        0.0,
+        0.0,
+        0.7071067811865476
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 45,
+      "material": 7
+    },
+    {
+      "name": "Art_Shared_Line",
+      "position": [
+        0.48,
+        1.493,
+        -1.678
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "geometry": 46,
+      "material": 8
+    }
+  ],
+  "materials": [
+    {
+      "name": "Stone_Grey",
+      "color": [
+        0.53,
+        0.55,
+        0.55
+      ],
+      "roughness": 0.97,
+      "metalness": 0,
+      "texture": 2
+    },
+    {
+      "name": "Wall_Chalk",
+      "color": [
+        0.89,
+        0.876,
+        0.827
+      ],
+      "roughness": 0.93,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Oak_Light",
+      "color": [
+        1,
+        1,
+        1
+      ],
+      "roughness": 0.74,
+      "metalness": 0,
+      "texture": 0
+    },
+    {
+      "name": "Floor_Light_Oak",
+      "color": [
+        1,
+        0.98,
+        0.95
+      ],
+      "roughness": 0.88,
+      "metalness": 0,
+      "texture": 0
+    },
+    {
+      "name": "Shadow_Reveal",
+      "color": [
+        0.34,
+        0.32,
+        0.28
+      ],
+      "roughness": 0.98,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Cream",
+      "color": [
+        0.96,
+        0.93,
+        0.86
+      ],
+      "roughness": 0.9,
+      "metalness": 0,
+      "texture": 1
+    },
+    {
+      "name": "Warm_White",
+      "color": [
+        0.94,
+        0.91,
+        0.84
+      ],
+      "roughness": 0.72,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Sage",
+      "color": [
+        0.57,
+        0.66,
+        0.56
+      ],
+      "roughness": 0.9,
+      "metalness": 0,
+      "texture": 1
+    },
+    {
+      "name": "Honey",
+      "color": [
+        0.85,
+        0.62,
+        0.32
+      ],
+      "roughness": 0.76,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Clay",
+      "color": [
+        0.75,
+        0.43,
+        0.31
+      ],
+      "roughness": 0.86,
+      "metalness": 0,
+      "texture": 1
+    },
+    {
+      "name": "Mist_Blue",
+      "color": [
+        0.51,
+        0.63,
+        0.66
+      ],
+      "roughness": 0.94,
+      "metalness": 0,
+      "texture": 1
+    },
+    {
+      "name": "Night_Blue",
+      "color": [
+        0.38,
+        0.5,
+        0.54
+      ],
+      "roughness": 0.92,
+      "metalness": 0,
+      "texture": 1
+    },
+    {
+      "name": "Cocoa",
+      "color": [
+        0.34,
+        0.26,
+        0.2
+      ],
+      "roughness": 0.86,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Butter",
+      "color": [
+        0.89,
+        0.79,
+        0.55
+      ],
+      "roughness": 0.83,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Peach",
+      "color": [
+        0.91,
+        0.65,
+        0.5
+      ],
+      "roughness": 0.9,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Book_Green",
+      "color": [
+        0.37,
+        0.48,
+        0.42
+      ],
+      "roughness": 0.92,
+      "metalness": 0,
+      "texture": -1
+    },
+    {
+      "name": "Paper",
+      "color": [
+        0.95,
+        0.93,
+        0.86
+      ],
+      "roughness": 0.96,
+      "metalness": 0,
+      "texture": -1
+    }
+  ]
+}

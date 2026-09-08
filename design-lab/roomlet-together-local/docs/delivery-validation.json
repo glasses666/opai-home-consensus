@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "preview.htmlInlineSourcesMatch": true,
+    "embed.htmlInlineSourcesMatch": true,
+    "embeddedTexturesEqualPNGAssets": true,
+    "allJavaScriptSyntaxValid": true,
+    "browserDownloadedGLBGeometryMaterialsAndAnimationMatchPythonExport": true,
+    "exportedCameraTransformsEquivalent": true,
+    "independentTrimeshFurnitureWorldTransformsMatch": true,
+    "documentedCorePathsPresent": true
+  },
+  "notes": [
+    "Syntax and structured-data checks do not replace browser rendering.",
+    "Camera output formats differ (matrix versus TRS); compared as matrices with 1e-6 tolerance."
+  ],
+  "syntaxCheckedScripts": 15,
+  "cameraMaximumElementDifference": 5.261936557587887e-07,
+  "staticTransformChecks": {
+    "roomlet-together-loop.glb": 5,
+    "roomlet-together-modified.glb": 5,
+    "roomlet-together-original.glb": 5
+  },
+  "passed": true
+}

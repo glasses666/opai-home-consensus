@@ -160,3 +160,41 @@ test('first-plan endpoint keeps the envelope stable for invalid setup', async ()
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('default DeepSeek first-plan wiring uses 4096 tokens and preserves provider failures', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'op-first-plan-deepseek-'));
+  const oldKey = process.env.DEEPSEEK_API_KEY;
+  process.env.DEEPSEEK_API_KEY = 'test-only-key';
+  const nativeFetch = globalThis.fetch;
+  const fixtureResponse = fixtureProvider();
+  const budgets = [];
+  let rejectProvider = false;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    if (String(url).startsWith('http://127.0.0.1:')) return nativeFetch(url, options);
+    budgets.push(JSON.parse(options.body).max_tokens);
+    if (rejectProvider) return { ok: false, status: 401 };
+    return { ok: true, json: async () => ({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(await fixtureResponse()) } }] }) };
+  });
+  const store = createPersistentProjectStore({ filePath: join(dir, 'project.json') });
+  const server = createAppServer({ projectStore: store, sync: async () => { throw new Error('offline'); } });
+  const origin = await listen(server);
+  const request = (eventId) => fetch(`${origin}/api/projects/project-demo/first-plan`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ eventId, expectedVersionId: store.currentVersionId, setup }),
+  });
+  try {
+    const success = await (await request('evt-ds-ready')).json();
+    assert.equal(success.status, 'ready');
+    assert.equal(success.provider.source, 'deepseek');
+    assert.deepEqual(budgets, [4096, 4096, 4096]);
+    rejectProvider = true;
+    const failed = await (await request('evt-ds-auth')).json();
+    assert.equal(failed.error.code, 'DEEPSEEK_AUTH_FAILED');
+    assert.equal(failed.result, null);
+  } finally {
+    await close(server);
+    if (oldKey === undefined) delete process.env.DEEPSEEK_API_KEY;
+    else process.env.DEEPSEEK_API_KEY = oldKey;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

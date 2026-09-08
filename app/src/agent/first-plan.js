@@ -125,7 +125,7 @@ export async function generateFirstPlan({ scene, setup: rawSetup, provider, maxA
       } catch (error) {
         if (attempt === maxAttempts || !error?.retryable) {
           setStage(stages, segment, { status: 'failed' });
-          throw firstPlanError(error?.message?.startsWith('AILY_') ? error.message : 'AILY_UNAVAILABLE', stages);
+          throw firstPlanError(/^(?:AILY|DEEPSEEK)_[A-Z_]+$/.test(error?.message ?? '') ? error.message : 'FIRST_PLAN_PROVIDER_UNAVAILABLE', stages);
         }
         continue;
       }

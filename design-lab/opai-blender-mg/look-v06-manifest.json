@@ -1,0 +1,18 @@
+{
+  "motion": "exact keyframe signature unchanged from V05",
+  "frames": 96,
+  "fps": 24,
+  "camera": [
+    3.4000000953674316,
+    -10.0,
+    5.199999809265137
+  ],
+  "ortho_scale": 15.5,
+  "palette": {
+    "backdrop": "F3EEE6",
+    "letters": "E4C79D",
+    "bracket": "F28B26"
+  },
+  "samples": 24,
+  "scope": "lighting, materials and camera only; no production changes"
+}

@@ -2,6 +2,7 @@ import { performance } from 'node:perf_hooks';
 
 import { runFixedAgentEval } from '../evals/agent-cases.mjs';
 import { runAgentTurn } from '../src/agent/harness.js';
+import { callDeepSeek } from '../server/deepseek.mjs';
 import { callAily } from '../server/feishu.mjs';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createSceneStore } from '../src/domain/scene.js';
@@ -16,7 +17,10 @@ if (!live) {
   if (!report.passed) process.exitCode = 1;
 } else {
   const agentId = process.env.AILY_AGENT_ID;
-  if (!agentId) throw new Error('AILY_AGENT_ID_MISSING');
+  const liveProvider = process.env.DEEPSEEK_API_KEY
+    ? (context) => callDeepSeek(context, { timeoutMs: 50_000 })
+    : (context) => callAily(context, { agentId, timeoutMs: 50_000, maxAttempts: 2 });
+  if (!process.env.DEEPSEEK_API_KEY && !agentId) throw new Error('LIVE_PROVIDER_MISSING');
   const writeTools = new Set(['move_object', 'rotate_object', 'set_object_material', 'set_surface_material', 'apply_catalog_item', 'delete_object']);
   const smokeCases = [
     {
@@ -125,7 +129,7 @@ if (!live) {
     const result = await runAgentTurn({
       store: createSceneStore(createDemoScene()),
       input: entry.input,
-      provider: (context) => callAily(context, { agentId, timeoutMs: 50_000, maxAttempts: 2 }),
+      provider: liveProvider,
       timeoutMs: 105_000,
     });
     cases.push({
@@ -149,6 +153,7 @@ if (!live) {
   console.log(JSON.stringify({
     schemaVersion: 1,
     suite: `agent-harness-live-${requestedSuite}`,
+    provider: process.env.DEEPSEEK_API_KEY ? 'deepseek' : 'aily',
     caseCount: cases.length,
     passed: failed === 0,
     failed,

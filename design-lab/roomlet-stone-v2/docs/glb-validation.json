@@ -1,0 +1,32 @@
+{
+  "roomlet-original.glb": {
+    "bytes": 1606560,
+    "nodes": 74,
+    "furnitureGroups": 6,
+    "embeddedImages": 3,
+    "animationClips": 0,
+    "independentImporterMeshes": "trimesh not installed"
+  },
+  "roomlet-modified.glb": {
+    "bytes": 1606612,
+    "nodes": 74,
+    "furnitureGroups": 6,
+    "embeddedImages": 3,
+    "animationClips": 0,
+    "independentImporterMeshes": "trimesh not installed"
+  },
+  "roomlet-loop.glb": {
+    "bytes": 1779156,
+    "nodes": 74,
+    "furnitureGroups": 6,
+    "embeddedImages": 3,
+    "animationClips": 1,
+    "duration": 16.399999618530273,
+    "samples": 985,
+    "channels": 12,
+    "onlyFurnitureAnimated": true,
+    "loopPositionError": 0,
+    "loopQuaternionError": 0,
+    "independentImporterMeshes": "trimesh not installed"
+  }
+}

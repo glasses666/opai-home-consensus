@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "source": "app/public/assets/hero/villa-hero-loop.mp4 at 10.8s",
+  "contact_sheet_seconds": [
+    0,
+    4.004,
+    8.008,
+    12.012,
+    15.015
+  ],
+  "model": "opai-video-house-v02.blend",
+  "render": "house-video-match-v02.png",
+  "builder": "build-v02.py + house_kit.py",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "engine": "CYCLES",
+  "samples": 96,
+  "objects": 1176,
+  "massing": [
+    "Broad left and right wings",
+    "Central open-air courtyard",
+    "Left stepped terrace and tall screened bay",
+    "Glazed rear link",
+    "Right cantilever and covered outdoor lounge",
+    "Complete roofs and glazing"
+  ],
+  "limits": [
+    "Proportional visual reconstruction, no source dimensions",
+    "Rear construction inferred",
+    "No animation or homepage change"
+  ],
+  "review": "pending"
+}

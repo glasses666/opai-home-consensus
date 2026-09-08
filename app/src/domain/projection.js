@@ -1,4 +1,5 @@
 import { objectCollisionFootprint, rotatedFootprint, segmentAtOffset, viewBoxForPolygons } from './geometry.js';
+import { furniturePreviewSource } from '../pascal/furniture-preview.js';
 
 /**
  * Project both 2D layers from the same scene records. The media layer deliberately
@@ -59,6 +60,7 @@ export function projectScene2D(scene) {
     sourceObjectId: object.id,
     roomId: object.roomId,
     src: object.media2D.src,
+    previewSrc: furniturePreviewSource(object.media2D.src),
     source: object.media2D.source,
     anchor: { x: object.transform.x, y: object.transform.z },
     width: object.dimensions.width,

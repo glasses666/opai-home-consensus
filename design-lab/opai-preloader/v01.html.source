@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1600, height=900">
+  <title>OPAI · 构筑 — 开场动效 01</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face { font-family: Didot; src: local('Didot Bold'); font-weight: 700; }
+    @font-face { font-family: Didot; src: local('Didot'); font-weight: 400; }
+    @font-face { font-family: 'PingFang SC'; src: local('PingFang SC Regular'); font-weight: 400; }
+    @font-face { font-family: 'PingFang SC'; src: local('PingFang SC Medium'); font-weight: 500; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1600px; height: 900px; overflow: hidden; background: #F3F0E9; }
+    body { color: #39372F; font-family: "PingFang SC", sans-serif; }
+    #root { width: 1600px; height: 900px; position: relative; overflow: hidden; }
+    .scene { position: absolute; inset: 0; width: 100%; height: 100%; background: #F3F0E9; overflow: hidden; }
+    .scene-content { width: 100%; height: 100%; padding: 65px 88px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 26px; }
+    #intro { z-index: 2; }
+    #home { opacity: 0; z-index: 1; }
+    .masthead { position: absolute; top: 54px; left: 70px; font-size: 16px; letter-spacing: .24em; color: #71695F; }
+    .edition { position: absolute; top: 54px; right: 70px; font-size: 16px; letter-spacing: .16em; color: #71695F; }
+    .assembly { position: relative; width: 960px; height: 300px; margin-top: -34px; }
+    .word { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 2px; }
+    .letter { position: relative; width: 235px; height: 300px; }
+    .glyph { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; font-family: Didot, serif; font-size: 278px; font-weight: 700; line-height: 1; letter-spacing: -.035em; }
+    .ghost { color: #F3F0E9; -webkit-text-stroke: .7px #C8C0B3; }
+    .ghost::before { content: attr(data-character); }
+    .slice { color: #39372F; transform-origin: 50% 90%; }
+    .guide { position: absolute; background: #C8C0B3; opacity: .55; }
+    .baseline { width: 1100px; height: 1px; left: -70px; bottom: 45px; }
+    .roofline { width: 1100px; height: 1px; left: -70px; top: 34px; }
+    .upright { height: 380px; width: 1px; top: -35px; }
+    .upright.left { left: -36px; }
+    .upright.right { right: -36px; }
+    .tick { position: absolute; width: 8px; height: 8px; border: 1px solid #8C5144; background: #F3F0E9; bottom: 41px; }
+    .tick.left { left: -39px; }
+    .tick.right { right: -39px; }
+    .brand { font-size: 26px; letter-spacing: .36em; font-weight: 500; padding-left: .36em; }
+    .tagline { font-size: 17px; letter-spacing: .12em; color: #71695F; }
+    .loading { position: absolute; bottom: 65px; width: 216px; left: 692px; display: flex; flex-direction: column; gap: 17px; align-items: center; }
+    .loading-line { width: 216px; height: 1px; background: #C8C0B3; overflow: hidden; }
+    .loading-fill { width: 100%; height: 100%; background: #8C5144; transform-origin: left; }
+    .loading-label { font-size: 16px; letter-spacing: .18em; color: #71695F; }
+    .home-content { align-items: flex-start; padding-left: 164px; gap: 25px; }
+    .home-kicker { font-size: 20px; letter-spacing: .32em; color: #8C5144; }
+    .headline { font-weight: 500; font-size: 77px; line-height: 1.44; letter-spacing: -.045em; max-width: 1100px; }
+    .headline span { display: block; }
+    .home-sub { font-size: 23px; color: #71695F; margin-top: 16px; letter-spacing: .055em; }
+    .home-brand { position: absolute; top: 58px; left: 164px; font-size: 24px; font-weight: 500; letter-spacing: .12em; }
+    .study { position: absolute; bottom: 58px; left: 164px; font-size: 16px; color: #71695F; letter-spacing: .16em; }
+    .home-rule { position: absolute; right: 165px; height: 360px; width: 1px; top: 267px; background: #C8C0B3; }
+    .home-index { position: absolute; right: 145px; top: 205px; font-family: Didot, serif; font-size: 35px; color: #8C5144; }
+  </style>
+</head>
+<body>
+<div data-hf-id="hf-ckcz" id="root" data-composition-id="opai-preloader" data-start="0" data-duration="9" data-width="1600" data-height="900">
+  <section data-hf-id="hf-ot0o" id="intro" class="scene" data-layout-allow-overflow>
+    <div data-hf-id="hf-7m5d" class="masthead">OPAI / 共创空间</div><div data-hf-id="hf-sq5o" class="edition">A HOME, TOGETHER.</div>
+    <div data-hf-id="hf-cn5c" class="scene-content">
+      <div data-hf-id="hf-crmz" class="assembly" aria-label="OPAI 字形构筑" data-layout-allow-overflow="">
+        <i data-hf-id="hf-bxmk" class="guide baseline" data-layout-ignore=""></i><i data-hf-id="hf-q41d" class="guide roofline" data-layout-ignore=""></i>
+        <i data-hf-id="hf-6q3v" class="guide upright left" data-layout-ignore=""></i><i data-hf-id="hf-6dd4" class="guide upright right" data-layout-ignore=""></i>
+        <i data-hf-id="hf-fp4j" class="tick left" data-layout-ignore=""></i><i data-hf-id="hf-53ao" class="tick right" data-layout-ignore=""></i>
+        <div data-hf-id="hf-241r" class="word" id="word" aria-hidden="true"></div>
+      </div>
+      <p data-hf-id="hf-fagh" class="brand">欧派共创空间</p><p data-hf-id="hf-9y00" class="tagline">让每一种期待，都有安放之处。</p>
+    </div>
+    <div data-hf-id="hf-tze4" class="loading"><div data-hf-id="hf-hlr7" class="loading-line"><div data-hf-id="hf-1q72" class="loading-fill"></div></div><span data-hf-id="hf-7fkv" class="loading-label">构筑家的可能</span></div>
+  </section>
+  <section data-hf-id="hf-h7az" id="home" class="scene">
+    <div data-hf-id="hf-ycbe" class="home-brand">欧派共创空间</div>
+    <div data-hf-id="hf-ey6l" class="scene-content home-content">
+      <p data-hf-id="hf-6c61" class="home-kicker">为一家人的生活而设计</p>
+      <h1 data-hf-id="hf-3ubu" class="headline"><span data-hf-id="hf-e4e9">一个家，</span><span data-hf-id="hf-u2ch">不该只有一种期待。</span></h1>
+      <p data-hf-id="hf-5939" class="home-sub">把不同的生活需求，变成共同确认的空间。</p>
+    </div>
+    <i data-hf-id="hf-s499" class="home-rule" data-layout-ignore=""></i><span data-hf-id="hf-zq2o" class="home-index">01</span>
+    <p data-hf-id="hf-bdd6" class="study">开场视觉小样 / 主页衔接示意</p>
+  </section>
+</div>
+<script>
+  // Real font glyphs masked into floor-like slabs; no copied logos or font files.
+  const word = document.getElementById('word');
+  for (const [column, character] of [...'OPAI'].entries()) {
+    const letter = document.createElement('div'); letter.className = 'letter';
+    letter.setAttribute('data-layout-allow-overlap', '');
+    const ghost = document.createElement('span');
+    ghost.className = 'glyph ghost'; ghost.dataset.character = character;
+    ghost.setAttribute('aria-hidden', 'true'); letter.append(ghost);
+    for (let row = 0; row < 7; row++) {
+      const slice = document.createElement('span');
+      slice.className = 'glyph slice'; slice.textContent = character;
+      slice.setAttribute('data-layout-allow-overlap', '');
+      slice.dataset.column = column; slice.dataset.row = row;
+      slice.style.clipPath = `inset(${Math.max(0, row * 100 / 7 - .06)}% 0 ${Math.max(0, 100 - (row + 1) * 100 / 7 - .06)}% 0)`;
+      letter.append(slice);
+    }
+    word.append(letter);
+  }
+  const tl = gsap.timeline({ paused: true });
+  tl.from('.masthead', { opacity: 0, duration: .65, ease: 'sine.out' }, .18);
+  tl.from('.edition', { opacity: 0, x: 12, duration: .7, ease: 'power1.out' }, .3);
+  tl.from('.baseline', { scaleX: 0, transformOrigin: 'left', duration: .95, ease: 'power2.out' }, .2);
+  tl.from('.roofline', { scaleX: 0, transformOrigin: 'right', duration: 1.1, ease: 'sine.inOut' }, .4);
+  tl.from('.upright', { scaleY: 0, transformOrigin: 'bottom', duration: .8, stagger: .12, ease: 'power1.out' }, .55);
+  tl.from('.tick', { opacity: 0, scale: .4, duration: .5, stagger: .1, ease: 'power2.out' }, .65);
+  tl.from('.ghost', { opacity: 0, duration: 1.2, stagger: .08, ease: 'sine.out' }, .55);
+  document.querySelectorAll('.slice').forEach(slice => {
+    const column = Number(slice.dataset.column), level = 6 - Number(slice.dataset.row);
+    tl.from(slice, {
+      y: -60 - level * 24, x: (column - 1.5) * (9 + level * 3),
+      rotation: (column % 2 ? 1 : -1) * .65, opacity: 0,
+      duration: .78 + level * .055,
+      ease: ['power2.out', 'power3.out', 'sine.out'][column % 3]
+    }, .7 + level * .245 + column * .085);
+  });
+  tl.from('.brand', { opacity: 0, y: 13, duration: .7, ease: 'power2.out' }, 2.9);
+  tl.from('.tagline', { opacity: 0, duration: 1.0, ease: 'sine.out' }, 3.25);
+  tl.from('.loading', { opacity: 0, duration: .6, ease: 'sine.out' }, .45);
+  tl.from('.loading-fill', { scaleX: 0, duration: 4.3, ease: 'sine.inOut' }, .6);
+  // Whole-scene reveal handles the exit; outgoing content stays intact.
+  tl.set('#home', { opacity: 1 }, 5.1);
+  tl.to('#intro', { y: -900, duration: 1.3, ease: 'power3.inOut' }, 5.1);
+  tl.set('#intro', { opacity: 0 }, 6.4);
+  tl.from('.home-brand', { opacity: 0, y: 15, duration: .6, ease: 'power2.out' }, 5.85);
+  tl.from('.home-kicker', { opacity: 0, x: -18, duration: .7, ease: 'sine.out' }, 5.7);
+  tl.from('.headline span', { opacity: 0, y: 36, duration: .95, stagger: .14, ease: 'power3.out' }, 5.9);
+  tl.from('.home-sub', { opacity: 0, y: 12, duration: .85, ease: 'power1.out' }, 6.3);
+  tl.from('.home-rule', { scaleY: 0, transformOrigin: 'top', duration: 1.0, ease: 'sine.inOut' }, 6.1);
+  tl.from('.home-index', { opacity: 0, duration: .7, ease: 'sine.out' }, 6.4);
+  tl.from('.study', { opacity: 0, duration: .7, ease: 'power1.out' }, 6.6);
+  window.__timelines = window.__timelines || {};
+  window.__timelines['opai-preloader'] = tl;
+</script>
+</body>
+</html>

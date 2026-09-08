@@ -1,0 +1,111 @@
+{
+  "method": "Closed RDP 0.021 units; Bezier AUTO for gentle curves, VECTOR for corners over 40 degrees",
+  "contours": [
+    {
+      "object": "0_O_part0",
+      "before": 47,
+      "after": 10
+    },
+    {
+      "object": "0_O_part1",
+      "before": 48,
+      "after": 10
+    },
+    {
+      "object": "0_O_part2",
+      "before": 47,
+      "after": 11
+    },
+    {
+      "object": "0_O_part3",
+      "before": 47,
+      "after": 10
+    },
+    {
+      "object": "1_P_part0",
+      "before": 23,
+      "after": 10
+    },
+    {
+      "object": "1_P_part1",
+      "before": 30,
+      "after": 10
+    },
+    {
+      "object": "1_P_part2",
+      "before": 31,
+      "after": 9
+    },
+    {
+      "object": "2_P_part0",
+      "before": 25,
+      "after": 9
+    },
+    {
+      "object": "2_P_part1",
+      "before": 35,
+      "after": 9
+    },
+    {
+      "object": "2_P_part2",
+      "before": 33,
+      "after": 11
+    },
+    {
+      "object": "3_E_part0",
+      "before": 11,
+      "after": 5
+    },
+    {
+      "object": "3_E_part1",
+      "before": 13,
+      "after": 5
+    },
+    {
+      "object": "3_E_part2",
+      "before": 13,
+      "after": 5
+    },
+    {
+      "object": "3_E_part3",
+      "before": 9,
+      "after": 5
+    },
+    {
+      "object": "4_I_part0",
+      "before": 10,
+      "after": 5
+    },
+    {
+      "object": "4_I_part1",
+      "before": 13,
+      "after": 5
+    },
+    {
+      "object": "4_I_part2",
+      "before": 11,
+      "after": 5
+    },
+    {
+      "object": "5_N_part0",
+      "before": 12,
+      "after": 5
+    },
+    {
+      "object": "5_N_part1",
+      "before": 52,
+      "after": 11
+    },
+    {
+      "object": "5_N_part2",
+      "before": 19,
+      "after": 8
+    }
+  ],
+  "preserved": "Object transforms, animation, palette, camera, frame bracket",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 64
+}

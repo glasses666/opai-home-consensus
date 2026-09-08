@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROOMLET · 透明画布最小示例</title>
+<style>
+html,body{margin:0;background:transparent;width:100%;height:100%;overflow:hidden;font-family:system-ui,sans-serif}canvas{display:block;width:100%;height:100%;outline-offset:-4px}button{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:8px 18px;color:#465240;border:1px solid #d4dbcb;border-radius:20px;background:#f7f8f0d9;font-size:11px;cursor:pointer}
+</style>
+<canvas id="room" tabindex="0" aria-label="拖动旋转房间，滚轮缩放，空格暂停"></canvas>
+<button id="pause">暂停</button>
+<script src="src/scene-data.js"></script>
+<script src="src/renderer.js"></script>
+<script src="src/viewer.js"></script>
+<script>
+const viewer=new RoomletViewer(document.getElementById('room'),SCULPT_SCENE);
+viewer.onReady=()=>{window.EXAMPLE_READY=true;viewer.onPlaying(viewer.playing);};
+viewer.onPlaying=playing=>document.getElementById('pause').textContent=playing?'暂停':'播放';
+document.getElementById('pause').onclick=()=>viewer.toggle();
+// viewer.seek(8.2);             // Pause at the modified layout.
+// viewer.resetView();           // Smoothly restore the default orbit.
+// viewer.setPlaying(true);      // Continue from the current frame.
+// viewer.dispose();             // Call when removing a component/route.
+</script>
+</html>

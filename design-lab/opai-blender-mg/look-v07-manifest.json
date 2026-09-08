@@ -1,0 +1,17 @@
+{
+  "palette": {
+    "letters": "FFFFFF",
+    "backdrop": "F2E3CF",
+    "bracket": "F28B26"
+  },
+  "motion": "All non-bracket animation unchanged; bracket scale linear and bounded 0..1",
+  "clamped_keys": 105,
+  "frames": 96,
+  "fps": 24,
+  "camera": [
+    3.4000000953674316,
+    -10.0,
+    5.199999809265137
+  ],
+  "scope": "Local prototype only; V06 preserved"
+}

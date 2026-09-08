@@ -1,0 +1,6 @@
+# Only required to regenerate geometry/textures/GLB. The preview needs none of these.
+# Versions used in the creation environment (Python 3.13).
+numpy==2.3.5
+scipy==1.17.0
+Pillow==12.3.0
+cadquery==2.8.0

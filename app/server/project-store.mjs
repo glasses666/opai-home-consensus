@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -115,16 +115,21 @@ export function createPersistentProjectStore({
   mkdirSync(dirname(filePath), { recursive: true });
 
   const fallback = makeInitialState({ projectId, scene: deserializeScene(serializeScene(initialScene)), now: now() });
+  const backupPath = `${filePath}.bak`;
   let state;
   if (existsSync(filePath)) {
     try {
       state = normalizeState(JSON.parse(readFileSync(filePath, 'utf8')), fallback);
     } catch {
       renameSync(filePath, `${filePath}.corrupt-${Date.now()}`);
+    }
+  }
+  if (!state) {
+    try {
+      state = normalizeState(JSON.parse(readFileSync(backupPath, 'utf8')), fallback);
+    } catch {
       state = fallback;
     }
-  } else {
-    state = fallback;
   }
 
   const save = () => {
@@ -132,6 +137,7 @@ export function createPersistentProjectStore({
     const tmp = `${filePath}.tmp-${process.pid}-${shortId(id())}`;
     try {
       writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
+      if (existsSync(filePath)) copyFileSync(filePath, backupPath);
       renameSync(tmp, filePath);
     } catch (error) {
       rmSync(tmp, { force: true });
@@ -222,8 +228,12 @@ export function createPersistentProjectStore({
     return version;
   };
 
-  const enqueueBaseEvent = (event) => {
+  const enqueueBaseEvent = (event, { retry = false } = {}) => {
     if (!event?.eventId) throw new Error('BASE_EVENT_INVALID');
+    if (retry) {
+      state.syncedBaseEventIds = state.syncedBaseEventIds.filter((eventId) => eventId !== event.eventId);
+      state.pendingBaseEvents = state.pendingBaseEvents.filter((candidate) => candidate.eventId !== event.eventId);
+    }
     if (!state.pendingBaseEvents.some((candidate) => candidate.eventId === event.eventId) &&
         !state.syncedBaseEventIds.includes(event.eventId)) {
       state.pendingBaseEvents.push(clone(event));
@@ -296,17 +306,18 @@ export function createPersistentProjectStore({
     const status = action === 'approve' ? 'designer_verified' : 'designer_returned';
     const existing = state.handoffSnapshots.find((snapshot) => snapshot.eventId === eventId);
     if (existing && (existing.versionId !== versionId || existing.type !== status || existing.note !== note)) throw new Error('EVENT_ID_CONFLICT');
-    if (!existing) {
-      version.status = status;
-      version.review = { action, actor, note, reviewedAt: now(), source: 'demo' };
-      state.handoffSnapshots.push({ eventId, type: status, versionId, action, actor, note, createdAt: now() });
-      save();
-    }
+    if (existing) return clone(version);
+    if (version.id !== state.project.currentVersionId) throw new Error('VERSION_NOT_CURRENT');
+    if (state.project.confirmedVersionId !== versionId || version.status !== 'customer_confirmed') throw new Error('VERSION_NOT_CONFIRMED');
+    version.status = status;
+    version.review = { action, actor, note, reviewedAt: now(), source: 'demo' };
+    state.handoffSnapshots.push({ eventId, type: status, versionId, action, actor, note, createdAt: now() });
+    save();
     return clone(version);
   };
 
-  const updateHandoffSnapshot = (versionId, updater) => {
-    const reverseIndex = [...state.handoffSnapshots].reverse().findIndex((snapshot) => snapshot.versionId === versionId && snapshot.versionHistory);
+  const updateHandoffSnapshot = (versionId, updater, eventId = null) => {
+    const reverseIndex = [...state.handoffSnapshots].reverse().findIndex((snapshot) => snapshot.versionId === versionId && snapshot.versionHistory && (!eventId || snapshot.eventId === eventId));
     if (reverseIndex < 0) throw new Error('HANDOFF_SNAPSHOT_NOT_FOUND');
     const index = state.handoffSnapshots.length - 1 - reverseIndex;
     state.handoffSnapshots[index] = updater(clone(state.handoffSnapshots[index]));

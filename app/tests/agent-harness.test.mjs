@@ -52,6 +52,33 @@ test('provider can inspect and change surfaces allowed for the current turn', as
   assert.equal(result.store.commands.length, 1);
 });
 
+test('explicit surface room overrides a stale selection in both execution and provider context', async () => {
+  const before = freshStore();
+  const flexMaterial = surfaceById(before, 'surface-floor-flex').materialId;
+  const result = await runAgentTurn({
+    store: before,
+    selectedObjectId: 'surface-floor-flex',
+    input: '把客厅地面换成瓷砖',
+    provider: ({ scene, expectedToolCalls }) => {
+      assert.ok(scene.surfaces.some(({ id }) => id === 'surface-floor-living-dining'));
+      assert.ok(!scene.surfaces.some(({ id }) => id === 'surface-floor-flex'));
+      return { toolCalls: expectedToolCalls };
+    },
+  });
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(surfaceById(result.store, 'surface-floor-living-dining').materialId, 'mat-floor-tile-warm');
+  assert.equal(surfaceById(result.store, 'surface-floor-flex').materialId, flexMaterial);
+});
+
+test('surface kind overrides selection without applying wall materials to a floor', async () => {
+  const before = freshStore();
+  const result = await runAgentTurn({ store: before, selectedObjectId: 'surface-floor-living-dining', input: '把客厅墙面换成暖白色' });
+  assert.equal(result.store.commands.length, 0);
+  assert.equal(result.trace.mode, 'clarify');
+  assert.equal(result.trace.toolCalls[0].tool, 'request_clarification');
+  assert.equal(serializeScene(result.store.currentScene), serializeScene(before.currentScene));
+});
+
 test('provider failure falls back once to deterministic local parsing', async () => {
   const before = freshStore();
   const result = await runAgentTurn({
@@ -65,6 +92,25 @@ test('provider failure falls back once to deterministic local parsing', async ()
   assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
   assert.equal(result.trace.source, 'local');
   assert.equal(result.trace.fallbackReason.includes('api_key'), false);
+});
+
+test('provider retries one malformed shape before falling back', async () => {
+  let calls = 0;
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => {
+      calls += 1;
+      return calls === 1
+        ? { assistantReply: '稍等。' }
+        : { mode: 'execute', assistantReply: '已移动。', reasons: [], unresolved: [], toolCalls: [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }] };
+    },
+  });
+
+  assert.equal(calls, 2);
+  assert.equal(result.trace.source, 'provider');
+  assert.equal(result.trace.fallbackReason, null);
+  assert.equal(objectById(result.store, 'object-sofa').transform.x, 2400);
 });
 
 test('provider fallback keeps a sanitized Aily failure code for diagnosis', async () => {
@@ -404,8 +450,11 @@ test('harness fixes clarify propose and execute modes before provider planning',
     const result = await runAgentTurn({
       store: freshStore(),
       input,
-      provider: ({ mode, tools }) => {
+      provider: ({ mode, tools, expectedToolCalls }) => {
         if (mode !== 'execute') assert.equal(tools.every((tool) => !tool.writes), true);
+        if (mode === 'execute') {
+          assert.deepEqual(expectedToolCalls, [{ tool: 'move_object', args: { objectId: 'object-sofa', dx: 200 } }]);
+        }
         return {
           mode,
           assistantReply: mode === 'clarify' ? '你想先改善哪个房间？' : mode === 'propose' ? '先比较两个方向。' : '移动沙发。',
@@ -423,6 +472,17 @@ test('harness fixes clarify propose and execute modes before provider planning',
     assert.equal(result.trace.providerModeExplicit, true, input);
     assert.equal(result.trace.source, 'provider', input);
   }
+});
+
+test('DeepSeek failures keep their provider code before deterministic fallback', async () => {
+  const result = await runAgentTurn({
+    store: freshStore(),
+    input: '把沙发向右移动20厘米',
+    provider: () => { throw new Error('DEEPSEEK_AUTH_FAILED'); },
+  });
+  assert.equal(result.trace.source, 'local');
+  assert.equal(result.trace.fallbackReason, 'DEEPSEEK_AUTH_FAILED');
+  assert.equal(result.store.currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
 });
 
 test('provider cannot switch an execute turn into propose mode', async () => {

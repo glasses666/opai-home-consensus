@@ -2,25 +2,23 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Armchair, ArrowLeft, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FileArrowUp, FloppyDisk, FolderOpen, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
 import { createDemoScene } from './domain/demo-scene.js';
-import { createDesignBrief, deserializeDesignBrief, normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
+const ReferenceHomePage = lazy(() => import('./ReferenceHomePage.jsx'));
+import { normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
+import { restoreProjectSession } from './domain/project-session.js';
 import {
   compareSceneVersions,
   confirmSceneVersion,
-  createVersionHistory,
-  deserializeVersionHistory,
   restoreSceneVersion,
   saveSceneVersion,
-  sceneStoreForVersion,
   serializeVersionHistory,
 } from './domain/design-version.js';
 import { evaluateDesignRules } from './domain/design-rules.js';
 import { buildDesignerReview, buildHandoffPacket } from './domain/handoff.js';
+import FeishuDelivery from './FeishuDelivery.jsx';
 import {
   addHouseholdOpinion,
   chooseConsensusDirection,
   confirmConsensusVersion,
-  createDemoHouseholdConsensus,
-  deserializeHouseholdConsensus,
   detectHouseholdConflicts,
   serializeHouseholdConsensus,
   setConflictDirections,
@@ -43,6 +41,7 @@ import {
   DEFAULT_EXPERIENCE_STYLE,
   EXPERIENCE_STYLES,
   experienceStyleHref,
+  normalizeExperienceStyle,
   resolveExperienceStyle,
   withExperienceStyle,
 } from './domain/experience-style.js';
@@ -134,10 +133,10 @@ const surfaceLabelOverrides = {
 };
 const roomBriefs = {
   'room-living-dining': {
-    kicker: '开放客餐厅任务',
-    title: '会客、用餐与固定系统同场协作',
-    summary: '家具、电视柜、格栅隔断与墙地顶饰面都来自同一 scene，并共享碰撞、净距与版本记录。',
-    checks: ['主通道 ≥ 900 mm', '固定构件需复核', '模型槽可替换'],
+    kicker: '开放客餐厅',
+    title: '相聚，也留出走动的空间',
+    summary: '调整沙发与餐桌的位置，也看看彼此之间的距离。每次修改都会保留记录，并检查通行空间。',
+    checks: ['主通道 ≥ 900 mm', '固定构件需复核'],
     shortcuts: [
       { label: '沙发', objectId: 'object-sofa' },
       { label: '餐桌', objectId: 'object-dining-table' },
@@ -146,7 +145,7 @@ const roomBriefs = {
     ],
   },
   'room-primary-bedroom': {
-    kicker: '主卧设计任务',
+    kicker: '主卧',
     title: '睡眠与收纳互不让步',
     summary: '同一 4.0 × 3.2 m 房间里，同时保护床侧通行、衣柜使用和入门开启。',
     checks: ['床侧 ≥ 600 mm', '柜前 ≥ 900 mm', '门扇可开启'],
@@ -157,9 +156,9 @@ const roomBriefs = {
     ],
   },
   'room-flex': {
-    kicker: '成长型儿童房任务',
+    kicker: '成长型儿童房',
     title: '学习、活动与未来换床',
-    summary: '同一 4.6 × 3.2 m 房间里，把睡眠、学习和中央活动区拉开；床和书桌的每次调整都进入规则与版本。',
+    summary: '在 4.6 × 3.2 m 的房间里，为睡眠、学习和玩耍各留一个角落。调整床与书桌时，同时留意中央的活动空间。',
     checks: ['床侧 ≥ 600 mm', '成长活动留白 1.6 m', '加宽床须复核活动区'],
     shortcuts: [
       { label: '单人床', objectId: 'object-flex-bed' },
@@ -278,8 +277,8 @@ const downstreamValueLabels = {
   not_connected_in_v1: 'V1 暂不连接生产系统',
 };
 
-async function fetchJson(path, options) {
-  const response = await fetch(path, options);
+async function fetchJson(path, options = {}) {
+  const response = await fetch(path, { ...options, signal: options.signal ?? AbortSignal.timeout(12000) });
   const text = await response.text();
   const body = text ? JSON.parse(text) : {};
   if (!response.ok) throw new Error(body.error?.code ?? body.error ?? `HTTP_${response.status}`);
@@ -310,60 +309,24 @@ const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {})
   return trace.assistantReply || '当前场景已读取；2D / 3D 未修改。';
 };
 
-const createInitialVersionProject = () => {
+const readLocalCache = (key) => {
+  if (typeof window === 'undefined') return { value: null, readable: false };
+  try { return { value: window.localStorage.getItem(key), readable: true }; }
+  catch { return { value: null, readable: false }; }
+};
+
+const createInitialProjectSession = (recordingMode) => {
   let styleId = 'scandinavian';
-  if (typeof window !== 'undefined') {
-    try { styleId = deserializeProjectSetup(window.localStorage.getItem('oppein.project-setup.v1')).styles[0] ?? styleId; }
-    catch { /* a missing setup uses the demo's default palette */ }
-  }
-  const fallbackStore = createSceneStore(createDemoScene(styleId));
-  const fallback = { history: createVersionHistory(fallbackStore), store: fallbackStore };
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const serializedHistory = window.localStorage.getItem(VERSION_STORAGE_KEY);
-    if (!serializedHistory) return fallback;
-    const history = deserializeVersionHistory(serializedHistory);
-    if (serializeScene(history.initialScene) !== serializeScene(fallbackStore.initialScene)) throw new Error('VERSION_FIXTURE_CHANGED');
-    return { history, store: sceneStoreForVersion(history) };
-  } catch {
-    window.localStorage.removeItem(VERSION_STORAGE_KEY);
-    return fallback;
-  }
-};
-
-const createInitialHouseholdProject = (history) => {
-  const fallback = createDemoHouseholdConsensus(history.currentVersionId);
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const serialized = window.localStorage.getItem(CONSENSUS_STORAGE_KEY);
-    if (!serialized) return fallback;
-    const restored = deserializeHouseholdConsensus(serialized);
-    const versionIds = new Set(history.versions.map((version) => version.id));
-    const referenced = [
-      restored.currentVersionId,
-      ...restored.opinions.map((opinion) => opinion.versionId),
-      ...restored.directions.map((direction) => direction.versionId),
-      restored.finalDecision?.versionId,
-      restored.finalDecision?.baseVersionId,
-      ...restored.confirmations.map((confirmation) => confirmation.versionId),
-    ].filter(Boolean);
-    if (referenced.some((versionId) => !versionIds.has(versionId))) throw new Error('CONSENSUS_VERSION_NOT_FOUND');
-    return restored;
-  } catch {
-    window.localStorage.removeItem(CONSENSUS_STORAGE_KEY);
-    return fallback;
-  }
-};
-
-const createInitialDesignBrief = () => {
-  if (typeof window === 'undefined') return createDesignBrief();
-  try {
-    const serialized = window.localStorage.getItem(DESIGN_BRIEF_STORAGE_KEY);
-    return serialized ? deserializeDesignBrief(serialized) : createDesignBrief();
-  } catch {
-    window.localStorage.removeItem(DESIGN_BRIEF_STORAGE_KEY);
-    return createDesignBrief();
-  }
+  try { styleId = deserializeProjectSetup(readLocalCache('oppein.project-setup.v1').value).styles[0] ?? styleId; }
+  catch { /* Missing setup uses the demo's default palette. */ }
+  const cache = Object.fromEntries([VERSION_STORAGE_KEY, CONSENSUS_STORAGE_KEY, DESIGN_BRIEF_STORAGE_KEY].map((key) => [key, readLocalCache(key)]));
+  const session = restoreProjectSession({
+    initialScene: recordingMode ? createRecordingBaseline().initialScene : createDemoScene(styleId),
+    serializedVersionHistory: recordingMode ? null : cache[VERSION_STORAGE_KEY].value,
+    serializedHouseholdConsensus: recordingMode ? null : cache[CONSENSUS_STORAGE_KEY].value,
+    serializedDesignBrief: recordingMode ? null : cache[DESIGN_BRIEF_STORAGE_KEY].value,
+  });
+  return { ...session, cache };
 };
 
 const entityKinds = { room: '房间', object: '家具', opening: '门窗', surface: '表面' };
@@ -524,7 +487,7 @@ function MediaLayer({ sceneModel, projection, selection, onSelect }) {
       const rotation = (asset.rotationY * 180) / Math.PI;
       return <g key={asset.id} className="media-object selectable-group" role="button" tabIndex="0" aria-label={`选择${objectLabels[object.id] ?? object.name}`} onClick={() => onSelect({ kind: 'object', id: asset.sourceObjectId })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'object', id: asset.sourceObjectId }, onSelect)}>
         <polygon className="media-hitbox" points={polygonPoints(asset.polygon)} />
-        <image className="media-image" href={asset.src} x={asset.anchor.x - asset.width / 2} y={asset.anchor.y - asset.depth / 2} width={asset.width} height={asset.depth} preserveAspectRatio="none" transform={`rotate(${rotation} ${asset.anchor.x} ${asset.anchor.y})`} />
+        <image className="media-image" href={asset.previewSrc ?? asset.src} x={asset.anchor.x - asset.width / 2} y={asset.anchor.y - asset.depth / 2} width={asset.width} height={asset.depth} preserveAspectRatio="none" transform={`rotate(${rotation} ${asset.anchor.x} ${asset.anchor.y})`} />
         <polygon className="media-selection" data-selected={selected} points={polygonPoints(asset.polygon)} />
       </g>;
     })}
@@ -582,26 +545,28 @@ function ProjectsPage() {
     if (new URLSearchParams(window.location.search).get('project') === 'demo') openProject();
   }, [openProject]);
 
-  return <main className="experience-shell project-library" data-page="projects">
+  return <main className="experience-shell project-library editorial-library" data-page="projects">
     <ExperienceNav projects />
     <section className="project-library__content" aria-labelledby="projects-title">
       <header className="project-library__heading">
-        <div><p className="experience-kicker">你的空间方案</p><h1 id="projects-title">我的设计</h1></div>
-        <p>继续已有方案，或者从一份户型资料开始。</p>
+        <div><p className="experience-kicker">YOUR DESIGN COLLECTION / 我的设计</p><h1 id="projects-title">家的下一章，<br />从这里开始。</h1></div>
+        <p>继续打磨已有方案，<br />或带上一份户型，让 AI 陪你从头设计。</p>
       </header>
 
       <div className="project-library__grid">
         <button className="project-tile project-tile--demo" type="button" onClick={openProject}>
           <ProjectPlanPreview label="示例住宅 · 装修布局" />
           <span className="project-tile__body"><span><small>示例项目</small><b>城市三口之家</b></span><span className="project-status">方案讨论中</span></span>
-          <span className="project-tile__meta"><span>7 个空间</span><span>当前版本 V4</span><ArrowRight size={17} aria-hidden="true" /></span>
+          <span className="project-tile__meta"><span>7 个空间</span><span>可编辑示例方案</span><ArrowRight size={17} aria-hidden="true" /></span>
         </button>
 
         <a className="project-tile project-tile--new" href="/projects/new">
           <span className="project-tile__add"><Plus size={24} weight="regular" aria-hidden="true" /></span>
-          <span><b>新建项目</b><small>从户型图或 Demo 户型开始</small></span>
+          <span><b>设计一个自己的家</b><small>从户型图或 Demo 户型开始</small></span>
+          <span className="editorial-new-action">新建项目 <ArrowRight size={18} aria-hidden="true" /></span>
         </a>
       </div>
+      <aside className="editorial-library-note"><span>从空间出发，而不只是挑选风格。</span><p>提供户型与需求 → 查看 AI 方案 → 调整与确认</p></aside>
     </section>
 
     <dialog className="project-detail" ref={dialogRef} onClose={() => window.history.replaceState({}, '', '/projects')} onClick={(event) => { if (event.target === event.currentTarget) closeProject(); }}>
@@ -615,10 +580,10 @@ function ProjectsPage() {
           <div><dt>户型</dt><dd>三室两厅一厨一卫</dd></div>
           <div><dt>建筑范围</dt><dd>11,000 × 8,000 mm</dd></div>
           <div><dt>空间</dt><dd>{scene.rooms.length} 个</dd></div>
-          <div><dt>当前版本</dt><dd>V4</dd></div>
+          <div><dt>当前版本</dt><dd>以工作台保存结果为准</dd></div>
           <div><dt>当前阶段</dt><dd>方案讨论</dd></div>
         </dl>
-        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><span className="project-detail__enter" aria-disabled="true">进入项目 <ArrowRight size={16} aria-hidden="true" /></span></footer>
+        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><a className="project-detail__enter" href="/project/demo?style=agent-canvas">进入项目 <ArrowRight size={16} aria-hidden="true" /></a></footer>
       </div>
     </dialog>
   </main>;
@@ -882,25 +847,25 @@ function ProjectGenerationPage() {
   const live = status === 'running';
   const stages = result?.stages?.length
     ? result.stages.map((stage) => [stage.label, stage.status === 'completed' ? 'done' : stage.status === 'running' ? 'active' : stage.status === 'failed' ? 'failed' : 'waiting'])
-    : [['读取家庭与户型需求', 'done'], ['Aily 生成并校验全屋母方案', live ? 'active' : 'waiting'], ['保存第一版方案', 'waiting']];
+    : [['读取家庭与户型需求', 'done'], ['AI 生成并校验全屋方案', live ? 'active' : 'waiting'], ['保存第一版方案', 'waiting']];
 
   return <main className="experience-shell generation-page" data-page="project-generation">
     <header className="generation-nav"><a className="experience-brand" href="/" aria-label="回到首页"><span><HouseLine size={20} /></span><strong>欧派共创空间</strong></a><a href="/projects/new">稍后回来</a></header>
     <section className="generation-stage" aria-labelledby="generation-title">
       <div className="generation-stage__visual">
         <h1 className="sr-only" id="generation-title">正在生成你的第一版全屋方案</h1>
-        <video autoPlay loop muted playsInline poster="/assets/hero/villa-hero-placeholder.png" aria-label="住宅方案逐步建立动画">
-          <source src="/assets/hero/villa-plan-loading-loop.mp4" type="video/mp4" />
+        <video autoPlay loop muted playsInline preload="none" poster="/assets/hero/house-graded-v25.jpg" aria-label="住宅方案逐步建立动画">
+          <source src="/assets/hero/house-web-v26.mp4" type="video/mp4" />
         </video>
         <div className="generation-progress" aria-label={`方案生成进度 ${progress}%`}><strong>{progress}%</strong><span><i style={{ width: `${progress}%` }} /></span><small>{progress === 99 && live ? '正在等待 Agent 返回并完成合同校验' : status === 'complete' ? '方案已生成，正在进入项目' : '正在建立你的第一版全屋方案'}</small></div>
       </div>
       <aside className="generation-agent" aria-live="polite">
-        <header><span><Sparkle size={20} weight="fill" /></span><div><b>AI 设计助手</b><small>{live ? '正在工作' : status === 'complete' ? '方案已完成' : status === 'degraded' ? 'Aily 暂不可用' : '生成暂停'}</small></div></header>
+        <header><span><Sparkle size={20} weight="fill" /></span><div><b>AI 设计助手</b><small>{live ? '正在工作' : status === 'complete' ? '方案已完成' : status === 'degraded' ? '设计服务暂不可用' : '生成暂停'}</small></div></header>
         <ol>{stages.map(([label, stageState], index) => <li key={label} data-state={stageState}><span>{stageState === 'done' ? <Check size={12} weight="bold" /> : index + 1}</span><div><b>{label}</b><small>{stageState === 'done' ? '完成' : stageState === 'active' ? '进行中' : '等待中'}</small></div></li>)}</ol>
         {status === 'complete' && <p className="generation-agent__message">《{result?.result?.plan?.title ?? '第一版全屋方案'}》已通过本地合同校验，正在进入项目。</p>}
-        {status === 'degraded' && <div className="generation-agent__recovery"><p>需求已保存，但 Aily 本轮没有返回完整方案。你可以重试，或先进入项目继续沟通。</p><button type="button" onClick={() => generate(true)}>重试生成</button><a href="/project/demo?firstPlan=degraded">先进入项目</a></div>}
+        {status === 'degraded' && <div className="generation-agent__recovery"><p>需求已保存，但设计服务本轮没有返回完整方案。你可以重试，或先进入项目继续沟通。</p><button type="button" onClick={() => generate(true)}>重试生成</button><a href="/project/demo?firstPlan=degraded">先进入项目</a></div>}
         {status === 'failed' && <div className="generation-agent__recovery"><p>本轮没有生成方案，已确认的设置仍然保留。错误：{result?.error}</p><button type="button" onClick={() => generate(true)}>重新生成</button><a href="/projects/new">返回设置</a></div>}
-        <footer>真实 Aily 调用 · Demo 户型与估算数据会明确标记</footer>
+        <footer>由已连接的设计模型生成 · Demo 户型与估算数据会明确标记</footer>
       </aside>
     </section>
   </main>;
@@ -1067,24 +1032,24 @@ function LabScenePage() {
 }
 
 function ProjectDemoPage() {
+  const [entryQuery] = useState(() => typeof window === 'undefined' ? '' : window.location.search);
+  const recordingMode = new URLSearchParams(entryQuery).get('recording') === '1';
   const initialExperienceStyle = useMemo(() => resolveExperienceStyle(
-    typeof window === 'undefined' ? '' : window.location.search,
-    typeof window === 'undefined' ? '' : window.localStorage.getItem('oppein.experience-style'),
+    entryQuery,
+    readLocalCache('oppein.experience-style').value,
   ), []);
-  const [initialVersionProject] = useState(() => {
-    const store = createRecordingBaseline();
-    return { history: createVersionHistory(store), store };
-  });
+  const [initialVersionProject] = useState(() => createInitialProjectSession(recordingMode));
+  const cacheRecoveryRef = useRef({});
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
-  const [householdConsensus, setHouseholdConsensus] = useState(() => createDemoHouseholdConsensus(initialVersionProject.history.currentVersionId));
-  const [designBrief, setDesignBrief] = useState(createDesignBrief);
+  const [householdConsensus, setHouseholdConsensus] = useState(initialVersionProject.householdConsensus);
+  const [designBrief, setDesignBrief] = useState(initialVersionProject.designBrief);
   const sceneStoreRef = useRef(sceneStore);
   const versionHistoryRef = useRef(versionHistory);
   sceneStoreRef.current = sceneStore;
   versionHistoryRef.current = versionHistory;
   const currentScene = sceneStore.currentScene;
-  const initialNavigation = useMemo(() => parseViewState('', scene), []);
+  const initialNavigation = useMemo(() => parseViewState(entryQuery, initialVersionProject.store.currentScene), []);
   const [navigation, setNavigation] = useState(initialNavigation);
   const experienceStyle = initialExperienceStyle;
   const [viewSequence, setViewSequence] = useState(1);
@@ -1109,13 +1074,28 @@ function ProjectDemoPage() {
   const [agentProgress, setAgentProgress] = useState('');
   const [agentCallout, setAgentCallout] = useState(null);
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
-  const [agentMessages, setAgentMessages] = useState([{
-    id: 'agent-welcome',
-    role: 'assistant',
-    text: `已读取 ${scene.rooms.length} 个空间和当前版本。选择房间或家具，再说想解决的问题。`,
-    source: 'local',
-    tools: [],
-  }]);
+  const [agentMessages, setAgentMessages] = useState(() => {
+    const messages = [{
+      id: 'agent-welcome', role: 'assistant',
+      text: recordingMode
+        ? '当前为编排演示模式，指定场景按预设步骤执行，并非 AI 实时生成；不会覆盖你的正常项目。'
+        : initialVersionProject.restoration.versions === 'invalid'
+        ? '旧版本缓存暂时无法校验，当前显示演示场景而非你的保存版本；旧数据会保留用于恢复。'
+        : `已${initialVersionProject.restoration.versions === 'restored' ? '恢复保存的版本，读取' : '读取'} ${initialVersionProject.store.currentScene.rooms.length} 个空间。选择房间或家具，再说想解决的问题。`,
+      source: recordingMode ? 'demo-script' : 'local', tools: [],
+    }];
+    if (new URLSearchParams(entryQuery).get('firstPlan') === 'ready') {
+      try {
+        const body = JSON.parse(readLocalCache(FIRST_PLAN_STORAGE_KEY).value ?? 'null');
+        const plan = body?.result?.plan;
+        if (body?.status === 'ready' && typeof plan?.title === 'string' && typeof plan.designIntent === 'string') {
+          messages.push({ id: 'agent-first-plan', role: 'assistant', source: 'first-plan', tools: [],
+            text: `设计方向已生成：《${plan.title.slice(0, 100)}》。${plan.designIntent.slice(0, 240)}\n当前 3D 仍是可编辑的演示户型，并未自动生成你的真实户型几何；可继续明确家具和表面的调整。` });
+        }
+      } catch { /* An unreadable plan is not a generated result and stays untouched. */ }
+    }
+    return messages;
+  });
   const [activeMemberId, setActiveMemberId] = useState(householdConsensus.members[0].id);
   const [opinionStance, setOpinionStance] = useState('support');
   const [opinionText, setOpinionText] = useState('');
@@ -1285,6 +1265,13 @@ function ProjectDemoPage() {
   const closeVersionDrawer = useCallback(() => {
     setVersionDrawerOpen(false);
   }, []);
+  const projectViewQuery = useCallback((viewState, sceneModel) => {
+    const query = new URLSearchParams(withExperienceStyle(serializeViewState(viewState, sceneModel), experienceStyle));
+    if (recordingMode) query.set('recording', '1');
+    const firstPlan = new URLSearchParams(entryQuery).get('firstPlan');
+    if (firstPlan === 'ready' || firstPlan === 'degraded') query.set('firstPlan', firstPlan);
+    return `?${query}`;
+  }, [experienceStyle, recordingMode, entryQuery]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -1292,19 +1279,19 @@ function ProjectDemoPage() {
       setNavigation(restored);
       setViewSequence((value) => value + 1);
     };
-    const canonicalQuery = withExperienceStyle(serializeViewState(initialNavigation, scene), experienceStyle);
+    const canonicalQuery = projectViewQuery(initialNavigation, initialVersionProject.store.currentScene);
     if (window.location.search !== canonicalQuery) {
       window.history.replaceState({}, '', `${window.location.pathname}${canonicalQuery}`);
     }
-    window.localStorage.setItem('oppein.experience-style', experienceStyle);
+    try { window.localStorage.setItem('oppein.experience-style', experienceStyle); } catch { /* Optional preference cache. */ }
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [experienceStyle, initialNavigation]);
+  }, [experienceStyle, initialNavigation, initialVersionProject, projectViewQuery]);
 
   const commitNavigation = (nextState, { replace = false, moveCamera = true } = {}) => {
     const sceneModel = sceneStoreRef.current.currentScene;
     const safe = sanitizeViewState(nextState, sceneModel);
-    const query = withExperienceStyle(serializeViewState(safe, sceneModel), experienceStyle);
+    const query = projectViewQuery(safe, sceneModel);
     const nextUrl = `${window.location.pathname}${query}`;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl || replace) {
@@ -1532,18 +1519,9 @@ function ProjectDemoPage() {
     try {
       let result;
       try {
-        const recordingScenario = findRecordingScenario(input);
+        const recordingScenario = recordingMode ? findRecordingScenario(input) : null;
         if (recordingScenario) {
-          for (const [message, delay] of [
-            ['Agent 思考中…', 3500],
-            ['正在理解家庭成员的使用频率…', 4000],
-            ['正在检查动线、边界与家具关系…', 4500],
-            ['正在规划布局…', 5000],
-            ['正在生成可撤销预览…', 3000],
-          ]) {
-            setAgentProgress(message);
-            await new Promise((resolve) => window.setTimeout(resolve, delay));
-          }
+          setAgentProgress('正在执行编排演示步骤…');
           result = runRecordingScenario(beforeStore, input);
         } else if (recordingSafePrompts.has(input)) {
           result = await runAgentTurn({
@@ -1555,6 +1533,7 @@ function ProjectDemoPage() {
             activeRoomId,
           });
         } else {
+        setAgentProgress('正在请求设计服务并校验可执行调整…');
         const serializedHistory = serializeVersionHistory(beforeHistory);
         const response = await fetch('/api/agent/turn', {
           method: 'POST',
@@ -1610,7 +1589,7 @@ function ProjectDemoPage() {
           saveOnKeep: true,
           startCursor: beforeStore.cursor,
           status: reviewChecks.length ? topRuleStatus(reviewChecks) : 'passed',
-          versionSource: result.trace.source === 'provider' ? 'aily' : 'agent-local',
+          versionSource: result.trace.source === 'provider' ? 'agent-provider' : result.trace.source === 'demo-script' ? 'demo-script' : 'agent-local',
         });
         setEditFeedback({ tone: reviewChecks.length ? 'warning' : 'success', message: 'Agent 已生成可撤销预览；由你保留后才写入版本链。' });
 
@@ -1712,7 +1691,7 @@ function ProjectDemoPage() {
     const id = eventId('evt-handoff');
     setHandoffSync({ status: 'pending', message: '正在提交复核快照…', reviewUrl: null, handoffUrl: null });
     try {
-      await fetchJson(`/api/projects/${PROJECT_ID}/snapshot`, {
+      const savedSnapshot = await fetchJson(`/api/projects/${PROJECT_ID}/snapshot`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -1728,12 +1707,14 @@ function ProjectDemoPage() {
       });
       setHandoffSync({
         status: 'synced',
-        message: '已提交设计师复核；真实欧派数据仍以 pending 字段保留。',
+        message: savedSnapshot.feishuDelivery?.status === 'synced' ? '交接快照已保存，飞书留痕已核验。可打开复核页继续。' : '交接快照已保存；飞书在后台同步，可在复核页查看进度。',
         reviewUrl: `/review/${PROJECT_ID}${withExperienceStyle(`?versionId=${encodeURIComponent(currentVersion.id)}`, experienceStyle)}`,
         handoffUrl: `/handoff/${encodeURIComponent(currentVersion.id)}${experienceStyle ? `?style=${experienceStyle}` : ''}`,
       });
     } catch (error) {
-      setHandoffSync({ status: 'failed', message: `提交失败：${error.message}`, reviewUrl: null, handoffUrl: null });
+      setHandoffSync({ status: 'failed', message: error.message === 'VERSION_CONFLICT'
+        ? '本地与服务器版本不同，已保留本地修改且未覆盖服务器数据；请核对项目版本后重试。'
+        : `提交失败：${error.message}`, reviewUrl: null, handoffUrl: null });
     }
   };
 
@@ -1891,37 +1872,47 @@ function ProjectDemoPage() {
     if (!versions.some((version) => version.id === compareFromVersionId)) setCompareFromVersionId(versions[0].id);
   }, [compareFromVersionId, versions]);
 
-  useEffect(() => {
-    try { window.localStorage.setItem(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory)); }
-    catch { /* Offline cache failure must not block the live editing session. */ }
-  }, [versionHistory]);
+  const persistSessionValue = useCallback((key, serializedValue, restorationKey) => {
+    // Rehearsal is deliberately isolated from the resident's saved project.
+    if (recordingMode || cacheRecoveryRef.current[key] === false) return;
+    try {
+      const original = initialVersionProject.cache[key];
+      if (!original.readable) throw new Error('CACHE_READ_UNAVAILABLE');
+      if (initialVersionProject.restoration[restorationKey] === 'invalid' && !cacheRecoveryRef.current[key]) {
+        const recoveryKey = `${key}.recovery.${Date.now()}.${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+        window.localStorage.setItem(recoveryKey, original.value);
+        if (window.localStorage.getItem(recoveryKey) !== original.value) throw new Error('CACHE_RECOVERY_FAILED');
+        cacheRecoveryRef.current[key] = true;
+      }
+      window.localStorage.setItem(key, serializedValue);
+    } catch {
+      cacheRecoveryRef.current[key] = false;
+      setEditFeedback({ tone: 'warning', message: '本地保存暂不可用，旧缓存未删除；当前修改仅保留在此页面，请暂勿刷新。' });
+    }
+  }, [recordingMode, initialVersionProject]);
 
-  useEffect(() => {
-    try { window.localStorage.setItem(CONSENSUS_STORAGE_KEY, serializeHouseholdConsensus(householdConsensus)); }
-    catch { /* Offline cache failure must not block the shared demo session. */ }
-  }, [householdConsensus]);
-
-  useEffect(() => {
-    try { window.localStorage.setItem(DESIGN_BRIEF_STORAGE_KEY, serializeDesignBrief(designBrief)); }
-    catch { /* Offline cache failure must not block the live design session. */ }
-  }, [designBrief]);
+  useEffect(() => { persistSessionValue(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory), 'versions'); }, [versionHistory, persistSessionValue]);
+  useEffect(() => { persistSessionValue(CONSENSUS_STORAGE_KEY, serializeHouseholdConsensus(householdConsensus), 'household'); }, [householdConsensus, persistSessionValue]);
+  useEffect(() => { persistSessionValue(DESIGN_BRIEF_STORAGE_KEY, serializeDesignBrief(designBrief), 'designBrief'); }, [designBrief, persistSessionValue]);
 
   useEffect(() => {
     const controller = new AbortController();
+    const healthTimeout = setTimeout(() => controller.abort(), 12000);
+    let alive = true;
     fetch('/api/health', { signal: controller.signal })
       .then((response) => {
         if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('HEALTH_UNAVAILABLE');
         return response.json();
       })
-      .then((health) => setAgentCapability({
+      .then((health) => { if (alive) setAgentCapability({
         aily: health.aily?.status ?? health.aily ?? 'api_unavailable',
         base: health.base?.status ?? health.base ?? 'api_unavailable',
         provider: health.provider ?? 'local',
-      }))
+      }); })
       .catch((error) => {
-        if (error.name !== 'AbortError') setAgentCapability({ aily: 'api_unavailable', base: 'api_unavailable', provider: 'local' });
-      });
-    return () => controller.abort();
+        if (alive) setAgentCapability({ aily: 'api_unavailable', base: 'api_unavailable', provider: 'local' });
+      }).finally(() => clearTimeout(healthTimeout));
+    return () => { alive = false; clearTimeout(healthTimeout); controller.abort(); };
   }, []);
 
   useEffect(() => {
@@ -2005,14 +1996,14 @@ function ProjectDemoPage() {
         {activeRoomId && <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome}>返回整屋</button>}
         <details className="project-tools-menu">
           <summary>更多工具</summary>
-          <div>
-            <button data-testid="open-version-drawer" type="button" onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />版本 {currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
+          <div onClick={event => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false; }}>
+            <button data-testid="open-version-drawer" type="button" aria-label={`版本 ${currentVersion.label}${hasUnsavedChanges ? ' · 未保存' : ''}`} onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />版本 {currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
             {handoffSync.reviewUrl
-              ? <a href={handoffSync.reviewUrl}>设计师复核</a>
-              : <button type="button" onClick={openVersionDrawer}>设计师复核</button>}
+              ? <a href={handoffSync.reviewUrl} aria-label="设计师复核">设计师复核</a>
+              : <button type="button" aria-label="设计师复核" onClick={openVersionDrawer}>设计师复核</button>}
             {handoffSync.handoffUrl
-              ? <a href={handoffSync.handoffUrl}>交接 JSON</a>
-              : <button type="button" onClick={openVersionDrawer}>交接 JSON</button>}
+              ? <a href={handoffSync.handoffUrl} aria-label="交接 JSON">交接 JSON</a>
+              : <button type="button" aria-label="交接 JSON" onClick={openVersionDrawer}>交接 JSON</button>}
           </div>
         </details>
       </div>
@@ -2025,7 +2016,10 @@ function ProjectDemoPage() {
             <p className="panel__kicker">空间方案</p>
             <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
           </div>
-          <div className="project-stage__summary"><span>{selectedLabel}</span><small>{currentViewLabel}</small></div>
+          <div className="project-stage__summary studio-navigation">
+            <label><span className="sr-only">前往房间</span><select aria-label="前往房间" value={activeRoomId ?? ''} onChange={event => event.target.value ? jumpToRoom(event.target.value) : jumpToHome()}><option value="">整屋总览</option>{currentScene.rooms.map(room => <option key={room.id} value={room.id}>{roomLabels[room.id] ?? room.name}</option>)}</select></label>
+            {activeRoomId && <label><span className="sr-only">房间视角</span><select aria-label="房间视角" value={displayViewId} onChange={event => jumpToRoomView(event.target.value)}>{!getRoomViewPresets(currentScene, activeRoomId).some(preset => preset.id === displayViewId) && <option value={displayViewId}>{currentViewLabel}</option>}{getRoomViewPresets(currentScene, activeRoomId).map(preset => <option key={preset.id} value={preset.id}>{preset.label}</option>)}</select></label>}
+          </div>
           <div className="project-stage__tier" data-tier={viewerTier} data-interaction={interactionLayer}>
             <span>{interactionLayer === 'quick' ? '正在微调' : (viewerTier === 'full' ? '浏览方案' : '轻量浏览')}</span>
             {viewerTier !== 'full' && !viewerExpanded && <button type="button" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>}
@@ -2064,9 +2058,9 @@ function ProjectDemoPage() {
           <details>
             <summary>切换</summary>
             <div>
-              <button type="button" aria-pressed={sidecarMode === 'agent'} onClick={() => setSidecarMode('agent')}><ChatCircleDots size={15} />Agent</button>
-              <button type="button" aria-pressed={sidecarMode === 'space'} onClick={() => setSidecarMode('space')}><Cube size={15} />微调</button>
-              <button type="button" aria-pressed={sidecarMode === 'household'} onClick={() => setSidecarMode('household')}><UsersThree size={15} />家庭</button>
+              <button type="button" aria-label="切换到设计助理" aria-pressed={sidecarMode === 'agent'} onClick={event => { setSidecarMode('agent'); event.currentTarget.closest('details').open = false; }}><ChatCircleDots size={15} />设计助理</button>
+              <button type="button" aria-label="切换到空间微调" aria-pressed={sidecarMode === 'space'} onClick={event => { setSidecarMode('space'); event.currentTarget.closest('details').open = false; }}><Cube size={15} />空间微调</button>
+              <button type="button" aria-label="切换到家庭意见" aria-pressed={sidecarMode === 'household'} onClick={event => { setSidecarMode('household'); event.currentTarget.closest('details').open = false; }}><UsersThree size={15} />家庭意见</button>
             </div>
           </details>
         </nav>
@@ -2098,7 +2092,7 @@ function ProjectDemoPage() {
           <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
           <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
           {activeRoomSurfaces.length > 0 && <section className="project-surfaces" aria-label="当前房间装修表面">
-            <div><span>装修表面</span><small>墙 · 地 · 顶同一 scene</small></div>
+            <div><span>装修表面</span><small>墙 · 地 · 顶同步更新</small></div>
             <div>{activeRoomSurfaces.map((surface) => <button key={surface.id} type="button" aria-pressed={selectedSurface?.id === surface.id} onClick={() => selectEntity({ kind: 'surface', id: surface.id })}>
               <span>{entityName('surface', surface)}</span><small>{materialLabels[surface.materialId] ?? surface.materialId}</small>
             </button>)}</div>
@@ -2123,18 +2117,18 @@ function ProjectDemoPage() {
           </div>}
           {selectedObject && <div className="project-object" data-testid="selected-object-details" data-layer="quick">
             <div><span>{entityName('object', selectedObject)}</span><strong>当前家具</strong></div>
-            <p className="project-object__quick-note">住户只调整位置、方向和大小；选材、增删与结构装修交给 Agent 生成方案。</p>
+            <p className="project-object__quick-note">在这里调整位置、方向和大小。需要换材质、增减家具或改动结构时，请交给设计助理。</p>
             <div className="project-edit" aria-label={`${entityName('object', selectedObject)}编辑工具`}>
               {(selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">
                 {selectedObject.capabilities.movable && <button type="button" aria-pressed={editMode === 'move'} onClick={() => setEditMode('move')}>移动</button>}
                 {selectedObject.capabilities.rotatable && <button type="button" aria-pressed={editMode === 'rotate'} onClick={() => setEditMode('rotate')}>旋转</button>}
               </div>}
               {selectedObject.capabilities.movable && <div className="project-edit__nudge" aria-label="每次移动 100 毫米">
-                <button type="button" aria-label="向北移动 100 毫米" onClick={() => moveSelected(0, -100)}>↑</button>
-                <button type="button" aria-label="向西移动 100 毫米" onClick={() => moveSelected(-100, 0)}>←</button>
+                <button type="button" aria-label="向北移动 100 毫米" onClick={() => moveSelected(0, -100)}>北</button>
+                <button type="button" aria-label="向西移动 100 毫米" onClick={() => moveSelected(-100, 0)}>西</button>
                 <span>100 mm</span>
-                <button type="button" aria-label="向东移动 100 毫米" onClick={() => moveSelected(100, 0)}>→</button>
-                <button type="button" aria-label="向南移动 100 毫米" onClick={() => moveSelected(0, 100)}>↓</button>
+                <button type="button" aria-label="向东移动 100 毫米" onClick={() => moveSelected(100, 0)}>东</button>
+                <button type="button" aria-label="向南移动 100 毫米" onClick={() => moveSelected(0, 100)}>南</button>
               </div>}
               {selectedObject.capabilities.rotatable && <button className="project-edit__rotate" type="button" onClick={rotateSelected}>顺时针 15°</button>}
               {selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
@@ -2159,15 +2153,15 @@ function ProjectDemoPage() {
             <p className="project-rules__scope">适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。</p>
           </div>
           <p>{displaySelectedEntity?.kind === 'object'
-            ? '已定位到所选家具；可在三维画布或右侧工具中编辑，规则不通过时不会写入 scene。'
+            ? '已定位到所选家具。可以直接在三维画布中调整，也可以使用上方工具；不符合空间规则的修改不会保存。'
             : displaySelectedEntity?.kind === 'surface'
               ? '已选择真实装修表面；饰面修改会同步进入 2D、3D、版本与交接。'
-            : (displayRoomId ? '使用画布底部的视角胶囊切换俯视、入口与主功能面；选择对象不会因切换镜头而丢失。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
+            : (displayRoomId ? '使用画布上方的视角菜单切换俯视、入口与主功能面，切换镜头不会取消家具选择。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
         </article>
         </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
           <header className="agent-sidecar__header">
-            <div className="agent-sidecar__identity"><span><Sparkle size={16} aria-hidden="true" /></span><div><strong>空间设计助理</strong><small>先预览，再由你决定</small></div></div>
-            <div className="agent-sidecar__capability" data-status={agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.aily === 'ready' ? '在线' : '演示'}</div>
+            <div className="agent-sidecar__identity"><div><strong>设计笔记</strong><small>与 AI 推敲空间的每一处细节</small></div></div>
+            <div className="agent-sidecar__capability" data-status={agentCapability.provider === 'deepseek' || agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.provider === 'deepseek' ? 'DeepSeek' : agentCapability.aily === 'checking' ? '连接中' : agentCapability.aily === 'ready' ? '在线' : '演示'}</div>
           </header>
 
           <div className="agent-sidecar__scope">
@@ -2177,7 +2171,7 @@ function ProjectDemoPage() {
 
           <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
             {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
-              <div className="agent-message__meta"><span>{message.role === 'user' ? '你' : 'Agent'}</span>{message.role === 'assistant' && message.source === 'provider' && <small>AILY</small>}</div>
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你的想法' : '设计助理'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' || message.source === 'agent-provider' ? 'AI' : message.source === 'demo-script' ? '编排演示' : message.source === 'first-plan' ? '方案方向' : '本地规则'}</small>}</div>
               <p>{message.text}</p>
               {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
@@ -2270,7 +2264,7 @@ function ProjectDemoPage() {
       <button className="version-layer__scrim" type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer} />
       <aside className="version-drawer" role="dialog" aria-modal="true" aria-labelledby="version-drawer-title" data-testid="version-impact-drawer" ref={versionDrawerRef} tabIndex={-1}>
         <header className="version-drawer__header">
-          <div><p className="panel__kicker">同一 scene · 可回放</p><h2 id="version-drawer-title">版本与影响</h2></div>
+          <div><p className="panel__kicker">每一次调整，都有迹可循</p><h2 id="version-drawer-title">版本与影响</h2></div>
           <button type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer}><X size={18} /></button>
         </header>
 
@@ -2280,7 +2274,7 @@ function ProjectDemoPage() {
           <div className="version-current__actions">
             <button type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview)}><FloppyDisk size={15} />保存为 V{versions.length + 1}</button>
             <button type="button" onClick={confirmCurrentVersion} disabled={hasUnsavedChanges || Boolean(pendingReview) || currentVersion.status === 'customer_confirmed'}><Check size={15} />客户确认</button>
-            <button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交设计师复核</button>
+            <button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交复核并同步飞书</button>
           </div>
           <div className="handoff-submit" data-status={handoffSync.status} role="status">
             <span>{handoffSync.message}</span>
@@ -2331,8 +2325,8 @@ function ProjectDemoPage() {
 }
 
 const latestLocalProject = () => {
-  const { history } = createInitialVersionProject();
-  return { history, consensus: createInitialHouseholdProject(history) };
+  const { history, householdConsensus } = createInitialProjectSession(false);
+  return { history, consensus: householdConsensus };
 };
 
 const routeSlug = (pathname, section) => {
@@ -2347,6 +2341,7 @@ function useExportPayload(versionId) {
     packet: buildHandoffPacket(history, consensus),
     review: buildDesignerReview(history, consensus),
     reviewDecision: null,
+    consensusSummary: null,
     source: 'local',
   }), [consensus, history]);
   const [state, setState] = useState({ status: 'loading', data: fallback, error: null });
@@ -2354,10 +2349,16 @@ function useExportPayload(versionId) {
   useEffect(() => {
     let alive = true;
     const query = versionId ? `?versionId=${encodeURIComponent(versionId)}` : '';
-    fetchJson(`/api/projects/${PROJECT_ID}/export${query}`)
-      .then((data) => { if (alive) setState({ status: 'ready', data: { ...data, source: 'server' }, error: null }); })
+    let timer;
+    const load = () => fetchJson(`/api/projects/${PROJECT_ID}/export${query}`)
+      .then((data) => {
+        if (!alive) return;
+        setState({ status: 'ready', data: { ...data, source: 'server' }, error: null });
+        if (data.consensusSummary?.status === 'pending') timer = window.setTimeout(load, 2000);
+      })
       .catch((error) => { if (alive) setState({ status: 'fallback', data: fallback, error: error.message }); });
-    return () => { alive = false; };
+    load();
+    return () => { alive = false; window.clearTimeout(timer); };
   }, [fallback, versionId]);
 
   return state;
@@ -2370,6 +2371,7 @@ function DesignerReviewPage() {
   const exportState = useExportPayload(versionId);
   const packet = exportState.data.packet;
   const review = exportState.data.review;
+  const consensusSummary = exportState.data.consensusSummary;
   const [decision, setDecision] = useState(exportState.data.reviewDecision?.decision ?? 'pending');
   const [notes, setNotes] = useState('');
   const [submitState, setSubmitState] = useState({ status: 'idle', message: '', handoffUrl: null });
@@ -2407,7 +2409,7 @@ function DesignerReviewPage() {
 
   return <main className="handoff-shell">
     <header className="handoff-hero">
-      <div><p className="eyebrow">Gate 11 · Designer Review</p><h1>设计师复核</h1><p>只读查看家庭确认版本、规则告警、版本差异和企业数据缺口；不混进客户工作台。</p></div>
+      <div><p className="eyebrow">Design Review</p><h1>设计师复核</h1><p>把已确认的想法交给专业判断。查看方案变化、空间提醒与待确认事项，再留下你的复核意见。</p></div>
       <div className="handoff-actions">
         <button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回客户工作台</button>
         <button className="utility-button" type="button" onClick={() => navigate(`/handoff/${review.currentVersionId}${experienceStyle ? `?style=${experienceStyle}` : ''}`)}>查看交接单</button>
@@ -2415,6 +2417,7 @@ function DesignerReviewPage() {
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
     {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业复核服务尚未连接。</p>}
+    <FeishuDelivery versionId={packet.version.id} enabled={exportState.data.source === 'server'} />
 
     <section className="handoff-grid">
       <article className="panel handoff-card">
@@ -2423,7 +2426,12 @@ function DesignerReviewPage() {
       </article>
       <article className="panel handoff-card">
         <span>服务状态</span><strong>{exportState.status === 'loading' ? '正在读取服务状态…' : `${capabilityLabel(review.capability.aily, 'Aily')} / ${capabilityLabel(review.capability.base, '飞书留痕')}`}</strong>
-        <p>页面只展示真实 capability 或本地降级，不声明已接通欧派生产、报价或 BOM。</p>
+        <p>以当前连接状态为准。欧派生产、报价与物料清单服务尚未接入。</p>
+      </article>
+      <article className="panel handoff-card">
+        <span>飞书共识秘书</span><strong>{consensusSummary?.status === 'ready' ? '摘要已生成' : consensusSummary?.status === 'pending' ? '正在整理' : consensusSummary?.status === 'failed' ? '暂未生成' : '等待提交'}</strong>
+        <p>{consensusSummary?.summary ?? (consensusSummary?.status === 'failed' ? '交接快照已保存，Aily 摘要失败不影响复核。' : '只读汇总家庭意见、版本差异与待确认项。')}</p>
+        {consensusSummary?.questions?.[0] && <small>待确认：{consensusSummary.questions[0]}</small>}
       </article>
       <article className="panel handoff-card">
         <span>设计师决定</span><strong>{decision === 'approved' ? '已批准' : decision === 'returned' ? '已退回' : '待复核'}</strong>
@@ -2474,20 +2482,21 @@ function HandoffPage() {
 
   return <main className="handoff-shell">
     <header className="handoff-hero">
-      <div><p className="eyebrow">Gate 11 · Downstream Handoff</p><h1>共识交接单</h1><p>脱敏、机器可读；真实欧派 SKU / 报价 / BOM / 生产接口仍以 pending 字段预留。</p></div>
-      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate(`/review/project-demo${experienceStyle ? `?style=${experienceStyle}` : ''}`)}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回工作台</button></div>
+      <div><p className="eyebrow">Design Handoff</p><h1>共识交接单</h1><p>整理确认版本与尚待解决的问题，方便下一位协作者接手。产品、报价与生产数据仍待接入。</p></div>
+      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate(`/review/project-demo${withExperienceStyle(`?versionId=${encodeURIComponent(packet.version.id)}`, experienceStyle)}`)}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回工作台</button></div>
     </header>
     {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
     {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业交接服务尚未连接。</p>}
+    <FeishuDelivery versionId={packet.version.id} enabled={exportState.data.source === 'server'} />
 
     <section className="handoff-grid">
       <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
-      <article className="panel handoff-card"><span>对象 / 表面</span><strong>{packet.confirmedObjects.length} / {packet.confirmedSurfaces?.length ?? 0}</strong><p>对象与饰面都保留 demo / estimate 来源，不冒充真实产品库。</p></article>
+      <article className="panel handoff-card"><span>家具与构件 / 装修表面</span><strong>{packet.confirmedObjects.length} / {packet.confirmedSurfaces?.length ?? 0}</strong><p>当前为演示与估算数据，来源标记已保留；不代表真实产品选型。</p></article>
       <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{downstreamValueLabels[packet.downstreamPlaceholders.pricing] ?? packet.downstreamPlaceholders.pricing}</p></article>
     </section>
 
     <section className="panel handoff-section">
-      <div className="handoff-section__title"><span>下游占位</span><strong>等待企业数据</strong></div>
+      <div className="handoff-section__title"><span>后续衔接</span><strong>等待企业数据</strong></div>
       <ul>{Object.entries(packet.downstreamPlaceholders).map(([key, value]) => <li key={key}><b>{downstreamLabels[key] ?? key}</b><span>{downstreamValueLabels[value] ?? value}</span></li>)}</ul>
     </section>
 
@@ -2503,7 +2512,9 @@ export default function App() {
   const [pathname, navigate] = usePathname();
   const isProd = import.meta.env.PROD;
   const isLabRoute = pathname.startsWith('/lab/scene');
-  const page = pathname === '/' || pathname === '/index.html'
+  const page = pathname === '/project/reference-home'
+    ? <Suspense fallback={<p>正在准备参考户型…</p>}><ReferenceHomePage /></Suspense>
+    : pathname === '/' || pathname === '/index.html'
     ? <ExperienceLandingPage />
     : pathname === '/projects/new/generating'
       ? <ProjectGenerationPage />

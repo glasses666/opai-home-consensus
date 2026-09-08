@@ -1,0 +1,13 @@
+{
+  "source": "oppein-mg-white-v07.blend",
+  "changes_only": [
+    "1920x1080 at 100 percent",
+    "Cycles samples 24 to 64"
+  ],
+  "frames": 96,
+  "fps": 24,
+  "samples": 64,
+  "preserved": "Geometry, materials, lighting, camera, all animation",
+  "limit": "Original low-resolution traced logo contours remain unchanged",
+  "scope": "Local render only; no production or remote changes"
+}

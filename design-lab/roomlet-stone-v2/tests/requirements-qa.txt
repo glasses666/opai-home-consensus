@@ -1,0 +1,2 @@
+playwright==1.57.0
+trimesh>=4.0,<5

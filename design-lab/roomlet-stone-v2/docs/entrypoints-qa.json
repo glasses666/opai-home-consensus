@@ -1,0 +1,61 @@
+{
+  "method": "Playwright Chromium; owned HTML in memory. Browser plugin unavailable; navigation URLs restricted in creation environment.",
+  "entries": {
+    "index.html": {
+      "title": "石间 · ROOMLET 02",
+      "viewport": [
+        1000,
+        820
+      ],
+      "errors": [],
+      "glError": 0,
+      "canvas": {
+        "x": 0,
+        "y": 150,
+        "width": 1000,
+        "height": 551
+      }
+    },
+    "example.html": {
+      "title": "石间 · 小尺寸网页嵌入示例",
+      "viewport": [
+        1200,
+        820
+      ],
+      "errors": [],
+      "glError": 0,
+      "canvas": {
+        "x": 670,
+        "y": 183.5,
+        "width": 400,
+        "height": 455
+      }
+    },
+    "minimal-example.html": {
+      "title": "ROOMLET · 透明画布最小示例",
+      "viewport": [
+        340,
+        380
+      ],
+      "errors": [],
+      "glError": 0,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 340,
+        "height": 380
+      }
+    },
+    "preview.html": {
+      "title": "石间 · ROOMLET 02",
+      "viewport": [
+        700,
+        820
+      ],
+      "errors": [],
+      "glError": 0,
+      "startsPaused": true,
+      "canOptIn": true
+    }
+  }
+}

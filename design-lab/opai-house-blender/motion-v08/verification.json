@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "complete_v04_world_matrices": true,
+  "render_calls": 0,
+  "frames": 300,
+  "perspective_camera": true,
+  "guides_hidden_in_render": true
+}

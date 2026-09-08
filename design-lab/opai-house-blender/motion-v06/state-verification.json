@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "frames": 480,
+  "fps": 20,
+  "duration_seconds": 24,
+  "pixels": [
+    960,
+    540
+  ],
+  "pen_strokes": 22,
+  "max_simultaneous_drawing_strokes": 1,
+  "assembly_units": 99,
+  "no_object_scale_animation": true,
+  "rigid_translations_verified": true,
+  "all_units_visibly_travel_at_full_opacity": true,
+  "complete_v04_world_matrices_preserved": true,
+  "all_solids_hidden_at_both_ends": true,
+  "camera_loop_closed": true,
+  "endpoint_pixel_delta": null,
+  "media_verified": false,
+  "boundary": "Assembly illustration and motion preview, not a physical construction schedule or final website deployment"
+}

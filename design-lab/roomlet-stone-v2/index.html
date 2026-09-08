@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f4f2ed">
+<title>石间 · ROOMLET 02</title>
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wordmark"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M4 10 13 3 24 7 27 20 17 27 5 23Z"/><path d="m4 10 12 5 8-8M16 15l1 12M16 15 27 20"/></svg><span>石间</span><span class="edition">ROOMLET / 02</span></div>
+  <nav aria-label="模型操作"><button id="objects-toggle" class="text-button" aria-expanded="false">独立对象 <span class="count">6</span></button><div class="export-wrap"><button id="export-toggle" class="outline-button" aria-expanded="false">导出 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-4-4 4 4 4-4M4 13v4h12v-4"/></svg></button><div id="export-menu" class="export-menu" hidden><button data-export="loop">循环动画 GLB <span>完整 A → B → A</span></button><button data-export="original">原布局 GLB <span>静态、独立对象</span></button><button data-export="modified">修改布局 GLB <span>静态、独立对象</span></button><button data-export="png">当前透明 PNG <span>1600 × 1600</span></button></div></div></nav>
+</header>
+<main>
+  <section class="scene-heading"><h1>一块石头，两种日常。</h1><p>棱角在外，柔软在内。</p></section>
+  <section id="stage" class="stage" aria-label="可旋转的动态房间模型">
+    <canvas id="room" tabindex="0" aria-label="三维模型。拖动旋转，滚轮缩放。空格暂停，方向键旋转，数字零恢复视角。"></canvas>
+    <div id="loading" class="loading"><span class="spinner"></span><span>正在布置小房间…</span></div>
+    <div class="stage-note"><span class="live-dot"></span><span id="phase-label">原布局 · 相聚</span></div>
+    <div class="view-tools" aria-label="视角控制"><button id="zoom-in" title="放大" aria-label="放大"><svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></button><button id="zoom-out" title="缩小" aria-label="缩小"><svg viewBox="0 0 20 20"><path d="M4 10h12"/></svg></button><span></span><button id="reset-view" title="恢复默认视角" aria-label="恢复默认视角"><svg viewBox="0 0 20 20"><path d="M4 8a6.5 6.5 0 1 1-.2 5M4 3v5h5"/></svg></button></div>
+    <button id="background-toggle" class="background-button" title="切换透明棋盘衬底" aria-label="切换透明棋盘衬底"><span class="checker-icon"></span></button>
+    <aside id="objects-panel" class="objects-panel" hidden><div class="panel-head"><strong>每件都能单独修改</strong><button id="objects-close" aria-label="关闭对象面板"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></div><div id="object-list"></div><div class="panel-foot">选中查看高亮 · 家具与建筑分层</div></aside>
+  </section>
+  <section class="transport" aria-label="动画控制">
+    <button id="play-toggle" class="play-button" aria-label="暂停动画" aria-pressed="true"><svg class="pause-icon" viewBox="0 0 24 24"><path d="M8 6v12M16 6v12"/></svg><svg class="play-icon" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></svg></button>
+    <div class="timeline"><div class="timeline-top"><span id="play-label">循环换位</span><span id="time-label">00.0 / 16.4 s</span></div><input id="timeline" type="range" min="0" max="16.4" step="0.001" value="0" aria-label="动画时间"><div class="timeline-bottom"><span>A · 相聚</span><span>B · 舒展</span><span>A</span></div></div>
+    <button id="speed-toggle" class="speed-button" title="切换播放速度" aria-label="播放速度 1 倍">1×</button>
+  </section>
+</main>
+<footer><span>拖动旋转 <i>·</i> 滚轮 / 双指缩放</span><span class="footer-detail">LOW-POLY STONE <i>·</i> SIX LITTLE PIECES</span></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="src/scene-data.js"></script>
+<script src="src/renderer.js"></script>
+<script src="src/viewer.js"></script>
+<script src="src/exporters.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "url": "http://127.0.0.1:8198/",
+  "surface": "isolated agent-browser playback test; in-app preview separately opened",
+  "duration_seconds": 24,
+  "observation_seconds": 25,
+  "start_time": 16.133323,
+  "end_time": 17.125091,
+  "observed_wraps": 1,
+  "paused": false,
+  "loop": true,
+  "ready_state": 4,
+  "width": 960,
+  "height": 540,
+  "decoded_frames": 1307,
+  "dropped_frames": 0,
+  "media_error": null
+}

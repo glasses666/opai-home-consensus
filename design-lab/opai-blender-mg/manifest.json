@@ -1,0 +1,13 @@
+{
+  "source": "opai-preloader/assets/oppein-official-header.jpg",
+  "blender": "5.1.2",
+  "pieces": 15,
+  "frames": 120,
+  "fps": 24,
+  "size": [
+    960,
+    540
+  ],
+  "direction": "MG plain materials, Latin only, small centered assembly",
+  "limitation": "Low-resolution official raster contour; final vector source still needed"
+}

@@ -1,0 +1,89 @@
+{
+  "method": "Conservative descendant-mesh OBB footprint + vertical interval, actual exported LINEAR/slerp tracks at 240 Hz. Not continuous collision proof or a physics solver.",
+  "samples": 4321,
+  "pairTests": 43210,
+  "minimumFurnitureSeparation": 0.18499994277954102,
+  "minimumWallClearance": 0.06799996721744539,
+  "minimumFloorOffset": -3.5762786759763188e-09,
+  "minimumFrontCoreClearance": 0.12000001668930071,
+  "onlyFurnitureAnimated": true,
+  "largeFurnitureGrounded": true,
+  "issueCount": 0,
+  "issues": [],
+  "bounds": {
+    "Furniture_Daybed": [
+      [
+        -1.0549999997019768,
+        -2.98023217215615e-10,
+        -0.5170000002980233
+      ],
+      [
+        1.0549999997019768,
+        0.948923404157691,
+        0.5149999856948853
+      ]
+    ],
+    "Furniture_Desk": [
+      [
+        -0.5899999737739563,
+        2.384185793236071e-09,
+        -0.3499999940395355
+      ],
+      [
+        0.5899999737739563,
+        1.0463088289037945,
+        0.3499999940395355
+      ]
+    ],
+    "Furniture_Cubby": [
+      [
+        -0.47999999932944776,
+        -7.450580569168253e-10,
+        -0.23999999463558197
+      ],
+      [
+        0.47999999932944776,
+        0.7599999991059303,
+        0.23999999463558197
+      ]
+    ],
+    "Furniture_Chair": [
+      [
+        -0.23499999940395355,
+        -1.7881393310492655e-09,
+        -0.22499999403953552
+      ],
+      [
+        0.23499999940395355,
+        0.7974999997019768,
+        0.22499999403953552
+      ]
+    ],
+    "Furniture_Rocker": [
+      [
+        -0.3804929256439209,
+        0.0017130218911916018,
+        -0.25
+      ],
+      [
+        0.3804929256439209,
+        0.9048286399391565,
+        0.25
+      ]
+    ]
+  },
+  "minimumByPair": {
+    "Furniture_Daybed | Furniture_Desk": 0.4550000135305656,
+    "Furniture_Daybed | Furniture_Cubby": 0.2750000413620268,
+    "Furniture_Daybed | Furniture_Chair": 1.7600000202655792,
+    "Furniture_Daybed | Furniture_Rocker": 0.5045070261544007,
+    "Furniture_Desk | Furniture_Cubby": 0.23999996967613696,
+    "Furniture_Desk | Furniture_Chair": 0.18499994277954102,
+    "Furniture_Desk | Furniture_Rocker": 0.44950708746910095,
+    "Furniture_Cubby | Furniture_Chair": 0.6050000537186861,
+    "Furniture_Cubby | Furniture_Rocker": 1.5895070631057024,
+    "Furniture_Chair | Furniture_Rocker": 0.6256857959236959
+  },
+  "allFurnitureRetained": true,
+  "noAnimatedVisibilityScaleOrGeometry": true
+}

@@ -1,4 +1,7 @@
 import { ArrowRight, Cube, HouseLine } from '@phosphor-icons/react';
+import HomePreview from './HomePreview.jsx';
+import './project-editorial.css';
+import './setup-editorial.css';
 import { DEFAULT_EXPERIENCE_STYLE, EXPERIENCE_STYLES, normalizeExperienceStyle } from './domain/experience-style.js';
 
 function savedStyle() {
@@ -38,6 +41,10 @@ function DirectionGrid({ currentStyle }) {
 }
 
 export function ExperienceLandingPage() {
+  return <HomePreview />;
+}
+
+export function PreviousExperienceLandingPage() {
   return <main className="experience-shell" data-page="home">
     <ExperienceNav />
     <section className="experience-hero">

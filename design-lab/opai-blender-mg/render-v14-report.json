@@ -1,0 +1,11 @@
+{
+  "frames": 96,
+  "unique_states_rendered": 62,
+  "identical_static_states_reused": 34,
+  "device": "METAL",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 64
+}

@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "objects": 4287,
+  "protected_exterior_components": 268,
+  "hero_camera_unchanged": true,
+  "all_three_images_valid": true,
+  "no_dof_or_animation": true,
+  "new_interior_objects": 1019,
+  "west_chair_jamb_aabb_separation_m": {
+    "Tall bay full height stone jamb": 0.2927,
+    "Tall bay full height stone jamb.001": 2.7627
+  },
+  "v03_preserved": true,
+  "boundary": "Visual furniture refinement and specific collision regression; not construction or full circulation validation"
+}

@@ -74,6 +74,17 @@ test('designer review status preserves the reviewed scene snapshot', () => {
   assert.throws(() => reviewSceneVersion(history, 'version-two', { action: 'maybe' }), /REVIEW_ACTION_INVALID/);
 });
 
+test('designer review rejects unconfirmed and stale versions', () => {
+  const initialStore = createSceneStore(createDemoScene());
+  let history = createVersionHistory(initialStore);
+  const moved = dispatchSceneCommand(initialStore, { type: 'object.setTransform', objectId: 'object-sofa', transform: { x: 2400 } });
+  history = saveSceneVersion(history, moved, { id: 'version-two' });
+  assert.throws(() => reviewSceneVersion(history, 'version-two', { action: 'approve' }), /VERSION_NOT_CONFIRMED/);
+  history = confirmSceneVersion(history, 'version-two');
+  history = saveSceneVersion(history, dispatchSceneCommand(moved, { type: 'object.setMaterial', objectId: 'object-sofa', materialId: 'mat-oak-veneer' }), { id: 'version-three' });
+  assert.throws(() => reviewSceneVersion(history, 'version-two', { action: 'approve' }), /VERSION_NOT_CURRENT/);
+});
+
 test('restoring an old version appends a reversible version instead of overwriting history', () => {
   const initialStore = createSceneStore(createDemoScene());
   let history = createVersionHistory(initialStore);

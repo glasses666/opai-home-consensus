@@ -1,0 +1,17 @@
+/* Only content moves: headers and canvas geometry remain fixed. */
+@keyframes content-arrive { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+@keyframes step-forward-soft { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
+@keyframes step-back-soft { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:none; } }
+.project-library__content, .project-setup__shell, .generation-stage, .handoff-grid { animation:content-arrive 300ms cubic-bezier(.2,.7,.2,1) both; }
+.project-setup .project-setup__step { animation:step-forward-soft 260ms cubic-bezier(.2,.7,.2,1) both; }
+.project-setup .project-setup__step--backward { animation-name:step-back-soft; }
+.project-setup__progress li > span { transition:background-color 220ms ease, border-color 220ms ease, color 220ms ease; }
+.project-demo .project-sidebar > article, .project-demo .version-drawer { animation:content-arrive 220ms ease both; }
+.project-demo .pascal-loading-preview { opacity:1; transition:opacity 380ms ease; background:#f5f1e9; }
+.project-demo .pascal-loading-preview[data-ready='true'] { opacity:0; pointer-events:none; }
+@media(prefers-reduced-motion:reduce) {
+  .project-library__content, .project-setup__shell, .generation-stage, .handoff-grid,
+  .project-setup .project-setup__step, .project-demo .project-sidebar > article,
+  .project-demo .version-drawer { animation:none; }
+  .project-setup__progress li > span, .project-demo .pascal-loading-preview { transition:none; }
+}

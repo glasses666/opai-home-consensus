@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "objects": 1176,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "model_bounds_metres": [
+    25.99,
+    14.7,
+    8.0
+  ],
+  "source_dimensions_measured": false,
+  "root_and_roof_components": true,
+  "camera": "west-front oblique",
+  "homepage_replaced": false,
+  "animation": false,
+  "limits": "Visible-proportion reconstruction; rear elevation inferred, not pixel-perfect or engineering validation"
+}

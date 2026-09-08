@@ -23,6 +23,28 @@
   transform: translateZ(0);
 }
 
+/* A mobile column has no definite parent height. Percentage height + the
+   editor shell's padding fed canvas measurements back into its own parent,
+   growing the render target every frame until the GPU pipeline went black. */
+.pascal-stage[data-render-profile="light"] {
+  height: clamp(500px, 64svh, 620px);
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+.pascal-stage[data-render-profile="light"] > .dark {
+  height: 100%;
+  min-height: 0;
+}
+
+/* The upstream hint describes mouse buttons, not touch gestures, and its
+   desktop-sized panel obscures the small portrait canvas. */
+@media (max-width: 640px) and (pointer: coarse) {
+  .pascal-stage section[aria-label="Camera controls hint"] {
+    display: none;
+  }
+}
+
 .pascal-stage > .dark,
 .pascal-stage canvas {
   background: #fff !important;

@@ -9,13 +9,16 @@ import {
   centerCameraPoseOnFloorPlan,
   centerCameraPoseOnRoom,
   cameraPresetToPose,
+  fitPortraitWholeHomePose,
   interpolateCameraPose,
+  cameraTransitionDuration,
   isTrackpadPanWheel,
   isTrackpadPinchWheel,
   panCameraPose,
   zoomCameraPose,
 } from './pascal/trackpad-navigation.js';
 import './pascal/pascal.css';
+import StudioPresentation from './pascal/StudioPresentation.jsx';
 
 const BUILDING_ID = 'building_oppein_demo';
 const LEVEL_ID = 'level_oppein_demo';
@@ -94,7 +97,9 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
     if (!(ready && editorLoaded)) return;
     const viewer = useViewer.getState();
     const edgeMode = interactionMode === 'quick' ? 'soft' : 'off';
-    viewer.setSceneTheme('overcast');
+    // Softer warm daylight separates fabric, oak and cabinetry without the
+    // former bright white studio key flattening their fine authored detail.
+    viewer.setSceneTheme('paper');
     viewer.setTransparentBackground(true);
     viewer.setShading('rendered');
     viewer.setTextures(true);
@@ -140,14 +145,20 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
     let animationFrame = 0;
     const unsubscribe = subscribeCameraPose((pose) => {
       if (applied) return;
-      const requestedPose = requestedPreset.kind === 'room_overhead' && activeRoom
-        ? centerCameraPoseOnRoom(pose, activeRoom)
-        : cameraPresetToPose(requestedPreset, pose.projection);
+      // URL/restored room views own their authored pose. The generic room-centering
+      // fallback places large rooms much farther away and makes them look whole-home.
+      const canonicalPose = cameraPresetToPose(requestedPreset, 'perspective');
+      const viewport = stageRef.current?.querySelector('canvas')?.getBoundingClientRect();
+      const requestedPose = requestedPreset.kind === 'whole_home'
+        ? fitPortraitWholeHomePose(canonicalPose, scene.floorPlan.bounds, viewport)
+        : canonicalPose;
       if (!requestedPose) return;
       applied = true;
+      const duration = cameraTransitionDuration(pose, requestedPose, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      if (!duration) { emitter.emit('camera-controls:apply-pose', requestedPose); return; }
       const startedAt = performance.now();
       const animate = (now) => {
-        const progress = Math.min(1, (now - startedAt) / 1800);
+        const progress = Math.min(1, (now - startedAt) / duration);
         emitter.emit('camera-controls:apply-pose', interpolateCameraPose(pose, requestedPose, progress));
         if (progress < 1) animationFrame = requestAnimationFrame(animate);
       };
@@ -157,7 +168,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
       unsubscribe();
       if (animationFrame) cancelAnimationFrame(animationFrame);
     };
-  }, [activeRoom, editorLoaded, ready, requestedPreset, viewRequest?.sequence]);
+  }, [activeRoom, editorLoaded, ready, requestedPreset, scene.floorPlan.bounds, viewRequest?.sequence]);
 
   useEffect(() => {
     if (!editorLoaded) return undefined;
@@ -187,11 +198,12 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
 
   return (
     <div ref={stageRef} className="pascal-stage" data-interaction={interactionMode} data-render-profile={renderProfile.mode}>
-      {!editorLoaded && <div className="pascal-loading-preview" role="status">{loadingFallback ?? '正在载入实时 3D…'}</div>}
+      <div className="pascal-loading-preview" data-ready={editorLoaded} aria-hidden={editorLoaded || undefined} role={editorLoaded ? undefined : 'status'}>{!editorLoaded && (loadingFallback ?? '正在载入实时 3D…')}</div>
       {editorLoaded && interactionMode === 'browse' && <PascalBrowseSelectionBridge mapping={projection.mapping} nodes={projection.sceneGraph.nodes} onSelect={onSelect} />}
       {editorLoaded && interactionMode === 'quick' && <PascalSelectionBridge editableObjectIds={editableObjectIds} mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       {editorLoaded && <PascalResidentModeGuard interactionMode={interactionMode} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
+      {editorLoaded && <StudioPresentation model={scene} mapping={projection.mapping} />}
       {editorLoaded && agentCallout?.roomId === activeRoomId && <div className="pascal-agent-callout" role="status" aria-live="polite">
         <strong>AGENT 已修改{agentCallout.roomLabel}</strong>
         <span>理由是：{agentCallout.reason}</span>

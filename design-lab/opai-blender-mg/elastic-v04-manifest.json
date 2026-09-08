@@ -1,0 +1,18 @@
+{
+  "counts": {
+    "0": 4,
+    "1": 3,
+    "2": 3,
+    "3": 4,
+    "4": 3,
+    "5": 3
+  },
+  "total_parts": 23,
+  "fps": 24,
+  "frames": 72,
+  "seconds": 3,
+  "entry": "local-center damped spring with overshoot",
+  "exit": "7 percent anticipation then rapid shrink",
+  "checks": "O four parts; all scales zero at loop ends; all scales one on hold; fixed geometry centers",
+  "limits": "transform-based softness, not deformable sponge simulation; raster-derived logo outlines"
+}

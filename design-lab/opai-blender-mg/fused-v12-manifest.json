@@ -1,0 +1,13 @@
+{
+  "method": "Per-frame exact union, common front plane, coplanar dissolve, exterior-only bevel",
+  "frames": 96,
+  "fps": 24,
+  "unique_letter_states": 259,
+  "preserved": "Stroke XY elastic scale and timing, positions, colors, lights, camera",
+  "changed": "Depth stays constant during growth; no hold-only mesh switching",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 64
+}

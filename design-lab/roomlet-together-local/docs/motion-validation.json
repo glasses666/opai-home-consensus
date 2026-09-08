@@ -1,0 +1,98 @@
+{
+  "method": "Conservative descendant-mesh OBB footprint + vertical interval, actual exported LINEAR/slerp tracks at 240 Hz. Not continuous collision proof or a physics solver.",
+  "samples": 4321,
+  "pairTests": 43210,
+  "minimumFurnitureSeparation": 0.05900000864267252,
+  "minimumWallClearance": 0.06749998637992416,
+  "minimumFloorOffset": -2.5331974018438785e-09,
+  "minimumFrontCoreClearance": 0.021287008932899587,
+  "onlyFurnitureAnimated": true,
+  "largeFurnitureGrounded": true,
+  "issueCount": 0,
+  "issues": [],
+  "bounds": {
+    "Furniture_Bed": [
+      [
+        -0.9399999976158142,
+        -2.98023217215615e-10,
+        -1.0890000029802323
+      ],
+      [
+        0.9399999976158142,
+        1.030000010728836,
+        1.0700000524520874
+      ]
+    ],
+    "Furniture_Wardrobe_A": [
+      [
+        -0.4504999998509884,
+        -7.450580569168253e-10,
+        -0.2500000008940697
+      ],
+      [
+        0.4504999998509884,
+        1.6000000001490116,
+        0.31500000020861624
+      ]
+    ],
+    "Furniture_Wardrobe_B": [
+      [
+        -0.4504999998509884,
+        -7.450580569168253e-10,
+        -0.2500000008940697
+      ],
+      [
+        0.4504999998509884,
+        1.6000000001490116,
+        0.31500000020861624
+      ]
+    ],
+    "Furniture_Dresser": [
+      [
+        -0.5899999737739563,
+        -7.450580569168253e-10,
+        -0.23999999463558197
+      ],
+      [
+        0.5899999737739563,
+        0.7815000007301569,
+        0.2815000000745058
+      ]
+    ],
+    "Furniture_Bedside": [
+      [
+        -0.20999999344348907,
+        1.1920928966180355e-09,
+        -0.20999999344348907
+      ],
+      [
+        0.20999999344348907,
+        0.8999999761581421,
+        0.20999999344348907
+      ]
+    ]
+  },
+  "minimumByPair": {
+    "Furniture_Bed | Furniture_Wardrobe_A": 0.9449999407603373,
+    "Furniture_Bed | Furniture_Wardrobe_B": 0.9449999407603373,
+    "Furniture_Bed | Furniture_Dresser": 0.07934466878884772,
+    "Furniture_Bed | Furniture_Bedside": 0.1799999624490738,
+    "Furniture_Wardrobe_A | Furniture_Wardrobe_B": 0.05900000864267252,
+    "Furniture_Wardrobe_A | Furniture_Dresser": 1.1595000144541243,
+    "Furniture_Wardrobe_A | Furniture_Bedside": 3.0249999468621027,
+    "Furniture_Wardrobe_B | Furniture_Dresser": 0.1995000061094749,
+    "Furniture_Wardrobe_B | Furniture_Bedside": 3.0249999888250376,
+    "Furniture_Dresser | Furniture_Bedside": 1.9999999850988388
+  },
+  "allFurnitureRetained": true,
+  "noAnimatedVisibilityScaleOrGeometry": true,
+  "layoutMetrics": {
+    "bedSideClearanceOriginal": 0.9449999407603373,
+    "bedSideClearanceModified": 1.0249999240710368,
+    "bedFootToDresserOriginal": 0.6199999004602432,
+    "bedFootToOpenFloorModified": 1.2249999475479125,
+    "storageModulesOriginal": 3,
+    "storageModulesModified": 3,
+    "note": "Stylized model dimensions, not construction advice or a regulatory accessibility assessment."
+  }
+}

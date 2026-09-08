@@ -1,0 +1,82 @@
+{
+  "sofa": {
+    "source": "SM_Modern_Sofa_2",
+    "bytes": 423660,
+    "sourceBounds": [
+      2.76237476,
+      0.8559196747000001,
+      1.0423747299000001
+    ],
+    "rotationY": -1.5707963267948966
+  },
+  "dining-table": {
+    "source": "SM_Modern_Table",
+    "bytes": 234236,
+    "sourceBounds": [
+      1.929808915,
+      0.779782767954,
+      0.909336447
+    ],
+    "rotationY": 0
+  },
+  "dining-chair": {
+    "source": "SM_Modern_Chair_1",
+    "bytes": 382852,
+    "sourceBounds": [
+      0.637464762,
+      0.85084258755,
+      0.646511108
+    ],
+    "rotationY": 0
+  },
+  "coffee-table": {
+    "source": "SM_Coffee_Table",
+    "bytes": 100072,
+    "sourceBounds": [
+      0.939018757,
+      0.365000237781,
+      0.939018637
+    ],
+    "rotationY": 0
+  },
+  "lounge-chair": {
+    "source": "SM_Elegant_chair",
+    "bytes": 807756,
+    "sourceBounds": [
+      1.175495207,
+      1.254267358515,
+      1.23029244
+    ],
+    "rotationY": 0
+  },
+  "double-bed": {
+    "source": "SM_Modern_Bed_1",
+    "bytes": 527496,
+    "sourceBounds": [
+      2.3403053199999997,
+      1.141325545993893,
+      2.9854489600000003
+    ],
+    "rotationY": 0
+  },
+  "wardrobe": {
+    "source": "wardrobe-assembled",
+    "bytes": 134412,
+    "sourceBounds": [
+      2.82251823,
+      2.568909329098,
+      0.757816672
+    ],
+    "rotationY": 0
+  },
+  "desk": {
+    "source": "SM_Modern_Table",
+    "bytes": 234236,
+    "sourceBounds": [
+      1.929808915,
+      0.779782767954,
+      0.909336447
+    ],
+    "rotationY": 0
+  }
+}

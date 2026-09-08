@@ -1,0 +1,20 @@
+[Unit]
+Description=Refresh and verify OPAI Feishu user authorization
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=opai
+Group=opai
+Environment=HOME=/opt/opai/home
+Environment=PATH=/usr/local/node-v20.18.0-linux-x64/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/opt/opai/home
+ExecStart=/usr/local/node-v20.18.0-linux-x64/bin/node /opt/opai/maintenance/feishu-auth-maintenance.mjs
+TimeoutStartSec=60
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/opai/home/.lark-cli

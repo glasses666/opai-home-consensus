@@ -1,0 +1,39 @@
+{
+  "method": "Playwright + Chromium, owned HTML loaded in memory, offline context; file URL navigation blocked by environment administrator",
+  "browserPlugin": "not available",
+  "errors": [],
+  "checks": {
+    "pageIdentity": {
+      "title": "石间 · ROOMLET 02",
+      "entry": "preview.html (in-memory HTML, about:blank)"
+    },
+    "meaningfulContent": true,
+    "autoplay": true,
+    "pauseFreezesTime": true,
+    "resumeAdvancesTime": true,
+    "architectureUnchanged": true,
+    "dragRotates": true,
+    "wheelZooms": true,
+    "resetView": true,
+    "speedControl": true,
+    "namedObjectSelection": true,
+    "checkerToggle": true,
+    "animatedExportDownload": true,
+    "desktopWebGLError": 0,
+    "mobileOverflow": false,
+    "mobileControlVisible": true,
+    "pinchZooms": true,
+    "mobileWebGLError": 0,
+    "externalNetworkRequests": [],
+    "viewports": [
+      "1440 × 1000",
+      "390 × 844"
+    ]
+  },
+  "untested": [
+    "physical iPhone/iPad",
+    "Safari/WebKit",
+    "Firefox",
+    "hardware GPU performance across devices"
+  ]
+}

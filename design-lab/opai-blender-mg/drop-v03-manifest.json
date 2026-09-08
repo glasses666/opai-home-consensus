@@ -1,0 +1,102 @@
+{
+  "gravity": 9.81,
+  "height": 5.5,
+  "restitution": 0.1,
+  "bounce_height": 0.05500000000000001,
+  "fps": 24,
+  "frames": 84,
+  "pieces": [
+    {
+      "name": "O_stroke_0",
+      "release": 1,
+      "impact": 26.41400321934794,
+      "settled": 31.49680386321753
+    },
+    {
+      "name": "O_stroke_1",
+      "release": 11,
+      "impact": 36.41400321934794,
+      "settled": 41.49680386321753
+    },
+    {
+      "name": "P_stroke_0",
+      "release": 3,
+      "impact": 28.41400321934794,
+      "settled": 33.49680386321753
+    },
+    {
+      "name": "P_stroke_1",
+      "release": 13,
+      "impact": 38.41400321934794,
+      "settled": 43.49680386321753
+    },
+    {
+      "name": "P_stroke_0.001",
+      "release": 5,
+      "impact": 30.41400321934794,
+      "settled": 35.49680386321753
+    },
+    {
+      "name": "P_stroke_1.001",
+      "release": 15,
+      "impact": 40.41400321934794,
+      "settled": 45.49680386321753
+    },
+    {
+      "name": "E_stroke_0",
+      "release": 7,
+      "impact": 32.41400321934794,
+      "settled": 37.49680386321753
+    },
+    {
+      "name": "E_stroke_1",
+      "release": 17,
+      "impact": 42.41400321934794,
+      "settled": 47.49680386321753
+    },
+    {
+      "name": "I_stroke_0",
+      "release": 9,
+      "impact": 34.41400321934794,
+      "settled": 39.49680386321753
+    },
+    {
+      "name": "I_stroke_1",
+      "release": 19,
+      "impact": 44.41400321934794,
+      "settled": 49.49680386321753
+    },
+    {
+      "name": "N_stroke_0",
+      "release": 11,
+      "impact": 36.41400321934794,
+      "settled": 41.49680386321753
+    },
+    {
+      "name": "N_stroke_1",
+      "release": 21,
+      "impact": 46.41400321934794,
+      "settled": 51.49680386321753
+    },
+    {
+      "name": "Orange bracket 0",
+      "release": 11,
+      "impact": 36.41400321934794,
+      "settled": 41.49680386321753
+    },
+    {
+      "name": "Orange bracket 1",
+      "release": 21,
+      "impact": 46.41400321934794,
+      "settled": 51.49680386321753
+    },
+    {
+      "name": "Orange bracket 2",
+      "release": 1,
+      "impact": 26.41400321934794,
+      "settled": 31.49680386321753
+    }
+  ],
+  "verification": "unit scale; vertical-only; no seat undershoot; increasing fall speed; each upper impacts after its own lower settles with less than 5-frame gap",
+  "limitation": "Analytic choreography, not rigid-body contact solver or full mesh intersection proof"
+}

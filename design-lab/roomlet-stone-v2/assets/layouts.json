@@ -1,0 +1,102 @@
+{
+  "original": {
+    "Furniture_Sofa": {
+      "position": [
+        -0.47,
+        0.08,
+        -1.13
+      ],
+      "rotationY": 0
+    },
+    "Furniture_DiningTable": {
+      "position": [
+        0.25,
+        0.08,
+        0.6
+      ],
+      "rotationY": 0
+    },
+    "Furniture_DiningChair_01": {
+      "position": [
+        -0.96,
+        0.08,
+        0.6
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_DiningChair_02": {
+      "position": [
+        1.43,
+        0.08,
+        0.6
+      ],
+      "rotationY": -1.5707963267948966
+    },
+    "Furniture_FloorLamp": {
+      "position": [
+        -1.78,
+        0.08,
+        0.19
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Plant": {
+      "position": [
+        1.64,
+        0.08,
+        -1.23
+      ],
+      "rotationY": 0
+    }
+  },
+  "modified": {
+    "Furniture_Sofa": {
+      "position": [
+        -1.54,
+        0.08,
+        -0.06
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_DiningTable": {
+      "position": [
+        0.72,
+        0.08,
+        -0.14
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_DiningChair_01": {
+      "position": [
+        0.7,
+        0.08,
+        -1.27
+      ],
+      "rotationY": 0
+    },
+    "Furniture_DiningChair_02": {
+      "position": [
+        0.73,
+        0.08,
+        1.12
+      ],
+      "rotationY": -3.141592653589793
+    },
+    "Furniture_FloorLamp": {
+      "position": [
+        -1.67,
+        0.08,
+        1.49
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Plant": {
+      "position": [
+        1.7,
+        0.08,
+        0.96
+      ],
+      "rotationY": -0.48
+    }
+  }
+}

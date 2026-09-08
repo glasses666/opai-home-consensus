@@ -11,6 +11,33 @@ const STYLE_ALIASES = Object.freeze({
   industrial: ['工业风', 'industrial', 'loft', '混凝土', '钢', '裸露结构'],
 });
 
+// Only explicit style names express rejection: disliking one material must not ban an entire style.
+const STYLE_NAMES = Object.freeze({
+  scandinavian: ['北欧', 'scandinavian', 'nordic'],
+  japandi: ['日式北欧', 'japandi', '日式', '侘寂'],
+  minimalist: ['极简', 'minimalist', 'minimalism'],
+  contemporary: ['当代', 'contemporary', '现代混搭'],
+  'mid-century-modern': ['中世纪', '复古', 'mid-century', 'mid century'],
+  'quiet-luxury': ['静奢', 'quiet luxury'],
+  'new-chinese': ['新中式', 'new chinese'],
+  industrial: ['工业风', 'industrial', 'loft'],
+});
+
+function excludedStyles(input) {
+  const names = Object.entries(STYLE_NAMES).flatMap(([styleId, aliases]) => aliases.map((name) => ({ name, styleId })))
+    .sort((a, b) => b.name.length - a.name.length);
+  const pattern = new RegExp(names.map(({ name }) => name).join('|'), 'gi');
+  const rejected = new Set();
+  const discussed = new Set();
+  for (const match of input.matchAll(pattern)) {
+    const styleId = names.find(({ name }) => name.toLowerCase() === match[0].toLowerCase()).styleId;
+    const prefix = input.slice(0, match.index).split(/[，,。；;！？!?\n]/).at(-1);
+    if (/(?:不要|不喜欢|不想要|不考虑|排除|拒绝|避免)\s*(?:走|用|做成|采用)?\s*$/i.test(prefix)) rejected.add(styleId);
+    else discussed.add(styleId);
+  }
+  return [...rejected].filter((styleId) => !discussed.has(styleId));
+}
+
 const FACETS = Object.freeze({
   'small-home': ['小户型', '小空间', '小公寓', 'compact', 'small', '48 平', '48平'],
   family: ['家庭', '孩子', '三代', '同堂', '亲子', 'family', 'children'],
@@ -112,9 +139,11 @@ export function retrieveStyleCases(input, { limit = 4, corpus = designStyleCases
 
   const query = normalize(raw);
   const styleHits = disambiguateStyles(query, detect(query, STYLE_ALIASES));
+  const excludedStyleIds = excludedStyles(raw);
+  for (const styleId of excludedStyleIds) delete styleHits[styleId];
   const facetHits = detect(query, FACETS);
   const expectedStyles = Object.keys(styleHits);
-  const scored = corpus.cases.map((item) => scoreCase(item, query, styleHits, facetHits))
+  const scored = corpus.cases.filter((item) => !excludedStyleIds.includes(item.styleId)).map((item) => scoreCase(item, query, styleHits, facetHits))
     .filter(({ score }) => score > 0)
     .sort((left, right) => right.score - left.score || left.item.id.localeCompare(right.item.id));
   const selected = rerank(scored, expectedStyles, limit);
@@ -131,7 +160,7 @@ export function retrieveStyleCases(input, { limit = 4, corpus = designStyleCases
   return Object.freeze({
     query: raw,
     status: results.length ? 'ready' : 'insufficient_context',
-    detected: Object.freeze({ styleIds: Object.freeze(expectedStyles), facets: Object.freeze(Object.keys(facetHits)) }),
+    detected: Object.freeze({ styleIds: Object.freeze(expectedStyles), excludedStyleIds: Object.freeze(excludedStyleIds), facets: Object.freeze(Object.keys(facetHits)) }),
     message: results.length ? '案例只用于方向比较；规范、报价和施工可行性仍需独立数据校验。' : '没有足够条件选出可靠案例，应先询问风格、房间或家庭需求。',
     results: Object.freeze(results),
   });

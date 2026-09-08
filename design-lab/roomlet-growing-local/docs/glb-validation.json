@@ -1,0 +1,40 @@
+{
+  "roomlet-growing-loop.glb": {
+    "bytes": 1583492,
+    "namedNodes": 104,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "duration": 18.0,
+    "samples": 1081,
+    "channels": 10,
+    "htmlAndGLBAnimationByteExact": true,
+    "loopEndpointsByteExact": true,
+    "architectureNotAnimated": true,
+    "independentTrimeshMeshCount": "not installed"
+  },
+  "roomlet-growing-modified.glb": {
+    "bytes": 1425136,
+    "namedNodes": 104,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "staticLayoutCorrect": true,
+    "independentTrimeshMeshCount": "not installed"
+  },
+  "roomlet-growing-original.glb": {
+    "bytes": 1425104,
+    "namedNodes": 104,
+    "embeddedTextures": 3,
+    "independentFurnitureGroups": 5,
+    "twoWallsOneFloor": true,
+    "finiteAttributes": true,
+    "validIndicesAndNormals": true,
+    "staticLayoutCorrect": true,
+    "independentTrimeshMeshCount": "not installed"
+  }
+}

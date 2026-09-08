@@ -87,6 +87,33 @@ export function cameraPresetToPose(preset, fallbackProjection = 'perspective') {
   };
 }
 
+// Narrow portrait whole-home framing only: retain the authored target, orbit angle
+// and FOV, but dolly back until the house bounds fit inside both frustum axes.
+export function fitPortraitWholeHomePose(pose, bounds, { width, height } = {}) {
+  if (!pose || !bounds || !(width > 0 && width <= 640 && height > width) || pose.projection !== 'perspective') return pose;
+  const offset = pose.position.map((value, index) => value - pose.target[index]);
+  const distance = Math.hypot(...offset);
+  const horizontal = Math.hypot(offset[0], offset[2]);
+  if (!(distance > 0 && horizontal > 0)) return pose;
+  const back = offset.map((value) => value / distance);
+  const right = [offset[2] / horizontal, 0, -offset[0] / horizontal];
+  const up = [back[1] * right[2], back[2] * right[0] - back[0] * right[2], -back[1] * right[0]];
+  const tanY = Math.tan((pose.fov ?? 50) * Math.PI / 360) * 0.88;
+  const tanX = tanY * width / height;
+  let fittedDistance = distance;
+  const dot = (a, b) => a.reduce((sum, value, index) => sum + value * b[index], 0);
+  const padding = 0.15;
+  for (const x of [bounds.x / 1000 - padding, (bounds.x + bounds.width) / 1000 + padding]) {
+    for (const z of [bounds.z / 1000 - padding, (bounds.z + bounds.depth) / 1000 + padding]) {
+      for (const y of [-padding, (bounds.height ?? 2800) / 1000 + padding]) {
+        const point = [x, y, z].map((value, index) => value - pose.target[index]);
+        fittedDistance = Math.max(fittedDistance, dot(point, back) + Math.abs(dot(point, right)) / tanX, dot(point, back) + Math.abs(dot(point, up)) / tanY);
+      }
+    }
+  }
+  return { ...pose, position: pose.target.map((value, index) => value + back[index] * fittedDistance) };
+}
+
 export function interpolateCameraPose(from, to, progress) {
   const amount = Math.max(0, Math.min(1, progress));
   if (amount === 0) return { ...from, position: [...from.position], target: [...from.target] };
@@ -101,4 +128,15 @@ export function interpolateCameraPose(from, to, progress) {
     target: [sampled.target.x, sampled.target.y, sampled.target.z],
     ...(Number.isFinite(from.fov) && Number.isFinite(to.fov) ? { fov: from.fov + (to.fov - from.fov) * eased } : {}),
   };
+}
+
+// Small reframes stay responsive; long moves and large turns have time to settle.
+export function cameraTransitionDuration(from, to, reducedMotion = false) {
+  if (reducedMotion) return 0;
+  const distance = Math.hypot(...from.target.map((v, i) => to.target[i] - v));
+  const a = from.position.map((v, i) => v - from.target[i]);
+  const b = to.position.map((v, i) => v - to.target[i]);
+  const denominator = Math.hypot(...a) * Math.hypot(...b);
+  const angle = denominator > 0 ? Math.acos(Math.max(-1, Math.min(1, a.reduce((sum, v, i) => sum + v * b[i], 0) / denominator))) : 0;
+  return Math.min(2400, 1000 + distance * 90 + angle * 450);
 }

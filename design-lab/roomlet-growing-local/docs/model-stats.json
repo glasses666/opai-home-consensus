@@ -1,0 +1,20 @@
+{
+  "scene": "growing",
+  "namedNodes": 103,
+  "furnitureGroups": 5,
+  "uniqueGeometries": 62,
+  "trianglesUnique": 39796,
+  "trianglesInstanced": 49180,
+  "materials": 17,
+  "textures": 3,
+  "walls": 2,
+  "floors": 1,
+  "shell": {
+    "solidValid": true,
+    "planarFaces": 94,
+    "shellTriangles": 200
+  },
+  "animationDuration": 18.0,
+  "samplesPerTrack": 1081,
+  "animationChannels": 10
+}

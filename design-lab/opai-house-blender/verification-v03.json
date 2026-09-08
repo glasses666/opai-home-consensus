@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "protected_structures": 76,
+  "structure_geometry_unchanged": true,
+  "hero_camera_unchanged": true,
+  "objects": 3415,
+  "hero_pixels": [
+    2560,
+    1440
+  ],
+  "detail_pixels": [
+    1920,
+    1080
+  ],
+  "olive_leaves": 2470,
+  "detail_camera_saved": true,
+  "v02_preserved": true,
+  "animation": false,
+  "boundary": "Visual detail pass; no structural engineering, product catalogue or website E2E claim"
+}

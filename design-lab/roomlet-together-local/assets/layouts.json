@@ -1,0 +1,86 @@
+{
+  "original": {
+    "Furniture_Bed": {
+      "position": [
+        0.4,
+        0.08,
+        -0.5
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Wardrobe_A": {
+      "position": [
+        -1.8,
+        0.08,
+        -1.25
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Wardrobe_B": {
+      "position": [
+        -1.8,
+        0.08,
+        0.2
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Dresser": {
+      "position": [
+        0.25,
+        0.08,
+        1.43
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Bedside": {
+      "position": [
+        1.75,
+        0.08,
+        -1.19
+      ],
+      "rotationY": 0
+    }
+  },
+  "modified": {
+    "Furniture_Bed": {
+      "position": [
+        0.48,
+        0.08,
+        -0.5
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Wardrobe_A": {
+      "position": [
+        -1.8,
+        0.08,
+        -1.25
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Wardrobe_B": {
+      "position": [
+        -1.8,
+        0.08,
+        -0.29
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Dresser": {
+      "position": [
+        -1.8,
+        0.08,
+        0.95
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Bedside": {
+      "position": [
+        1.81,
+        0.08,
+        -1.19
+      ],
+      "rotationY": 0
+    }
+  }
+}

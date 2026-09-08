@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1600, height=900">
+  <title>欧派 · 连锁翻牌循环 — 小样 03</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { width: 1600px; height: 900px; overflow: hidden; background: #FFFFFF; }
+    .scene-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .assembly { width: 384px; height: 120px; display: flex; align-items: center; justify-content: center; }
+    .tiles { width: 384px; height: 72px; display: grid; grid-template-columns: repeat(16,24px); grid-template-rows: repeat(3,24px); }
+    .cell { width: 24px; height: 24px; perspective: 220px; }
+    .tile { width: 24px; height: 24px; background-image: url('./assets/oppein-official-header.jpg'); background-repeat: no-repeat; background-size: 545.495327px 61.009346px; backface-visibility: hidden; transform-origin: 50% 50%; will-change: transform; }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-w0se" id="root" class="clip" data-composition-id="opai-preloader" data-start="0" data-duration="14.4" data-width="1600" data-height="900">
+    <div data-hf-id="hf-cn5c" class="scene-content">
+      <div data-hf-id="hf-zrzn" class="assembly" aria-label="欧派 OPPEIN 官方商标">
+        <div data-hf-id="hf-czj5" class="tiles" id="tiles" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Crop the official header at its 214px brand boundary; do not redraw or stretch the mark.
+    const grid = document.getElementById('tiles');
+    for (let row = 0; row < 3; row++) {
+      for (let column = 0; column < 16; column++) {
+        const cell = document.createElement('div'); cell.className = 'cell';
+        const tile = document.createElement('div'); tile.className = 'tile';
+        tile.id = `tile-${row}-${column}`;
+        tile.dataset.row = row; tile.dataset.column = column;
+        tile.style.backgroundPosition = `${-column * 24}px ${5.495327 - row * 24}px`;
+        cell.append(tile); grid.append(cell);
+      }
+    }
+    const tl = gsap.timeline({ paused: true });
+    tl.addLabel('blank', 0);
+    tl.addLabel('reveal', .15);
+    tl.addLabel('hold', 1.88);
+    tl.addLabel('exit', 3.05);
+    document.querySelectorAll('.tile').forEach(tile => {
+      const column = Number(tile.dataset.column), row = Number(tile.dataset.row);
+      // Continuous forward turns: back -> front -> back. No opacity reveal or random scatter.
+      for (let cycle = 0; cycle < 3; cycle++) {
+        const start = cycle * 4.8;
+        tl.fromTo(tile, { rotationX: -180 }, {
+          rotationX: 0, duration: .65, ease: 'power2.out', immediateRender: cycle === 0
+        }, start + .15 + column * .065 + row * .05);
+        tl.to(tile, { rotationX: 180, duration: .6, ease: 'power2.in' },
+          start + 3.05 + column * .055 + row * .045);
+        tl.set(tile, { rotationX: -180 }, start + 4.8);
+      }
+    });
+    // Reset only while every face is hidden: the cycle boundary has identical white pixels.
+    window.__timelines = window.__timelines || {};
+    window.__timelines['opai-preloader'] = tl;
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "purpose": "Complete house hero still for visual review; not deployed",
+  "model": "opai-complete-house-v01.blend",
+  "builder": "build.py",
+  "render": "house-hero-v01.png",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 128,
+  "engine": "CYCLES",
+  "camera": "orthographic oblique; right-biased",
+  "dof": false,
+  "root": "RESIDENCE · complete architectural assembly",
+  "objects": 868,
+  "source": "Original procedural geometry and materials; no imported meshes, textures or official product claims",
+  "constraints": [
+    "Complete roofs and closed exterior",
+    "No cutaway",
+    "No homepage replacement",
+    "No video output"
+  ],
+  "simplifications": [
+    "Concept architecture, not a buildable or engineered plan",
+    "Selective furnishings visible through glass",
+    "No HVAC or detailed waterproofing"
+  ]
+}

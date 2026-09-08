@@ -1,0 +1,12 @@
+{
+  "method": "2D contour union before extrusion; shared depth; exterior bevel",
+  "frames": 96,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 64,
+  "stroke_overlap_scale": 1.012,
+  "unique_states": 270,
+  "limit": "Discrete 24fps geometry bake; original XY timing preserved, depth fixed"
+}

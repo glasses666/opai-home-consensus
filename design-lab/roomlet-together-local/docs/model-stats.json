@@ -1,0 +1,20 @@
+{
+  "scene": "together",
+  "namedNodes": 95,
+  "furnitureGroups": 5,
+  "uniqueGeometries": 47,
+  "trianglesUnique": 28040,
+  "trianglesInstanced": 42800,
+  "materials": 17,
+  "textures": 3,
+  "walls": 2,
+  "floors": 1,
+  "shell": {
+    "solidValid": true,
+    "planarFaces": 94,
+    "shellTriangles": 200
+  },
+  "animationDuration": 18.0,
+  "samplesPerTrack": 1081,
+  "animationChannels": 10
+}

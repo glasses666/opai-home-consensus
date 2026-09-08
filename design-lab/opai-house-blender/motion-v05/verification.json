@@ -1,0 +1,70 @@
+{
+  "passed": true,
+  "frame_count": 320,
+  "pixels": [
+    960,
+    540
+  ],
+  "fps": 20,
+  "duration_s": 16,
+  "endpoints_within_one_8bit_level": true,
+  "endpoint_max_pixel_delta": 0.003921627998352051,
+  "start_end_camera_identical": true,
+  "states": [
+    {
+      "frame": 1,
+      "solid_z": 9.999999747378752e-05,
+      "wire_z": 0.003000000026077032,
+      "visible_solids": 0
+    },
+    {
+      "frame": 26,
+      "solid_z": 9.999999747378752e-05,
+      "wire_z": 0.012572357431054115,
+      "visible_solids": 0
+    },
+    {
+      "frame": 60,
+      "solid_z": 0.04296875,
+      "wire_z": 0.7989804744720459,
+      "visible_solids": 4247
+    },
+    {
+      "frame": 103,
+      "solid_z": 1.0,
+      "wire_z": 1.0,
+      "visible_solids": 4247
+    },
+    {
+      "frame": 160,
+      "solid_z": 1.0,
+      "wire_z": 1.0,
+      "visible_solids": 4247
+    },
+    {
+      "frame": 206,
+      "solid_z": 1.0,
+      "wire_z": 1.0,
+      "visible_solids": 4247
+    },
+    {
+      "frame": 256,
+      "solid_z": 9.999999747378752e-05,
+      "wire_z": 1.0,
+      "visible_solids": 0
+    },
+    {
+      "frame": 278,
+      "solid_z": 9.999999747378752e-05,
+      "wire_z": 0.378028929233551,
+      "visible_solids": 0
+    },
+    {
+      "frame": 320,
+      "solid_z": 9.999999747378752e-05,
+      "wire_z": 0.003000000026077032,
+      "visible_solids": 0
+    }
+  ],
+  "boundary": "Motion study, no production quality or homepage deployment claim"
+}

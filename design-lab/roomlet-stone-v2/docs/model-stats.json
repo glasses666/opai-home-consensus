@@ -1,0 +1,16 @@
+{
+  "namedNodes": 73,
+  "furnitureGroups": 6,
+  "uniqueGeometries": 45,
+  "trianglesUnique": 47800,
+  "trianglesInstanced": 60448,
+  "materials": 18,
+  "textures": 3,
+  "walls": 2,
+  "floors": 1,
+  "shellTriangles": 200,
+  "shellSolidValid": true,
+  "animationDuration": 16.4,
+  "samplesPerTrack": 985,
+  "animationChannels": 12
+}

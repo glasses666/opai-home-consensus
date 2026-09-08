@@ -196,7 +196,7 @@ function selectedOrNamedObjectId(input, selectedId, scene = null) {
 function summarizeScene(scene, input, selectedObjectId) {
   const roomIds = new Set(ROOM_NOUNS.filter(([pattern]) => pattern.test(input)).map(([, roomId]) => roomId));
   const namedObjectId = selectedOrNamedObjectId(input, selectedObjectId, scene);
-  const namedSurfaceId = SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
+  const namedSurfaceId = selectedOrNamedSurfaceId(input, selectedObjectId, scene);
   const selectedEntityId = namedObjectId ?? namedSurfaceId ?? selectedObjectId;
   const selectedEntity = [...(scene.objects ?? []), ...(scene.surfaces ?? [])].find((entity) => entity.id === selectedEntityId);
   const selectedRoomId = findById(scene.rooms, selectedEntityId)?.id ?? roomIdForSelected(scene, selectedEntityId);
@@ -282,10 +282,14 @@ function selectedOrNamedSurfaceId(input, selectedObjectId, scene) {
   const explicit = SURFACE_NOUNS.find(([noun]) => input.includes(noun))?.[1] ?? null;
   if (explicit) return explicit;
   const selected = findById(scene?.surfaces, selectedObjectId);
-  if (selected) return selected.id;
   const roomId = namedRoomId(input);
-  const kind = /(顶面|天花)/.test(input) ? 'ceiling' : /(地面|地板|瓷砖)/.test(input) ? 'floor' : null;
-  return roomId && kind ? scene?.surfaces?.find((surface) => surface.roomId === roomId && surface.kind === kind)?.id ?? null : null;
+  const kind = /(顶面|天花)/.test(input) ? 'ceiling' : /(地面|地板)/.test(input) ? 'floor' : /(墙|墙面)/.test(input) ? 'wall' : null;
+  // A previous selection is context, not permission to override an explicitly named room or surface.
+  if (selected && (!roomId || selected.roomId === roomId) && (!kind || selected.kind === kind)) return selected.id;
+  const targetRoomId = roomId ?? roomIdForSelected(scene, selectedObjectId);
+  if (!targetRoomId || !kind) return null;
+  const candidates = scene?.surfaces?.filter((surface) => surface.roomId === targetRoomId && surface.kind === kind) ?? [];
+  return candidates.length === 1 ? candidates[0].id : null;
 }
 
 function namedRoomId(input) {
@@ -618,7 +622,7 @@ function withTimeout(promise, timeoutMs) {
 
 function providerFailureCode(error) {
   const message = error?.message;
-  if (/^AILY_[A-Z_]+$/.test(message ?? '')) return message;
+  if (/^(?:AILY|DEEPSEEK)_[A-Z_]+$/.test(message ?? '')) return message;
   if (message === 'PROVIDER_TIMEOUT') return message;
   if (message === 'PROVIDER_SHAPE_INVALID') return message;
   if (message === 'PROVIDER_REPLY_UNGROUNDED') return message;
@@ -934,13 +938,21 @@ export async function runAgentTurn({
       }) : null,
       designBrief: stableJsonValue(currentBrief),
       styleEvidence: styleEvidenceForProvider(styleEvidence),
+      expectedToolCalls: stableJsonValue(deterministicToolCalls),
     };
     try {
-      const providerResult = await withTimeout(
-        Promise.resolve(provider(providerContext)),
-        timeoutMs,
-      );
-      ({ assistantReply, toolCalls, providerReplyIssue, providerModeExplicit, providerDeclaredMode, reasons, unresolved } = normalizeProviderResult(providerResult, providerContext));
+      let normalizedProviderResult;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const providerResult = await withTimeout(Promise.resolve(provider(providerContext)), timeoutMs);
+        try {
+          normalizedProviderResult = normalizeProviderResult(providerResult, providerContext);
+          break;
+        } catch (error) {
+          if (attempt === 0 && error?.message === 'PROVIDER_SHAPE_INVALID') continue;
+          throw error;
+        }
+      }
+      ({ assistantReply, toolCalls, providerReplyIssue, providerModeExplicit, providerDeclaredMode, reasons, unresolved } = normalizedProviderResult);
       toolCalls = await normalizeCatalogToolCalls(toolCalls, catalogPlugin);
       assertProviderWriteCallsMatchIntent(toolCalls, deterministicToolCalls, store.currentScene);
       source = 'provider';

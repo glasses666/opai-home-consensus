@@ -52,3 +52,26 @@ test('Chinese style names trigger retrieval and compound Nordic comparison keeps
     ['scandinavian', 'japandi'],
   );
 });
+
+test('explicitly rejected styles are excluded rather than boosted by their keywords', () => {
+  for (const [input, excluded, preferred] of [
+    ['不要工业风，想要北欧风', 'industrial', 'scandinavian'],
+    ['不喜欢日式北欧，喜欢当代风', 'japandi', 'contemporary'],
+    ['排除静奢，想要极简收纳', 'quiet-luxury', 'minimalist'],
+  ]) {
+    const result = retrieveStyleCases(input);
+    assert.ok(result.detected.excludedStyleIds.includes(excluded), input);
+    assert.ok(!result.detected.styleIds.includes(excluded), input);
+    assert.ok(result.results.every(({ styleId }) => styleId !== excluded), input);
+    assert.equal(result.results[0].styleId, preferred, input);
+  }
+});
+
+test('material dislikes do not ban a style and explicit comparisons remain available', () => {
+  const materials = retrieveStyleCases('想要工业风，但是不要混凝土');
+  assert.deepEqual(materials.detected.excludedStyleIds, []);
+  assert.equal(materials.results[0].styleId, 'industrial');
+  const comparison = retrieveStyleCases('不喜欢日式低矮，在北欧与日式北欧之间怎么取舍？');
+  assert.deepEqual(comparison.detected.excludedStyleIds, []);
+  assert.deepEqual(comparison.results.slice(0, 2).map(({ styleId }) => styleId), ['scandinavian', 'japandi']);
+});

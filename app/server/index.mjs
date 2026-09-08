@@ -13,7 +13,9 @@ import { confirmSceneVersion, createVersionHistory, deserializeVersionHistory, r
 import { createDemoHouseholdConsensus, deserializeHouseholdConsensus, serializeHouseholdConsensus } from '../src/domain/household-consensus.js';
 import { buildDesignerReview, buildHandoffPacket } from '../src/domain/handoff.js';
 import { createSceneStore, deserializeScene } from '../src/domain/scene.js';
-import { callAily, getFeishuHealth, syncActivity } from './feishu.mjs';
+import { callDeepSeek } from './deepseek.mjs';
+import { generateConsensusSummary } from './consensus-secretary.mjs';
+import { callAily, getFeishuHealth, syncActivity, safeBaseUrl } from './feishu.mjs';
 import { createPersistentProjectStore } from './project-store.mjs';
 
 const JSON_LIMIT = 128 * 1024;
@@ -23,6 +25,27 @@ const AGENT_PROVIDER_TIMEOUT_MS = 38_000;
 const FIRST_PLAN_PROVIDER_TIMEOUT_MS = 240_000;
 const DEFAULT_PROJECT_STORE_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', '.data', 'project-demo.json');
 const REVIEW_ACTIONS = new Set(['approve', 'return']);
+
+export function handoffActivitySummary(snapshot, projectId, publicAppUrl = process.env.PUBLIC_APP_URL) {
+  const history = deserializeVersionHistory(snapshot.versionHistory);
+  const consensus = deserializeHouseholdConsensus(snapshot.householdConsensus);
+  const review = buildDesignerReview(history, consensus, { projectId, versionId: snapshot.versionId });
+  let reviewUrl = null;
+  try {
+    const origin = new URL(publicAppUrl);
+    if (origin.protocol === 'https:' && !origin.username && !origin.password && origin.pathname === '/' && !origin.search && !origin.hash) {
+      reviewUrl = new URL(`/review/${encodeURIComponent(projectId)}?versionId=${encodeURIComponent(snapshot.versionId)}`, origin).href;
+    }
+  } catch { /* Unconfigured origins are intentionally not guessed. */ }
+  return {
+    versionId: snapshot.versionId, versionLabel: review.currentVersionLabel, status: review.status,
+    changedFurnitureCount: review.objectDiffs.length, changedSurfaceCount: review.surfaceDiffs.length,
+    ruleStatus: review.ruleStatus, ruleIssueCount: review.ruleIssues.length,
+    unresolvedCount: review.unresolved.length, professionalReviewCount: review.professionalReviews.length,
+    boundary: '概念方案演示；规则与影响为 demo/estimate，不代表真实报价、BOM、施工或专业审批。',
+    reviewUrl,
+  };
+}
 
 const pendingFirstPlanStages = () => FIRST_PLAN_STAGES.map((stage) => ({ ...stage, status: 'pending', attempts: 0 }));
 const firstPlanEnvelope = (record, sync, replayed = false) => ({
@@ -65,6 +88,8 @@ const payloadFromHandoffSnapshot = (snapshot, { projectId, versionId, capability
     packet: buildHandoffPacket(history, consensus, { projectId, versionId: targetVersionId, capability }),
     review: buildDesignerReview(history, consensus, { projectId, versionId: targetVersionId, capability }),
     reviewDecision: snapshot.review ?? null,
+    consensusSummary: snapshot.consensusSummary ?? null,
+    feishuDelivery: snapshot.feishuDelivery ?? { status: 'not_submitted' },
   };
 };
 
@@ -102,7 +127,9 @@ export function createAppServer({
     catalogPlugin = demoCatalogPlugin,
     health = getFeishuHealth,
     sync = syncActivity,
-    agentProvider = process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
+    agentProvider = process.env.DEEPSEEK_API_KEY
+      ? (context) => callDeepSeek(context, { timeoutMs: AILY_RESPONSE_TIMEOUT_MS })
+      : process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
       ? (context) => callAily(context, {
           agentId: process.env.AILY_AGENT_ID,
           appId: process.env.AILY_APP_ID,
@@ -110,7 +137,9 @@ export function createAppServer({
           maxAttempts: 1,
         })
       : null,
-    firstPlanProvider = process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
+    firstPlanProvider = process.env.DEEPSEEK_API_KEY
+      ? (context) => callDeepSeek(context, { timeoutMs: FIRST_PLAN_PROVIDER_TIMEOUT_MS, maxTokens: 4096 })
+      : process.env.AILY_AGENT_ID || process.env.AILY_APP_ID
       ? (context) => callAily(context, {
           agentId: process.env.AILY_AGENT_ID,
           appId: process.env.AILY_APP_ID,
@@ -118,19 +147,51 @@ export function createAppServer({
           maxAttempts: 1,
         })
       : null,
+    consensusProvider = process.env.AILY_AGENT_ID
+      ? (context) => callAily(context, { agentId: process.env.AILY_AGENT_ID, timeoutMs: 40_000, maxAttempts: 2 })
+      : null,
+    providerName = process.env.DEEPSEEK_API_KEY ? 'deepseek' : process.env.AILY_AGENT_ID || process.env.AILY_APP_ID ? 'aily' : firstPlanProvider ? 'aily' : agentProvider ? 'provider' : 'local',
     id = randomUUID,
   } = {}) {
   let store = initialStore;
   const pendingEvents = new Map();
 
-  const flushPending = async () => {
+  let activeFlush = null;
+  let flushRequested = false;
+  // A prior process cannot still be syncing this in-memory queue. Preserve the
+  // saved handoff but expose interrupted attempts as explicitly retryable.
+  for (const snapshot of projectStore?.snapshot().handoffSnapshots ?? []) {
+    if (snapshot.versionHistory && snapshot.feishuDelivery?.status === 'pending') {
+      projectStore.updateHandoffSnapshot(snapshot.versionId, (saved) => ({
+        ...saved, feishuDelivery: { status: 'failed', eventId: saved.eventId, reason: 'BASE_SYNC_INTERRUPTED' },
+      }), snapshot.eventId);
+    }
+  }
+  const performFlush = async () => {
     if (projectStore) {
-      for (const event of projectStore.listPendingBaseEvents()) {
+      const attempted = new Set();
+      for (let event; (event = projectStore.listPendingBaseEvents().find((candidate) => !attempted.has(candidate.eventId)));) {
+        attempted.add(event.eventId);
         try {
-          await sync(event);
+          const receipt = await sync(event);
+          if (event.type === 'snapshot_published') {
+            if (!receipt?.recordId || receipt.eventId !== event.eventId || !Number.isFinite(Date.parse(receipt.verifiedAt))) {
+              throw new Error('BASE_RECEIPT_NOT_VERIFIED');
+            }
+            projectStore.updateHandoffSnapshot(event.versionId, (snapshot) => ({
+              ...snapshot,
+              feishuDelivery: { status: 'synced', eventId: event.eventId, recordId: receipt.recordId,
+                verifiedAt: receipt.verifiedAt, recordUrl: safeBaseUrl(receipt.recordUrl) },
+            }), event.eventId);
+          }
           projectStore.markBaseSynced(event.eventId);
         } catch {
-          // Durable queue remains on disk for the next health/turn retry.
+          if (event.type === 'snapshot_published') {
+            projectStore.updateHandoffSnapshot(event.versionId, (snapshot) => ({
+              ...snapshot, feishuDelivery: { status: 'failed', eventId: event.eventId, reason: 'BASE_SYNC_UNAVAILABLE' },
+            }), event.eventId);
+          }
+          // Durable queue remains on disk for the next business-request retry.
         }
       }
       return;
@@ -144,17 +205,31 @@ export function createAppServer({
       }
     }
   };
+  const flushPending = () => {
+    flushRequested = true;
+    if (!activeFlush) activeFlush = (async () => {
+      do {
+        flushRequested = false;
+        await performFlush();
+      } while (flushRequested);
+    })().finally(() => { activeFlush = null; });
+    return activeFlush;
+  };
 
   return createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
 
+      if (request.method === 'GET' && url.pathname === '/api/health/live') {
+        sendJson(response, 200, { status: 'ok', service: 'opai-backend' });
+        return;
+      }
+
       if (request.method === 'GET' && url.pathname === '/api/health') {
-        await flushPending();
         const capabilities = await health();
         sendJson(response, 200, {
           ...capabilities,
-          provider: capabilities.aily?.status === 'ready' ? 'aily' : 'local',
+          provider: providerName === 'deepseek' ? 'deepseek' : capabilities.aily?.status === 'ready' ? 'aily' : 'local',
           catalog: { status: 'ready', reason: 'demo_catalog', ...(await Promise.resolve(catalogPlugin.describe())) },
           pendingBaseEvents: projectStore ? projectStore.listPendingBaseEvents().length : pendingEvents.size,
         });
@@ -283,11 +358,11 @@ export function createAppServer({
               warnings: generated.warnings,
               plan: generated.plan,
             },
-            provider: { source: 'aily', status: 'ready', promptVersion: generated.promptVersion, reason: null },
+            provider: { source: providerName, status: 'ready', promptVersion: generated.promptVersion, reason: null },
             error: null,
           });
         } catch (error) {
-          const reason = error.code ?? (error.message?.startsWith('AILY_') ? error.message : 'FIRST_PLAN_GENERATION_FAILED');
+          const reason = error.code ?? (/^(AILY|DEEPSEEK)_/.test(error.message ?? '') ? error.message : 'FIRST_PLAN_GENERATION_FAILED');
           record = projectStore.saveFirstPlan({
             eventId: body.eventId,
             setupFingerprint: prepared.setupFingerprint,
@@ -296,7 +371,7 @@ export function createAppServer({
             stages: error.stages ?? pendingFirstPlanStages(),
             result: null,
             provider: {
-              source: firstPlanProvider ? 'aily' : 'none',
+              source: firstPlanProvider ? providerName : 'none',
               status: firstPlanProvider ? 'failed' : 'unavailable',
               promptVersion: STANDARD_PLAN_PROMPT_VERSION,
               reason,
@@ -364,6 +439,34 @@ export function createAppServer({
         return;
       }
 
+      const deliveryMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/feishu-delivery$/);
+      if (deliveryMatch && ['GET', 'POST'].includes(request.method)) {
+        if (!projectStore || projectStore.getProject().id !== decodeURIComponent(deliveryMatch[1])) {
+          sendJson(response, 404, { error: 'PROJECT_NOT_FOUND' }); return;
+        }
+        const body = request.method === 'POST' ? await readJson(request) : {};
+        const versionId = body.versionId ?? url.searchParams.get('versionId') ?? projectStore.currentVersionId;
+        let saved = projectStore.getHandoffSnapshotForVersion(versionId);
+        if (!saved) {
+          sendJson(response, request.method === 'GET' ? 200 : 404, request.method === 'GET'
+            ? { feishuDelivery: { status: 'not_submitted' } }
+            : { error: 'HANDOFF_SNAPSHOT_NOT_FOUND' });
+          return;
+        }
+        if (request.method === 'POST' && saved.feishuDelivery?.status !== 'synced') {
+          saved = projectStore.updateHandoffSnapshot(versionId, (snapshot) => ({
+            ...snapshot, feishuDelivery: { status: 'pending', eventId: saved.eventId },
+          }), saved.eventId);
+          projectStore.enqueueBaseEvent({ eventId: saved.eventId, type: 'snapshot_published',
+            input: 'handoff_snapshot', projectId: projectStore.getProject().id, versionId,
+            trace: { source: 'handoff_snapshot', versionId }, traceId: saved.eventId, provider: 'local',
+            result: handoffActivitySummary(saved, projectStore.getProject().id) }, { retry: true });
+          void flushPending().catch(() => {});
+        }
+        sendJson(response, 200, { feishuDelivery: saved.feishuDelivery ?? { status: 'not_submitted' } });
+        return;
+      }
+
       const snapshotMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/snapshot$/);
       if (request.method === 'POST' && snapshotMatch) {
         const projectId = decodeURIComponent(snapshotMatch[1]);
@@ -384,12 +487,32 @@ export function createAppServer({
           return;
         }
         projectStore.publishVersionHistory(history);
-        const saved = projectStore.saveHandoffSnapshot({
+        let saved = projectStore.saveHandoffSnapshot({
           eventId: body.eventId,
           versionId: current.id,
           versionHistory: serializeVersionHistory(history),
           householdConsensus: serializeHouseholdConsensus(consensus),
         });
+        if (consensusProvider && !saved.consensusSummary) {
+          saved = projectStore.updateHandoffSnapshot(current.id, (snapshot) => ({
+            ...snapshot,
+            consensusSummary: { status: 'pending', provider: 'aily' },
+          }), body.eventId);
+          const review = buildDesignerReview(history, consensus, { projectId, versionId: current.id });
+          void generateConsensusSummary(review, consensusProvider)
+            .then((summary) => projectStore.updateHandoffSnapshot(current.id, (snapshot) => ({ ...snapshot, consensusSummary: summary }), body.eventId))
+            .catch((error) => projectStore.updateHandoffSnapshot(current.id, (snapshot) => ({
+              ...snapshot,
+              consensusSummary: {
+                status: 'failed',
+                provider: 'aily',
+                reason: /^AILY_|^CONSENSUS_/.test(error?.message ?? '') ? error.message : 'CONSENSUS_PROVIDER_FAILED',
+              },
+            }), body.eventId));
+        }
+        if (saved.feishuDelivery?.status !== 'synced') saved = projectStore.updateHandoffSnapshot(current.id, (snapshot) => ({
+          ...snapshot, feishuDelivery: { status: 'pending', eventId: body.eventId },
+        }), body.eventId);
         projectStore.enqueueBaseEvent({
           eventId: body.eventId,
           type: 'snapshot_published',
@@ -399,8 +522,9 @@ export function createAppServer({
           trace: { source: 'handoff_snapshot', versionId: current.id },
           traceId: body.eventId,
           versionId: current.id,
+          result: handoffActivitySummary(saved, projectId),
         });
-        await flushPending();
+        void flushPending().catch(() => {});
         sendJson(response, 200, {
           ...payloadFromHandoffSnapshot(saved, { projectId }),
           sync: projectStore.listPendingBaseEvents().some((pending) => pending.eventId === body.eventId) ? 'pending' : 'synced',
@@ -475,7 +599,10 @@ export function createAppServer({
         const note = typeof body.note === 'string' ? body.note.slice(0, 1000) : typeof body.notes === 'string' ? body.notes.slice(0, 1000) : '';
         const version = projectStore.reviewVersion({ versionId, eventId, action, note });
         const snapshot = projectStore.getHandoffSnapshotForVersion(versionId);
-        if (snapshot) {
+        if (snapshot && !(snapshot.review?.status === version.status
+          && snapshot.review?.action === action
+          && snapshot.review?.note === note
+          && snapshot.review?.reviewedAt === version.review?.reviewedAt)) {
           projectStore.updateHandoffSnapshot(versionId, (saved) => ({
             ...saved,
             versionHistory: serializeVersionHistory(reviewSceneVersion(
@@ -598,7 +725,7 @@ export function createAppServer({
             type: 'agent_turn',
             input: body.input,
             projectId: body.projectId ?? project?.id,
-            provider: result.trace.source === 'provider' ? 'aily' : 'local',
+            provider: result.trace.source === 'provider' ? providerName : 'local',
             selectedObjectId: body.selectedObjectId ?? null,
             spaceId: body.spaceId,
             trace: result.trace,
@@ -666,7 +793,7 @@ export function createAppServer({
           eventId,
           input: body.input,
           projectId: body.projectId ?? project?.id,
-          provider: result.trace.source === 'provider' ? 'aily' : 'local',
+          provider: result.trace.source === 'provider' ? providerName : 'local',
           selectedObjectId: body.selectedObjectId ?? null,
           spaceId: body.spaceId,
           trace: result.trace,
@@ -711,7 +838,7 @@ export function createAppServer({
         sendJson(response, 409, { error: 'VERSION_CONFLICT' });
         return;
       }
-      if (['VERSION_NOT_FOUND', 'VERSION_NOT_CURRENT', 'EVENT_ID_INVALID', 'REVIEW_ACTION_INVALID', 'HANDOFF_SNAPSHOT_NOT_FOUND', 'VERSION_HISTORY_INVALID'].includes(error?.message)) {
+      if (['VERSION_NOT_FOUND', 'VERSION_NOT_CURRENT', 'VERSION_NOT_CONFIRMED', 'EVENT_ID_INVALID', 'REVIEW_ACTION_INVALID', 'HANDOFF_SNAPSHOT_NOT_FOUND', 'VERSION_HISTORY_INVALID'].includes(error?.message)) {
         sendJson(response, 400, { error: error.message });
         return;
       }

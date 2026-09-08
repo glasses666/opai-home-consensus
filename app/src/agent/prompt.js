@@ -1,6 +1,22 @@
-export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.4';
+export const AGENT_PROMPT_VERSION = 'oppein-harness-v2.5';
 
-export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief = null, styleEvidence = null }) {
+function responseExample(mode, expectedToolCalls) {
+  const toolCalls = Array.isArray(expectedToolCalls) ? expectedToolCalls : [];
+  const clarification = toolCalls.find((call) => call?.tool === 'request_clarification')?.args?.question;
+  if (mode === 'clarify') {
+    return { mode, assistantReply: clarification ?? '你希望先解决哪个空间问题？', reasons: [], unresolved: [], toolCalls };
+  }
+  if (mode === 'execute') return { mode, assistantReply: '', reasons: [], unresolved: [], toolCalls };
+  return {
+    mode,
+    assistantReply: '方向一保留当前关系并优化重点；方向二调整重点关系，请结合当前场景取舍。',
+    reasons: [],
+    unresolved: [],
+    toolCalls: [],
+  };
+}
+
+export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, catalog, designBrief = null, styleEvidence = null, expectedToolCalls = [] }) {
   return JSON.stringify({
     promptVersion: AGENT_PROMPT_VERSION,
     role: '家装意图规划层；只澄清、选目录项和提工具调用，本地规则引擎执行。',
@@ -21,7 +37,9 @@ export function buildAgentPrompt({ input, mode, scene, selectedObjectId, tools, 
       'styleEvidence只是 reference_only 案例：用于比较方向和说明适用性，必须保留风险与 unknowns，不得把案例当作规范、报价或户型事实。',
       '仅凭风格词不得调用写工具；先给两个符合当前户型与家庭条件的方向，信息不足时只问一个问题。',
       '案例里的构件或做法必须写成“可参考方向”，不能写成已适用、已安装或施工结论；不要补充scene、catalog和styleEvidence之外的构件。',
+      'responseExample只示范本轮严格JSON形状。execute与clarify时toolCalls必须与示例完全一致，不得增加、删除或改写参数；propose时只写两个方向且toolCalls必须为空。',
     ],
+    responseExample: responseExample(mode, expectedToolCalls),
     input: String(input ?? ''),
     selectedObjectId: selectedObjectId ?? null,
     designBrief,

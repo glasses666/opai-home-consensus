@@ -1,0 +1,78 @@
+{
+  "method": "Regularized line and ellipse strokes within previous letter bounds; no replacement font",
+  "letters": [
+    {
+      "letter_index": 0,
+      "letter": "O",
+      "bounds": [
+        -2.015999972820282,
+        0.08949999511241913,
+        -1.1839999556541443,
+        0.9210000038146973
+      ],
+      "parts": 4
+    },
+    {
+      "letter_index": 1,
+      "letter": "P",
+      "bounds": [
+        -1.0239999741315842,
+        0.08899998664855957,
+        -0.3844999819993973,
+        0.9210000038146973
+      ],
+      "parts": 3
+    },
+    {
+      "letter_index": 2,
+      "letter": "P",
+      "bounds": [
+        -0.2240000069141388,
+        0.08899998664855957,
+        0.4479999989271164,
+        0.9210000038146973
+      ],
+      "parts": 3
+    },
+    {
+      "letter_index": 3,
+      "letter": "E",
+      "bounds": [
+        0.5760000199079514,
+        0.08899998664855957,
+        1.1520000100135803,
+        0.9210000038146973
+      ],
+      "parts": 4
+    },
+    {
+      "letter_index": 4,
+      "letter": "I",
+      "bounds": [
+        1.3440000265836716,
+        0.08900000154972076,
+        1.5040000230073929,
+        0.9210000038146973
+      ],
+      "parts": 3
+    },
+    {
+      "letter_index": 5,
+      "letter": "N",
+      "bounds": [
+        1.6639999598264694,
+        0.08899998664855957,
+        2.3360000401735306,
+        0.9210000038146973
+      ],
+      "parts": 3
+    }
+  ],
+  "preserved": "Letter bounds, object transforms, all animation, colors, lights and camera",
+  "limitation": "Clean geometric reconstruction from previous raster proportions, not official vector artwork",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 64
+}

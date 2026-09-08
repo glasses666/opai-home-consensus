@@ -200,9 +200,24 @@ test('confirm and review mutate version status idempotently without deleting sce
     assert.equal(repeated.status, 'customer_confirmed');
 
     const reviewed = store.reviewVersion({ versionId: version.id, eventId: 'evt-review', action: 'approve', note: 'ok' });
+    const repeatedReview = store.reviewVersion({ versionId: version.id, eventId: 'evt-review', action: 'approve', note: 'ok' });
     assert.equal(reviewed.status, 'designer_verified');
+    assert.equal(repeatedReview.status, 'designer_verified');
     assert.equal(store.getSceneStore(version.id).currentScene.objects.find((object) => object.id === 'object-sofa').transform.x, 2400);
     assert.throws(() => store.reviewVersion({ versionId: version.id, eventId: 'evt-review', action: 'return', note: 'changed' }), /EVENT_ID_CONFLICT/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('designer review requires the current customer-confirmed version', () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file, id: () => 'guard' });
+    assert.throws(
+      () => store.reviewVersion({ versionId: store.currentVersionId, eventId: 'evt-too-early', action: 'approve' }),
+      /VERSION_NOT_CONFIRMED/,
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -216,6 +231,24 @@ test('corrupt project file is preserved and replaced with a valid initial store'
     assert.equal(store.getProject().currentVersionId, 'version-demo-initial');
     assert.equal(store.getSceneStore().currentScene.id, createDemoScene().id);
     assert.equal(readdirSync(dir).some((name) => name.startsWith('project.json.corrupt-')), true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+for (const failure of ['corrupt', 'missing']) test(`${failure} project file restores the last valid backup`, () => {
+  const { dir, file } = tmpStorePath();
+  try {
+    const store = createPersistentProjectStore({ filePath: file });
+    const firstBrief = evolveDesignBrief(store.getDesignBrief(), { input: '主卧需要更多收纳' });
+    store.saveDesignBrief(firstBrief);
+    store.saveDesignBrief(evolveDesignBrief(firstBrief, { input: '同时保持安静温暖' }));
+    if (failure === 'missing') rmSync(file);
+    else writeFileSync(file, '{not-json');
+
+    const recovered = createPersistentProjectStore({ filePath: file });
+    assert.deepEqual(recovered.getDesignBrief(), firstBrief);
+    assert.equal(readdirSync(dir).some((name) => name.startsWith('project.json.corrupt-')), failure === 'corrupt');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

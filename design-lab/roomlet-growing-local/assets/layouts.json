@@ -1,0 +1,86 @@
+{
+  "original": {
+    "Furniture_Daybed": {
+      "position": [
+        -0.72,
+        0.08,
+        -1.08
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Desk": {
+      "position": [
+        0.48,
+        0.08,
+        0.66
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Cubby": {
+      "position": [
+        1.51,
+        0.08,
+        -0.9
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Chair": {
+      "position": [
+        0.48,
+        0.08,
+        1.42
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Rocker": {
+      "position": [
+        -0.94,
+        0.08,
+        0.78
+      ],
+      "rotationY": 0
+    }
+  },
+  "modified": {
+    "Furniture_Daybed": {
+      "position": [
+        -1.52,
+        0.08,
+        -0.18
+      ],
+      "rotationY": 1.5707963267948966
+    },
+    "Furniture_Desk": {
+      "position": [
+        1.06,
+        0.08,
+        -1.3
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Cubby": {
+      "position": [
+        -0.25,
+        0.08,
+        -1.46
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Chair": {
+      "position": [
+        1.07,
+        0.08,
+        -0.4
+      ],
+      "rotationY": 0
+    },
+    "Furniture_Rocker": {
+      "position": [
+        -0.12,
+        0.08,
+        0.9
+      ],
+      "rotationY": 0
+    }
+  }
+}

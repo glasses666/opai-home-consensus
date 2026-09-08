@@ -1,0 +1,10 @@
+{
+  "duration": 16.8,
+  "assertions": [
+    { "kind": "staysInFrame", "selector": "#tile-0-0" },
+    { "kind": "staysInFrame", "selector": "#tile-0-15" },
+    { "kind": "staysInFrame", "selector": "#tile-2-0" },
+    { "kind": "staysInFrame", "selector": "#tile-2-15" },
+    { "kind": "keepsMoving", "withinSelector": ".tiles", "maxStaticSec": 2.2 }
+  ]
+}

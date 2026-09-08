@@ -41,7 +41,7 @@ const wallArt = (filename, title) => ({
 });
 
 const stylePalettes = {
-  scandinavian: { ceiling: '#f6f2ea', door: '#f2ede5', fabric: '#d8cfc2', flexAccent: '#a8b7a0', oak: '#bf9567', white: '#eee9e1', greige: '#c7bdb0', panel: '#c39b6f', wall: '#f5f0e8' },
+  scandinavian: { ceiling: '#f6f2ea', door: '#f2ede5', fabric: '#d8cfc2', flexAccent: '#a8b7a0', oak: '#c7b49a', white: '#eee9e1', greige: '#c7bdb0', panel: '#c39b6f', wall: '#f5f0e8' },
   'quiet-luxury': { ceiling: '#f4f0e8', door: '#eee8df', fabric: '#cfc6ba', flexAccent: '#a7b3a8', oak: '#ad8765', white: '#f0ebe4', greige: '#bdb2a5', panel: '#ae8867', wall: '#f3eee7' },
   japandi: { ceiling: '#eee8de', door: '#e8e0d5', fabric: '#bcb1a2', flexAccent: '#b6b09a', oak: '#ac845b', white: '#eae3d9', greige: '#aaa092', panel: '#a77f58', wall: '#eee8de' },
   'mid-century-modern': { ceiling: '#efe8dc', door: '#e8dfd2', fabric: '#9d8270', flexAccent: '#a3a77d', oak: '#875a34', white: '#eee6da', greige: '#aa9580', panel: '#855833', wall: '#f1e9dd' },

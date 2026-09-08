@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "png": "house-hero-v01.png",
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "objects": 868,
+  "glass_panels": 49,
+  "engine": "CYCLES",
+  "device": "GPU",
+  "complete_roof_components_present": true,
+  "animation": false,
+  "boundary": "Component checks, not architectural engineering or waterproofing validation"
+}

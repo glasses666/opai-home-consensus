@@ -1,0 +1,6 @@
+# Generated CAD interchange is an asset, not a source-code diff.
+*.step binary
+*.blend binary
+*.glb binary
+# Keep scene manifests available without flooding code reviews with geometry.
+design-lab/**/manifest.json -diff
