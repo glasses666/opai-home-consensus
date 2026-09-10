@@ -43,9 +43,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p validation-evidence
-          # Only dependencies and public source fixtures needed by the uploaded ZIP.
-          # Never archive .git, .env, .data, customer records, videos or Fab binaries.
-          tar --exclude='*/.env*' --exclude='*/.data/*' --exclude='*.mp4' --exclude='*/fab/*' --exclude='*/.cache/*' -czf validation-evidence/runtime.tar.gz app/node_modules app/index.html app/evals app/public/assets/models design-lab/reference-home
+          # Public fixtures only. Credentials and licensed Fab payloads stay out.
+          tar --exclude='*/.env*' --exclude='*/.data/*' --exclude='*.mp4' --exclude='*/fab/*' --exclude='*/.cache/*' -czf validation-evidence/runtime.tar.gz app/node_modules app/index.html app/evals app/public/assets/models app/public/assets/furniture app/public/assets/rooms app/public/icons design-lab/reference-home design-lab/roomlet-stone-v2/src/scene-data.js design-lab/roomlet-growing-local/src/scene-data.js design-lab/roomlet-together-local/src/scene-data.js design-lab/ue-furniture-import/web-manifest.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
