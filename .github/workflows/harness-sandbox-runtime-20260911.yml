@@ -1,0 +1,39 @@
+name: Harness isolated runtime
+on:
+  push:
+    branches: [codex/constraint-quality-repair-20260910]
+    paths: [.github/workflows/harness-sandbox-runtime-20260911.yml]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the existing locked dependencies, without product credentials
+        working-directory: app
+        run: |
+          set -o pipefail
+          npm ci --no-audit --no-fund 2>&1 | tee /tmp/opai-dependencies.log
+      - name: Package the isolated runtime, not private data or restricted assets
+        run: |
+          mkdir -p /tmp/opai-runtime
+          git rev-parse HEAD > /tmp/opai-runtime/source-commit.txt
+          node --version > /tmp/opai-runtime/node-version.txt
+          tar --exclude='app/.env*' --exclude='app/.data' --exclude='app/dist' --exclude='app/public/assets/models/fab' --exclude='*/.cache' --exclude='*.mp4' --exclude='*.mov' --exclude='*.ttf' --exclude='*.otf' --exclude='*.woff' --exclude='*.woff2' -czf /tmp/opai-runtime/runtime.tar.gz AGENTS.md GATE-0-PRODUCT-CONTRACT.md PLAN.md README.md app docs design-lab/reference-home
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opai-harness-isolated-runtime
+          path: |
+            /tmp/opai-runtime/
+            /tmp/opai-dependencies.log
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: warn
