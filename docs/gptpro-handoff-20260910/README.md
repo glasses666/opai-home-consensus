@@ -52,3 +52,12 @@ npm run dev:experience
 ## 交付定义
 
 GPT Pro 的成果应是代码和可复验行为：提交/PR、测试、真实 DeepSeek trace、浏览器端前后场景证据、已知限制。只输出架构建议、提示词草案或问题列表不算完成。
+
+## 网页沙箱降级路径
+
+ChatGPT 的 GitHub 连接可能只有读取权限，网页执行环境也可能无法安全获得 DeepSeek 密钥或访问 `api.deepseek.com`。这不应阻塞代码修复：
+
+1. GPT Pro 先做不超过十分钟的能力预检，分别确认仓库读取、文件写入/导出、GitHub 写入、外网出口与密钥环境；不能把“能浏览 GitHub”当作“能推送 PR”。
+2. GitHub 只读时，在上传的 ZIP 中完成修改，交付完整 changed-files ZIP 与 `git diff --binary` 补丁；由本地 Codex 应用并提交。
+3. DeepSeek 不可调用时，不索取或回显密钥，不把 mock 当 live；继续完成实现、确定性测试、对抗用例和观测脚本，并列出一条本机 live 验证命令。
+4. 本地 Codex 使用现有 `app/.env.local` 跑真实 DeepSeek 和浏览器验收，将首次失败与完整脱敏 trace 回传 GPT Pro。重复这条短闭环，直到验收合同通过。
