@@ -1,0 +1,24 @@
+{
+  "baselineBranch": "codex/gptpro-harness-github-20260910",
+  "baselineCommit": "fc742b7bd8f1fcf44dcce3a33d6dafb04dde0b1b",
+  "workingBranch": "codex/constraint-quality-repair-20260910",
+  "uploadedZipSha256": "0411d7d7089ee7be39192e7babff991c3509bfcc245d92bd09297ba23783f00d",
+  "repositoryRead": "verified through GitHub connector, including base ref and AGENTS.md",
+  "githubBranchWrite": "verified by creation from the specified base",
+  "githubFileWrite": "this committed preflight is the file-write probe",
+  "sandboxFileWrite": "verified after extraction and local test execution",
+  "terminalDeepSeek": "curl exit 6: Could not resolve host api.deepseek.com",
+  "terminalNpm": "curl exit 6: Could not resolve host registry.npmjs.org",
+  "deepseekKeyPresent": false,
+  "liveRequests": 0,
+  "nodeVersion": "v22.16.0",
+  "dependencies": "npm ci --offline failed ENOTCACHED; no cached next package",
+  "uploadedBaselineTests": {"tests": 431, "passed": 416, "failed": 15},
+  "coverageLimits": [
+    "The uploaded ZIP omits dependencies, eval fixtures, design-lab fixtures and most media assets.",
+    "An execution sandbox reset occurred. Final results must be rerun in the recovered sandbox; temporary pre-reset results are not deliverables.",
+    "The local Git repository is a content snapshot of the ZIP, not a claim of upstream Git ancestry.",
+    "No credentials were requested, printed, committed or sent to the browser.",
+    "No production deployment, permission change or real Feishu write was performed."
+  ]
+}
