@@ -1,0 +1,55 @@
+name: Harness repair validation
+on:
+  push:
+    branches: [codex/constraint-quality-repair-20260910]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: harness-repair-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+      - name: Install locked dependencies (no provider credentials)
+        id: install
+        working-directory: app
+        run: npm ci --no-audit --no-fund
+      - name: Full tests and build, retaining both exit codes
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p validation-evidence
+          set +e
+          (cd app && npm test) > validation-evidence/npm-test.log 2>&1
+          tests=$?
+          (cd app && npm run build) > validation-evidence/npm-build.log 2>&1
+          build=$?
+          printf '{"nonLive":true,"providerRequests":0,"testsExit":%s,"buildExit":%s,"commit":"%s"}\n' "$tests" "$build" "$GITHUB_SHA" > validation-evidence/result.json
+          cat validation-evidence/result.json
+          tail -20 validation-evidence/npm-test.log
+          tail -20 validation-evidence/npm-build.log
+          test "$tests" = 0 && test "$build" = 0
+      - name: Package isolated runtime for sandbox regression
+        if: always() && steps.install.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p validation-evidence
+          # Only dependencies and public source fixtures needed by the uploaded ZIP.
+          # Never archive .git, .env, .data, customer records, videos or Fab binaries.
+          tar --exclude='*/.env*' --exclude='*/.data/*' --exclude='*.mp4' --exclude='*/fab/*' --exclude='*/.cache/*' -czf validation-evidence/runtime.tar.gz app/node_modules app/index.html app/evals app/public/assets/models design-lab/reference-home
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: harness-validation-${{ github.sha }}
+          path: validation-evidence/
+          if-no-files-found: warn
+          retention-days: 3
