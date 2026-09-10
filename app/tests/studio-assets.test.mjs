@@ -5,6 +5,9 @@ import { studioAssetSource } from '../src/pascal/studio-assets.js';
 
 test('studio revises local demo models, never user imports or older layout variants', () => {
   assert.equal(studioAssetSource('/assets/models/sofa.glb'), '/assets/models/fab/sofa.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-bed.glb'), '/assets/models/studio/bedroom-bed.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-feature.glb'), '/assets/models/studio/bedroom-feature.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-bedside.glb'), '/assets/models/studio/bedroom-bedside.glb');
   for (const src of ['https://example.com/sofa.glb', '/uploads/sofa.glb', '/assets/models/double-bed-original.glb', '/assets/models/sofa.glb?custom=1', undefined]) assert.equal(studioAssetSource(src), src);
 });
 test('studio GLBs contain valid embedded geometry and textures, with no remote dependencies', () => {
@@ -30,6 +33,7 @@ test('studio GLBs contain valid embedded geometry and textures, with no remote d
   }
 });
 test('every studio model has a real local payload', () => {
+  assert.ok(existsSync(new URL('../public/assets/models/studio/bedroom-bedside.glb',import.meta.url)));
   for (const name of ['sofa','dining-table','dining-chair','coffee-table','lounge-chair','tv-console','double-bed','single-bed','wardrobe','desk','kitchen-counter','shoe-cabinet','floating-shelf','slat-partition','feature-wall']) {
     assert.ok(existsSync(new URL(`../public${studioAssetSource(`/assets/models/${name}.glb`)}`, import.meta.url)),name);
   }

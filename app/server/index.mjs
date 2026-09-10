@@ -17,6 +17,7 @@ import { callDeepSeek } from './deepseek.mjs';
 import { generateConsensusSummary } from './consensus-secretary.mjs';
 import { callAily, getFeishuHealth, syncActivity, safeBaseUrl } from './feishu.mjs';
 import { createPersistentProjectStore } from './project-store.mjs';
+import { createExperienceRuntime } from './experience-runtime.mjs';
 
 const JSON_LIMIT = 128 * 1024;
 const SNAPSHOT_JSON_LIMIT = 1024 * 1024;
@@ -122,6 +123,7 @@ async function readJson(request, limit = JSON_LIMIT) {
 }
 
 export function createAppServer({
+    experienceHandler = null,
     initialStore = createSceneStore(createDemoScene()),
     projectStore = null,
     catalogPlugin = demoCatalogPlugin,
@@ -218,6 +220,7 @@ export function createAppServer({
 
   return createServer(async (request, response) => {
     try {
+      if (experienceHandler && await experienceHandler(request, response)) return;
       const url = new URL(request.url ?? '/', 'http://127.0.0.1');
 
       if (request.method === 'GET' && url.pathname === '/api/health/live') {
@@ -852,7 +855,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const projectStore = createPersistentProjectStore({
     filePath: process.env.PROJECT_STORE_PATH ?? DEFAULT_PROJECT_STORE_PATH,
   });
-  createAppServer({ projectStore }).listen(port, '127.0.0.1', () => {
+  const experience = createExperienceRuntime();
+  createAppServer({ projectStore, experienceHandler: experience.handler }).listen(port, '127.0.0.1', () => {
     console.log(`OP backend listening on http://127.0.0.1:${port}`);
   });
 }

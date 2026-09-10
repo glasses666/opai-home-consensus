@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:8791',
+      '/api': process.env.OPAI_API_ORIGIN || 'http://127.0.0.1:8791',
     },
   },
 }));

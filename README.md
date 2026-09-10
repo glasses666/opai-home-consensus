@@ -41,11 +41,24 @@
 
 ## 本地审阅
 
+普通本地后端使用 `8791`：
+
 ```bash
 cd app
 npm install
+npm run server
 npm run dev -- --port 5173
 ```
+
+需要用隔离数据和真实 DeepSeek 验收时，分别在两个终端启动候选后端与已绑定正确代理端口的前端：
+
+```bash
+cd app
+npm run experience -- --existing-opai-provider
+npm run dev:experience
+```
+
+候选入口固定为 `http://127.0.0.1:5180/`，API 由 Vite 转发到隔离后端 `127.0.0.1:8794`。不要用普通 `npm run dev` 单独连接候选后端，否则默认的 `8791` 会导致进入独立项目时返回 `HTTP_502`。
 
 导航首页为 `http://127.0.0.1:5173/`，四方向比较页为 `/directions`，主工作台为 `/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`。`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
 

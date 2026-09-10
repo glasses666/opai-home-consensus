@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-09T15:23:33Z",
+  "environment": {
+    "kind": "isolated-local-candidate",
+    "origin": "http://127.0.0.1:5186",
+    "measurement": "hidden in-app browser Resource Timing",
+    "cacheBoundary": "fresh candidate tabs; local network only"
+  },
+  "homepage": {
+    "resourceCount": 9,
+    "resourceTransferBytes": 1654604
+  },
+  "workbench": {
+    "resourceCount": 165,
+    "navigationTransferBytes": 1181,
+    "resourceTransferBytes": 5421174,
+    "observedZeroTransferIconBytes": 1885
+  },
+  "interpretation": {
+    "homepageApproxMB": 1.65,
+    "workbenchApproxMB": 5.43,
+    "underTenMBForObservedLocalLoads": true,
+    "doesNotProve": [
+      "public cold-network latency",
+      "mobile carrier billing",
+      "real-device Safari behavior",
+      "download of every file in dist"
+    ]
+  }
+}

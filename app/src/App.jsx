@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Armchair, ArrowLeft, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FileArrowUp, FloppyDisk, FolderOpen, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
 import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
+import { assertRequirementConstraints } from './agent/dialogue.js';
+import { assertEvidenceConstraints } from './agent/evidence.js';
 import { createDemoScene } from './domain/demo-scene.js';
 const ReferenceHomePage = lazy(() => import('./ReferenceHomePage.jsx'));
 import { normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
@@ -15,6 +17,13 @@ import {
 import { evaluateDesignRules } from './domain/design-rules.js';
 import { buildDesignerReview, buildHandoffPacket } from './domain/handoff.js';
 import FeishuDelivery from './FeishuDelivery.jsx';
+import { RequirementSummary, TurnProvenance } from './GuidancePanels.jsx';
+import ExperienceDocuments from './ExperienceDocuments.jsx';
+import ExperienceDiscussion from './ExperienceDiscussion.jsx';
+import { retractUnretainedPreview } from './workbench-session.js';
+import { formatExperienceHandoff } from './experience-handoff.js';
+import { describeWorkbenchDiff } from './workbench-diff.js';
+import { formatResidentMessage } from './conversation-presentation.js';
 import {
   addHouseholdOpinion,
   chooseConsensusDirection,
@@ -45,6 +54,7 @@ import {
   resolveExperienceStyle,
   withExperienceStyle,
 } from './domain/experience-style.js';
+import { experienceEntryFailureMessage } from './domain/experience-entry.js';
 import { ExperienceDirectionsPage, ExperienceLandingPage, ExperienceNav } from './DesignDirections.jsx';
 import { createRecordingBaseline, findRecordingScenario, runRecordingScenario } from './demo/recording-scenarios.js';
 
@@ -119,6 +129,7 @@ const materialLabels = {
   'mat-flex-accent-fabric': '雾绿成长织物',
   'mat-floor-light-oak': '浅橡木地板',
   'mat-floor-tile-warm': '暖灰哑光砖',
+  'mat-floor-dark-walnut': '深棕胡桃木地板',
   'mat-oak-veneer': '浅橡木',
   'mat-object-warm-white': '暖白家具饰面',
   'mat-wall-greige': '暖灰墙面',
@@ -189,6 +200,8 @@ const diffKindLabels = {
 const objectLayerLabels = { fixed_installation: '固定安装', furniture: '家具', equipment: '设备', service: '点位' };
 const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
 const editErrorMessages = [
+  [/REQUIREMENT_CONSTRAINT/, '这次调整会违反你已经确认的保留条件。可以先在设计笔记中纠正那条条件，再继续调整。'],
+  [/EVIDENCE_/, '这次调整不符合当前房屋资料中已确认的限制。请先检查或更新相应资料，再继续调整。'],
   [/OBJECT_FOOTPRINT_OUTSIDE_ROOM/, '这件家具已经压出所属房间了，请往房间内侧移动一点。'],
   [/CLEARANCE_OCCUPIED/, '这里会占用必要通行或使用净距，请给动线和开门留出空间。'],
   [/OBJECT_COLLISION/, '这里会和另一件家具重叠，请错开一点再放。'],
@@ -256,7 +269,9 @@ const agentToolLabels = {
   inspect_catalog_item: '读取组件',
   inspect_object: '读取对象',
   inspect_room: '读取房间',
+  inspect_spatial_relation: '核对相对位置',
   move_object: '移动对象',
+  move_relative_to_object: '按相对位置移动',
   request_clarification: '澄清需求',
   request_confirmation: '请求确认',
   rotate_object: '旋转对象',
@@ -288,6 +303,7 @@ async function fetchJson(path, options = {}) {
 const eventId = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {}) => {
+  if (trace.assistantReply) return trace.assistantReply;
   const failed = trace.steps.find((step) => !step.ok);
   if (trace.rolledBack || failed) {
     const reason = normalizeEditError(new Error(failed?.error ?? '规则未通过')).replace(/[。！？!?]+$/, '');
@@ -315,7 +331,12 @@ const readLocalCache = (key) => {
   catch { return { value: null, readable: false }; }
 };
 
-const createInitialProjectSession = (recordingMode) => {
+const createInitialProjectSession = (recordingMode, remoteProject = null) => {
+  if (remoteProject) return { ...restoreProjectSession({
+    initialScene: createDemoScene(),
+    serializedVersionHistory: remoteProject.versionHistory,
+    serializedDesignBrief: JSON.stringify(remoteProject.designBrief),
+  }), cache: {}, remoteProject };
   let styleId = 'scandinavian';
   try { styleId = deserializeProjectSetup(readLocalCache('oppein.project-setup.v1').value).styles[0] ?? styleId; }
   catch { /* Missing setup uses the demo's default palette. */ }
@@ -441,7 +462,7 @@ function CadLayer({ sceneModel, projection, selection, onSelect, showFurniture =
   return (
     <g data-layer="cad" data-subtle={subtle}>
       {cad.rooms.map((room) => {
-        const label = roomLabelPositions[room.id] ?? polygonCenter(room.polygon);
+        const label = sceneModel.id === scene.id ? roomLabelPositions[room.id] ?? polygonCenter(room.polygon) : polygonCenter(room.polygon);
         const selected = selection?.kind === 'room' && selection.id === room.id;
         return <g key={room.id} className="selectable-group" role="button" tabIndex="0" aria-label={`选择${roomLabels[room.id] ?? room.name}`} onClick={() => onSelect({ kind: 'room', id: room.id })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'room', id: room.id }, onSelect)}>
           <polygon
@@ -449,7 +470,7 @@ function CadLayer({ sceneModel, projection, selection, onSelect, showFurniture =
             data-selected={selected}
             data-textured={showTexture}
             points={polygonPoints(room.polygon)}
-            style={showTexture ? { fill: `url(#${room.materialId === 'mat-floor-tile-warm' ? 'floor-tile' : 'floor-oak'})` } : undefined}
+            style={showTexture ? { fill: `url(#${room.materialId === 'mat-floor-tile-warm' ? 'floor-tile' : room.materialId === 'mat-floor-dark-walnut' ? 'floor-walnut' : 'floor-oak'})` } : undefined}
           />
           {showAnnotations && <>
             <text className="cad-room-label" x={label.x} y={label.y - 45}>{roomLabels[room.id] ?? room.name}</text>
@@ -507,6 +528,10 @@ function ScenePlan({ sceneModel = scene, mode, onModeChange, selection, onSelect
         <pattern id="floor-tile" width="1800" height="1800" patternUnits="userSpaceOnUse">
           <image href="/assets/materials/floor-tile-warm.webp" width="1800" height="1800" opacity="0.48" preserveAspectRatio="xMidYMid slice" />
         </pattern>
+        <pattern id="floor-walnut" width="1800" height="1800" patternUnits="userSpaceOnUse">
+          <rect width="1800" height="1800" fill="#5a3d30" />
+          <image href="/assets/materials/floor-oak-light.webp" width="1800" height="1800" opacity="0.2" preserveAspectRatio="xMidYMid slice" />
+        </pattern>
       </defs>
       <rect className="drawing-sheet" x={currentProjection.viewBox.x - padding} y={currentProjection.viewBox.y - padding} width={currentProjection.viewBox.width + padding * 2.45} height={currentProjection.viewBox.height + padding * 2} />
       {mode === 'cad' && <CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} />}
@@ -529,6 +554,7 @@ function ProjectPlanPreview({ mode = 'overlay', label }) {
 
 function ProjectsPage() {
   const dialogRef = useRef(null);
+  const [experienceProjects] = useState(() => { try { const value = JSON.parse(readLocalCache('opai.experience.projects.v1').value ?? '[]'); return Array.isArray(value) ? value.filter(project => /^exp-[a-f0-9-]{36}$/.test(project.id)) : []; } catch { return []; } });
 
   const openProject = useCallback(() => {
     const dialog = dialogRef.current;
@@ -554,15 +580,16 @@ function ProjectsPage() {
       </header>
 
       <div className="project-library__grid">
+        {experienceProjects.map(project => <a key={project.id} className="project-tile project-tile--experience" href={`/project/demo?project=${encodeURIComponent(project.id)}&style=agent-canvas`}><div className="experience-project-thumb"><HouseLine size={56} weight="thin" /><span>我的生活空间</span></div><span className="project-tile__body"><span><small>我的独立项目</small><b>{project.name}</b></span><span className="project-status">{project.versionLabel ?? 'V1'}</span></span><span className="project-tile__meta"><span>{new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span><span>打开保存的方案与需求</span><ArrowRight size={17} /></span></a>)}
         <button className="project-tile project-tile--demo" type="button" onClick={openProject}>
           <ProjectPlanPreview label="示例住宅 · 装修布局" />
           <span className="project-tile__body"><span><small>示例项目</small><b>城市三口之家</b></span><span className="project-status">方案讨论中</span></span>
           <span className="project-tile__meta"><span>7 个空间</span><span>可编辑示例方案</span><ArrowRight size={17} aria-hidden="true" /></span>
         </button>
 
-        <a className="project-tile project-tile--new" href="/projects/new">
+        <a className="project-tile project-tile--new" href="/project/demo?style=agent-canvas">
           <span className="project-tile__add"><Plus size={24} weight="regular" aria-hidden="true" /></span>
-          <span><b>设计一个自己的家</b><small>从户型图或 Demo 户型开始</small></span>
+          <span><b>设计一个自己的家</b><small>从可编辑参考户型和你的生活需要开始</small></span>
           <span className="editorial-new-action">新建项目 <ArrowRight size={18} aria-hidden="true" /></span>
         </a>
       </div>
@@ -583,7 +610,7 @@ function ProjectsPage() {
           <div><dt>当前版本</dt><dd>以工作台保存结果为准</dd></div>
           <div><dt>当前阶段</dt><dd>方案讨论</dd></div>
         </dl>
-        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><a className="project-detail__enter" href="/project/demo?style=agent-canvas">进入项目 <ArrowRight size={16} aria-hidden="true" /></a></footer>
+        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><a className="project-detail__enter" href="/project/demo?legacy=1&style=agent-canvas">进入原项目 <ArrowRight size={16} aria-hidden="true" /></a></footer>
       </div>
     </dialog>
   </main>;
@@ -1031,14 +1058,97 @@ function LabScenePage() {
   </main>;
 }
 
+const experienceTokenKey = (id) => `opai.experience.${id}.token`;
+let experienceBootstrap;
+
+const rememberExperienceProject = (project, versionLabel) => {
+  try {
+    const previous = JSON.parse(readLocalCache('opai.experience.projects.v1').value ?? '[]');
+    const projects = Array.isArray(previous) ? previous.filter(item => item.id !== project.projectId) : [];
+    projects.unshift({ id: project.projectId, name: project.project?.name ?? '我的生活空间', versionLabel: versionLabel ?? 'V1', updatedAt: new Date().toISOString() });
+    window.localStorage.setItem('opai.experience.projects.v1', JSON.stringify(projects.slice(0, 40)));
+  } catch { /* Project access and server persistence work even when the optional local list is unavailable. */ }
+};
+
+async function loadExperienceProject() {
+  const requested = new URLSearchParams(window.location.search).get('project');
+  const token = requested ? readLocalCache(experienceTokenKey(requested)).value : null;
+  if (requested && !token) throw new Error('这个项目的访问凭据不在当前浏览器中，请回到原浏览器，或新建独立体验。');
+  let project;
+  try {
+    project = await fetchJson(requested ? `/api/experience/projects/${encodeURIComponent(requested)}` : '/api/experience/projects', requested
+      ? { headers: { authorization: `Bearer ${token}` } }
+      : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ requestId: eventId('create') }) });
+  } catch (error) {
+    throw new Error(experienceEntryFailureMessage(error, { requestedProject: Boolean(requested) }), { cause: error });
+  }
+  const accessToken = project.accessToken ?? token;
+  if (!project.projectId || !accessToken || !project.versionHistory) throw new Error('项目数据尚未准备好，请重试。');
+  window.localStorage.setItem(experienceTokenKey(project.projectId), accessToken);
+  try { const history = JSON.parse(project.versionHistory); rememberExperienceProject(project, history.versions?.find(version => version.id === history.currentVersionId)?.label); } catch { /* Validated below when loading the scene. */ }
+  const url = new URL(window.location.href);
+  url.searchParams.set('project', project.projectId);
+  window.history.replaceState({}, '', url);
+  return { ...project, accessToken };
+}
+
 function ProjectDemoPage() {
+  const legacy = new URLSearchParams(window.location.search).has('legacy') || new URLSearchParams(window.location.search).get('recording') === '1';
+  const [project, setProject] = useState(null);
+  const [failure, setFailure] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const pendingWorkRef = useRef(false);
+  const lastProjectUrlRef = useRef(window.location.href);
+  useEffect(() => {
+    if (legacy) return undefined;
+    let alive = true;
+    const pending = experienceBootstrap ?? (experienceBootstrap = loadExperienceProject());
+    pending.then(value => { if (alive) { lastProjectUrlRef.current = window.location.href; setProject(value); } }).catch(error => { if (alive) setFailure(error.message); }).finally(() => { if (experienceBootstrap === pending) experienceBootstrap = null; });
+    return () => { alive = false; };
+  }, [legacy, attempt]);
+  useEffect(() => {
+    if (!project) return undefined;
+    const onProjectNavigation = () => {
+      const nextId = new URLSearchParams(window.location.search).get('project');
+      if (nextId === project.projectId) { lastProjectUrlRef.current = window.location.href; return; }
+      if (pendingWorkRef.current && !window.confirm('当前调整还没有保存。离开后将打开另一项目，是否继续？')) {
+        window.history.pushState({}, '', lastProjectUrlRef.current);
+        return;
+      }
+      setProject(null); setFailure(''); setAttempt(value => value + 1);
+    };
+    window.addEventListener('popstate', onProjectNavigation);
+    return () => window.removeEventListener('popstate', onProjectNavigation);
+  }, [project]);
+  if (legacy) return <ProjectWorkspace />;
+  if (project) return <ProjectWorkspace key={project.projectId} remoteProject={project} pendingWorkRef={pendingWorkRef} />;
+  return <main className="experience-project-loading"><HouseLine size={32} /><h1>{failure ? '暂时没有打开项目' : '正在准备你的空间'}</h1><p role="status">{failure || '为这次体验建立独立项目，读取你可以实际调整的房屋。'}</p>{failure && <div><button onClick={() => { setFailure(''); setAttempt(value => value + 1); }}>重试</button><a href="/project/demo?style=agent-canvas">新建独立体验</a></div>}</main>;
+}
+
+function ProjectWorkspace({ remoteProject = null, pendingWorkRef = null }) {
   const [entryQuery] = useState(() => typeof window === 'undefined' ? '' : window.location.search);
   const recordingMode = new URLSearchParams(entryQuery).get('recording') === '1';
   const initialExperienceStyle = useMemo(() => resolveExperienceStyle(
     entryQuery,
     readLocalCache('oppein.experience-style').value,
   ), []);
-  const [initialVersionProject] = useState(() => createInitialProjectSession(recordingMode));
+  const [initialVersionProject] = useState(() => createInitialProjectSession(recordingMode, remoteProject));
+  const [projectRevision, setProjectRevision] = useState(remoteProject?.revision ?? 0);
+  const projectRevisionRef = useRef(projectRevision);
+  const [requirements, setRequirements] = useState(remoteProject?.requirements ?? null);
+  const [evidenceConstraints, setEvidenceConstraints] = useState(remoteProject?.evidenceConstraints ?? []);
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const saveRequestRef = useRef(null);
+  const discussionAdoptionRef = useRef(null);
+  const outcomeCacheKey = remoteProject ? `opai.experience.${remoteProject.projectId}.outcome.v1` : null;
+  const [pendingDiscussionOutcome, setPendingDiscussionOutcome] = useState(() => {
+    try { return remoteProject ? JSON.parse(window.localStorage.getItem(`opai.experience.${remoteProject.projectId}.outcome.v1`) ?? 'null') : null; } catch { return null; }
+  });
+  const [outcomeBusy, setOutcomeBusy] = useState(false);
+  const outcomeRequestRef = useRef(false);
+  const experiencePath = remoteProject ? `/api/experience/projects/${encodeURIComponent(remoteProject.projectId)}` : null;
+  const projectHeaders = remoteProject ? { 'content-type': 'application/json', authorization: `Bearer ${remoteProject.accessToken}` } : { 'content-type': 'application/json' };
+  const applyProjectRevision = revision => { if (Number.isInteger(revision)) { projectRevisionRef.current = revision; setProjectRevision(revision); } };
   const cacheRecoveryRef = useRef({});
   const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
   const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
@@ -1072,16 +1182,18 @@ function ProjectDemoPage() {
   const [agentInput, setAgentInput] = useState('');
   const [agentBusy, setAgentBusy] = useState(false);
   const [agentProgress, setAgentProgress] = useState('');
+  const agentRequestRef = useRef(null);
+  const [lastAgentFailure, setLastAgentFailure] = useState(null);
   const [agentCallout, setAgentCallout] = useState(null);
   const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
   const [agentMessages, setAgentMessages] = useState(() => {
-    const messages = [{
+    const messages = remoteProject?.conversation?.length ? remoteProject.conversation : [{
       id: 'agent-welcome', role: 'assistant',
       text: recordingMode
         ? '当前为编排演示模式，指定场景按预设步骤执行，并非 AI 实时生成；不会覆盖你的正常项目。'
         : initialVersionProject.restoration.versions === 'invalid'
         ? '旧版本缓存暂时无法校验，当前显示演示场景而非你的保存版本；旧数据会保留用于恢复。'
-        : `已${initialVersionProject.restoration.versions === 'restored' ? '恢复保存的版本，读取' : '读取'} ${initialVersionProject.store.currentScene.rooms.length} 个空间。选择房间或家具，再说想解决的问题。`,
+        : `已经读取这套房屋的 ${initialVersionProject.store.currentScene.rooms.length} 个空间。说说最近一次在家里觉得不舒服、或希望改变的时刻，我们从那里开始。`,
       source: recordingMode ? 'demo-script' : 'local', tools: [],
     }];
     if (new URLSearchParams(entryQuery).get('firstPlan') === 'ready') {
@@ -1121,6 +1233,7 @@ function ProjectDemoPage() {
   const versions = versionHistory.versions;
   const currentVersion = versions.find((version) => version.id === versionHistory.currentVersionId) ?? versions.at(-1);
   const hasUnsavedChanges = serializeScene(currentVersion.scene) !== serializeScene(currentScene);
+  if (pendingWorkRef) pendingWorkRef.current = hasUnsavedChanges || Boolean(pendingReview);
   const workingVersion = hasUnsavedChanges
     ? { ...currentVersion, id: 'working-copy', label: '未保存', scene: currentScene, commands: sceneStore.commands, cursor: sceneStore.cursor }
     : currentVersion;
@@ -1207,7 +1320,11 @@ function ProjectDemoPage() {
     ? '自由视角'
     : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
   const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
-  const roomBrief = activeRoomId ? roomBriefs[activeRoomId] : null;
+  const roomBrief = remoteProject && currentRoom ? {
+    kicker: currentRoom.name, title: '从真实空间里，找到适合你的调整',
+    summary: `当前房间约 ${polygonAreaM2(currentRoom.polygon.map(point => ({ x: point.x, y: point.z }))).toFixed(1)} m²，家具与门窗位置来自这份方案。先明确生活需要，再看每次调整的实际变化。`,
+    checks: ['门口保持通行', '调整可撤销'], shortcuts: currentScene.objects.filter(object => object.roomId === activeRoomId).map(object => ({ label: object.name, objectId: object.id })),
+  } : activeRoomId ? roomBriefs[activeRoomId] : null;
   const agentHasConversation = agentMessages.some((message) => message.role === 'user');
   const agentQuickPrompts = selectedSurface
     ? selectedSurface.kind === 'wall'
@@ -1217,16 +1334,19 @@ function ProjectDemoPage() {
         : ['这个顶面改成暖灰', '这个顶面改成暖白', '对比上一版变化']
     : activeRoomId === 'room-primary-bedroom'
     ? selectedObject?.id === 'object-primary-bed'
-      ? ['双人床向左移动10厘米', '检查双人床床侧净距', '对比上一版变化']
+      ? ['床留下，帮我把主卧变暖一点', '看看床周围现在舒不舒服', '对比上一版变化']
       : selectedObject?.id === 'object-primary-wardrobe'
-        ? ['衣柜改成暖白色', '检查衣柜柜前净距', '对比上一版变化']
-        : ['主卧太满但收纳别少', '把衣柜改成暖白色', '对比上一版变化']
+        ? ['衣柜留下，但别显得那么重', '看看衣柜前面现在顺不顺', '对比上一版变化']
+        : selectedObject?.id === 'object-primary-feature-wall'
+          ? ['床头这块想更温暖安静一点', '床头别太满，试个克制的方向', '对比上一版变化']
+        : ['主卧有点冷，想温暖安静一点', '床和衣柜都留下，先试试氛围', '对比上一版变化']
     : activeRoomId === 'room-flex'
       ? selectedObject?.id === 'object-flex-bed'
         ? ['单人床向右移动20厘米', '检查单人床床侧净距', '对比上一版变化']
         : selectedObject?.id === 'object-flex-desk'
           ? ['书桌向左移动20厘米', '检查书桌周围规则', '对比上一版变化']
           : ['检查儿童房当前规则', '单人床向右移动20厘米', '书桌向左移动20厘米']
+      : !agentHasConversation ? ['这个客厅让我不太想待', '我想改得更好看，但还说不清楚']
       : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
   const namedDiffs = useMemo(() => [
     ...versionDiff.objectDiffs.map((diff) => ({
@@ -1260,18 +1380,23 @@ function ProjectDemoPage() {
   );
   const openVersionDrawer = useCallback(() => {
     versionDrawerActivatorRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // A fresh proposal is compared with its saved base, not an older timeline
+    // selection left over from a previous visit to this drawer.
+    if (pendingReview) setCompareFromVersionId(versionHistoryRef.current.currentVersionId);
     setVersionDrawerOpen(true);
-  }, []);
+  }, [pendingReview]);
   const closeVersionDrawer = useCallback(() => {
     setVersionDrawerOpen(false);
   }, []);
   const projectViewQuery = useCallback((viewState, sceneModel) => {
     const query = new URLSearchParams(withExperienceStyle(serializeViewState(viewState, sceneModel), experienceStyle));
     if (recordingMode) query.set('recording', '1');
+    if (remoteProject) query.set('project', remoteProject.projectId);
+    else if (new URLSearchParams(entryQuery).has('legacy')) query.set('legacy', '1');
     const firstPlan = new URLSearchParams(entryQuery).get('firstPlan');
     if (firstPlan === 'ready' || firstPlan === 'degraded') query.set('firstPlan', firstPlan);
     return `?${query}`;
-  }, [experienceStyle, recordingMode, entryQuery]);
+  }, [experienceStyle, recordingMode, entryQuery, remoteProject]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -1357,6 +1482,7 @@ function ProjectDemoPage() {
   };
 
   const executeCommand = useCallback((command, successMessage = '修改已应用') => {
+    if (agentRequestRef.current || saveRequestRef.current) { setEditFeedback({ tone: 'warning', message: '当前正在处理设计或保存，请完成或取消后再调整。' }); return null; }
     if (pendingReview) {
       setEditFeedback({ tone: 'warning', message: '请先保留或撤销当前预览，再继续调整。' });
       return null;
@@ -1365,6 +1491,8 @@ function ProjectDemoPage() {
       const startCursor = sceneStoreRef.current.cursor;
       const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
       const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
+      assertRequirementConstraints(sceneStoreRef.current.currentScene, nextStore.currentScene, requirements);
+      assertEvidenceConstraints(sceneStoreRef.current.currentScene, nextStore.currentScene, evidenceConstraints, { projectId: remoteProject?.projectId, houseId: nextStore.currentScene.id });
       const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
       const affectedObjectIds = [command.objectId, command.newObjectId];
       const changedReviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, affectedObjectIds);
@@ -1393,9 +1521,10 @@ function ProjectDemoPage() {
       setEditFeedback({ tone: 'error', message: `未应用：${message}` });
       return null;
     }
-  }, [pendingReview]);
+  }, [pendingReview, requirements, evidenceConstraints, remoteProject?.projectId]);
 
   const undo = useCallback(() => {
+    if (agentRequestRef.current || saveRequestRef.current) return;
     try {
       const nextStore = undoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
@@ -1410,6 +1539,7 @@ function ProjectDemoPage() {
   }, []);
 
   const redo = useCallback(() => {
+    if (agentRequestRef.current || saveRequestRef.current) return;
     try {
       const nextStore = redoSceneCommand(sceneStoreRef.current);
       sceneStoreRef.current = nextStore;
@@ -1473,14 +1603,12 @@ function ProjectDemoPage() {
       }]);
     }
     setPendingReview(null);
-    setEditFeedback({ tone: 'success', message: '已保留预览；这些提醒会作为 demo 规则边界继续显示。' });
+    setEditFeedback({ tone: 'success', message: '已保留这次调整。点击保存方案后，可重新打开继续。' });
   };
 
   const discardPendingReview = () => {
     if (!pendingReview) return;
-    let nextStore = sceneStoreRef.current;
-    const targetCursor = Math.max(0, Math.min(pendingReview.startCursor ?? nextStore.cursor - 1, nextStore.cursor));
-    while (nextStore.cursor > targetCursor) nextStore = undoSceneCommand(nextStore);
+    const nextStore = retractUnretainedPreview(sceneStoreRef.current, pendingReview);
     sceneStoreRef.current = nextStore;
     setSceneStore(nextStore);
     setPendingReview(null);
@@ -1494,36 +1622,38 @@ function ProjectDemoPage() {
 
   const runAgentPrompt = async (rawInput) => {
     const input = String(rawInput ?? '').trim();
-    if (!input || agentBusy) return;
+    if (!input || agentRequestRef.current || saveRequestRef.current) return;
     if (pendingReview) {
-      setSidecarMode('agent');
+      discardPendingReview();
       setAgentMessages((messages) => [...messages, {
         id: `agent-review-${Date.now()}`,
         role: 'assistant',
-        text: '需保留或撤销当前规范预览；未确认状态不可叠加。',
-        source: 'local',
+        text: '已撤回刚才未保留的预览，再按你的补充继续。之前手动修改和已保留的调整不变。',
+        source: 'request-status',
         tools: [],
       }]);
-      return;
     }
 
     const turnId = globalThis.crypto?.randomUUID?.() ?? `turn-${Date.now()}`;
+    const controller = new AbortController();
+    agentRequestRef.current = { id: turnId, controller };
+    const deadline = setTimeout(() => controller.abort(new Error('REQUEST_TIMEOUT')), 100_000);
     setSidecarMode('agent');
     setAgentInput('');
     setAgentBusy(true);
     setAgentCallout(null);
+    setLastAgentFailure(null);
     setAgentMessages((messages) => [...messages, { id: `${turnId}-user`, role: 'user', text: input, source: 'resident', tools: [] }]);
     const beforeStore = sceneStoreRef.current;
     const beforeHistory = versionHistoryRef.current;
 
     try {
       let result;
-      try {
         const recordingScenario = recordingMode ? findRecordingScenario(input) : null;
         if (recordingScenario) {
           setAgentProgress('正在执行编排演示步骤…');
           result = runRecordingScenario(beforeStore, input);
-        } else if (recordingSafePrompts.has(input)) {
+        } else if (recordingMode && recordingSafePrompts.has(input)) {
           result = await runAgentTurn({
             store: beforeStore,
             input,
@@ -1535,40 +1665,36 @@ function ProjectDemoPage() {
         } else {
         setAgentProgress('正在请求设计服务并校验可执行调整…');
         const serializedHistory = serializeVersionHistory(beforeHistory);
-        const response = await fetch('/api/agent/turn', {
+        const response = await fetch(experiencePath ? `${experiencePath}/turn` : '/api/agent/turn', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          signal: AbortSignal.timeout(40_000),
+          headers: projectHeaders,
+          signal: controller.signal,
           body: JSON.stringify({
             eventId: turnId,
-            projectId: 'project-demo',
+            requestId: turnId,
+            expectedRevision: projectRevisionRef.current,
+            projectId: remoteProject?.projectId ?? 'project-demo',
             spaceId: activeRoomId ?? 'scene-demo-whole-home',
             versionId: beforeHistory.currentVersionId,
             input,
             selectedObjectId: navigation.selectedId,
             scene: serializeScene(beforeStore.currentScene),
             designBrief,
-            ...(serializedHistory.length < 60_000 ? { versionHistory: serializedHistory } : {}),
+            ...(remoteProject || serializedHistory.length < 60_000 ? { versionHistory: serializedHistory } : {}),
           }),
         });
-        if (!response.ok) throw new Error('AGENT_BFF_UNAVAILABLE');
         const body = await response.json();
+        if (!response.ok) throw Object.assign(new Error(body.error?.message ?? body.error?.code ?? body.error ?? `AGENT_HTTP_${response.status}`), { trace: body.trace });
+        applyProjectRevision(body.revision);
+        if (body.requirements) setRequirements(body.requirements);
+        if (body.evidenceConstraints) setEvidenceConstraints(body.evidenceConstraints);
         if (!Array.isArray(body.commands) || !body.trace) throw new Error('AGENT_BFF_INVALID');
         let replayed = beforeStore;
         for (const command of body.commands) replayed = dispatchSceneCommand(replayed, command);
         result = { store: replayed, trace: body.trace };
         }
-      } catch (apiError) {
-        result = await runAgentTurn({
-          store: beforeStore,
-          input,
-          selectedObjectId: navigation.selectedId,
-          versionHistory: beforeHistory,
-          designBrief,
-          activeRoomId,
-        });
-        result = { ...result, trace: { ...result.trace, fallbackReason: result.trace.fallbackReason ?? apiError?.message ?? 'AGENT_BFF_UNAVAILABLE' } };
-      }
+      if (controller.signal.aborted || agentRequestRef.current?.id !== turnId) return;
+      if (sceneStoreRef.current !== beforeStore || versionHistoryRef.current !== beforeHistory) throw new Error('SCENE_CHANGED_DURING_REQUEST');
       const sceneChanged = serializeScene(result.store.currentScene) !== serializeScene(beforeStore.currentScene);
       if (result.trace.designBrief) setDesignBrief(normalizeDesignBrief(result.trace.designBrief));
       const successfulWrites = result.trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
@@ -1586,7 +1712,7 @@ function ProjectDemoPage() {
         needsReview = true;
         setPendingReview({
           checks: reviewChecks.slice(0, 3),
-          saveOnKeep: true,
+          saveOnKeep: false,
           startCursor: beforeStore.cursor,
           status: reviewChecks.length ? topRuleStatus(reviewChecks) : 'passed',
           versionSource: result.trace.source === 'provider' ? 'agent-provider' : result.trace.source === 'demo-script' ? 'demo-script' : 'agent-local',
@@ -1603,11 +1729,7 @@ function ProjectDemoPage() {
           const reason = result.scenario?.calloutReason
             ?? String(result.trace.assistantReply ?? input).split(/[。！？!?]/)[0].slice(0, 48);
           setAgentCallout({ roomId: modifiedRoom.id, roomLabel: roomLabels[modifiedRoom.id] ?? modifiedRoom.name, reason });
-          commitNavigation({
-            roomId: modifiedRoom.id,
-            viewId: modifiedRoom.cameraPresetIds[0],
-            selectedId: result.scenario?.selectedId ?? changedEntity?.id ?? modifiedRoom.id,
-          });
+          if (recordingMode) commitNavigation({ roomId: modifiedRoom.id, viewId: modifiedRoom.cameraPresetIds[0], selectedId: result.scenario?.selectedId ?? changedEntity?.id ?? modifiedRoom.id });
         }
 
         const deletedSelected = successfulWrites.some((step) => step.tool === 'delete_object' && step.args?.objectId === navigation.selectedId);
@@ -1625,18 +1747,25 @@ function ProjectDemoPage() {
         text: agentReplyFromTrace(result.trace, { pending: needsReview }),
         source: result.trace.source,
         fallbackReason: result.trace.fallbackReason,
+        trace: result.trace,
         tools: result.trace.toolCalls.map((call) => call.tool),
         confirmationRequested: result.trace.steps.some((step) => step.ok && step.tool === 'request_confirmation'),
       }]);
-    } catch {
+    } catch (error) {
+      const cancelled = controller.signal.aborted && controller.signal.reason?.message !== 'REQUEST_TIMEOUT';
+      const reason = cancelled ? '已取消这次请求。' : error?.message === 'SCENE_CHANGED_DURING_REQUEST' ? '请求期间场景已改变，已丢弃过期结果。' : '这次设计请求未完成，可以重试。';
+      setLastAgentFailure(cancelled ? null : { input, reason: String(error?.message ?? 'REQUEST_FAILED') });
       setAgentMessages((messages) => [...messages, {
         id: `${turnId}-assistant`,
         role: 'assistant',
-        text: '本轮未完成，当前场景保持不变。请重试或缩小到一个房间与一个目标。',
-        source: 'local',
+        text: `${reason} 房屋没有被修改。`,
+        source: 'request-status',
+        trace: error.trace,
         tools: [],
       }]);
     } finally {
+      clearTimeout(deadline);
+      if (agentRequestRef.current?.id === turnId) agentRequestRef.current = null;
       setAgentProgress('');
       setAgentBusy(false);
     }
@@ -1647,24 +1776,65 @@ function ProjectDemoPage() {
     runAgentPrompt(agentInput);
   };
 
-  const saveCurrentVersion = () => {
-    if (pendingReview) {
+  const syncDiscussionOutcome = async (outcome) => {
+    if (!outcome || outcomeRequestRef.current) return;
+    outcomeRequestRef.current = true;
+    setOutcomeBusy(true);
+    setPendingDiscussionOutcome(outcome);
+    // Persist only version/event IDs so a refresh can retry the same idempotent link.
+    try { window.localStorage.setItem(outcomeCacheKey, JSON.stringify(outcome)); } catch { /* The current page still offers retry. */ }
+    try {
+      await fetchJson(`${experiencePath}/discussions/${encodeURIComponent(outcome.discussionId)}/outcome`, { method: 'POST', headers: projectHeaders, body: JSON.stringify(outcome) });
+      discussionAdoptionRef.current = null;
+      setPendingDiscussionOutcome(null);
+      try { window.localStorage.removeItem(outcomeCacheKey); } catch { /* Safe idempotent replay if storage remains. */ }
+      setHandoffSync({ status: 'synced', message: '已将新版本关联回这次飞书讨论。', reviewUrl: null, handoffUrl: null });
+    } catch (error) {
+      setHandoffSync({ status: 'failed', message: `新版本已保存，讨论关联未完成：${error.message}`, reviewUrl: null, handoffUrl: null });
+    } finally { outcomeRequestRef.current = false; setOutcomeBusy(false); }
+  };
+
+  const saveCurrentVersion = async () => {
+    if (pendingReview || agentRequestRef.current || saveRequestRef.current) {
       setEditFeedback({ tone: 'warning', message: '请先保留或撤销规范预览，再保存版本。' });
       return;
     }
-    const nextHistory = saveSceneVersion(versionHistory, sceneStoreRef.current, { source: `manual:${activeMember.id}` });
-    if (nextHistory === versionHistory) {
+    const beforeHistory = versionHistoryRef.current;
+    const nextHistory = saveSceneVersion(beforeHistory, sceneStoreRef.current, { source: `resident:${activeMember.id}` });
+    if (nextHistory === beforeHistory && !remoteProject) {
       setEditFeedback({ tone: 'neutral', message: `${currentVersion.label} 已包含当前场景，无需重复保存。` });
       return;
     }
+    if (remoteProject) {
+      const requestId = eventId('save');
+      saveRequestRef.current = requestId;
+      setSaveStatus('saving');
+      try {
+        const response = await fetchJson(`${experiencePath}/save`, { method: 'POST', headers: projectHeaders,
+          body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current, versionHistory: serializeVersionHistory(nextHistory), designBrief }) });
+        applyProjectRevision(response.revision);
+        if (response.requirements) setRequirements(response.requirements);
+        setSaveStatus('saved');
+        const adoption = discussionAdoptionRef.current;
+        if (adoption && nextHistory.currentVersionId !== adoption.baseVersionId) {
+          await syncDiscussionOutcome({ discussionId: adoption.discussionId, eventId: eventId('outcome'), baseVersionId: adoption.baseVersionId, outcomeVersionId: nextHistory.currentVersionId });
+        }
+      } catch (error) {
+        setSaveStatus('failed');
+        setEditFeedback({ tone: 'error', message: `保存未完成，当前调整仍保留在此页：${error.message}` });
+        return;
+      } finally { saveRequestRef.current = null; }
+    }
     setCompareFromVersionId(currentVersion.id);
+    versionHistoryRef.current = nextHistory;
     setVersionHistory(nextHistory);
     const saved = nextHistory.versions.at(-1);
+    if (remoteProject) rememberExperienceProject(remoteProject, saved.label);
     setEditFeedback({ tone: 'success', message: `${saved.label} 已保存；可与 ${currentVersion.label} 对比或回退。` });
     setAgentMessages((messages) => [...messages, {
       id: `manual-saved-${saved.id}`,
       role: 'assistant',
-      text: `${saved.label} 已进入版本链。需要家庭共识时，请让每位成员针对这个版本表达真实理由。`,
+      text: `${saved.label} 已保存，可以重新打开继续。也可以邀请家人围绕这版方案表达意见。`,
       source: 'local',
       tools: [],
       nextAction: 'household',
@@ -1681,6 +1851,21 @@ function ProjectDemoPage() {
     setCompareFromVersionId(currentVersion.id);
     setEditFeedback({ tone: 'success', message: `${currentVersion.label} 已客户确认；后续保存会标记为确认后修改。` });
     setHandoffSync({ status: 'idle', message: '已客户确认，可以提交设计师复核。', reviewUrl: null, handoffUrl: null });
+  };
+
+  const downloadExperienceHandoff = async (format = 'markdown') => {
+    if (!remoteProject || pendingReview || hasUnsavedChanges) return;
+    try {
+      const body = await fetchJson(`${experiencePath}/handoff`, { headers: projectHeaders });
+      const machineReadable = format === 'json';
+      const exportedVersionIndex = (body.versions ?? []).findIndex(version => version.id === body.versionId);
+      const exportedLabel = body.versionLabel ?? (exportedVersionIndex >= 0 ? `V${exportedVersionIndex + 1}` : body.versionId);
+      const content = machineReadable ? JSON.stringify(body, null, 2) : formatExperienceHandoff({ ...body, versionLabel: exportedLabel });
+      const url = URL.createObjectURL(new Blob([content], { type: machineReadable ? 'application/json' : 'text/markdown;charset=utf-8' }));
+      const link = document.createElement('a'); link.href = url; link.download = `OPAI-${exportedLabel}-需求与交接.${machineReadable ? 'json' : 'md'}`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setHandoffSync({ status: 'synced', message: '已导出当前保存版本的需求简报与交接记录。', reviewUrl: null, handoffUrl: null });
+    } catch (error) { setHandoffSync({ status: 'failed', message: `交接导出未完成：${error.message}`, reviewUrl: null, handoffUrl: null }); }
   };
 
   const submitDesignerReview = async () => {
@@ -1718,13 +1903,24 @@ function ProjectDemoPage() {
     }
   };
 
-  const restoreComparedVersion = () => {
-    if (hasUnsavedChanges || pendingReview) {
+  const restoreComparedVersion = async () => {
+    if (hasUnsavedChanges || pendingReview || agentRequestRef.current || saveRequestRef.current) {
       setEditFeedback({ tone: 'warning', message: hasUnsavedChanges ? '请先保存或撤销当前修改，再从旧版继续。' : '请先处理规范预览。' });
       return;
     }
     const restored = restoreSceneVersion(versionHistory, compareFromVersion.id);
+    if (remoteProject) {
+      const requestId = eventId('restore');
+      saveRequestRef.current = requestId; setSaveStatus('saving');
+      try {
+        const response = await fetchJson(`${experiencePath}/save`, { method: 'POST', headers: projectHeaders, body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current, versionHistory: serializeVersionHistory(restored.history), designBrief }) });
+        applyProjectRevision(response.revision); setSaveStatus('saved');
+        rememberExperienceProject(remoteProject, restored.history.versions.at(-1).label);
+      } catch (error) { setSaveStatus('failed'); setEditFeedback({ tone: 'error', message: `旧版尚未恢复：${error.message}。当前方案保持不变。` }); return; }
+      finally { saveRequestRef.current = null; }
+    }
     sceneStoreRef.current = restored.store;
+    versionHistoryRef.current = restored.history;
     setSceneStore(restored.store);
     setVersionHistory(restored.history);
     setPendingReview(null);
@@ -1874,7 +2070,7 @@ function ProjectDemoPage() {
 
   const persistSessionValue = useCallback((key, serializedValue, restorationKey) => {
     // Rehearsal is deliberately isolated from the resident's saved project.
-    if (recordingMode || cacheRecoveryRef.current[key] === false) return;
+    if (remoteProject || recordingMode || cacheRecoveryRef.current[key] === false) return;
     try {
       const original = initialVersionProject.cache[key];
       if (!original.readable) throw new Error('CACHE_READ_UNAVAILABLE');
@@ -1889,7 +2085,7 @@ function ProjectDemoPage() {
       cacheRecoveryRef.current[key] = false;
       setEditFeedback({ tone: 'warning', message: '本地保存暂不可用，旧缓存未删除；当前修改仅保留在此页面，请暂勿刷新。' });
     }
-  }, [recordingMode, initialVersionProject]);
+  }, [recordingMode, initialVersionProject, remoteProject]);
 
   useEffect(() => { persistSessionValue(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory), 'versions'); }, [versionHistory, persistSessionValue]);
   useEffect(() => { persistSessionValue(CONSENSUS_STORAGE_KEY, serializeHouseholdConsensus(householdConsensus), 'household'); }, [householdConsensus, persistSessionValue]);
@@ -1919,6 +2115,15 @@ function ProjectDemoPage() {
     const list = agentMessageListRef.current;
     if (list) list.scrollTop = list.scrollHeight;
   }, [agentBusy, agentMessages]);
+
+  useEffect(() => () => { agentRequestRef.current?.controller.abort(); }, []);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges && !pendingReview) return undefined;
+    const preventLostWork = event => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', preventLostWork);
+    return () => window.removeEventListener('beforeunload', preventLostWork);
+  }, [hasUnsavedChanges, pendingReview]);
 
   useEffect(() => {
     if (versionDrawerOpen) {
@@ -1988,15 +2193,18 @@ function ProjectDemoPage() {
         <span className="product-brand__mark" aria-hidden="true"><HouseLine size={20} weight="regular" /></span>
         <div>
           <p className="eyebrow">欧派共创空间</p>
-          <h1>城市三口之家</h1>
+          <h1>{remoteProject ? '我的生活空间' : '城市三口之家'}</h1>
         </div>
       </a>
       <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
       <div className="product-hero__meta">
+        <button className="guidance-save" type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview) || agentBusy || saveStatus === 'saving'}><FloppyDisk size={15} />{saveStatus === 'saving' ? '正在保存…' : hasUnsavedChanges ? '保存方案' : `${currentVersion.label} · 已保存`}</button>
         {activeRoomId && <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome}>返回整屋</button>}
         <details className="project-tools-menu">
           <summary>更多工具</summary>
           <div onClick={event => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false; }}>
+            {remoteProject && <a href="/project/demo?style=agent-canvas">新建独立体验</a>}
+            {remoteProject && <a href="/project/demo?legacy=1&style=agent-canvas">打开原来的本地项目</a>}
             <button data-testid="open-version-drawer" type="button" aria-label={`版本 ${currentVersion.label}${hasUnsavedChanges ? ' · 未保存' : ''}`} onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />版本 {currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
             {handoffSync.reviewUrl
               ? <a href={handoffSync.reviewUrl} aria-label="设计师复核">设计师复核</a>
@@ -2037,6 +2245,7 @@ function ProjectDemoPage() {
           : <Suspense fallback={<div className="pascal-stage-loading">正在启动实时装修空间…</div>}>
             <PascalStage
               scene={currentScene}
+              initialView={viewerExpanded ? '3d' : null}
               selection={selection}
               activeRoomId={activeRoomId}
               viewRequest={viewRequest}
@@ -2058,9 +2267,9 @@ function ProjectDemoPage() {
           <details>
             <summary>切换</summary>
             <div>
-              <button type="button" aria-label="切换到设计助理" aria-pressed={sidecarMode === 'agent'} onClick={event => { setSidecarMode('agent'); event.currentTarget.closest('details').open = false; }}><ChatCircleDots size={15} />设计助理</button>
-              <button type="button" aria-label="切换到空间微调" aria-pressed={sidecarMode === 'space'} onClick={event => { setSidecarMode('space'); event.currentTarget.closest('details').open = false; }}><Cube size={15} />空间微调</button>
-              <button type="button" aria-label="切换到家庭意见" aria-pressed={sidecarMode === 'household'} onClick={event => { setSidecarMode('household'); event.currentTarget.closest('details').open = false; }}><UsersThree size={15} />家庭意见</button>
+              <button type="button" aria-label="切换到设计助理" title="切换到设计助理" aria-pressed={sidecarMode === 'agent'} onClick={event => { setSidecarMode('agent'); event.currentTarget.closest('details').open = false; }}><ChatCircleDots size={15} aria-hidden="true" /><span>设计助理</span></button>
+              <button type="button" aria-label="切换到空间微调" title="切换到空间微调" aria-pressed={sidecarMode === 'space'} onClick={event => { setSidecarMode('space'); event.currentTarget.closest('details').open = false; }}><Cube size={15} aria-hidden="true" /><span>空间微调</span></button>
+              <button type="button" aria-label="切换到家庭意见" title="切换到家庭意见" aria-pressed={sidecarMode === 'household'} onClick={event => { setSidecarMode('household'); event.currentTarget.closest('details').open = false; }}><UsersThree size={15} aria-hidden="true" /><span>家庭意见</span></button>
             </div>
           </details>
         </nav>
@@ -2150,7 +2359,7 @@ function ProjectDemoPage() {
           </div>}
           <div className="project-rules" aria-label="设计规则检查" data-layer="summary">
             <div className="project-rules__header"><span>规则检查</span><strong data-status={lastRejected ? 'blocked' : designEvaluation.status}>{lastRejected ? '刚才已阻止' : (ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status)}</strong></div>
-            <p className="project-rules__scope">适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。</p>
+            <p className="project-rules__scope">{remoteProject ? '按参考户型与当前家具位置校验。局部尺寸为演示估算，实际装修仍需现场复核。' : '适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。'}</p>
           </div>
           <p>{displaySelectedEntity?.kind === 'object'
             ? '已定位到所选家具。可以直接在三维画布中调整，也可以使用上方工具；不符合空间规则的修改不会保存。'
@@ -2170,15 +2379,19 @@ function ProjectDemoPage() {
           </div>
 
           <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
+            <RequirementSummary requirements={requirements} disabled={agentBusy} onCorrect={text => { setAgentInput(text); document.querySelector('.agent-composer textarea')?.focus(); }} />
+            {remoteProject && <ExperienceDocuments path={experiencePath} headers={projectHeaders} disabled={agentBusy || saveStatus === 'saving'} onConstraints={setEvidenceConstraints} />}
             {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
-              <div className="agent-message__meta"><span>{message.role === 'user' ? '你的想法' : '设计助理'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' || message.source === 'agent-provider' ? 'AI' : message.source === 'demo-script' ? '编排演示' : message.source === 'first-plan' ? '方案方向' : '本地规则'}</small>}</div>
-              <p>{message.text}</p>
-              {message.tools?.length > 0 && <div className="agent-message__tools">{message.tools.map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你的想法' : '设计助理'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' || message.source === 'agent-provider' ? 'AI' : message.source === 'demo-script' ? '编排演示' : message.source === 'first-plan' ? '方案方向' : message.source === 'request-status' ? '请求状态' : '本地规则'}</small>}</div>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{message.role === 'user' ? formatResidentMessage(message.text) : message.text}</p>
+              {message.tools?.length > 0 && <div className="agent-message__tools">{[...new Set(message.tools)].map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
+              <TurnProvenance trace={message.trace} />
               {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
-              {message.nextAction === 'household' && <button className="agent-message__action" type="button" onClick={() => setSidecarMode('household')}>进入家庭共识</button>}
+              {message.nextAction === 'household' && <button className="agent-message__action" type="button" onClick={() => setSidecarMode('household')}>发起家庭讨论</button>}
               {message.nextAction === 'version' && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本与交接</button>}
             </article>)}
-            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>设计助理</span></div><p><i className="agent-message__spinner" aria-hidden="true" />{agentProgress || '正在检查当前场景与空间规则…'}</p></article>}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>设计助理</span></div><p><i className="agent-message__spinner" aria-hidden="true" />{agentProgress || '正在检查当前场景与空间规则…'}</p><button type="button" className="agent-message__action" onClick={() => agentRequestRef.current?.controller.abort()}>取消本次请求</button></article>}
+            {!agentBusy && lastAgentFailure && <div className="guidance-failure" role="status"><p>{/CONFLICT|STALE/.test(lastAgentFailure.reason) ? '项目已经有更新，先读取最新保存状态，再继续设计。当前页面的修改尚未被覆盖。' : '尚未生成新的修改，当前方案仍在。'}</p>{/CONFLICT|STALE/.test(lastAgentFailure.reason) ? <button onClick={() => window.location.reload()}>重新打开保存的方案</button> : <button onClick={() => runAgentPrompt(lastAgentFailure.input)}>重试这条需求</button>}<details><summary>查看原因</summary>{lastAgentFailure.reason}</details></div>}
             {!agentBusy && !agentHasConversation && <div className="agent-starters" aria-label="可以这样开始">
               {agentQuickPrompts.slice(0, 2).map((prompt) => <button key={prompt} type="button" onClick={() => runAgentPrompt(prompt)}>{prompt}</button>)}
             </div>}
@@ -2188,15 +2401,16 @@ function ProjectDemoPage() {
             <strong>{reviewTitle(pendingReview.status)}</strong>
             <p>{pendingReview.checks[0]?.message ?? '场景已按当前目标生成预览，尚未保存为新版本。'}</p>
             {designBrief.softPreferences.includes('控制预算') && <small>预算已记录为偏好；当前只能验证设计变化，真实成本是否下降需等待欧派报价 API。</small>}
-            <div><button type="button" onClick={keepPendingReview}>保留并保存</button><button type="button" onClick={discardPendingReview}>撤销预览</button></div>
+            <div><button type="button" onClick={keepPendingReview}>保留这次调整</button><button type="button" onClick={discardPendingReview}>撤销预览</button><button type="button" onClick={openVersionDrawer}>查看真实差异</button></div>
           </div>}
 
           <form className="agent-composer" onSubmit={submitAgentPrompt}>
-            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={`试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
-            <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || Boolean(pendingReview)}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
+            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={pendingReview ? '直接说哪里不合适，未保留的预览会先撤回…' : `试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy} />
+            <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || !agentInput.trim() || saveStatus === 'saving'}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
           </form>
-          <footer className="agent-sidecar__footer">修改先生成预览，确认后才保存。</footer>
-        </article> : <article className="panel household-sidecar" data-testid="household-sidecar">
+          {pendingDiscussionOutcome && <div className="guidance-outcome" role="status"><p>方案已保存；飞书讨论的新版本关联{outcomeBusy ? '正在同步…' : '尚未完成，不影响重新打开方案。'}</p><button type="button" disabled={outcomeBusy || agentBusy} onClick={() => syncDiscussionOutcome(pendingDiscussionOutcome)}>{outcomeBusy ? '正在关联…' : '重试关联飞书讨论'}</button></div>}
+          <footer className="agent-sidecar__footer">先预览，再由你保留和保存。家庭讨论随时可以稍后进行。</footer>
+        </article> : remoteProject ? <ExperienceDiscussion path={experiencePath} headers={projectHeaders} versionId={currentVersion.id} versionLabel={currentVersion.label} requirements={requirements} disabled={Boolean(pendingReview) || hasUnsavedChanges || agentBusy || saveStatus === 'saving'} onAdopt={async adoption => { discussionAdoptionRef.current = adoption; setSidecarMode('agent'); await runAgentPrompt(adoption.request); }} /> : <article className="panel household-sidecar" data-testid="household-sidecar">
           <header className="household-sidecar__header">
             <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>当前为 Demo 顺序切换，不是实时多人同步</small></div></div>
             <em>同一版本</em>
@@ -2271,20 +2485,21 @@ function ProjectDemoPage() {
         <section className="version-current" data-status={currentVersionStatus}>
           <div><span>当前工作状态</span><strong>{currentVersion.label} · {versionStatusLabels[currentVersionStatus]}</strong></div>
           <p>{hasUnsavedChanges ? '当前 2D / 3D 有尚未进入版本链的真实修改。' : `已保存 ${currentVersion.summary.commandCount} 条命令，快照可由 SceneCommand 完整重建。`}</p>
+          {saveStatus === 'failed' && <div className="guidance-failure" role="status"><p>保存还未完成，当前调整保留在本页。可以重试保存；如果另一会话已更新项目，请重新打开保存的方案。</p><button onClick={() => window.location.reload()}>重新打开保存的方案</button></div>}
           <div className="version-current__actions">
             <button type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview)}><FloppyDisk size={15} />保存为 V{versions.length + 1}</button>
-            <button type="button" onClick={confirmCurrentVersion} disabled={hasUnsavedChanges || Boolean(pendingReview) || currentVersion.status === 'customer_confirmed'}><Check size={15} />客户确认</button>
-            <button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交复核并同步飞书</button>
+            {remoteProject ? <><button type="button" onClick={() => { closeVersionDrawer(); setSidecarMode('household'); }} disabled={hasUnsavedChanges || Boolean(pendingReview)}><UsersThree size={15} />邀请家人讨论</button><button type="button" onClick={() => downloadExperienceHandoff()} disabled={hasUnsavedChanges || Boolean(pendingReview)}><FileArrowUp size={15} />导出可读需求简报</button><button type="button" onClick={() => downloadExperienceHandoff('json')} disabled={hasUnsavedChanges || Boolean(pendingReview)}>下载机器可读记录 JSON</button></> : <><button type="button" onClick={confirmCurrentVersion} disabled={hasUnsavedChanges || Boolean(pendingReview) || currentVersion.status === 'customer_confirmed'}><Check size={15} />客户确认</button><button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交复核并同步飞书</button></>}
           </div>
           <div className="handoff-submit" data-status={handoffSync.status} role="status">
             <span>{handoffSync.message}</span>
+            {pendingDiscussionOutcome && <button type="button" disabled={outcomeBusy} onClick={() => syncDiscussionOutcome(pendingDiscussionOutcome)}>{outcomeBusy ? '正在关联…' : '重试关联飞书讨论'}</button>}
             {handoffSync.reviewUrl && <a href={handoffSync.reviewUrl}>打开复核页</a>}
             {handoffSync.handoffUrl && <a href={handoffSync.handoffUrl}>打开交接单</a>}
           </div>
         </section>
 
         <section className="version-section" aria-labelledby="version-timeline-title">
-          <div className="version-section__title"><div><span>版本时间线</span><strong id="version-timeline-title">{versions.length} 个可重建节点</strong></div><small>offline cache</small></div>
+          <div className="version-section__title"><div><span>版本时间线</span><strong id="version-timeline-title">{versions.length} 个可重建节点</strong></div><small>{remoteProject ? `项目记录 · ${projectRevision}` : '本地缓存'}</small></div>
           <div className="version-timeline" aria-label="设计版本">
             {[...versions].reverse().map((version) => <button key={version.id} type="button" aria-pressed={compareFromVersion.id === version.id} data-status={version.status} onClick={() => setCompareFromVersionId(version.id)}>
               <span className="version-timeline__rail" aria-hidden="true" />
@@ -2301,7 +2516,7 @@ function ProjectDemoPage() {
           </div>
           <ul className="version-diff" aria-label="版本差异">
             {namedDiffs.length
-              ? namedDiffs.map((diff, index) => <li key={`${diff.kind}-${diff.entityId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><p>{diff.label}</p></li>)
+              ? namedDiffs.map((diff, index) => <li key={`${diff.kind}-${diff.entityId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><div><p>{diff.label}</p><small className="version-diff__id">{diff.entityId}</small><p className="version-diff__values">{describeWorkbenchDiff(diff, compareFromVersion.scene.materials, currentScene.materials)}</p></div></li>)
               : <li><span>无变化</span><p>基准版与当前场景完全一致</p></li>}
           </ul>
           <dl className="version-impact" aria-label="影响摘要">
@@ -2540,20 +2755,20 @@ export default function App() {
 
   useEffect(() => {
     const title = pathname.startsWith('/review/')
-      ? '设计师复核 · 欧派 AI 共识工作台'
+      ? '设计师复核 · OPAI AI 家居设计'
       : pathname.startsWith('/handoff/')
-        ? '共识交接单 · 欧派 AI 共识工作台'
+        ? '需求交接单 · OPAI AI 家居设计'
         : pathname.startsWith('/projects')
           ? '我的设计 · 欧派共创空间'
         : pathname === '/directions'
-          ? '设计方向 · 欧派 AI 共识工作台'
+          ? '设计方向 · OPAI AI 家居设计'
           : pathname === '/' || pathname === '/index.html'
-            ? 'AI 家装共识 · 欧派 AI 共识工作台'
+            ? '从生活需要开始 · OPAI AI 家居设计'
             : pathname.startsWith('/project/demo')
-          ? '欧派 AI 共识工作台'
+          ? '我的生活空间 · OPAI AI 家居设计'
           : pathname.startsWith('/lab/scene')
-            ? '欧派 AI 共识工作台 · 内部技术页'
-            : '欧派 AI 共识工作台';
+            ? 'OPAI AI 家居设计 · 内部技术页'
+            : 'OPAI AI 家居设计';
     document.title = title;
   }, [pathname]);
 

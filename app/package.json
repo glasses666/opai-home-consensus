@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "dev:experience": "OPAI_API_ORIGIN=http://127.0.0.1:8794 vite --host 127.0.0.1 --port 5180 --strictPort",
     "server": "node --env-file-if-exists=.env.local server/index.mjs",
+    "experience": "node scripts/start-experience.mjs",
     "build": "vite build",
     "home": "node --env-file-if-exists=.env.local scripts/home-cli.mjs",
     "test": "node --test",

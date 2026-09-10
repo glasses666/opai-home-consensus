@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-400 -400 7400 11300" role="img" aria-label="二维校对稿 V2，尚未同步三维">
+<rect x="-400" y="-400" width="7400" height="11300" fill="#faf8f2"/>
+<!-- Independent review drawing. Not imported by the canonical scene or app. -->
+<path d="M0 0H6600V10500H550V9300H0Z" fill="#e7d6ba"/>
+<path d="M1650 0H3400V2300H1650Z M4500 5450H6600V6950H4500Z" fill="#d6ddd7"/>
+<path d="M550 9300H3400V10500H550Z" fill="#c5d1ba"/>
+<g fill="#ac9a7d" fill-opacity=".7" stroke="#716956" stroke-width="20">
+<rect x="110" y="250" width="500" height="2700" rx="40"/>
+<rect x="4400" y="725" width="1900" height="1350" rx="40"/>
+<rect x="5250" y="3400" width="1200" height="1950" rx="40"/>
+<rect x="3475" y="4650" width="950" height="500" rx="40"/>
+<rect x="1750" y="4750" width="1100" height="700" rx="40"/>
+<rect x="1590" y="4305" width="420" height="430" rx="40"/>
+<rect x="1590" y="5535" width="420" height="430" rx="40"/>
+<rect x="195" y="6650" width="850" height="2100" rx="40"/>
+<rect x="1430" y="7475" width="800" height="550" rx="40"/>
+<rect x="2830" y="6900" width="500" height="2000" rx="40"/>
+<rect x="4600" y="8200" width="1900" height="1500" rx="40"/>
+<rect x="3500" y="8550" width="500" height="1800" rx="40"/>
+</g>
+<!-- Two opposing wardrobe recesses, rather than a full-width straight division. -->
+<g fill="#d3c5ac" stroke="#918671" stroke-width="22">
+<rect x="4590" y="2350" width="1900" height="430"/>
+<rect x="4590" y="2920" width="1900" height="430"/>
+<path d="M4800 2350V2780M5100 2350V2780M5400 2350V2780M5700 2350V2780M6000 2350V2780M6300 2350V2780M4800 2920V3350M5100 2920V3350M5400 2920V3350M5700 2920V3350M6000 2920V3350M6300 2920V3350"/>
+</g>
+<g fill="none" stroke="#64665c" stroke-width="120" stroke-linecap="butt" stroke-linejoin="miter">
+<path stroke-width="180" d="M0 3800V0H6600V10500H550V9300H0V4700"/>
+<path d="M1650 0V3550H0 M1650 2300H3400 M3400 0V2300H4500V3550H3400V5450H6600 M4500 2850H6600 M4500 5450V6950H6600 M3400 5450V10500 M0 9300H3400"/>
+</g>
+<!-- Existing unrelated openings retained. Corrected doors have explicit swing arcs. -->
+<g fill="none" stroke="#fbf7ed" stroke-width="200">
+<path d="M650 3550H1500 M2350 2300H3150 M3500 2300H4350 M3500 3550H4350 M3400 5650V6500 M4500 5750V6550 M850 9300H3150"/>
+</g>
+<g fill="none" stroke="#aac6ca" stroke-width="190">
+<path d="M350 0H1350 M2150 0H2950 M3950 0H6050 M6600 3500V5000 M6600 5800V6500 M3950 10500H6050 M850 10500H3150"/>
+</g>
+<g fill="none" stroke="#99764c" stroke-width="27">
+<path d="M3500 2300V1450 M3500 1450A850 850 0 0 1 4350 2300"/>
+<path d="M3500 3550V4400 M3500 4400A850 850 0 0 0 4350 3550"/>
+<path d="M3400 5650H4250 M4250 5650A850 850 0 0 1 3400 6500"/>
+<path d="M4500 6550H5300 M5300 6550A800 800 0 0 0 4500 5750"/>
+</g>
+<g font-family="system-ui,sans-serif" font-size="210" text-anchor="middle" fill="#343b32">
+<text x="1000" y="1800">厨房</text><text x="2500" y="1200">公卫</text>
+<text x="5350" y="1550">次卧 / 客房</text><text x="2850" y="3020">过道</text>
+<text x="5850" y="4200">儿童房</text><text x="1800" y="6100">客餐厅 / 玄关</text>
+<text x="5600" y="6200">主卫</text><text x="3930" y="6900" font-size="170">主卧前室</text>
+<text x="5500" y="9050">主卧</text><text x="2050" y="10000">南向阳台</text>
+</g>
+</svg>

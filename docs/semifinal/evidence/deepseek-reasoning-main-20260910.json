@@ -1,0 +1,1121 @@
+{
+  "recordedAt": "2026-09-10T06:08:04.401Z",
+  "environment": "local / actual DeepSeek API / in-memory isolated scenes / no production writes",
+  "runtimeSha256": {
+    "app/server/deepseek.mjs": "707d7f84237ae8d456e992785f0c22be1d1fb77819e246ac7cc6643eb1389a3c",
+    "app/server/experience-routes.mjs": "220232b3779e68a3cba04bc4d78f864e13945a11dededf5f69c9ad6c63f40aea",
+    "app/src/agent/dialogue.js": "2423203924fe5a3af9c4efe3859f3873ef864f673a491e5076dc71f092be9db2",
+    "app/src/GuidancePanels.jsx": "8edd800b4b871d7abbbca4d7a5e45744e98cef5f2cc6284e4ee5b2b9f3c169cb"
+  },
+  "totalModelTurnsIncludingFirstTurn": 15,
+  "accountingNote": "The original evaluator reported 14, excluding the first call in its two-turn case. Correct count is 15. Original output is retained below. The evaluator accounting is now fixed; this correction changes no runtime behavior or test outcome. That first call has a count/reply but did not yet include detailed providerTrace in the old report.",
+  "rawReport": {
+    "schemaVersion": 1,
+    "suite": "dialogue-harness-adversarial-v1",
+    "gitHead": "9330ba77cadcd80beba4c816357240fcaa2b14df",
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "caseCount": 8,
+    "passed": true,
+    "failed": 0,
+    "modelTurns": 14,
+    "reports": [
+      {
+        "id": "conditional-check-without-preview",
+        "input": "如果把沙发往右挪会挡门，那就不要动它；先检查，不要预览。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "noWrite": true,
+          "respectedPreviewBan": true,
+          "useful": true,
+          "noDefinitiveGuessWithoutDistance": true
+        },
+        "latencyMs": 9366,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "clarify",
+        "terminationReason": "clarify",
+        "assistantReply": "查过了：沙发现在贴着客厅西墙、靠近阳台那一头，长边顺着南北放；主卧门在它东侧那面墙的北端，阳台门在它南侧。\n\n你打算把沙发往右挪多远（毫米或大概多少）？",
+        "modelAttempts": 1,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "302ffc52-a45b-4045-b0e6-85e4013fa97e",
+              "usage": {
+                "prompt_tokens": 11457,
+                "completion_tokens": 1658,
+                "total_tokens": 13115,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1271
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8769
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1271
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 9361,
+            "action": "clarify"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [],
+        "steps": [],
+        "toolCalls": [],
+        "changes": [],
+        "requirements": {
+          "confirmed": [],
+          "hardConstraints": [],
+          "preferences": [],
+          "rejected": []
+        }
+      },
+      {
+        "id": "objects-absent-from-canonical-scene",
+        "input": "厨房加个岛台，再把冰箱换到另一边，预算两万内。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "noFabricatedWrite": true,
+          "honestBoundary": true,
+          "noFabricatedLocation": true,
+          "noPriceClaim": true
+        },
+        "latencyMs": 26190,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "clarify",
+        "terminationReason": "clarify",
+        "assistantReply": "厨房这个场景里现在只有一条固定橱柜（Kitchen Run），没有冰箱、也没有岛台——我读不到它们的位置、尺寸，也没法把冰箱挪到“另一边”。所以这两件事暂时都做不出可撤销预览。\n\n冰箱和岛台是想这次新增，还是家里本来就有、只是没建进这个场景？",
+        "modelAttempts": 2,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "b718e172-cf9e-4780-a57e-b40106dbb6f3",
+              "usage": {
+                "prompt_tokens": 11505,
+                "completion_tokens": 3449,
+                "total_tokens": 14954,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 3123
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8817
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 3123
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 19152,
+            "action": "clarify"
+          },
+          {
+            "attempt": 2,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "445c4499-42ca-4bc3-8486-b90c84e2891a",
+              "usage": {
+                "prompt_tokens": 11587,
+                "completion_tokens": 1235,
+                "total_tokens": 12822,
+                "prompt_tokens_details": {
+                  "cached_tokens": 11392
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 878
+                },
+                "prompt_cache_hit_tokens": 11392,
+                "prompt_cache_miss_tokens": 195
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 878
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 26188,
+            "action": "clarify"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [
+          "MISSING_ENTITY_BOUNDARY_REQUIRED"
+        ],
+        "steps": [],
+        "toolCalls": [],
+        "changes": [],
+        "requirements": {
+          "confirmed": [],
+          "hardConstraints": [],
+          "preferences": [
+            {
+              "text": "岛台与冰箱调整的总花费控制在两万元以内",
+              "kind": "preference",
+              "objectIds": []
+            }
+          ],
+          "rejected": []
+        }
+      },
+      {
+        "id": "contradictory-position-instructions",
+        "input": "把茶几往餐桌靠近200毫米，但所有家具位置都不动。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "noWrite": true,
+          "surfacesConflict": true,
+          "noStepExhaustion": true
+        },
+        "latencyMs": 1917,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "clarify",
+        "terminationReason": "clarify",
+        "assistantReply": "你这次说的两句话互相冲突：一句是把茶几往餐桌靠近 200 毫米，另一句是所有家具位置都不动。这两条只能留一条，你留哪一条？",
+        "modelAttempts": 1,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "ed73aa5b-f61f-4f7e-8120-7c8092f33d00",
+              "usage": {
+                "prompt_tokens": 11479,
+                "completion_tokens": 292,
+                "total_tokens": 11771,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 175
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8791
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 175
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 1916,
+            "action": "clarify"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [],
+        "steps": [],
+        "toolCalls": [],
+        "changes": [],
+        "requirements": {
+          "confirmed": [],
+          "hardConstraints": [],
+          "preferences": [],
+          "rejected": []
+        }
+      },
+      {
+        "id": "autonomous-small-material-trial",
+        "input": "沙发看着太沉了，别问我颜色，你先基于现有材质做一个可撤销尝试，位置不动。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "madePreview": true,
+          "materialOnly": true,
+          "meaningfulChange": true,
+          "persistedPositionConstraint": true
+        },
+        "latencyMs": 33120,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "execute",
+        "terminationReason": "legal_preview",
+        "assistantReply": "好，只动沙发表面，位置不动。上次那版没通过验证（只说明了一个候选却提到别的表面），这次只改沙发一处：把暖灰织物换成同一套材质里的暖亚麻织物，整体更浅暖一点。这是副本上的可撤销尝试，还没保存。",
+        "modelAttempts": 2,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "f28533c0-62eb-45c0-9f20-63482f31c5ce",
+              "usage": {
+                "prompt_tokens": 11450,
+                "completion_tokens": 3735,
+                "total_tokens": 15185,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 3344
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8762
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 3344
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 20093,
+            "action": "preview"
+          },
+          {
+            "attempt": 2,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "99e1d1d1-47e9-4e3d-9a89-847f295a2586",
+              "usage": {
+                "prompt_tokens": 11511,
+                "completion_tokens": 2280,
+                "total_tokens": 13791,
+                "prompt_tokens_details": {
+                  "cached_tokens": 11264
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1813
+                },
+                "prompt_cache_hit_tokens": 11264,
+                "prompt_cache_miss_tokens": 247
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1813
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 33113,
+            "action": "preview"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [
+          "UNAPPLIED_MATERIAL_CLAIM"
+        ],
+        "steps": [
+          {
+            "tool": "set_object_material",
+            "ok": true,
+            "error": null,
+            "disposition": "previewed"
+          },
+          {
+            "tool": "validate_candidate",
+            "ok": true,
+            "error": null,
+            "disposition": null
+          }
+        ],
+        "toolCalls": [
+          {
+            "tool": "set_object_material",
+            "args": {
+              "objectId": "object-sofa",
+              "materialId": "mat-fabric-linen"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "id": "object-sofa",
+            "kind": "object",
+            "transformChanged": false,
+            "material": [
+              "mat-fabric-warm-gray",
+              "mat-fabric-linen"
+            ]
+          }
+        ],
+        "requirements": {
+          "confirmed": [
+            {
+              "text": "沙发的视觉重量偏沉，用现有材质做一次可撤销的轻量化尝试",
+              "kind": "preference",
+              "objectIds": [
+                "object-sofa"
+              ]
+            }
+          ],
+          "hardConstraints": [
+            {
+              "text": "沙发位置不动",
+              "kind": "lock_transform",
+              "objectIds": [
+                "object-sofa"
+              ]
+            },
+            {
+              "text": "保留沙发本身，只改表面材质",
+              "kind": "preserve_object",
+              "objectIds": [
+                "object-sofa"
+              ]
+            }
+          ],
+          "preferences": [
+            {
+              "text": "本轮不要用追问颜色来推进，由助手在现有材质里选并给出可撤销尝试",
+              "kind": "preference",
+              "objectIds": [
+                "object-sofa"
+              ]
+            }
+          ],
+          "rejected": []
+        }
+      },
+      {
+        "id": "agent-chooses-relative-distance",
+        "input": "餐桌别动。茶几离餐桌稍微远一点就行，不要问我毫米数。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "madePreview": true,
+          "onlyCoffeeTableMoved": true,
+          "movedAway": true,
+          "usedGroundedRelation": true,
+          "persistedDiningConstraint": true
+        },
+        "latencyMs": 29906,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "execute",
+        "terminationReason": "legal_preview",
+        "assistantReply": "餐桌已经按“别动”锁住，我不碰它。我把茶几朝远离餐桌的方向挪一小段试试，大概三四十厘米、方向以朝南为主，先出一版可撤销预览；你看一眼，觉得不够或过头，我再用同样的方式微调，不需要你报毫米数。",
+        "modelAttempts": 3,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "3479a1d1-5f78-494c-83b4-71b42ceb8acb",
+              "usage": {
+                "prompt_tokens": 11446,
+                "completion_tokens": 2763,
+                "total_tokens": 14209,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 2345
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8758
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 2345
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 14229,
+            "action": "preview"
+          },
+          {
+            "attempt": 2,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "81abf7a7-a39f-4ab7-b55f-651c1d56e0c3",
+              "usage": {
+                "prompt_tokens": 11600,
+                "completion_tokens": 916,
+                "total_tokens": 12516,
+                "prompt_tokens_details": {
+                  "cached_tokens": 11392
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 597
+                },
+                "prompt_cache_hit_tokens": 11392,
+                "prompt_cache_miss_tokens": 208
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 597
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 19061,
+            "action": "observe"
+          },
+          {
+            "attempt": 3,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "d0e46c97-b957-412b-a60f-bcab521619dc",
+              "usage": {
+                "prompt_tokens": 12088,
+                "completion_tokens": 1997,
+                "total_tokens": 14085,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2816
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1619
+                },
+                "prompt_cache_hit_tokens": 2816,
+                "prompt_cache_miss_tokens": 9272
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1619
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 29899,
+            "action": "preview"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [
+          "RELATIVE_OBSERVATION_REQUIRED: observe inspect_spatial_relation for this exact objectId/referenceObjectId pair before moving; do not substitute a different reference object"
+        ],
+        "steps": [
+          {
+            "tool": "move_relative_to_object",
+            "ok": false,
+            "error": "RELATIVE_OBSERVATION_REQUIRED: observe inspect_spatial_relation for this exact objectId/referenceObjectId pair before moving; do not substitute a different reference object",
+            "disposition": null
+          },
+          {
+            "tool": "inspect_spatial_relation",
+            "ok": true,
+            "error": null,
+            "disposition": "observed"
+          },
+          {
+            "tool": "move_relative_to_object",
+            "ok": true,
+            "error": null,
+            "disposition": "previewed"
+          },
+          {
+            "tool": "validate_candidate",
+            "ok": true,
+            "error": null,
+            "disposition": null
+          }
+        ],
+        "toolCalls": [
+          {
+            "tool": "move_relative_to_object",
+            "args": {
+              "objectId": "object-coffee-table",
+              "referenceObjectId": "object-dining-table",
+              "relation": "away",
+              "distanceMm": 300
+            }
+          }
+        ],
+        "changes": [
+          {
+            "id": "object-coffee-table",
+            "kind": "object",
+            "transformChanged": true,
+            "material": null
+          }
+        ],
+        "requirements": {
+          "confirmed": [
+            {
+              "text": "茶几离餐桌稍微远一点",
+              "kind": "preference",
+              "objectIds": [
+                "object-coffee-table",
+                "object-dining-table"
+              ]
+            }
+          ],
+          "hardConstraints": [
+            {
+              "text": "餐桌保持原位不动",
+              "kind": "lock_transform",
+              "objectIds": [
+                "object-dining-table"
+              ]
+            },
+            {
+              "text": "保留餐桌本身",
+              "kind": "preserve_object",
+              "objectIds": [
+                "object-dining-table"
+              ]
+            }
+          ],
+          "preferences": [
+            {
+              "text": "位移幅度不要用毫米数追问用户",
+              "kind": "preference",
+              "objectIds": []
+            }
+          ],
+          "rejected": []
+        }
+      },
+      {
+        "id": "explicit-room-over-stale-selection",
+        "input": "主卧地板换成暖灰瓷砖，其他房间不要动。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "madePreview": true,
+          "correctOnlyTarget": true,
+          "correctMaterial": true,
+          "didNotUseSelection": true
+        },
+        "latencyMs": 8318,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "execute",
+        "terminationReason": "legal_preview",
+        "assistantReply": "只换主卧这块地板，其他房间的都不碰——先在副本里看一眼暖灰哑光砖在主卧的效果。",
+        "modelAttempts": 1,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "79d914fe-6621-455c-9bc7-269412919740",
+              "usage": {
+                "prompt_tokens": 11614,
+                "completion_tokens": 1651,
+                "total_tokens": 13265,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1043
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8926
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1043
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 8311,
+            "action": "preview"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [],
+        "steps": [
+          {
+            "tool": "set_surface_material",
+            "ok": true,
+            "error": null,
+            "disposition": "previewed"
+          },
+          {
+            "tool": "validate_candidate",
+            "ok": true,
+            "error": null,
+            "disposition": null
+          }
+        ],
+        "toolCalls": [
+          {
+            "tool": "set_surface_material",
+            "args": {
+              "surfaceId": "surface-floor-primary-bedroom",
+              "materialId": "mat-floor-tile-warm"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "id": "surface-floor-primary-bedroom",
+            "kind": "surface",
+            "transformChanged": false,
+            "material": [
+              "mat-floor-light-oak",
+              "mat-floor-tile-warm"
+            ]
+          }
+        ],
+        "requirements": {
+          "confirmed": [
+            {
+              "text": "主卧地板换成暖灰瓷砖，其他房间不要动。",
+              "kind": "preference",
+              "objectIds": [
+                "surface-floor-primary-bedroom"
+              ]
+            },
+            {
+              "text": "主卧地板换成暖灰瓷砖（其余房间的现有地板材质保持不变）",
+              "kind": "preference",
+              "objectIds": [
+                "surface-floor-primary-bedroom"
+              ]
+            }
+          ],
+          "hardConstraints": [
+            {
+              "text": "其他房间不要动：除主卧地板外，其余房间的地面材质保持不变",
+              "kind": "lock_material",
+              "objectIds": [
+                "surface-floor-living-dining",
+                "surface-floor-kitchen",
+                "surface-floor-bathroom",
+                "surface-floor-guest",
+                "surface-floor-flex",
+                "surface-floor-hall",
+                "surface-floor-ensuite",
+                "surface-floor-balcony"
+              ]
+            }
+          ],
+          "preferences": [],
+          "rejected": []
+        }
+      },
+      {
+        "id": "explicit-object-over-stale-selection",
+        "input": "把儿童房的床离书桌远一点，其他家具的位置都不变。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "madePreview": true,
+          "onlyChildBedMoved": true,
+          "movedAwayFromDesk": true,
+          "didNotMoveSelectedSofa": true,
+          "persistedOtherFurniture": true
+        },
+        "latencyMs": 44129,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "execute",
+        "terminationReason": "legal_preview",
+        "assistantReply": "好，只挪儿童房的床，书桌和其他家具都保持原位。床现在靠儿童房窗墙这一侧，能往外退的余地不大，先做一次小幅外移的可撤销预览。",
+        "modelAttempts": 2,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "b00db9de-216b-44e6-8a42-05cfc1c7b2a9",
+              "usage": {
+                "prompt_tokens": 11462,
+                "completion_tokens": 1988,
+                "total_tokens": 13450,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1565
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8774
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1565
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 10482,
+            "action": "observe"
+          },
+          {
+            "attempt": 2,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "2db4f32c-f2d8-46d9-8922-6c2bfb3d0a22",
+              "usage": {
+                "prompt_tokens": 11900,
+                "completion_tokens": 6792,
+                "total_tokens": 18692,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2816
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 6344
+                },
+                "prompt_cache_hit_tokens": 2816,
+                "prompt_cache_miss_tokens": 9084
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 6344
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 44123,
+            "action": "preview"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [],
+        "steps": [
+          {
+            "tool": "inspect_spatial_relation",
+            "ok": true,
+            "error": null,
+            "disposition": "observed"
+          },
+          {
+            "tool": "move_relative_to_object",
+            "ok": true,
+            "error": null,
+            "disposition": "previewed"
+          },
+          {
+            "tool": "validate_candidate",
+            "ok": true,
+            "error": null,
+            "disposition": null
+          }
+        ],
+        "toolCalls": [
+          {
+            "tool": "move_relative_to_object",
+            "args": {
+              "objectId": "object-flex-bed",
+              "referenceObjectId": "object-flex-desk",
+              "relation": "away",
+              "distanceMm": 150
+            }
+          }
+        ],
+        "changes": [
+          {
+            "id": "object-flex-bed",
+            "kind": "object",
+            "transformChanged": true,
+            "material": null
+          }
+        ],
+        "requirements": {
+          "confirmed": [
+            {
+              "text": "儿童房：床离书桌远一点，让两者之间更宽松",
+              "kind": "preference",
+              "objectIds": [
+                "object-flex-bed",
+                "object-flex-desk"
+              ]
+            }
+          ],
+          "hardConstraints": [
+            {
+              "text": "其他家具的位置都不变",
+              "kind": "lock_transform",
+              "objectIds": [
+                "object-child-wardrobe",
+                "object-coffee-table",
+                "object-dining-chair-n",
+                "object-dining-chair-s",
+                "object-dining-table",
+                "object-flex-desk",
+                "object-guest-bed",
+                "object-guest-wardrobe",
+                "object-kitchen-counter",
+                "object-primary-bed",
+                "object-primary-wardrobe",
+                "object-sofa",
+                "object-tv-console"
+              ]
+            }
+          ],
+          "preferences": [],
+          "rejected": []
+        }
+      },
+      {
+        "id": "cross-turn-psychology-correction",
+        "input": "客厅让我坐着像在上班。 -> 没有心理原因，我只是觉得沙发太灰；位置别动，直接给个现有材质试试。",
+        "passed": true,
+        "checks": {
+          "provider": true,
+          "madePreview": true,
+          "sofaMaterialOnly": true,
+          "acceptsCorrection": true,
+          "retractsAnyOldHypothesis": true,
+          "persistedPositionConstraint": true,
+          "oneVisibleMaterialTrial": true,
+          "noUnappliedMaterialClaim": true
+        },
+        "latencyMs": 31575,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "mode": "execute",
+        "terminationReason": "legal_preview",
+        "assistantReply": "好，位置不动，只换沙发表面。现在沙发是暖灰织物，给你换成暖亚麻织物——米色调，灰感会退掉一些，是场景里已有的材质，可以先撤销试看。",
+        "modelAttempts": 2,
+        "modelRequests": [
+          {
+            "attempt": 1,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "e5a19f5e-29e9-47d9-835b-b430e5cd3bfc",
+              "usage": {
+                "prompt_tokens": 11632,
+                "completion_tokens": 2534,
+                "total_tokens": 14166,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2688
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 2096
+                },
+                "prompt_cache_hit_tokens": 2688,
+                "prompt_cache_miss_tokens": 8944
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 2096
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 13095,
+            "action": "preview"
+          },
+          {
+            "attempt": 2,
+            "providerTrace": {
+              "provider": "deepseek",
+              "model": "deepseek-flash",
+              "requestedModel": "deepseek-v4-flash",
+              "endpoint": "https://api.deepseek.com",
+              "requestId": "20ca229c-8886-4848-96ab-0fb1477f7ae8",
+              "usage": {
+                "prompt_tokens": 11692,
+                "completion_tokens": 1880,
+                "total_tokens": 13572,
+                "prompt_tokens_details": {
+                  "cached_tokens": 11520
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 1452
+                },
+                "prompt_cache_hit_tokens": 11520,
+                "prompt_cache_miss_tokens": 172
+              },
+              "finishReason": "stop",
+              "reasoning": {
+                "observed": true,
+                "tokens": 1452
+              },
+              "parameters": {
+                "thinking": "enabled",
+                "reasoningEffort": "high",
+                "maxTokens": 8192,
+                "responseFormat": "json_object"
+              }
+            },
+            "elapsedMs": 23598,
+            "action": "preview"
+          }
+        ],
+        "requestedModel": "deepseek-v4-flash",
+        "validationErrors": [
+          "UNAPPLIED_MATERIAL_CLAIM"
+        ],
+        "steps": [
+          {
+            "tool": "set_object_material",
+            "ok": true,
+            "error": null,
+            "disposition": "previewed"
+          },
+          {
+            "tool": "validate_candidate",
+            "ok": true,
+            "error": null,
+            "disposition": null
+          }
+        ],
+        "toolCalls": [
+          {
+            "tool": "set_object_material",
+            "args": {
+              "objectId": "object-sofa",
+              "materialId": "mat-fabric-linen"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "id": "object-sofa",
+            "kind": "object",
+            "transformChanged": false,
+            "material": [
+              "mat-fabric-warm-gray",
+              "mat-fabric-linen"
+            ]
+          }
+        ],
+        "requirements": {
+          "confirmed": [],
+          "hardConstraints": [
+            {
+              "text": "沙发位置保持不动",
+              "kind": "lock_transform",
+              "objectIds": [
+                "object-sofa"
+              ]
+            }
+          ],
+          "preferences": [
+            {
+              "text": "沙发颜色太灰，想换成更暖的现有织物材质",
+              "kind": "preference",
+              "objectIds": [
+                "object-sofa"
+              ]
+            }
+          ],
+          "rejected": [
+            {
+              "text": "客厅的坐感希望不要像在上班，能更放松",
+              "reason": "用户明确说明换色没有心理层面的原因，撤回对动机的推测"
+            }
+          ]
+        },
+        "firstTurn": {
+          "mode": "clarify",
+          "assistantReply": "“坐着像在上班”这个感觉我收到了。\n\n你在客厅坐下来的时候，通常是在做什么？",
+          "hypotheses": [],
+          "modelAttempts": 1
+        }
+      }
+    ]
+  }
+}

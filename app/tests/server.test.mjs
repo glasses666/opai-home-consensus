@@ -172,7 +172,10 @@ test('DeepSeek adapter uses the chat endpoint and returns structured provider ou
   assert.equal(requestBody.temperature, 0.1);
   assert.equal(requestBody.max_tokens, 800);
   assert.deepEqual(result.toolCalls, []);
-  assert.deepEqual(result.providerTrace, { provider: 'deepseek', model: 'deepseek-v4-flash' });
+  assert.equal(result.providerTrace.provider, 'deepseek');
+  assert.equal(result.providerTrace.model, 'deepseek-v4-flash');
+  assert.equal(result.providerTrace.requestedModel, 'deepseek-v4-flash');
+  assert.equal(result.providerTrace.parameters.thinking, 'disabled');
 });
 
 test('DeepSeek gives first-plan requests a separate output budget and rejects truncated JSON', async () => {
@@ -943,8 +946,10 @@ test('BFF persists handoff snapshot, customer confirmation, designer review, and
       }
       assert.equal(summarized.consensusSummary.status, 'ready');
       assert.equal(summarized.consensusSummary.provider, 'aily');
-      assert.equal(summarized.consensusSummary.agreed.length, 4);
-      assert.deepEqual(summarized.consensusSummary.questions, ['企业目录何时接入？']);
+      // An empty household cannot substantiate the provider's invented consensus.
+      // Snapshot/export still complete, but unsupported family claims stay out.
+      assert.equal(summarized.consensusSummary.agreed.length, 0);
+      assert.deepEqual(summarized.consensusSummary.questions, []);
 
       const snapshotWithFailedSummary = await fetch(`${origin}/api/projects/project-demo/snapshot`, {
         method: 'POST',

@@ -1,4 +1,5 @@
 import { createDemoScene } from './demo-scene.js';
+import { wallFaceRooms } from './wall-finishes.js';
 
 export const referenceHomeSource = {
   title: '首开·熙悦丽博 C 户型', page: 8, publishedGrossAreaM2: 89,
@@ -10,15 +11,21 @@ const rect = (x,z,w,d)=>polygon([[x,z],[x+w,z],[x+w,z+d],[x,z+d]]);
 
 export function createReferenceHome() {
   const base=createDemoScene();
+  base.materials.push(
+    {id:'mat-wall-bedroom-sage',name:'主卧鼠尾草灰绿',kind:'paint',appliesTo:['wall'],source:'demo',color:'#9bA28f'},
+    {id:'mat-wall-bedroom-ivory',name:'主卧暖米灰墙面',kind:'paint',appliesTo:['wall'],source:'demo',color:'#ded4c5'},
+    {id:'mat-floor-bedroom-oak',name:'主卧烟熏浅橡木',kind:'wood',appliesTo:['floor'],source:'demo',color:'#b5a18b'},
+    {id:'mat-object-bedroom-putty',name:'主卧亚麻灰柜面',kind:'painted-wood',appliesTo:['object'],source:'demo',color:'#c5b8a2'},
+  );
   const specs=[
     ['kitchen','厨房','kitchen',rect(0,0,1650,3550)],
     ['bathroom','公卫','bathroom',rect(1650,0,1750,2300)],
-    ['guest','次卧 / 客房','bedroom',rect(3400,0,3200,2850)],
-    ['hall','卧室过道','circulation',polygon([[1650,2300],[3400,2300],[3400,2850],[4500,2850],[4500,4300],[1650,4300]])],
-    ['flex','儿童房','bedroom-study',polygon([[4500,2850],[6600,2850],[6600,5450],[3400,5450],[3400,4300],[4500,4300]])],
+    ['guest','次卧 / 客房','bedroom',polygon([[3400,0],[6600,0],[6600,2850],[4500,2850],[4500,2300],[3400,2300]])],
+    ['hall','卧室过道','circulation',rect(1650,2300,2850,1250)],
+    ['flex','儿童房','bedroom-study',polygon([[4500,2850],[6600,2850],[6600,5450],[3400,5450],[3400,3550],[4500,3550]])],
     ['ensuite','主卫','bathroom',rect(4500,5450,2100,1500)],
-    ['primary-bedroom','主卧','bedroom',rect(3400,6950,3200,3550)],
-    ['living-dining','客餐厅 / 玄关','living-dining',polygon([[0,3550],[1650,3550],[1650,4300],[3400,4300],[3400,5450],[4500,5450],[4500,6950],[3400,6950],[3400,9300],[0,9300]])],
+    ['primary-bedroom','主卧','bedroom',polygon([[3400,5450],[4500,5450],[4500,6950],[6600,6950],[6600,10500],[3400,10500]])],
+    ['living-dining','客餐厅 / 玄关','living-dining',rect(0,3550,3400,5750)],
     ['balcony','南向阳台','balcony',rect(550,9300,2850,1200)],
   ];
   const rooms=specs.map(([key,name,kind,shape])=>({id:'room-'+key,name,kind,polygon:shape,adjacentRoomIds:[],cameraPresetIds:['camera-'+key+'-overhead']}));
@@ -49,15 +56,15 @@ export function createReferenceHome() {
   opening('entry',['living-dining'],false,0,3800,900,'exterior-door');
   opening('kitchen',['kitchen','living-dining'],true,3550,650,850);
   opening('bath',['bathroom','hall'],true,2300,2350,800);
-  opening('guest',['guest','hall'],true,2850,3500,850);
-  opening('child',['flex','hall'],false,4500,3100,850);
-  opening('primary',['primary-bedroom','living-dining'],false,3400,7350,850);
-  opening('ensuite',['ensuite','primary-bedroom'],true,6950,4700,800);
+  opening('guest',['guest','hall'],true,2300,3500,850);
+  opening('child',['flex','hall'],true,3550,3500,850);
+  opening('primary',['primary-bedroom','living-dining'],false,3400,5650,850);
+  opening('ensuite',['ensuite','primary-bedroom'],false,4500,5750,800);
   opening('balcony',['balcony','living-dining'],true,9300,850,2300,'shared-doorway');
   opening('kitchen-window',['kitchen'],true,0,350,1000,'window');
   opening('bath-window',['bathroom'],true,0,2150,800,'window');
   opening('guest-window',['guest'],true,0,3950,2100,'window');
-  opening('child-window',['flex'],false,6600,3300,1500,'window');
+  opening('child-window',['flex'],false,6600,3500,1500,'window');
   opening('ensuite-window',['ensuite'],false,6600,5800,700,'window');
   opening('primary-window',['primary-bedroom'],true,10500,3950,2100,'window');
   opening('balcony-window',['balcony'],true,10500,850,2300,'window');
@@ -69,18 +76,63 @@ export function createReferenceHome() {
     o.collision.dimensions={...o.dimensions};o.model3D.renderBounds={...o.dimensions};o.model3D.slotId='slot-'+id;
     o.ruleIds=o.ruleIds.filter(id=>!['rule-child-activity-clearance','rule-tv-distance-1800-3600'].includes(id));objects.push(o);
   };
-  add('object-primary-bed','object-primary-bed','primary-bedroom',5550,8950,-Math.PI/2,{width:1500,depth:1900});
+  add('object-primary-bed','object-primary-bed','primary-bedroom',5500,7750,-Math.PI/2,{width:1500,depth:1900});
+  objects.at(-1).model3D.src='/assets/models/bedroom-bed.glb';
   add('object-primary-wardrobe','object-primary-wardrobe','primary-bedroom',3750,9450,Math.PI/2,{width:1800,depth:500});
-  add('object-flex-bed','object-flex-bed','flex',5850,4150,0);
-  add('object-flex-desk','object-flex-desk','flex',3950,4900,0,{width:950,depth:500});
-  add('object-primary-bed','object-guest-bed','guest',5350,1400,-Math.PI/2,{width:1350,depth:1900});
+  objects.at(-1).materialId='mat-object-bedroom-putty';
+  // Keep the user-confirmed bed and wardrobe exactly where they are. The old
+  // master-bedroom story still needs a material-editable focal surface, so fit
+  // its feature panel to the real east wall instead of reviving the old room.
+  const primaryHeadboardSurface=surfaces.find(surface=>surface.kind==='wall'
+    && surface.roomId==='room-primary-bedroom'
+    && surface.edge?.start.x===6600&&surface.edge?.end.x===6600
+    && Math.min(surface.edge.start.z,surface.edge.end.z)<=6950
+    && Math.max(surface.edge.start.z,surface.edge.end.z)>=10500);
+  if(!primaryHeadboardSurface)throw Error('Reference primary-bedroom headboard wall is missing');
+  primaryHeadboardSurface.materialId='mat-wall-bedroom-ivory';
+  for(const surface of surfaces.filter(surface=>surface.kind==='wall')){
+    if(Object.values(wallFaceRooms({rooms},surface)).includes('room-primary-bedroom'))surface.roomMaterialIds={'room-primary-bedroom':'mat-wall-bedroom-ivory'};
+  }
+  surfaces.find(surface=>surface.id==='surface-floor-primary-bedroom').materialId='mat-floor-bedroom-oak';
+  // East wall's inner face is 6510 mm (180 mm wall thickness). Keep the
+  // entire 40 mm panel outside it, with a real 5 mm gap rather than coplanar art.
+  // Its front also clears the unchanged bed footprint by 15 mm.
+  add('object-primary-feature-wall','object-primary-feature-wall','primary-bedroom',6485,8710,-Math.PI/2,{width:3380,depth:40,height:2700});
+  const primaryFeatureWall=objects.at(-1);
+  primaryFeatureWall.name='床头主景墙';
+  primaryFeatureWall.preferredCameraPresetId='camera-primary-bedroom-feature';
+  primaryFeatureWall.materialId='mat-object-warm-white';
+  primaryFeatureWall.model3D.src='/assets/models/bedroom-surround.glb';
+  delete primaryFeatureWall.wallArt; // Artwork is authored geometry inside this GLB.
+  primaryFeatureWall.placement.hostSurfaceId=primaryHeadboardSurface.id;
+  primaryFeatureWall.installation.hostSurfaceId=primaryHeadboardSurface.id;
+  add('object-coffee-table','object-primary-bedside','primary-bedroom',6200,8800,-Math.PI/2,{width:460,depth:420,height:1000});
+  const bedside=objects.at(-1);
+  bedside.name='床头柜与暖光台灯';
+  bedside.category='bedside-table';
+  bedside.materialId='mat-oak-veneer';
+  bedside.model3D.src='/assets/models/bedroom-bedside.glb';
+  bedside.preferredCameraPresetId='camera-primary-bedroom-feature';
+  for(const object of objects.filter(object=>['object-primary-bed','object-primary-feature-wall','object-primary-bedside'].includes(object.id))){
+    object.model3D.generator='scripts/build_bedroom_assets.py';
+    object.model3D.revision+=1;
+    object.model3D.provenance={...object.model3D.provenance,provider:'local-blender',generationId:'bedroom-restyle-20260910',humanReviewed:false};
+  }
+  add('object-flex-bed','object-flex-bed','flex',5850,4375,0,{depth:1950});
+  add('object-primary-wardrobe','object-guest-wardrobe','guest',5540,2565,Math.PI,{width:1900,depth:430});
+  add('object-primary-wardrobe','object-child-wardrobe','flex',5540,3135,0,{width:1900,depth:430});
+  add('object-flex-desk','object-flex-desk','flex',3950,4900,-Math.PI/2,{width:950,depth:500});
+  add('object-primary-bed','object-guest-bed','guest',5750,1000,-Math.PI,{width:1350,depth:1900});
   add('object-sofa','object-sofa','living-dining',620,7700,Math.PI/2,{width:2100,depth:850});
   add('object-tv-console','object-tv-console','living-dining',3080,7900,-Math.PI/2);
   add('object-coffee-table','object-coffee-table','living-dining',1830,7750,0,{width:800,depth:550});
   add('object-dining-table','object-dining-table','living-dining',2100,5100,0,{width:1100,depth:700});
-  add('object-dining-chair-n','object-dining-chair-n','living-dining',1800,4520,0,{width:420,depth:430});
-  add('object-dining-chair-s','object-dining-chair-s','living-dining',1800,5750,Math.PI,{width:420,depth:430});
+  add('object-dining-chair-n','object-dining-chair-n','living-dining',1800,4520,-Math.PI/2,{width:420,depth:430});
+  add('object-dining-chair-s','object-dining-chair-s','living-dining',1800,5750,Math.PI/2,{width:420,depth:430});
   add('object-kitchen-counter','object-kitchen-counter','kitchen',360,1600,Math.PI/2);
   const cameraPresets=[{id:'camera-home-overview',roomId:null,kind:'whole_home',label:'整屋',position:{x:12700,y:14000,z:17600},target:{x:3300,y:0,z:5250},fov:40},...rooms.map(r=>{const xs=r.polygon.map(p=>p.x),zs=r.polygon.map(p=>p.z),x=(Math.min(...xs)+Math.max(...xs))/2,z=(Math.min(...zs)+Math.max(...zs))/2;return{id:r.cameraPresetIds[0],roomId:r.id,kind:'room_overhead',label:'俯视',position:{x:x+60,y:Math.max(7200,Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...zs)-Math.min(...zs))*1.8),z:z+60},target:{x,y:0,z},fov:50};})];
+  const primaryFeatureCamera={id:'camera-primary-bedroom-feature',roomId:'room-primary-bedroom',kind:'object_feature',label:'床头主景',position:{x:4450,y:2450,z:10300},target:{x:5650,y:750,z:8050},fov:55};
+  cameraPresets.push(primaryFeatureCamera);
+  rooms.find(room=>room.id==='room-primary-bedroom').cameraPresetIds.push(primaryFeatureCamera.id);
   return {...base,id:'scene-reference-xiyue-c',floorPlan:{...base.floorPlan,id:'floor-reference-c',bounds:{x:0,z:0,width:6600,depth:10500,height:2800}},rooms,surfaces,openings,objects,cameraPresets,clearanceZones:[],reference:referenceHomeSource};
 }

@@ -13,7 +13,8 @@ test('Fab finishes preserve authored default and restore it after an edit', () =
   assert.equal(mesh.material, original);
   applyStudioFinish(mesh, {id:'edited',color:'#456789'}, 'sofa', owned);
   assert.equal(mesh.material.color.getHexString(), '456789');
-  assert.equal(mesh.material.map, original.map);
+  assert.equal(mesh.material.map, null, 'a chosen finish must not be multiplied by the original brown base-color image');
+  assert.ok(original.map, 'shared authored texture remains untouched for undo and other instances');
   applyStudioFinish(mesh, {id:'default',color:'#cccccc'}, 'sofa', owned);
   assert.equal(mesh.material, original);
   assert.equal(owned.size, 0);

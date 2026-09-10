@@ -40,7 +40,7 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand, activeRoomId = null, interactionMode = 'browse', loadingFallback = null, viewRequest = null, agentCallout = null }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, activeRoomId = null, interactionMode = 'browse', loadingFallback = null, viewRequest = null, agentCallout = null, initialView = null }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
@@ -208,8 +208,8 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
         <strong>AGENT 已修改{agentCallout.roomLabel}</strong>
         <span>理由是：{agentCallout.reason}</span>
       </div>}
-      <PascalViewSwitch renderProfile={renderProfile} />
-      {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
+      <PascalViewSwitch renderProfile={renderProfile} initialView={initialView} />
+      {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · {initialView === '3d' ? '按需载入 3D' : '默认 2D'}</div>}
       {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
         <Editor
         key={scene.id}
@@ -358,10 +358,11 @@ function PascalResidentModeGuard({ interactionMode }) {
   return null;
 }
 
-function PascalViewSwitch({ renderProfile }) {
+function PascalViewSwitch({ renderProfile, initialView }) {
   const viewMode = useEditor((state) => state.viewMode);
   const setViewMode = useEditor((state) => state.setViewMode);
-  useEffect(() => { setViewMode(renderProfile.defaultView); }, [renderProfile.mode, setViewMode]);
+  // Honor the explicit mobile entry click instead of presenting a second 2D gate.
+  useEffect(() => { setViewMode(initialView ?? renderProfile.defaultView); }, [initialView, renderProfile.mode, renderProfile.defaultView, setViewMode]);
   return (
     <div className="pascal-view-switch" aria-label="户型视图">
       {[

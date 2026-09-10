@@ -8,6 +8,7 @@ import {
   segmentOnSegment,
 } from './geometry.js';
 import { assertDesignRules } from './design-rules.js';
+import { wallFaceRooms } from './wall-finishes.js';
 
 const ADDRESSABLE_ARRAY_KEYS = new Set([
   'rooms',
@@ -337,6 +338,12 @@ export function validateScene(scene) {
     if (!room) {
       addError(errors, 'SURFACE_ROOM_REF_DANGLING', `${path}.roomId`, `Surface room "${surface.roomId}" does not exist.`);
     }
+    if(surface.roomMaterialIds!==undefined){
+      const adjacent=new Set(Object.values(wallFaceRooms(scene,surface)).filter(Boolean));
+      if(surface.kind!=='wall'||!isObject(surface.roomMaterialIds)||Object.entries(surface.roomMaterialIds).some(([roomId,id])=>!adjacent.has(roomId)||!materialAppliesTo(materialMap.get(id),'wall'))){
+        addError(errors,'WALL_ROOM_FINISH_INVALID',`${path}.roomMaterialIds`,'Wall finishes must reference an adjacent room and compatible material.');
+      }
+    }
     const material = materialMap.get(surface.materialId);
     if (!material) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Surface material "${surface.materialId}" does not exist.`);
@@ -577,7 +584,7 @@ export function validateScene(scene) {
       !isPositiveInteger(model.revision) ||
       model.units !== 'mm' || model.upAxis !== 'y' || model.forwardAxis !== 'z' ||
       !modelBoundsValid || !provenanceValid ||
-      (model.source === 'generated' && model.generator !== 'scripts/build_demo_assets.py')
+      (model.source === 'generated' && !['scripts/build_demo_assets.py','scripts/build_bedroom_assets.py'].includes(model.generator))
     ) {
       addError(
         errors,
@@ -676,6 +683,9 @@ function applySceneCommand(scene, command) {
     const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
     if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     if (!materialAppliesTo(material, 'object')) throw new Error(`OBJECT_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to objects.`);
+    if (material.kind === 'fabric' && !['sofa', 'bed', 'chair', 'dining-chair', 'armchair', 'ottoman', 'rug'].includes(object.category)) {
+      throw new Error(`OBJECT_MATERIAL_INCOMPATIBLE: Fabric is not a supported finish for ${object.category}.`);
+    }
     object.materialId = command.materialId;
   } else if (command.type === 'object.setDimensions') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
@@ -777,7 +787,13 @@ function applySceneCommand(scene, command) {
     const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
     if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     if (!materialAppliesTo(material, surface.kind)) throw new Error(`SURFACE_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to ${surface.kind}.`);
-    surface.materialId = command.materialId;
+    if(command.roomId!==undefined){
+      if(surface.kind!=='wall'||!Object.values(wallFaceRooms(nextScene,surface)).includes(command.roomId))throw Error('WALL_ROOM_FINISH_INVALID: room is not adjacent to this wall.');
+      surface.roomMaterialIds={...surface.roomMaterialIds,[command.roomId]:command.materialId};
+    }else{
+      surface.materialId = command.materialId;
+      if(surface.roomMaterialIds?.[surface.roomId])surface.roomMaterialIds[surface.roomId]=command.materialId;
+    }
   } else {
     throw new Error(`COMMAND_UNSUPPORTED: ${command.type}`);
   }

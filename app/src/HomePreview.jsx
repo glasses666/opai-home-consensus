@@ -39,10 +39,10 @@ export default function HomePreview() {
       <button onClick={finish}>进入首页 </button>
     </div>}
     <div className="ha-page-reveal" data-visible={!loading} inert={loading ? true : undefined}>
-      <header className="ha-nav"><a href="/" className="ha-brand"><strong>OPPEIN<span> / </span></strong><span>欧派共创空间</span></a><nav aria-label="首页导航"><a href="#story">家的可能</a><a href="#method">如何共创</a><a href="/projects">我的设计</a></nav><a className="ha-nav-cta" href="/projects">开始设计 </a></header>
+      <header className="ha-nav"><a href="/" className="ha-brand"><strong>OPPEIN<span> / </span></strong><span>欧派共创空间</span></a><nav aria-label="首页导航"><a href="#story">家的可能</a><a href="#method">如何共创</a><a href="/projects">我的设计</a></nav><a className="ha-nav-cta" href="/project/demo?style=agent-canvas">开始设计 </a></header>
       <main>
         <section className="ha-hero">
-          <div className="ha-hero-copy"><h1>让 AI 设计<span>你的家。</span></h1><p className="ha-lead">从一张户型图，到你想要的生活。</p><div className="ha-actions"><a className="ha-button" href="/projects">开始我的设计</a></div></div>
+          <div className="ha-hero-copy"><h1>让 AI 设计<span>你的家。</span></h1><p className="ha-lead">从你的生活需要，开始推敲家的每一处。</p><div className="ha-actions"><a className="ha-button" href="/project/demo?style=agent-canvas">开始我的设计</a></div></div>
           <AmbientHouse suspended={loading} />
         </section>
         <section className="ha-statement"><span className="ha-eyebrow">DESIGNED AROUND YOUR LIFE</span><h2>不只换一种风格，<br />更让空间适合你。</h2><p>动线、收纳，和未来的生活。<br />让 AI 把你的需求，转成看得见的设计。</p></section>

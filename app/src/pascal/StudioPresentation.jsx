@@ -12,7 +12,6 @@ export default function StudioPresentation({ model, mapping }) {
 
   useEffect(() => {
     const sync = () => {
-      if (document.visibilityState === 'hidden') return;
       const active = new Set();
       for (const object of model.objects) {
         // Imported/replaced assets own their own material semantics.

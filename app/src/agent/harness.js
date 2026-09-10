@@ -4,6 +4,7 @@ import { createDesignBrief, evolveDesignBrief, normalizeDesignBrief } from '../d
 import { retrieveStyleCases, shouldRetrieveStyleCases } from '../catalog/style-retrieval.js';
 import { compareVersionHistory } from '../domain/design-version.js';
 import { evaluateDesignRules, filterDesignRuleChecksForRoom } from '../domain/design-rules.js';
+import { DEMO_DARK_WALNUT_FLOOR_MATERIAL } from '../domain/demo-scene.js';
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|authorization|password|secret|token)/i;
 const NO_WRITE_INTENT_PATTERN = /(?:先(?:看(?:看|一下)?|给.{0,8}(?:方向|方案|建议))|只?(?:给|提供).{0,8}(?:方向|方案|建议)|(?:不要|别|不许|不能|不想|先不|暂不|暂时不).{0,16}(?:改|修改|调整|动|移动|挪|旋转|删|删除|移除|应用|安装|换|执行|实施|落地|保存)|(?:只|仅)(?:看|预览))/;
@@ -41,6 +42,10 @@ const OBJECT_NOUNS = [
 ];
 
 const MATERIAL_NOUNS = [
+  ['深棕胡桃木', 'mat-floor-dark-walnut'],
+  ['深棕色', 'mat-floor-dark-walnut'],
+  ['深褐色', 'mat-floor-dark-walnut'],
+  ['胡桃木', 'mat-floor-dark-walnut'],
   ['橡木色', 'mat-oak-veneer'],
   ['橡木', 'mat-oak-veneer'],
   ['浅橡木', 'mat-floor-light-oak'],
@@ -65,6 +70,7 @@ const SURFACE_MATERIAL_NOUNS = {
     [/(暖白|白色)/, 'mat-wall-warm-white'],
   ],
   floor: [
+    [/(深棕|深褐|胡桃木)/, 'mat-floor-dark-walnut'],
     [/(瓷砖|暖灰|灰色)/, 'mat-floor-tile-warm'],
     [/(浅橡木|木地板|地板)/, 'mat-floor-light-oak'],
   ],
@@ -87,6 +93,7 @@ const ROOM_NOUNS = [
 export const TOOL_REGISTRY = [
   { name: 'inspect_room', writes: false, requiredArgs: ['roomId'], description: '读取房间、对象和表面。' },
   { name: 'inspect_object', writes: false, requiredArgs: ['objectId'], description: '读取一个场景对象。' },
+  { name: 'inspect_spatial_relation', writes: false, requiredArgs: ['objectId', 'referenceObjectId'], description: '按 canonical axes 读取两个对象中心的毫米差、方向和中心距离；中心距离不是通行净宽。' },
   { name: 'search_catalog', writes: false, requiredArgs: [], optionalArgs: ['query', 'category', 'kind', 'appliesTo', 'limit'], description: '搜索合成组件目录；价格和工期均为 estimate。' },
   { name: 'inspect_catalog_item', writes: false, requiredArgs: ['catalogItemId'], description: '读取目录项、约束、来源与 sceneReady 状态。' },
   { name: 'request_clarification', writes: false, requiredArgs: ['question'], optionalArgs: ['reason', 'options'], description: '信息不足时只追问一个关键问题。' },
@@ -94,9 +101,11 @@ export const TOOL_REGISTRY = [
   { name: 'compare_versions', writes: false, requiredArgs: ['beforeVersionId'], optionalArgs: ['afterVersionId'], description: '比较两个已保存版本的真实对象差异与影响。' },
   { name: 'request_confirmation', writes: false, requiredArgs: [], optionalArgs: ['versionId', 'message'], description: '请求住户确认当前版本；工具不直接代替住户确认。' },
   { name: 'move_object', writes: true, requiredArgs: ['objectId'], optionalArgs: ['x', 'z', 'dx', 'dz'], description: '移动已有可移动对象，单位为整数毫米。' },
+  { name: 'move_relative_to_object', writes: true, requiredArgs: ['objectId', 'referenceObjectId', 'relation', 'distanceMm'], description: '将已有可移动对象朝参考对象靠近或远离指定毫米，再交由 SceneCommand 和同一规则系统校验。' },
   { name: 'rotate_object', writes: true, requiredArgs: ['objectId', 'degrees'], optionalArgs: ['mode'], description: '旋转已有可旋转对象。' },
   { name: 'set_object_material', writes: true, requiredArgs: ['objectId', 'materialId'], description: '修改已有对象材质。' },
   { name: 'set_surface_material', writes: true, requiredArgs: ['surfaceId', 'materialId'], description: '直接修改已有表面材质。' },
+  { name: 'set_surface_group_material', writes: true, requiredArgs: ['surfaceIds', 'materialId'], description: '把同一已有材质原子应用到一组明确的现有表面；适用于“全屋地板”等批量请求，surfaceIds 最多 24 个。' },
   { name: 'apply_catalog_item', writes: true, requiredArgs: ['catalogItemId', 'surfaceId'], description: '只把 sceneReady 的目录表面系统应用到兼容表面。' },
   { name: 'delete_object', writes: true, requiredArgs: ['objectId'], description: '删除允许删除的可移动家具。' },
 ];
@@ -262,7 +271,10 @@ function toolsForInput(input, noWrite = hasNoWriteIntent(input)) {
     names.add('inspect_catalog_item');
   }
   if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(input)) names.add('apply_catalog_item');
-  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(input) && /(改成|换成|设为|设置为)/.test(input)) names.add('set_surface_material');
+  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(input) && /(改成|换成|设为|设置为|铺成|刷成)/.test(input)) {
+    names.add('set_surface_material');
+    if (/(全屋|整屋|所有房间)/.test(input)) names.add('set_surface_group_material');
+  }
   if (objectIntent) names.add('inspect_object');
   if (/(移动|挪|移)/.test(input)) names.add('move_object');
   if (input.includes('旋转')) names.add('rotate_object');
@@ -290,6 +302,15 @@ function selectedOrNamedSurfaceId(input, selectedObjectId, scene) {
   if (!targetRoomId || !kind) return null;
   const candidates = scene?.surfaces?.filter((surface) => surface.roomId === targetRoomId && surface.kind === kind) ?? [];
   return candidates.length === 1 ? candidates[0].id : null;
+}
+
+function namedSurfaceKind(input) {
+  return /(顶面|天花)/.test(input) ? 'ceiling' : /(地面|地板)/.test(input) ? 'floor' : /(墙|墙面)/.test(input) ? 'wall' : null;
+}
+
+function wholeHomeSurfaceIds(input, scene, kind) {
+  if (!kind || !/(全屋|整屋|所有房间)/.test(input)) return [];
+  return (scene?.surfaces ?? []).filter((surface) => surface.kind === kind).map((surface) => surface.id);
 }
 
 function namedRoomId(input) {
@@ -384,11 +405,15 @@ export function parseLocalToolCalls({ input, selectedObjectId = null, versionHis
     return [{ tool: 'request_clarification', args: { question: '你想把木饰面应用到哪一个房间的哪面墙？', reason: '目标墙面不明确' } }];
   }
 
-  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(text) && /(改成|换成|设为|设置为)/.test(text)) {
+  if (/(墙|墙面|地面|地板|瓷砖|顶面|天花)/.test(text) && /(改成|换成|设为|设置为|铺成|刷成)/.test(text)) {
+    const kind = namedSurfaceKind(text);
+    const materialId = namedSurfaceMaterialId(text, kind);
+    const surfaceIds = wholeHomeSurfaceIds(text, scene, kind);
+    if (surfaceIds.length && materialId) return [{ tool: 'set_surface_group_material', args: { surfaceIds, materialId } }];
     if (!surfaceId) return [{ tool: 'request_clarification', args: { question: '请先在户型图、3D 场景或装修表面列表中选择要修改的墙面、地面或顶面。', reason: '目标表面不明确' } }];
     const target = findById(scene?.surfaces, surfaceId);
-    const materialId = namedSurfaceMaterialId(text, target?.kind);
-    if (materialId) return [{ tool: 'set_surface_material', args: { surfaceId, materialId } }];
+    const selectedMaterialId = materialId ?? namedSurfaceMaterialId(text, target?.kind);
+    if (selectedMaterialId) return [{ tool: 'set_surface_material', args: { surfaceId, materialId: selectedMaterialId } }];
     return [{ tool: 'request_clarification', args: { question: '这个表面想用哪一种饰面？', reason: '饰面材质不明确' } }];
   }
 
@@ -667,7 +692,7 @@ function truthfulExecutionReply({ rolledBack, steps, toolCalls }) {
   if (!writes.length) return null;
   if (writes.length > 1) return `已通过本地规则校验并应用 ${writes.length} 项变更。`;
   const call = writes[0];
-  const action = call.tool === 'move_object' ? '移动'
+  const action = ['move_object', 'move_relative_to_object'].includes(call.tool) ? '移动'
     : call.tool === 'rotate_object' ? '旋转'
       : call.tool === 'delete_object' ? '删除'
         : call.tool === 'set_object_material' ? '材质修改'
@@ -717,6 +742,22 @@ function optionalStringArray(args, key) {
   return values;
 }
 
+function requireStringArray(args, key, limit = 24) {
+  const values = args[key];
+  if (!Array.isArray(values) || values.length === 0 || values.length > limit
+    || values.some((value) => typeof value !== 'string' || !value || value.length > 128)
+    || new Set(values).size !== values.length) {
+    throw new Error(`ARG_INVALID: ${key}`);
+  }
+  return values;
+}
+
+function ensureSupportedMaterial(store, materialId) {
+  if (store.currentScene.materials.some((material) => material.id === materialId)) return store;
+  if (materialId !== DEMO_DARK_WALNUT_FLOOR_MATERIAL.id) return store;
+  return dispatchSceneCommand(store, { type: 'material.add', material: DEMO_DARK_WALNUT_FLOOR_MATERIAL });
+}
+
 function optionalInteger(args, key) {
   if (args[key] !== undefined && !isInteger(args[key])) {
     throw new Error(`ARG_INVALID: ${key} must be integer millimeters`);
@@ -739,13 +780,74 @@ function inspectObject(scene, objectId) {
   return stableJsonValue(object);
 }
 
-async function executeTool(store, call, { catalogPlugin, versionHistory }) {
+const OPPOSITE_AXIS_DIRECTION = {
+  east: 'west',
+  west: 'east',
+  north: 'south',
+  south: 'north',
+  up: 'down',
+  down: 'up',
+};
+
+function spatialRelation(scene, objectId, referenceObjectId) {
+  const object = findById(scene.objects, objectId);
+  if (!object) throw new Error(`OBJECT_NOT_FOUND: ${objectId}`);
+  const referenceObject = findById(scene.objects, referenceObjectId);
+  if (!referenceObject) throw new Error(`REFERENCE_OBJECT_NOT_FOUND: ${referenceObjectId}`);
+  if (objectId === referenceObjectId) throw new Error('SPATIAL_SAME_OBJECT');
+  const xPositive = scene.floorPlan?.axes?.x;
+  const zPositive = scene.floorPlan?.axes?.z;
+  if (typeof xPositive !== 'string' || typeof zPositive !== 'string' ||
+      !OPPOSITE_AXIS_DIRECTION[xPositive] || !OPPOSITE_AXIS_DIRECTION[zPositive]) {
+    throw new Error('SPATIAL_AXES_INVALID');
+  }
+  const deltaX = object.transform?.x - referenceObject.transform?.x;
+  const deltaZ = object.transform?.z - referenceObject.transform?.z;
+  if (![deltaX, deltaZ].every(Number.isFinite)) throw new Error('SPATIAL_CENTER_INVALID');
+  if (deltaX === 0 && deltaZ === 0) throw new Error('SPATIAL_CENTERS_OVERLAP');
+  const xDirection = deltaX === 0 ? 'aligned' : deltaX > 0 ? xPositive : OPPOSITE_AXIS_DIRECTION[xPositive];
+  const zDirection = deltaZ === 0 ? 'aligned' : deltaZ > 0 ? zPositive : OPPOSITE_AXIS_DIRECTION[zPositive];
+  const directionParts = [zDirection, xDirection].filter((direction) => direction !== 'aligned');
+  return stableJsonValue({
+    objectId,
+    referenceObjectId,
+    centersMm: {
+      object: { x: object.transform.x, z: object.transform.z },
+      reference: { x: referenceObject.transform.x, z: referenceObject.transform.z },
+    },
+    deltaMm: { x: deltaX, z: deltaZ },
+    centerDistanceMm: Math.round(Math.hypot(deltaX, deltaZ)),
+    relativeDirection: directionParts.join('-'),
+    axisDirections: { x: xDirection, z: zDirection },
+    canonicalAxes: { xPositive, zPositive },
+    measurement: 'center_to_center',
+    caveat: 'CENTER_DISTANCE_IS_NOT_CLEARANCE_WIDTH',
+  });
+}
+
+export async function executeTool(store, call, options = {}) {
+  const { catalogPlugin = demoCatalogPlugin, versionHistory = null } = options;
   const { args, tool } = call;
+  const contract = TOOL_REGISTRY.find((entry) => entry.name === tool);
+  if (contract && (!isRecord(args) || Object.keys(args).some((key) =>
+    ![...(contract.requiredArgs ?? []), ...(contract.optionalArgs ?? [])].includes(key)))) {
+    throw new Error('TOOL_CALL_INVALID');
+  }
   if (tool === 'inspect_room') {
     return { store, result: inspectRoom(store.currentScene, requireString(args, 'roomId')) };
   }
   if (tool === 'inspect_object') {
     return { store, result: inspectObject(store.currentScene, requireString(args, 'objectId')) };
+  }
+  if (tool === 'inspect_spatial_relation') {
+    return {
+      store,
+      result: spatialRelation(
+        store.currentScene,
+        requireString(args, 'objectId'),
+        requireString(args, 'referenceObjectId'),
+      ),
+    };
   }
   if (tool === 'search_catalog') {
     const limit = args.limit === undefined ? undefined : requireNumber(args, 'limit');
@@ -831,6 +933,37 @@ async function executeTool(store, call, { catalogPlugin, versionHistory }) {
       result: { objectId, transform: { x, z } },
     };
   }
+  if (tool === 'move_relative_to_object') {
+    const objectId = requireString(args, 'objectId');
+    const referenceObjectId = requireString(args, 'referenceObjectId');
+    const relation = requireString(args, 'relation');
+    if (!['toward', 'away'].includes(relation)) throw new Error('ARG_INVALID: relation must be toward or away');
+    const distanceMm = requireNumber(args, 'distanceMm');
+    if (!isInteger(distanceMm) || distanceMm <= 0 || distanceMm > 5000) {
+      throw new Error('ARG_INVALID: distanceMm must be a positive integer no greater than 5000');
+    }
+    const before = spatialRelation(store.currentScene, objectId, referenceObjectId);
+    const magnitude = Math.hypot(before.deltaMm.x, before.deltaMm.z);
+    if (relation === 'toward' && distanceMm >= magnitude) {
+      throw new Error('SPATIAL_DISTANCE_REACHES_OR_CROSSES_REFERENCE');
+    }
+    const factor = relation === 'toward' ? -1 : 1;
+    const dx = Math.round((before.deltaMm.x / magnitude) * distanceMm * factor);
+    const dz = Math.round((before.deltaMm.z / magnitude) * distanceMm * factor);
+    const moved = await executeTool(store, { tool: 'move_object', args: { objectId, dx, dz } }, options);
+    return {
+      store: moved.store,
+      result: stableJsonValue({
+        objectId,
+        referenceObjectId,
+        relation,
+        requestedDistanceMm: distanceMm,
+        appliedDeltaMm: { x: dx, z: dz },
+        transform: moved.result.transform,
+        spatialRelationBefore: before,
+      }),
+    };
+  }
   if (tool === 'rotate_object') {
     const objectId = requireString(args, 'objectId');
     const object = findById(store.currentScene.objects, objectId);
@@ -854,9 +987,22 @@ async function executeTool(store, call, { catalogPlugin, versionHistory }) {
   if (tool === 'set_surface_material') {
     const surfaceId = requireString(args, 'surfaceId');
     const materialId = requireString(args, 'materialId');
+    const materialStore = ensureSupportedMaterial(store, materialId);
     return {
-      store: dispatchSceneCommand(store, { type: 'surface.setMaterial', surfaceId, materialId }),
+      store: dispatchSceneCommand(materialStore, { type: 'surface.setMaterial', surfaceId, materialId }),
       result: { surfaceId, materialId },
+    };
+  }
+  if (tool === 'set_surface_group_material') {
+    const surfaceIds = requireStringArray(args, 'surfaceIds');
+    const materialId = requireString(args, 'materialId');
+    let candidate = ensureSupportedMaterial(store, materialId);
+    for (const surfaceId of surfaceIds) {
+      candidate = dispatchSceneCommand(candidate, { type: 'surface.setMaterial', surfaceId, materialId });
+    }
+    return {
+      store: candidate,
+      result: { surfaceIds, materialId, changedSurfaceCount: surfaceIds.length },
     };
   }
   if (tool === 'delete_object') {

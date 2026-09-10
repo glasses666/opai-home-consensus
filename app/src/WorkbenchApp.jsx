@@ -5,5 +5,6 @@ import './experience-motion.css';
 import './workbench-studio.css';
 import './studio-details.css';
 import './review-editorial.css';
+import './workbench-guidance.css';
 
 export default App;

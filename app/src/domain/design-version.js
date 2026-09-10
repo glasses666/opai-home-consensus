@@ -210,6 +210,13 @@ export function compareSceneVersions(beforeVersion, afterVersion) {
     const after = afterSurfaces.get(id);
     if (!after) surfaceDiffs.push(surfaceDiffValue('deleted', id, before, null));
     else if (before.materialId !== after.materialId) surfaceDiffs.push(surfaceDiffValue('material', id, before.materialId, after.materialId));
+    if(after){
+      for(const roomId of new Set([...Object.keys(before.roomMaterialIds??{}),...Object.keys(after.roomMaterialIds??{})])){
+        const previous=before.roomMaterialIds?.[roomId]??before.materialId,next=after.roomMaterialIds?.[roomId]??after.materialId;
+        const alreadyCounted=before.materialId!==after.materialId&&roomId===after.roomId;
+        if(previous!==next&&!alreadyCounted)surfaceDiffs.push({...surfaceDiffValue('material',id,previous,next),roomId});
+      }
+    }
   }
   for (const [id, after] of afterSurfaces) {
     if (!beforeSurfaces.has(id)) surfaceDiffs.push(surfaceDiffValue('added', id, null, after));
