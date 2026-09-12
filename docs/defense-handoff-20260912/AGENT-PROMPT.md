@@ -3,6 +3,12 @@
 ```text
 你正在接手 OPAI「我的生活空间」Demo 的答辩稿工作。请直接在当前仓库内工作，不要先进行宽泛搜索。
 
+仓库地址：https://github.com/glasses666/opai-home-consensus
+指定工作分支：codex/demo-handoff-20260912
+交接入口：https://github.com/glasses666/opai-home-consensus/blob/codex/demo-handoff-20260912/docs/defense-handoff-20260912/00-START-HERE.md
+
+如果本地还没有仓库，请克隆上述仓库并切换到指定工作分支；不要从 main 或其他历史分支撰写。若只能通过 GitHub 网页访问，也必须以指定分支中的文件为准。
+
 先按顺序完整阅读：
 1. docs/defense-handoff-20260912/00-START-HERE.md
 2. docs/defense-handoff-20260912/CURRENT-FACTS.md
