@@ -209,6 +209,7 @@ function buildArchitecture(world, scene, textures, entityRoots) {
   const floorMaterials = {
     'mat-floor-light-oak': new THREE.MeshStandardMaterial({ color: colorOf('mat-floor-light-oak', '#cfb38a'), map: textures.oak, roughness: 0.72, side: THREE.DoubleSide }),
     'mat-floor-tile-warm': new THREE.MeshStandardMaterial({ color: colorOf('mat-floor-tile-warm', '#d8d0c5'), map: textures.tile, roughness: 0.64, side: THREE.DoubleSide }),
+    'mat-floor-dark-walnut': new THREE.MeshStandardMaterial({ color: colorOf('mat-floor-dark-walnut', '#5a3d30'), map: textures.oak, roughness: 0.74, side: THREE.DoubleSide }),
   };
   const floorGroup = new THREE.Group();
   floorGroup.name = 'Canonical floors';

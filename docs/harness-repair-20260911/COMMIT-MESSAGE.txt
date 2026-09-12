@@ -1,0 +1,23 @@
+feat(harness): ground reversible layout proposals in geometry and reviewed intent
+
+Base: codex/gptpro-harness-github-20260910 at fc742b7bd8f1fcf44dcce3a33d6dafb04dde0b1b.
+
+Separate retention, pose locks and full entity locks. Add observed, scene-bound
+layout options and atomic multi-object transforms. Independently review actual
+candidate effects and constraint meaning with the same DeepSeek provider; retain
+first failures and fail closed on unverified models or incomplete responses.
+
+Stream actual request stages, cancel/retry safely, pair local API/frontend boot,
+show readable room/entity diffs, keep solo onboarding optional, and retry refused
+renderer snapshots. Add frozen dev/holdout fixtures, bounded real A/B runner and
+readonly rendered-matrix browser QA.
+
+Verified after local integration: harness tests 108/108; full tests 500/500;
+production build passed. Final-source DeepSeek mechanics passed both sampled cases;
+h-flex-rest passed automated acceptance while core-repro failed closed on an invalid
+blind-review fact ID, with observed deepseek-flash reasoning. A hidden desktop
+browser passed preview, diff, discard, keep, save V2 and reload; one malformed
+response and one timeout were also surfaced without mutating the scene. Mobile,
+production and live Feishu acceptance remain open. Tracked Studio assets are the
+clean-checkout default. No restricted assets, secrets,
+production writes or remote changes are included.

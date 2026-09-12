@@ -40,6 +40,13 @@ export function applyStudioFinish(mesh, finish, category, owned) {
     mesh.material = material;
   }
   for (const material of owned.get(mesh).clones) {
+    // Fab's baked base-color image contains its original brown upholstery.
+    // Multiplying a new canonical color by it is not a material replacement.
+    // Keep normal/roughness maps, but use the chosen finish's actual base color.
+    if (mesh.userData?.fabDefaultMaterial && material.map) {
+      material.map = null;
+      material.needsUpdate = true;
+    }
     material.color?.set(finish.color);
     material.roughness = studioFinishRoughness(finish.kind);
     material.envMapIntensity = 0.55;

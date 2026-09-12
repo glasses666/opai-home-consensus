@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createDemoScene } from '../src/domain/demo-scene.js';
+import { createReferenceHome } from '../src/domain/reference-home.js';
 import {
   cameraDistanceLimit,
   cameraFocusObjectId,
@@ -475,6 +476,33 @@ test('non-movable objects reject transform commands', () => {
       }),
     /OBJECT_NOT_MOVABLE/,
   );
+});
+
+test('a user-confirmed installation reconfiguration stays command-driven and reversible', () => {
+  const store = createSceneStore(createReferenceHome());
+  assert.throws(() => dispatchSceneCommand(store, {
+    type: 'installation.reconfigure',
+    objectId: 'object-child-wardrobe',
+    transform: { x: 3685, z: 4775, rotationY: Math.PI / 2 },
+    dimensions: { width: 1100, depth: 430, height: 2400 },
+  }), /INSTALLATION_RECONFIGURE_REQUIRES_CONFIRMATION/);
+
+  const changed = dispatchSceneCommand(store, {
+    type: 'installation.reconfigure',
+    objectId: 'object-child-wardrobe',
+    confirmedByUser: true,
+    transform: { x: 3685, z: 4775, rotationY: Math.PI / 2 },
+    dimensions: { width: 1100, depth: 430, height: 2400 },
+    relatedTransforms: [
+      { objectId: 'object-flex-bed', transform: { x: 5300, z: 4850, rotationY: -Math.PI / 2 } },
+      { objectId: 'object-flex-desk', transform: { x: 6300, z: 3375, rotationY: -Math.PI / 2 } },
+    ],
+  });
+  const wardrobe = changed.currentScene.objects.find((object) => object.id === 'object-child-wardrobe');
+  assert.deepEqual(wardrobe.transform, { x: 3685, y: 0, z: 4775, rotationY: Math.PI / 2 });
+  assert.deepEqual(wardrobe.dimensions, { width: 1100, depth: 430, height: 2400 });
+  assert.equal(changed.commands.at(-1).type, 'installation.reconfigure');
+  assert.deepEqual(undoSceneCommand(changed).currentScene, store.currentScene);
 });
 
 test('projection changes when fixture geometry changes', () => {

@@ -1,0 +1,102 @@
+{
+  "updatedAt": "2026-09-11T03:41:48+08:00",
+  "upstreamBundleBaselineRef": "codex/gptpro-harness-github-20260910",
+  "upstreamBundleBaselineSha": "fc742b7bd8f1fcf44dcce3a33d6dafb04dde0b1b",
+  "integrationBranch": "codex/gptpro-local-integration-20260911",
+  "localMergedBranch": "codex/gptpro-harness-rebuild-20260910",
+  "candidateSourceFingerprint": "8aca454caa33e59de1aed9b6f5d72be7bfbd373bcf0faa0310e8d223e0915ee6",
+  "targeted": {
+    "command": "npm run test:harness",
+    "pass": 108,
+    "fail": 0,
+    "exitCode": 0
+  },
+  "full": {
+    "command": "npm test",
+    "pass": 500,
+    "fail": 0,
+    "total": 500,
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "passed": true,
+    "exitCode": 0,
+    "note": "Built with the complete local workspace dependencies. Chunk-size and browser externalization warnings remain non-fatal."
+  },
+  "liveDeepSeek": {
+    "provider": "deepseek",
+    "observedModels": ["deepseek-flash"],
+    "reasoningObserved": true,
+    "finalAutomatedEvalRequests": 12,
+    "evaluatedCases": [
+      {
+        "id": "core-repro",
+        "automatedPass": false,
+        "mechanicsPassed": true,
+        "requests": 6,
+        "reasoningTokens": 8531,
+        "failure": "Blind final review cited opening:opening-child instead of the allowed room-scoped fact ID; fail-closed schema validation rejected the otherwise accepted review.",
+        "evidence": "app/.data/harness-eval/2026-09-10T19-42-16.914Z-59422fd4"
+      },
+      {
+        "id": "h-flex-rest",
+        "automatedPass": true,
+        "mechanicsPassed": true,
+        "requests": 6,
+        "reasoningTokens": 4512,
+        "evidence": "app/.data/harness-eval/2026-09-10T19-42-16.914Z-59422fd4"
+      }
+    ],
+    "boundary": "Final-source result is 1/2 automated pass with 2/2 deterministic mechanics pass. The failed first record is preserved and was not replaced by a retry. Automated blind review is model judgement, not human design acceptance."
+  },
+  "browser": {
+    "surface": "Codex in-app browser controlled through the computer-use tool with visible=false",
+    "desktop": {
+      "passed": true,
+      "url": "http://127.0.0.1:5191",
+      "observed": [
+        "homepage to new project",
+        "actual Three.js room render",
+        "real DeepSeek spatial preview with readable object/material diff",
+        "discard restored V1",
+        "explicit single-material preview",
+        "keep and save created V2",
+        "reload reopened V2 and restored requirement summary and rendered whole-home scene"
+      ],
+      "providerFailuresObserved": [
+        "DEEPSEEK_RESPONSE_INVALID",
+        "DEEPSEEK_TIMEOUT"
+      ],
+      "failureBehavior": "Both failures were surfaced and did not modify the room. A later explicit request succeeded."
+    },
+    "finalSourceRenderSmoke": {
+      "passed": true,
+      "url": "http://127.0.0.1:5192",
+      "sourceFingerprint": "8aca454caa33e59de1aed9b6f5d72be7bfbd373bcf0faa0310e8d223e0915ee6",
+      "observed": "Hidden browser opened a fresh project and rendered the whole-home Three.js workspace using tracked Studio assets; no console error was observed.",
+      "warning": "Existing repeated BVH deprecation warnings remain. The full save lifecycle was not repeated after the asset fallback-only patch."
+    },
+    "mobile": {
+      "passed": false,
+      "blockedBy": "Python Playwright is not installed in the current local runtime",
+      "report": "/tmp/opai-gptpro-mobile-qa-20260911/report.json"
+    }
+  },
+  "previewLifecycle": {
+    "serverFailClosedBeforeSave": true,
+    "handoffAndDiscussionPostBlockedForPendingOrKeptDraft": true,
+    "traceDisposition": ["pending", "kept", "discarded", "saved"],
+    "savedVersionTraceLinked": true
+  },
+  "restrictedAssets": {
+    "fabDefaultRuntimeDependency": false,
+    "trackedStudioFallback": true,
+    "explicitFabPathStillSupported": true,
+    "committed": false
+  },
+  "productionOrFeishuWrites": 0,
+  "newPermissions": 0,
+  "completeLedgerAcceptance": false,
+  "acceptanceBoundary": "The repaired Harness is locally merged with deterministic unit/build/desktop evidence. The final-source live sample was 1/2 automated pass (both mechanics passed), so model-quality closure, full A/B rates, independent human design acceptance, mobile rendering, production and real Feishu end-to-end remain open."
+}

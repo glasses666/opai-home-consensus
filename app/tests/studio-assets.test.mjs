@@ -4,8 +4,17 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { studioAssetSource } from '../src/pascal/studio-assets.js';
 
 test('studio revises local demo models, never user imports or older layout variants', () => {
-  assert.equal(studioAssetSource('/assets/models/sofa.glb'), '/assets/models/fab/sofa.glb');
+  assert.equal(studioAssetSource('/assets/models/sofa.glb'), '/assets/models/studio/sofa.glb');
+  assert.equal(studioAssetSource('/assets/models/fab/sofa.glb'), '/assets/models/fab/sofa.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-bed.glb'), '/assets/models/studio/bedroom-bed.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-feature.glb'), '/assets/models/studio/bedroom-feature.glb');
+  assert.equal(studioAssetSource('/assets/models/bedroom-bedside.glb'), '/assets/models/studio/bedroom-bedside.glb');
   for (const src of ['https://example.com/sofa.glb', '/uploads/sofa.glb', '/assets/models/double-bed-original.glb', '/assets/models/sofa.glb?custom=1', undefined]) assert.equal(studioAssetSource(src), src);
+});
+test('licensed local Fab assets are opt-in while clean checkouts keep studio fallbacks', () => {
+  assert.equal(studioAssetSource('/assets/models/dining-table.glb', { useLocalFabAssets: true }), '/assets/models/fab/dining-table.glb');
+  assert.equal(studioAssetSource('/assets/models/dining-chair.glb', { useLocalFabAssets: true }), '/assets/models/fab/dining-chair.glb');
+  assert.equal(studioAssetSource('/assets/models/tv-console.glb', { useLocalFabAssets: true }), '/assets/models/studio/tv-console.glb');
 });
 test('studio GLBs contain valid embedded geometry and textures, with no remote dependencies', () => {
   const root = new URL('../public/assets/models/studio/', import.meta.url);
@@ -30,6 +39,7 @@ test('studio GLBs contain valid embedded geometry and textures, with no remote d
   }
 });
 test('every studio model has a real local payload', () => {
+  assert.ok(existsSync(new URL('../public/assets/models/studio/bedroom-bedside.glb',import.meta.url)));
   for (const name of ['sofa','dining-table','dining-chair','coffee-table','lounge-chair','tv-console','double-bed','single-bed','wardrobe','desk','kitchen-counter','shoe-cabinet','floating-shelf','slat-partition','feature-wall']) {
     assert.ok(existsSync(new URL(`../public${studioAssetSource(`/assets/models/${name}.glb`)}`, import.meta.url)),name);
   }

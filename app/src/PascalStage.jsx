@@ -1,5 +1,7 @@
+import { synchronizeSnapshot } from './pascal/snapshot-sync.js';
+import { readRenderedScene } from './pascal/qa-scene-probe.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { applySceneSnapshot, emitter, loadPlugin, subscribeSceneCommits } from '@pascal-app/core';
+import { applySceneSnapshot, emitter, loadPlugin, subscribeSceneCommits, sceneRegistry } from '@pascal-app/core';
 import { Editor, subscribeCameraPose, useEditor, useSidebarStore, useViewer } from '@pascal-app/editor';
 import { builtinPlugin } from '@pascal-app/nodes';
 import { projectOppeinSceneToPascal } from './pascal/oppein-to-pascal.js';
@@ -40,7 +42,7 @@ function snapshotFromProjection(projection) {
   };
 }
 
-export default function PascalStage({ scene, selection, onSelect, onEditCommand, activeRoomId = null, interactionMode = 'browse', loadingFallback = null, viewRequest = null, agentCallout = null }) {
+export default function PascalStage({ scene, selection, onSelect, onEditCommand, activeRoomId = null, interactionMode = 'browse', loadingFallback = null, viewRequest = null, agentCallout = null, initialView = null }) {
   const stageRef = useRef(null);
   const projection = useMemo(() => localizeAssetUrls(projectOppeinSceneToPascal(scene)), [scene]);
   const projectionRef = useRef(projection);
@@ -50,6 +52,8 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   const [ready, setReady] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [status, setStatus] = useState('Pascal Editor 启动中');
+  const [syncState,setSyncState] = useState('pending');
+  const [syncRetry,setSyncRetry] = useState(0);
   const renderProfile = useRenderProfile();
   const setSidebarCollapsed = useSidebarStore((state) => state.setIsCollapsed);
   const editableObjectIds = useMemo(() => new Set(scene.objects
@@ -108,14 +112,22 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
     const unsubscribe = useViewer.subscribe((state) => {
       if (state.edges !== edgeMode) useViewer.getState().setEdges(edgeMode);
     });
-    try {
-      applySceneSnapshot(snapshotFromProjection(projection), { origin: 'host' });
-      setStatus('canonical scene 已同步到 Pascal');
-    } catch {
-      // Pascal refuses snapshot replacement during pointer interactions; next scene change retries.
-    }
-    return unsubscribe;
-  }, [editorLoaded, interactionMode, projection, ready]);
+    const cancelSync=synchronizeSnapshot(()=>applySceneSnapshot(snapshotFromProjection(projection), { origin:'host' }),{
+      onState:({status:next})=>{
+        setSyncState(next);
+        setStatus(next==='synced'?'canonical scene 已同步到 Pascal':next==='failed'?'3D 同步未完成，请重试。':'正在将调整同步到 3D…');
+      },
+    });
+    return ()=>{cancelSync();unsubscribe();};
+  }, [editorLoaded, interactionMode, projection, ready, syncRetry]);
+
+  useEffect(()=>{
+    // Opt-in, development-only and read-only. It contains no project credentials.
+    if(!(import.meta.env.DEV && import.meta.env.VITE_OPAI_QA_PROBE==='1'))return;
+    const probe=()=>({...readRenderedScene(scene,projection.mapping,sceneRegistry),syncState});
+    window.__OPAI_QA_READ_SCENE__=probe;
+    return()=>{if(window.__OPAI_QA_READ_SCENE__===probe)delete window.__OPAI_QA_READ_SCENE__;};
+  },[scene,projection,syncState]);
 
   const activeRoom = useMemo(() => scene.rooms.find((room) => room.id === activeRoomId) ?? null, [activeRoomId, scene.rooms]);
   const requestedPreset = useMemo(
@@ -197,19 +209,23 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
   if (!renderProfile.allowHeavy3D) return <div className="pascal-stage-loading" data-render-profile="paused">页面暂时隐藏，装修编辑器已暂停以节省资源。</div>;
 
   return (
-    <div ref={stageRef} className="pascal-stage" data-interaction={interactionMode} data-render-profile={renderProfile.mode}>
+    <div ref={stageRef} className="pascal-stage" data-interaction={interactionMode} data-render-profile={renderProfile.mode} data-scene-sync={syncState}>
       <div className="pascal-loading-preview" data-ready={editorLoaded} aria-hidden={editorLoaded || undefined} role={editorLoaded ? undefined : 'status'}>{!editorLoaded && (loadingFallback ?? '正在载入实时 3D…')}</div>
       {editorLoaded && interactionMode === 'browse' && <PascalBrowseSelectionBridge mapping={projection.mapping} nodes={projection.sceneGraph.nodes} onSelect={onSelect} />}
       {editorLoaded && interactionMode === 'quick' && <PascalSelectionBridge editableObjectIds={editableObjectIds} mapping={projection.mapping} selection={selection} onSelect={onSelect} />}
       {editorLoaded && <PascalResidentModeGuard interactionMode={interactionMode} />}
       {editorLoaded && <PascalTrackpadNavigation rootRef={stageRef} />}
       {editorLoaded && <StudioPresentation model={scene} mapping={projection.mapping} />}
-      {editorLoaded && agentCallout?.roomId === activeRoomId && <div className="pascal-agent-callout" role="status" aria-live="polite">
+      {editorLoaded && syncState==='failed' && <div className="pascal-sync-failure" role="alert">
+        <p>房间数据已通过检查，但 3D 画面尚未同步。请停止拖动后重试。</p>
+        <button type="button" onClick={()=>setSyncRetry(n=>n+1)}>重试 3D 同步</button>
+      </div>}
+      {editorLoaded && syncState==='synced' && agentCallout?.roomId === activeRoomId && <div className="pascal-agent-callout" role="status" aria-live="polite">
         <strong>AGENT 已修改{agentCallout.roomLabel}</strong>
         <span>理由是：{agentCallout.reason}</span>
       </div>}
-      <PascalViewSwitch renderProfile={renderProfile} />
-      {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · 默认 2D</div>}
+      <PascalViewSwitch renderProfile={renderProfile} initialView={initialView} />
+      {renderProfile.mode === 'light' && <div className="pascal-resource-badge">轻量模式 · {initialView === '3d' ? '按需载入 3D' : '默认 2D'}</div>}
       {editorLoaded && <div className="pascal-trackpad-hint">双指平移 · 捏合缩放 · 右键旋转</div>}
         <Editor
         key={scene.id}
@@ -221,7 +237,7 @@ export default function PascalStage({ scene, selection, onSelect, onEditCommand,
         onLoaderChange={onLoaderChange}
         appMenuButton={<div className="pascal-app-badge">OP</div>}
         sidebarTop={<div className="pascal-sidebar-note"><strong>{status}</strong><span>同一 canonical scene；Pascal 只负责编辑壳。</span></div>}
-        viewerBanner={selection?.id ? <div className="pascal-banner">当前 canonical 选择：{selection.id}</div> : null}
+        viewerBanner={selection?.id ? <div className="pascal-banner">当前选择：{scene.objects.find(o=>o.id===selection.id)?.name??scene.rooms.find(r=>r.id===selection.id)?.name??'装修表面'}</div> : null}
       />
     </div>
   );
@@ -358,10 +374,11 @@ function PascalResidentModeGuard({ interactionMode }) {
   return null;
 }
 
-function PascalViewSwitch({ renderProfile }) {
+function PascalViewSwitch({ renderProfile, initialView }) {
   const viewMode = useEditor((state) => state.viewMode);
   const setViewMode = useEditor((state) => state.setViewMode);
-  useEffect(() => { setViewMode(renderProfile.defaultView); }, [renderProfile.mode, setViewMode]);
+  // Honor the explicit mobile entry click instead of presenting a second 2D gate.
+  useEffect(() => { setViewMode(initialView ?? renderProfile.defaultView); }, [initialView, renderProfile.mode, renderProfile.defaultView, setViewMode]);
   return (
     <div className="pascal-view-switch" aria-label="户型视图">
       {[

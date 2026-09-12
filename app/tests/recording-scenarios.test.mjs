@@ -63,9 +63,13 @@ test('scene two restores the complete growth-room layout', () => {
 
   assert.deepEqual(objectById('object-flex-bed').transform, { x: 7700, y: 0, z: 1400, rotationY: 0 });
   assert.equal(objectById('object-flex-bed').materialId, 'mat-flex-accent-fabric');
-  assert.deepEqual(objectById('object-flex-desk').transform, { x: 10650, y: 0, z: 1600, rotationY: Math.PI / 2 });
+  assert.deepEqual(objectById('object-flex-desk').transform, { x: 10650, y: 0, z: 2450, rotationY: Math.PI / 2 });
   assert.deepEqual(objectById('object-flex-floating-shelf').dimensions, { width: 1000, depth: 260, height: 720 });
-  assert.ok(objectById('object-flex-chair'));
+  assert.deepEqual(objectById('object-flex-chair').transform, { x: 10100, y: 0, z: 2760, rotationY: Math.PI / 2 });
+  assert.equal(
+    evaluateDesignRules(result.store.currentScene).violations.some((check) => check.objectIds?.includes('object-flex-chair')),
+    false,
+  );
 });
 
 test('scene three restores the light wardrobe, slat feature wall, and generated artwork', () => {

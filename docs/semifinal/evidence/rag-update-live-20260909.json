@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "local_live_provider_rag_revision_fidelity",
+  "recordedAt": "2026-09-09T20:08:44+08:00",
+  "environment": {
+    "kind": "isolated_local",
+    "server": "http://127.0.0.1:8795",
+    "dataRoot": "/tmp/opai-rag-live-20260909",
+    "productionTouched": false,
+    "rootQaServerTouched": false
+  },
+  "workspace": {
+    "head": "7a120e9d9ec3d811a10219355a9b709a70a904e0",
+    "liveTestedFileHashes": {
+      "app/server/house-knowledge.mjs": "sha256:bccdbbce857feca4ecb17317140496f69d27becafad9583d61853aa78fa98f57",
+      "app/src/agent/dialogue.js": "sha256:e8690e187a664d9c5540679c834e321b22c48e1d5d03c9a98223addb89fb833c",
+      "app/src/agent/evidence.js": "sha256:d6a05a40c647c4dc8861ad72d9dad8022efe4880af27c2967a79b73c67f59103",
+      "app/server/experience-routes.mjs": "sha256:a0c31c84091e4e86b9659b526309f11daf307a9665e0ce064590a4a7a7f7cd30",
+      "app/scripts/start-experience.mjs": "sha256:bfb6ace2caa30c418deb9ce662b08de169aa09198147a436ebf7290f30ed94b1"
+    },
+    "latestValidatedAt": "2026-09-09T20:12:57+08:00",
+    "latestValidatedFileHashes": {
+      "app/server/house-knowledge.mjs": "sha256:1070e300b505321e6e37abf05b3e0b6cf08a6a63cbbabe0850b5e8a83cc16860",
+      "app/src/agent/dialogue.js": "sha256:bd21a0cff838d6f33a1b38f42984934ca0b7257f50f4bec21c0e17a8f4c980c8",
+      "app/src/agent/evidence.js": "sha256:d6a05a40c647c4dc8861ad72d9dad8022efe4880af27c2967a79b73c67f59103",
+      "app/server/experience-routes.mjs": "sha256:259a49834685c774cfa924549803ebd4e32801ec271cbfcd409fa0d2e244f481",
+      "app/scripts/start-experience.mjs": "sha256:bfb6ace2caa30c418deb9ce662b08de169aa09198147a436ebf7290f30ed94b1"
+    },
+    "latestTargetedValidation": {
+      "tests": 22,
+      "passed": 22,
+      "failed": 0,
+      "liveProviderCall": false
+    },
+    "postLiveChanges": {
+      "pathsChanged": [
+        "app/server/house-knowledge.mjs",
+        "app/src/agent/dialogue.js",
+        "app/server/experience-routes.mjs"
+      ],
+      "houseKnowledgeChange": "Added restart-time integrity validation for the persisted revision/hash-derived evidenceConstraintId.",
+      "validation": "The changed snapshot passed the 22 targeted local tests but was not exercised by another live provider turn."
+    }
+  },
+  "scope": {
+    "projectId": "exp-68bfb7af-38a1-4a6b-88f1-f4d4b2bf72e3",
+    "houseId": "scene-reference-xiyue-c",
+    "wrongProjectId": "exp-wrong-project-rag-check"
+  },
+  "sourceRevisionUpdate": {
+    "documentId": "doc-6fc67aa5424b8372f770",
+    "uri": "resident://rag-live-living-constraint",
+    "trust": "user_confirmed",
+    "authorization": "user_provided",
+    "revisionBefore": 1,
+    "revisionAfter": 2,
+    "indexRevisionAfter": 2,
+    "contentSha256": "98da4f56d08ccc74ec404c3d8840795daa26a70caf0db02a21ea3235729aabea",
+    "oldChunkId": "chunk-13b8301dcd854987ef1d3a29",
+    "newChunkId": "chunk-5bf8b7f4e72e475db82b7904",
+    "oldChunkPresentAfterUpdate": false,
+    "newConstraintSummary": "Forbid greige microcement and moving/replacing the sofa; try the TV wall in light-oak panel while keeping the entrance unchanged."
+  },
+  "scopeIsolation": {
+    "wrongProjectSearchStatus": "no_documents",
+    "wrongProjectResultCount": 0,
+    "excludedDifferentProject": 1,
+    "passed": true
+  },
+  "liveTurn": {
+    "requestId": "rag-live-update-turn-20260909",
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "source": "provider",
+    "httpStatus": 200,
+    "terminationReason": "legal_preview",
+    "modelRequestCount": 1,
+    "validationPassed": true,
+    "retrievedDocumentRevision": 2,
+    "retrievedChunkId": "chunk-5bf8b7f4e72e475db82b7904",
+    "oldRevisionRetrieved": false,
+    "command": {
+      "type": "surface.setMaterial",
+      "surfaceId": "surface-wall-reference-11",
+      "materialId": "mat-wall-greige"
+    },
+    "expectedMaterialIdFromConfirmedSource": "mat-wall-oak-panel",
+    "reasonSourceIds": [],
+    "retrievalRevisionFidelityPassed": true,
+    "plannerConstraintFidelityPassed": false,
+    "failure": "The live provider retrieved only source revision 2 but ignored its explicit prohibition and produced the greige command from the invalidated advice. The command passed geometric SceneCommand validation because evidence-to-command semantic conflicts are not yet deterministically enforced."
+  },
+  "typedConstraintRevisionUpdate": {
+    "documentId": "doc-6fc67aa5424b8372f770",
+    "uri": "resident://rag-live-living-constraint",
+    "trust": "user_confirmed",
+    "authorization": "user_provided",
+    "revisionBefore": 2,
+    "revisionAfter": 3,
+    "indexRevisionAfter": 3,
+    "contentSha256": "307231410c9c325d3b38e15fb9d08e071a644f091540eac9200577bd83e8ba87",
+    "designConstraintCount": 3,
+    "constraints": [
+      {
+        "type": "material",
+        "targetId": "surface-wall-reference-11",
+        "allowedMaterialIds": ["mat-wall-oak-panel"],
+        "forbiddenMaterialIds": ["mat-wall-greige"]
+      },
+      {
+        "type": "lock_transform",
+        "targetId": "object-sofa"
+      },
+      {
+        "type": "no_new_objects",
+        "targetId": "room-living-dining"
+      }
+    ],
+    "oldRevisionRetrievedAfterUpdate": false
+  },
+  "typedConstraintLiveTurn": {
+    "requestId": "rag-live-typed-turn-20260909",
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "source": "provider",
+    "httpStatus": 200,
+    "terminationReason": "legal_preview",
+    "rolledBack": false,
+    "modelRequestCount": 5,
+    "acceptedLegalPreviewAttempt": 5,
+    "modelActions": ["preview", "preview", "clarify", "clarify", "preview"],
+    "retrievedDocumentRevision": 3,
+    "retrievedContentSha256": "307231410c9c325d3b38e15fb9d08e071a644f091540eac9200577bd83e8ba87",
+    "oldRevisionRetrieved": false,
+    "evidenceConstraintCount": 3,
+    "command": {
+      "type": "surface.setMaterial",
+      "surfaceId": "surface-wall-reference-11",
+      "materialId": "mat-wall-oak-panel"
+    },
+    "forbiddenMaterialApplied": false,
+    "reasonSourceIds": ["doc-6fc67aa5424b8372f770"],
+    "retrievalRevisionFidelityPassed": true,
+    "plannerConstraintFidelityPassed": true,
+    "deterministicGatePassed": true
+  },
+  "callBudget": {
+    "freshLiveTurnsAgainstFreeTextRevision": 1,
+    "freshLiveTurnsAgainstTypedRevision": 1,
+    "typedTurnInternalModelRequests": 5,
+    "additionalHttpTurnRetriesRun": 0
+  },
+  "security": {
+    "containsBearerToken": false,
+    "containsProjectAccessToken": false,
+    "containsSecretQueryParameters": false
+  },
+  "conclusion": {
+    "status": "typed_contract_passed_with_retained_free_text_failure",
+    "typedConstraintContractPassedAtLiveTestedSnapshot": true,
+    "currentCandidateCoveredByLiveEvidence": false,
+    "ordinaryFreeTextDeterministicConstraintInterpretationPassed": false,
+    "verified": [
+      "Update replaced revision 1 chunks with revision 2 chunks.",
+      "The live retrieval trace contained revision 2 only.",
+      "Wrong-project retrieval returned no documents.",
+      "The live provider and model identity were DeepSeek/deepseek-v4-flash.",
+      "A user-confirmed JSON typed constraint replaced revision 2 with revision 3 and was bound to its document revision and content hash.",
+      "The bounded live typed-constraint turn cited the current document and produced the allowed light-oak command while excluding the forbidden greige material."
+    ],
+    "capabilityBoundary": "Only explicit, user-confirmed typed designConstraints receive deterministic command validation. Ordinary document prose remains untrusted reference text and is not automatically converted into executable hard constraints. The earlier free-text failure remains part of the evidence set. The live pass proves the recorded liveTestedFileHashes only; subsequent source changes have targeted local coverage but require a later live regression before claiming the whole current candidate is live-verified."
+  }
+}

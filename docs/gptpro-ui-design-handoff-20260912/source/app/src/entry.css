@@ -1,0 +1,5 @@
+html { background:#f5f1e9; }
+body { margin:0; }
+.entry-loading { min-height:70svh; padding:12vh 7vw; color:#353d32; font:16px/1.8 'PingFang SC',sans-serif; }
+.entry-loading h1 { font:normal clamp(28px,4vw,44px)/1.4 'Songti SC',serif; }
+.entry-loading a,.entry-loading button { display:inline-block; margin:16px 24px 0 0; color:inherit; }

@@ -1,0 +1,24 @@
+{
+  "evidenceScope": "Historical upstream GPT Pro sandbox preflight before local integration; superseded by VALIDATION.json for current results.",
+  "startedAt": "2026-09-10T16:26:07.811698+00:00",
+  "finishedAt": "2026-09-10T16:28:59.356417+00:00",
+  "baselineRef": "codex/gptpro-harness-github-20260910",
+  "baselineSha": "fc742b7bd8f1fcf44dcce3a33d6dafb04dde0b1b",
+  "source": "uploaded ZIP, SHA256 0411d7d7089ee7be39192e7babff991c3509bfcc245d92bd09297ba23783f00d",
+  "localBranch": "codex/constraint-quality-repair-20260911",
+  "githubRead": "verified remote baseline ref",
+  "githubWrite": "not available through exposed connector functions; create/apply_patch discovery exposes no writes; no GitHub credential in terminal",
+  "terminalGithub": "curl/git DNS failure github.com",
+  "terminalDeepSeek": "curl DNS failure api.deepseek.com",
+  "deepseekKeyAvailable": false,
+  "fileWriteExport": "verified extracted ZIP and initialized a local patch baseline",
+  "dependencies": "npm ci --offline failed ENOTCACHED; no registry DNS egress",
+  "browser": "Chromium available; Browser plugin absent; app cannot yet build",
+  "baselineTests": {
+    "pass": 416,
+    "fail": 15,
+    "total": 431
+  },
+  "liveRequests": 0,
+  "warning": "Local Git baseline is a source snapshot, not upstream ancestry. No remote code, main, production or Feishu mutations."
+}

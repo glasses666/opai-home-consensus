@@ -8,6 +8,7 @@ import {
   segmentOnSegment,
 } from './geometry.js';
 import { assertDesignRules } from './design-rules.js';
+import { wallFaceRooms } from './wall-finishes.js';
 
 const ADDRESSABLE_ARRAY_KEYS = new Set([
   'rooms',
@@ -337,6 +338,12 @@ export function validateScene(scene) {
     if (!room) {
       addError(errors, 'SURFACE_ROOM_REF_DANGLING', `${path}.roomId`, `Surface room "${surface.roomId}" does not exist.`);
     }
+    if(surface.roomMaterialIds!==undefined){
+      const adjacent=new Set(Object.values(wallFaceRooms(scene,surface)).filter(Boolean));
+      if(surface.kind!=='wall'||!isObject(surface.roomMaterialIds)||Object.entries(surface.roomMaterialIds).some(([roomId,id])=>!adjacent.has(roomId)||!materialAppliesTo(materialMap.get(id),'wall'))){
+        addError(errors,'WALL_ROOM_FINISH_INVALID',`${path}.roomMaterialIds`,'Wall finishes must reference an adjacent room and compatible material.');
+      }
+    }
     const material = materialMap.get(surface.materialId);
     if (!material) {
       addError(errors, 'MATERIAL_REF_DANGLING', `${path}.materialId`, `Surface material "${surface.materialId}" does not exist.`);
@@ -577,7 +584,7 @@ export function validateScene(scene) {
       !isPositiveInteger(model.revision) ||
       model.units !== 'mm' || model.upAxis !== 'y' || model.forwardAxis !== 'z' ||
       !modelBoundsValid || !provenanceValid ||
-      (model.source === 'generated' && model.generator !== 'scripts/build_demo_assets.py')
+      (model.source === 'generated' && !['scripts/build_demo_assets.py','scripts/build_bedroom_assets.py'].includes(model.generator))
     ) {
       addError(
         errors,
@@ -659,7 +666,83 @@ function applySceneCommand(scene, command) {
 
   const nextScene = jsonClone(scene);
 
-  if (command.type === 'object.setTransform') {
+  if (command.type === 'installation.reconfigure') {
+    const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
+    if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
+    if (!object.installation || object.hierarchy?.layer !== 'fixed_installation') {
+      throw new Error(`OBJECT_NOT_INSTALLATION: Object "${command.objectId}" is not a fixed installation.`);
+    }
+    if (!object.capabilities.parameterEditable) {
+      throw new Error(`OBJECT_PARAMETERS_LOCKED: Object "${command.objectId}" cannot be reconfigured.`);
+    }
+    if (command.confirmedByUser !== true) {
+      throw new Error('INSTALLATION_RECONFIGURE_REQUIRES_CONFIRMATION');
+    }
+    if (command.transform !== undefined) {
+      if (!isObject(command.transform) || !Object.keys(command.transform).length
+        || Object.keys(command.transform).some((key) => !['x', 'y', 'z', 'rotationY'].includes(key))) {
+        throw new Error('TRANSFORM_INVALID');
+      }
+      object.transform = { ...object.transform, ...command.transform };
+    }
+    if (command.dimensions !== undefined) {
+      if (!isObject(command.dimensions)) throw new Error('DIMENSIONS_INVALID: dimensions are required.');
+      const dimensions = { ...object.dimensions, ...command.dimensions };
+      if (![dimensions.width, dimensions.depth, dimensions.height].every(isPositiveInteger)) {
+        throw new Error('DIMENSIONS_INVALID: dimensions must be positive integer millimeters.');
+      }
+      object.dimensions = dimensions;
+      if (object.collision?.source === 'canonical') object.collision.dimensions = { ...dimensions };
+      if (object.model3D?.renderBounds) object.model3D.renderBounds = { ...dimensions };
+    }
+    if (command.hostSurfaceId !== undefined) {
+      const host = nextScene.surfaces?.find((candidate) => candidate.id === command.hostSurfaceId);
+      if (!host) throw new Error(`SURFACE_NOT_FOUND: Surface "${command.hostSurfaceId}" does not exist.`);
+      if (host.kind !== object.installation.mount || host.roomId !== object.roomId) {
+        throw new Error('INSTALLATION_HOST_INVALID');
+      }
+      object.installation.hostSurfaceId = host.id;
+      object.placement.hostSurfaceId = host.id;
+    }
+    if (command.relatedTransforms !== undefined) {
+      if (!Array.isArray(command.relatedTransforms) || command.relatedTransforms.length > 23
+        || new Set(command.relatedTransforms.map((item) => item?.objectId)).size !== command.relatedTransforms.length
+        || command.relatedTransforms.some((item) => item?.objectId === object.id)) {
+        throw new Error('TRANSFORM_BATCH_INVALID');
+      }
+      for (const item of command.relatedTransforms) {
+        const related = nextScene.objects.find((candidate) => candidate.id === item?.objectId);
+        if (!related) throw new Error(`OBJECT_NOT_FOUND: ${item?.objectId}`);
+        if (!related.capabilities.movable) throw new Error(`OBJECT_NOT_MOVABLE: ${related.id}`);
+        if (!isObject(item.transform) || !Object.keys(item.transform).length
+          || Object.keys(item.transform).some((key) => !['x', 'y', 'z', 'rotationY'].includes(key))) {
+          throw new Error('TRANSFORM_INVALID');
+        }
+        if (item.transform.rotationY !== undefined && item.transform.rotationY !== related.transform.rotationY
+          && !related.capabilities.rotatable) throw new Error(`OBJECT_NOT_ROTATABLE: ${related.id}`);
+        related.transform = { ...related.transform, ...item.transform };
+      }
+    }
+  } else if (command.type === 'objects.setTransforms') {
+    // Capability-check each member, then validate the FINAL arrangement once.
+    // Sequential moves can reject a legal rearrangement due to intermediate overlap.
+    if (!Array.isArray(command.items) || !command.items.length || command.items.length > 24
+      || new Set(command.items.map(item => item?.objectId)).size !== command.items.length) {
+      throw new Error('TRANSFORM_BATCH_INVALID');
+    }
+    for (const item of command.items) {
+      const object = nextScene.objects.find(candidate => candidate.id === item?.objectId);
+      if (!object) throw new Error(`OBJECT_NOT_FOUND: ${item?.objectId}`);
+      if (!object.capabilities.movable) throw new Error(`OBJECT_NOT_MOVABLE: ${object.id}`);
+      if (!isObject(item.transform) || !Object.keys(item.transform).length
+        || Object.keys(item.transform).some(key => !['x','y','z','rotationY'].includes(key))) {
+        throw new Error('TRANSFORM_INVALID');
+      }
+      if (item.transform.rotationY !== undefined && item.transform.rotationY !== object.transform.rotationY
+        && !object.capabilities.rotatable) throw new Error(`OBJECT_NOT_ROTATABLE: ${object.id}`);
+      object.transform = { ...object.transform, ...item.transform };
+    }
+  } else if (command.type === 'object.setTransform') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
     if (!object) throw new Error(`OBJECT_NOT_FOUND: Object "${command.objectId}" does not exist.`);
     if (!object.capabilities.movable) throw new Error(`OBJECT_NOT_MOVABLE: Object "${command.objectId}" cannot move.`);
@@ -676,6 +759,9 @@ function applySceneCommand(scene, command) {
     const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
     if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     if (!materialAppliesTo(material, 'object')) throw new Error(`OBJECT_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to objects.`);
+    if (material.kind === 'fabric' && !['sofa', 'bed', 'chair', 'dining-chair', 'armchair', 'ottoman', 'rug'].includes(object.category)) {
+      throw new Error(`OBJECT_MATERIAL_INCOMPATIBLE: Fabric is not a supported finish for ${object.category}.`);
+    }
     object.materialId = command.materialId;
   } else if (command.type === 'object.setDimensions') {
     const object = nextScene.objects?.find((candidate) => candidate.id === command.objectId);
@@ -777,7 +863,13 @@ function applySceneCommand(scene, command) {
     const material = nextScene.materials?.find((candidate) => candidate.id === command.materialId);
     if (!material) throw new Error(`MATERIAL_NOT_FOUND: Material "${command.materialId}" does not exist.`);
     if (!materialAppliesTo(material, surface.kind)) throw new Error(`SURFACE_MATERIAL_INCOMPATIBLE: Material "${command.materialId}" does not apply to ${surface.kind}.`);
-    surface.materialId = command.materialId;
+    if(command.roomId!==undefined){
+      if(surface.kind!=='wall'||!Object.values(wallFaceRooms(nextScene,surface)).includes(command.roomId))throw Error('WALL_ROOM_FINISH_INVALID: room is not adjacent to this wall.');
+      surface.roomMaterialIds={...surface.roomMaterialIds,[command.roomId]:command.materialId};
+    }else{
+      surface.materialId = command.materialId;
+      if(surface.roomMaterialIds?.[surface.roomId])surface.roomMaterialIds[surface.roomId]=command.materialId;
+    }
   } else {
     throw new Error(`COMMAND_UNSUPPORTED: ${command.type}`);
   }

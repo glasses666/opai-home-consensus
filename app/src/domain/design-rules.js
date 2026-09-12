@@ -1,3 +1,4 @@
+import { wallFaceRooms } from './wall-finishes.js';
 import { convexPolygonsOverlap, distance, objectCollisionFootprint, polygonEdges, polygonInsidePolygon, segmentAtOffset } from './geometry.js';
 
 const levelForRule = (rule) => {
@@ -201,8 +202,9 @@ export function evaluateDesignRules(scene) {
     const rule = rules.get(opening.ruleIds?.[0]);
     const level = levelForRule(rule);
     let occupied = false;
+    const connectedRooms=new Set([host.roomId,...Object.values(wallFaceRooms(scene,host)),...(opening.connectsRoomIds??[])]);
     for (const object of objects) {
-      if (object.roomId !== host.roomId || !convexPolygonsOverlap(footprintFor(object), swing)) continue;
+      if (!connectedRooms.has(object.roomId) || !convexPolygonsOverlap(footprintFor(object), swing)) continue;
       occupied = true;
       checks.push(failed(
         'DOOR_SWING_OCCUPIED',

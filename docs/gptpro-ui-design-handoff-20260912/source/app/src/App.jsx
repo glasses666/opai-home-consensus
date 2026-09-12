@@ -1,0 +1,2887 @@
+import { fetchJson, fetchEntryWithRetry, readTurnResponse, PHASE_LABELS } from './experience-client.js';
+import { readableEntityName, changedEntities, affectedRoomIds } from './domain/entity-labels.js';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Armchair, ArrowLeft, ArrowRight, ChatCircleDots, Check, ClockCounterClockwise, Cube, FileArrowUp, FloppyDisk, FolderOpen, HouseLine, MapTrifold, PaperPlaneTilt, Plus, Sparkle, StackSimple, UsersThree, X } from '@phosphor-icons/react';
+import { runAgentTurn, TOOL_REGISTRY } from './agent/harness.js';
+import { assertRequirementConstraints } from './agent/dialogue.js';
+import { assertEvidenceConstraints } from './agent/evidence.js';
+import { createDemoScene } from './domain/demo-scene.js';
+import { createReferenceHome, referenceHomeSource } from './domain/reference-home.js';
+const ReferenceHomePage = lazy(() => import('./ReferenceHomePage.jsx'));
+import { normalizeDesignBrief, serializeDesignBrief } from './domain/design-brief.js';
+import { restoreProjectSession } from './domain/project-session.js';
+import {
+  compareSceneVersions,
+  confirmSceneVersion,
+  restoreSceneVersion,
+  saveSceneVersion,
+  serializeVersionHistory,
+} from './domain/design-version.js';
+import { evaluateDesignRules } from './domain/design-rules.js';
+import { buildDesignerReview, buildHandoffPacket } from './domain/handoff.js';
+import FeishuDelivery from './FeishuDelivery.jsx';
+import { RequirementSummary, TurnProvenance } from './GuidancePanels.jsx';
+import ExperienceDocuments from './ExperienceDocuments.jsx';
+import ExperienceDiscussion from './ExperienceDiscussion.jsx';
+import { retractUnretainedPreview } from './workbench-session.js';
+import { formatExperienceHandoff } from './experience-handoff.js';
+import { describeWorkbenchDiff } from './workbench-diff.js';
+import { formatResidentMessage } from './conversation-presentation.js';
+import {
+  addHouseholdOpinion,
+  chooseConsensusDirection,
+  confirmConsensusVersion,
+  detectHouseholdConflicts,
+  serializeHouseholdConsensus,
+  setConflictDirections,
+} from './domain/household-consensus.js';
+import { projectScene2D } from './domain/projection.js';
+import {
+  createSceneStore,
+  deserializeScene,
+  dispatchSceneCommand,
+  redoSceneCommand,
+  serializeScene,
+  undoSceneCommand,
+  validateScene,
+} from './domain/scene.js';
+import { objectNavigationPreset, parseViewState, sanitizeViewState, serializeViewState } from './domain/view-state.js';
+import { resolveInteractionLayer, resolveRenderProfile } from './domain/render-profile.js';
+import { createProjectSetup, deserializeProjectSetup, normalizeProjectSetup, projectSetupFingerprint, serializeProjectSetup } from './domain/project-setup.js';
+import { generationProgressAt, remainingGenerationDelay } from './domain/generation-timing.js';
+import {
+  DEFAULT_EXPERIENCE_STYLE,
+  EXPERIENCE_STYLES,
+  experienceStyleHref,
+  normalizeExperienceStyle,
+  resolveExperienceStyle,
+  withExperienceStyle,
+} from './domain/experience-style.js';
+import { experienceEntryFailureMessage } from './domain/experience-entry.js';
+import { ExperienceDirectionsPage, ExperienceLandingPage, ExperienceNav } from './DesignDirections.jsx';
+import { createRecordingBaseline, findRecordingScenario, runRecordingScenario } from './demo/recording-scenarios.js';
+
+const PascalStage = lazy(() => import('./PascalStage.jsx'));
+const Scene3D = lazy(() => import('./Scene3D.jsx'));
+
+const scene = createSceneStore(createDemoScene()).currentScene;
+const referenceScene = createReferenceHome();
+const serialized = serializeScene(scene);
+const serializedBytes = new TextEncoder().encode(serialized).length;
+const roundTripMatches = serializeScene(deserializeScene(serialized)) === serialized;
+
+const capabilityLabel = (status, name) => {
+  if (status === 'ready') return `${name} 已连接`;
+  if (status === 'missing_scope') return `${name} 待授权`;
+  if (status === 'auth_failed') return `${name} 授权失效`;
+  return `${name} 未连接`;
+};
+
+const roomLabels = {
+  'room-primary-bedroom': '主卧',
+  'room-bathroom': '卫生间',
+  'room-flex': '儿童房 / 书房',
+  'room-hall': '过厅',
+  'room-living-dining': '开放客餐厅',
+  'room-kitchen': '厨房',
+  'room-entry': '玄关',
+};
+
+const recordingSafePrompts = new Set([
+  '沙发向右移动20厘米',
+  '检查当前规则',
+  '对比上一版变化',
+]);
+
+const roomLabelPositions = {
+  'room-primary-bedroom': { x: 2850, y: 2750 },
+  'room-bathroom': { x: 5200, y: 1200 },
+  'room-flex': { x: 8650, y: 1700 },
+  'room-hall': { x: 5200, y: 3300 },
+  'room-living-dining': { x: 3850, y: 6150 },
+  'room-kitchen': { x: 9300, y: 4600 },
+  'room-entry': { x: 9300, y: 6900 },
+};
+
+const objectLabels = {
+  'object-primary-bed': '双人床',
+  'object-primary-wardrobe': '衣柜',
+  'object-flex-bed': '单人床',
+  'object-flex-desk': '书桌',
+  'object-flex-chair': '学习椅',
+  'object-sofa': '沙发',
+  'object-tv-console': '电视柜',
+  'object-dining-table': '餐桌',
+  'object-dining-chair-n': '餐椅',
+  'object-dining-chair-s': '餐椅',
+  'object-dining-chair-w': '餐椅',
+  'object-dining-chair-e': '餐椅',
+  'object-coffee-table': '茶几',
+  'object-lounge-chair': '休闲椅',
+  'object-kitchen-counter': '橱柜',
+  'object-shoe-cabinet': '鞋柜',
+  'object-flex-floating-shelf': '悬浮层板',
+  'object-living-slat-partition': '格栅隔断',
+  'object-primary-feature-wall': '主卧背景墙',
+};
+
+const materialLabels = {
+  'mat-ceiling-greige': '暖灰顶面',
+  'mat-ceiling-warm-white': '暖白顶面',
+  'mat-door-warm-white': '暖白',
+  'mat-fabric-warm-gray': '暖灰织物',
+  'mat-flex-accent-fabric': '雾绿成长织物',
+  'mat-floor-light-oak': '浅橡木地板',
+  'mat-floor-tile-warm': '暖灰哑光砖',
+  'mat-floor-dark-walnut': '深棕胡桃木地板',
+  'mat-oak-veneer': '浅橡木',
+  'mat-object-warm-white': '暖白家具饰面',
+  'mat-wall-greige': '暖灰墙面',
+  'mat-wall-oak-panel': '浅橡木墙板',
+  'mat-wall-warm-white': '暖白墙面',
+};
+const surfaceKindLabels = { wall: '墙面', floor: '地面', ceiling: '顶面' };
+const wallDirectionLabels = { north: '北墙', south: '南墙', east: '东墙', west: '西墙' };
+const surfaceLabelOverrides = {
+  'surface-wall-living-east-kitchen': '东墙 · 厨房侧',
+  'surface-wall-living-east-entry': '东墙 · 玄关侧',
+};
+const roomBriefs = {
+  'room-living-dining': {
+    kicker: '开放客餐厅',
+    title: '相聚，也留出走动的空间',
+    summary: '调整沙发与餐桌的位置，也看看彼此之间的距离。每次修改都会保留记录，并检查通行空间。',
+    checks: ['主通道 ≥ 900 mm', '固定构件需复核'],
+    shortcuts: [
+      { label: '沙发', objectId: 'object-sofa' },
+      { label: '餐桌', objectId: 'object-dining-table' },
+      { label: '电视柜', objectId: 'object-tv-console' },
+      { label: '格栅隔断', objectId: 'object-living-slat-partition' },
+    ],
+  },
+  'room-primary-bedroom': {
+    kicker: '主卧',
+    title: '睡眠与收纳互不让步',
+    summary: '同一 4.0 × 3.2 m 房间里，同时保护床侧通行、衣柜使用和入门开启。',
+    checks: ['床侧 ≥ 600 mm', '柜前 ≥ 900 mm', '门扇可开启'],
+    shortcuts: [
+      { label: '床', objectId: 'object-primary-bed' },
+      { label: '衣柜', objectId: 'object-primary-wardrobe' },
+      { label: '背景墙', objectId: 'object-primary-feature-wall' },
+    ],
+  },
+  'room-flex': {
+    kicker: '成长型儿童房',
+    title: '学习、活动与未来换床',
+    summary: '在 4.6 × 3.2 m 的房间里，为睡眠、学习和玩耍各留一个角落。调整床与书桌时，同时留意中央的活动空间。',
+    checks: ['床侧 ≥ 600 mm', '成长活动留白 1.6 m', '加宽床须复核活动区'],
+    shortcuts: [
+      { label: '单人床', objectId: 'object-flex-bed' },
+      { label: '书桌', objectId: 'object-flex-desk' },
+      { label: '悬浮层板', objectId: 'object-flex-floating-shelf' },
+    ],
+  },
+};
+const versionStatusLabels = {
+  drafting: '草拟中',
+  impact_review: '待影响确认',
+  customer_confirmed: '已确认',
+  changed_after_confirm: '确认后修改',
+  designer_verified: '设计师已复核',
+  designer_returned: '设计师退回',
+};
+const diffKindLabels = {
+  added: '新增',
+  deleted: '删除',
+  transform: '位置 / 旋转',
+  dimensions: '尺寸',
+  material: '材质',
+  model: '3D 模型',
+  placement: '安装位置',
+  collision: '碰撞代理',
+  review: '专业复核',
+};
+const objectLayerLabels = { fixed_installation: '固定安装', furniture: '家具', equipment: '设备', service: '点位' };
+const ruleStatusLabels = { blocked: '阻止', warning: '提醒', recommendation: '建议', passed: '通过' };
+const editErrorMessages = [
+  [/REQUIREMENT_CONSTRAINT/, '这次调整会违反你已经确认的保留条件。可以先在设计笔记中纠正那条条件，再继续调整。'],
+  [/EVIDENCE_/, '这次调整不符合当前房屋资料中已确认的限制。请先检查或更新相应资料，再继续调整。'],
+  [/OBJECT_FOOTPRINT_OUTSIDE_ROOM/, '这件家具已经压出所属房间了，请往房间内侧移动一点。'],
+  [/CLEARANCE_OCCUPIED/, '这里会占用必要通行或使用净距，请给动线和开门留出空间。'],
+  [/OBJECT_COLLISION/, '这里会和另一件家具重叠，请错开一点再放。'],
+  [/DOOR_SWING_OCCUPIED/, '这里挡到了门扇开启范围，请避开门的开启弧线。'],
+  [/ROOM_BOUNDARY/, '这件家具需要完整留在当前房间边界内。'],
+  [/OBJECT_NOT_MOVABLE/, '这个对象属于固定构件，不能直接移动。'],
+  [/OBJECT_NOT_ROTATABLE/, '这个对象当前不允许旋转。'],
+  [/OBJECT_MATERIAL_LOCKED/, '这个对象的材质由当前方案锁定，不能直接更换。'],
+  [/OBJECT_PARAMETERS_LOCKED/, '这个对象的尺寸由当前方案锁定，不能直接改参数。'],
+  [/SURFACE_MATERIAL_LOCKED/, '这个表面的饰面由当前方案锁定，不能直接更换。'],
+  [/SURFACE_MATERIAL_INCOMPATIBLE/, '这种材质不适用于当前表面，请改选同类饰面。'],
+];
+
+const normalizeEditError = (error) => {
+  const raw = error instanceof Error ? error.message : '未知错误';
+  const stripped = raw.replace(/^DESIGN_RULE_BLOCKED: /, '');
+  const match = editErrorMessages.find(([pattern]) => pattern.test(stripped));
+  return match ? match[1] : stripped;
+};
+const reviewableRuleStatuses = new Set(['warning', 'recommendation']);
+const spatialReviewCommands = new Set(['object.setTransform', 'object.setDimensions']);
+const ruleReviewKey = (check) => [
+  check.status,
+  check.code,
+  check.ruleId,
+  [...check.objectIds].sort().join(','),
+  check.message,
+  check.valueMm ?? '',
+].join('|');
+const reviewableChecksForObjects = (evaluation, objectIds) => {
+  const ids = new Set(objectIds.filter(Boolean));
+  if (!ids.size) return [];
+  return evaluation.checks.filter((check) => (
+    reviewableRuleStatuses.has(check.status) &&
+    check.objectIds.some((id) => ids.has(id))
+  ));
+};
+const newReviewChecks = (before, after, objectIds) => {
+  const beforeKeys = new Set(before.checks.filter((check) => reviewableRuleStatuses.has(check.status)).map(ruleReviewKey));
+  return reviewableChecksForObjects(after, objectIds).filter((check) => !beforeKeys.has(ruleReviewKey(check)));
+};
+const topRuleStatus = (checks) => checks.some((check) => check.status === 'warning') ? 'warning' : 'recommendation';
+const reviewTitle = (status) => status === 'passed' ? '方案待确认' : status === 'warning' ? '规范提醒待确认' : '舒适建议待确认';
+const PROJECT_ID = 'project-demo';
+const VERSION_STORAGE_KEY = 'oppein.project-demo.versions.v3';
+const CONSENSUS_STORAGE_KEY = 'oppein.project-demo.household.v3';
+const DESIGN_BRIEF_STORAGE_KEY = 'oppein.project-demo.design-brief.v1';
+const opinionStanceLabels = {
+  support: '支持',
+  oppose: '反对',
+  supplement: '补充',
+  non_negotiable: '不可妥协',
+};
+const memberRoleLabels = { owner: '主决策人', co_decider: '共同决策', resident: '长期居住' };
+const agentWriteTools = new Set(TOOL_REGISTRY.filter((tool) => tool.writes).map((tool) => tool.name));
+const agentToolLabels = {
+  explore_layout:'观察布局可能性',apply_layout_option:'重新布置家具',review_design:'复核设计效果',
+  apply_catalog_item: '应用组件',
+  check_rules: '检查规则',
+  compare_versions: '比较版本',
+  delete_object: '删除对象',
+  add_object: '添加家具',
+  add_material: '添加材质',
+  resize_object: '调整尺寸',
+  replace_object_model: '更换家具款式',
+  inspect_catalog_item: '读取组件',
+  inspect_object: '读取对象',
+  inspect_room: '读取房间',
+  inspect_spatial_relation: '核对相对位置',
+  move_object: '移动对象',
+  move_relative_to_object: '按相对位置移动',
+  request_clarification: '澄清需求',
+  request_confirmation: '请求确认',
+  rotate_object: '旋转对象',
+  search_catalog: '检索组件',
+  set_object_material: '修改家具材质',
+  set_surface_material: '修改表面材质',
+};
+const downstreamLabels = {
+  skuMapping: '产品与 SKU 映射',
+  pricing: '报价与估算',
+  bom: 'BOM 预览',
+  production: '生产下发',
+};
+const downstreamValueLabels = {
+  pending_enterprise_catalog: '等待欧派企业产品目录',
+  pending_overseas_quote_or_estimate_api: '等待海外报价或估算接口',
+  pending_bom_preview_api: '等待 BOM 预览接口',
+  not_connected_in_v1: 'V1 暂不连接生产系统',
+};
+
+const eventId = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+const agentReplyFromTrace = (trace, { savedLabel = null, pending = false } = {}) => {
+  if (trace.assistantReply) return trace.assistantReply;
+  const failed = trace.steps.find((step) => !step.ok);
+  if (trace.rolledBack || failed) {
+    const reason = normalizeEditError(new Error(failed?.error ?? '规则未通过')).replace(/[。！？!?]+$/, '');
+    return `场景未写入：${reason}。调整距离或方向后重试。`;
+  }
+  const clarification = trace.steps.find((step) => step.tool === 'request_clarification' && step.ok)?.result;
+  if (clarification?.question) return clarification.question;
+  const confirmation = trace.steps.find((step) => step.tool === 'request_confirmation' && step.ok)?.result;
+  if (confirmation?.message) return confirmation.message;
+  const comparison = trace.steps.find((step) => step.tool === 'compare_versions' && step.ok)?.result;
+  if (comparison) return `版本比较：${comparison.objectDiffs?.length ?? 0} 项对象变化，${comparison.surfaceDiffs?.length ?? 0} 项饰面变化，${comparison.ruleDiffs?.length ?? 0} 项规则变化，${comparison.impact?.unresolved?.length ?? 0} 项待确认。`;
+  const writes = trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
+  if (writes.length) {
+    if (trace.assistantReply) return trace.assistantReply;
+    const actions = [...new Set(writes.map((step) => agentToolLabels[step.tool] ?? step.tool))].join('、');
+    if (pending) return `已生成${actions}预览；有 demo 规范提醒，请先保留或撤销，再进入版本链。`;
+    return `已完成${actions}，确定性规则已检查${savedLabel ? `，并保存为 ${savedLabel}` : ''}。`;
+  }
+  return trace.assistantReply || '当前场景已读取；2D / 3D 未修改。';
+};
+
+const readLocalCache = (key) => {
+  if (typeof window === 'undefined') return { value: null, readable: false };
+  try { return { value: window.localStorage.getItem(key), readable: true }; }
+  catch { return { value: null, readable: false }; }
+};
+
+const createInitialProjectSession = (recordingMode, remoteProject = null) => {
+  if (remoteProject) {
+    const session = restoreProjectSession({
+      initialScene: createDemoScene(),
+      serializedVersionHistory: remoteProject.versionHistory,
+      serializedDesignBrief: JSON.stringify(remoteProject.designBrief),
+    });
+    const draft = remoteProject.pendingPreview ?? remoteProject.workingDraft;
+    let store = session.store;
+    for (const command of draft?.commands ?? []) store = dispatchSceneCommand(store, command);
+    if (draft?.scene && serializeScene(store.currentScene) !== serializeScene(draft.scene)) throw new Error('REMOTE_DRAFT_REPLAY_MISMATCH');
+    return { ...session, store, cache: {}, remoteProject,
+      remotePreview: remoteProject.pendingPreview ? {
+        previewId: remoteProject.pendingPreview.id,
+        startCursor: remoteProject.pendingPreview.startCursor,
+        checks: [], status: 'passed', saveOnKeep: false, versionSource: 'agent-provider',
+      } : null };
+  }
+  let styleId = 'scandinavian';
+  try { styleId = deserializeProjectSetup(readLocalCache('oppein.project-setup.v1').value).styles[0] ?? styleId; }
+  catch { /* Missing setup uses the demo's default palette. */ }
+  const cache = Object.fromEntries([VERSION_STORAGE_KEY, CONSENSUS_STORAGE_KEY, DESIGN_BRIEF_STORAGE_KEY].map((key) => [key, readLocalCache(key)]));
+  const session = restoreProjectSession({
+    initialScene: recordingMode ? createRecordingBaseline().initialScene : createDemoScene(styleId),
+    serializedVersionHistory: recordingMode ? null : cache[VERSION_STORAGE_KEY].value,
+    serializedHouseholdConsensus: recordingMode ? null : cache[CONSENSUS_STORAGE_KEY].value,
+    serializedDesignBrief: recordingMode ? null : cache[DESIGN_BRIEF_STORAGE_KEY].value,
+  });
+  return { ...session, cache };
+};
+
+const entityKinds = { room: '房间', object: '家具', opening: '门窗', surface: '表面' };
+const modeOptions = [
+  { id: 'cad', label: 'CAD 图纸', icon: HouseLine },
+  { id: 'furniture', label: '家具俯视', icon: Armchair },
+  { id: 'overlay', label: 'CAD 与家具叠加', icon: StackSimple },
+];
+
+const polygonPoints = (points) => points.map((point) => `${point.x},${point.y}`).join(' ');
+const polygonCenter = (points) => {
+  const total = points.reduce((result, point) => ({ x: result.x + point.x, y: result.y + point.y }), { x: 0, y: 0 });
+  return { x: total.x / points.length, y: total.y / points.length };
+};
+const polygonAreaM2 = (points) => Math.abs(points.reduce((sum, point, index) => {
+  const next = points[(index + 1) % points.length];
+  return sum + point.x * next.y - next.x * point.y;
+}, 0)) / 2_000_000;
+const formatMm = (value) => `${Math.round(value).toLocaleString()} mm`;
+
+function selectOnKeyboard(event, selection, onSelect) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onSelect(selection);
+}
+
+function HorizontalDimension({ y, points, labels, overall = false }) {
+  return (
+    <g className={`cad-dimension-set ${overall ? 'cad-dimension-set--overall' : ''}`} aria-hidden="true">
+      {points.map((x) => <line key={`ext-${x}`} className="cad-extension" x1={x} y1="0" x2={x} y2={y - 30} />)}
+      {points.slice(0, -1).map((x, index) => {
+        const end = points[index + 1];
+        return (
+          <g key={`${x}-${end}`}>
+            <line className="cad-dimension" x1={x} y1={y} x2={end} y2={y} />
+            <line className="cad-tick" x1={x - 28} y1={y + 28} x2={x + 28} y2={y - 28} />
+            {index === points.length - 2 && <line className="cad-tick" x1={end - 28} y1={y + 28} x2={end + 28} y2={y - 28} />}
+            <text className="cad-dimension-label" x={(x + end) / 2} y={y - 50}>{labels[index]}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+function VerticalDimension({ x, points, labels, overall = false }) {
+  return (
+    <g className={`cad-dimension-set ${overall ? 'cad-dimension-set--overall' : ''}`} aria-hidden="true">
+      {points.map((y) => <line key={`ext-${y}`} className="cad-extension" x1="11000" y1={y} x2={x + 30} y2={y} />)}
+      {points.slice(0, -1).map((y, index) => {
+        const end = points[index + 1];
+        const mid = (y + end) / 2;
+        return (
+          <g key={`${y}-${end}`}>
+            <line className="cad-dimension" x1={x} y1={y} x2={x} y2={end} />
+            <line className="cad-tick" x1={x - 28} y1={y + 28} x2={x + 28} y2={y - 28} />
+            {index === points.length - 2 && <line className="cad-tick" x1={x - 28} y1={end + 28} x2={x + 28} y2={end - 28} />}
+            <text className="cad-dimension-label" x={x + 78} y={mid} transform={`rotate(90 ${x + 78} ${mid})`}>{labels[index]}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+function PlanDimensions() {
+  return (
+    <g className="cad-dimensions">
+      <HorizontalDimension y={-330} points={[0, 4000, 6400, 11000]} labels={['4,000', '2,400', '4,600']} />
+      <HorizontalDimension y={-650} points={[0, 11000]} labels={['11,000']} overall />
+      <VerticalDimension x={11350} points={[0, 3200, 5600, 8000]} labels={['3,200', '2,400', '2,400']} />
+      <VerticalDimension x={11700} points={[0, 8000]} labels={['8,000']} overall />
+    </g>
+  );
+}
+
+function OpeningSymbol({ opening, subtle }) {
+  const dx = opening.end.x - opening.start.x;
+  const dy = opening.end.y - opening.start.y;
+  const length = Math.hypot(dx, dy);
+  const normal = { x: (-dy / length) * 28, y: (dx / length) * 28 };
+
+  if (opening.type === 'window') {
+    return <>
+      <line className="cad-opening-gap" data-subtle={subtle} x1={opening.start.x} y1={opening.start.y} x2={opening.end.x} y2={opening.end.y} />
+      <line className="cad-window" x1={opening.start.x + normal.x} y1={opening.start.y + normal.y} x2={opening.end.x + normal.x} y2={opening.end.y + normal.y} />
+      <line className="cad-window" x1={opening.start.x - normal.x} y1={opening.start.y - normal.y} x2={opening.end.x - normal.x} y2={opening.end.y - normal.y} />
+    </>;
+  }
+  if (opening.type === 'shared-doorway') {
+    return <>
+      <line className="cad-opening-gap" data-subtle={subtle} x1={opening.start.x} y1={opening.start.y} x2={opening.end.x} y2={opening.end.y} />
+      <line className="cad-threshold" x1={opening.start.x} y1={opening.start.y} x2={opening.end.x} y2={opening.end.y} />
+    </>;
+  }
+
+  const hinge = opening.swing?.hinge === 'end' ? opening.end : opening.start;
+  const closedEnd = opening.swing?.hinge === 'end' ? opening.start : opening.end;
+  const leafDx = closedEnd.x - hinge.x;
+  const leafDy = closedEnd.y - hinge.y;
+  const side = opening.swing?.side ?? 1;
+  const openEnd = { x: hinge.x + (-leafDy / length) * length * side, y: hinge.y + (leafDx / length) * length * side };
+  return <>
+    <line className="cad-opening-gap" data-subtle={subtle} x1={opening.start.x} y1={opening.start.y} x2={opening.end.x} y2={opening.end.y} />
+    <line className="cad-door-leaf" x1={hinge.x} y1={hinge.y} x2={openEnd.x} y2={openEnd.y} />
+    <path className="cad-door-swing" d={`M ${closedEnd.x} ${closedEnd.y} A ${length} ${length} 0 0 ${side > 0 ? 1 : 0} ${openEnd.x} ${openEnd.y}`} />
+  </>;
+}
+
+function CadLayer({ sceneModel, projection, selection, onSelect, showFurniture = true, showAnnotations = true, showDimensions = true, showTexture = false, subtle = false }) {
+  const cad = projection.layers.cad;
+  return (
+    <g data-layer="cad" data-subtle={subtle}>
+      {cad.rooms.map((room) => {
+        const label = sceneModel.id === scene.id ? roomLabelPositions[room.id] ?? polygonCenter(room.polygon) : polygonCenter(room.polygon);
+        const selected = selection?.kind === 'room' && selection.id === room.id;
+        return <g key={room.id} className="selectable-group" role="button" tabIndex="0" aria-label={`选择${roomLabels[room.id] ?? room.name}`} onClick={() => onSelect({ kind: 'room', id: room.id })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'room', id: room.id }, onSelect)}>
+          <polygon
+            className="cad-room"
+            data-selected={selected}
+            data-textured={showTexture}
+            points={polygonPoints(room.polygon)}
+            style={showTexture ? { fill: `url(#${room.materialId === 'mat-floor-tile-warm' ? 'floor-tile' : room.materialId === 'mat-floor-dark-walnut' ? 'floor-walnut' : 'floor-oak'})` } : undefined}
+          />
+          {showAnnotations && <>
+            <text className="cad-room-label" x={label.x} y={label.y - 45}>{roomLabels[room.id] ?? room.name}</text>
+            <text className="cad-room-meta" x={label.x} y={label.y + 78}>{polygonAreaM2(room.polygon).toFixed(1)} m²</text>
+          </>}
+        </g>;
+      })}
+      {cad.wallSegments.map((wall) => <g key={wall.id} className="selectable-group" role="button" tabIndex="0" aria-label="选择墙体" onClick={() => onSelect({ kind: 'surface', id: wall.id })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'surface', id: wall.id }, onSelect)}>
+        <line className="cad-wall" data-selected={selection?.kind === 'surface' && selection.id === wall.id} x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} style={{ strokeWidth: subtle ? Math.max(72, wall.thickness * 0.62) : wall.thickness }} />
+      </g>)}
+      {cad.openingSegments.map((opening) => <g key={opening.id} className="cad-opening selectable-group" data-selected={selection?.kind === 'opening' && selection.id === opening.id} role="button" tabIndex="0" aria-label="选择门窗" onClick={() => onSelect({ kind: 'opening', id: opening.id })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'opening', id: opening.id }, onSelect)}>
+        <OpeningSymbol opening={opening} subtle={subtle} />
+      </g>)}
+      {showFurniture && cad.objectFootprints.map((footprint) => {
+        const object = sceneModel.objects.find((candidate) => candidate.id === footprint.sourceObjectId);
+        const center = polygonCenter(footprint.polygon);
+        const selected = selection?.kind === 'object' && selection.id === footprint.sourceObjectId;
+        return <g key={footprint.id} className="selectable-group" role="button" tabIndex="0" aria-label={`选择${objectLabels[object.id] ?? object.name}`} onClick={() => onSelect({ kind: 'object', id: footprint.sourceObjectId })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'object', id: footprint.sourceObjectId }, onSelect)}>
+          <polygon className="cad-footprint" data-selected={selected} points={polygonPoints(footprint.polygon)} />
+          <text className="cad-object-label" x={center.x} y={center.y - 12}>{objectLabels[object.id] ?? object.name}</text>
+          <text className="cad-object-meta" x={center.x} y={center.y + 64}>{object.dimensions.width} × {object.dimensions.depth}</text>
+        </g>;
+      })}
+      {showDimensions && <PlanDimensions />}
+      {showAnnotations && <g className="north-arrow" aria-label="北向"><text x="-430" y="420">N</text><line x1="-390" y1="620" x2="-390" y2="470" /><path d="M -390 430 L -440 510 L -390 485 L -340 510 Z" /></g>}
+    </g>
+  );
+}
+
+function MediaLayer({ sceneModel, projection, selection, onSelect }) {
+  return <g data-layer="media">
+    {projection.layers.media.assets.map((asset) => {
+      const object = sceneModel.objects.find((candidate) => candidate.id === asset.sourceObjectId);
+      const selected = selection?.kind === 'object' && selection.id === asset.sourceObjectId;
+      const rotation = (asset.rotationY * 180) / Math.PI;
+      return <g key={asset.id} className="media-object selectable-group" role="button" tabIndex="0" aria-label={`选择${objectLabels[object.id] ?? object.name}`} onClick={() => onSelect({ kind: 'object', id: asset.sourceObjectId })} onKeyDown={(event) => selectOnKeyboard(event, { kind: 'object', id: asset.sourceObjectId }, onSelect)}>
+        <polygon className="media-hitbox" points={polygonPoints(asset.polygon)} />
+        <image className="media-image" href={asset.previewSrc ?? asset.src} x={asset.anchor.x - asset.width / 2} y={asset.anchor.y - asset.depth / 2} width={asset.width} height={asset.depth} preserveAspectRatio="none" transform={`rotate(${rotation} ${asset.anchor.x} ${asset.anchor.y})`} />
+        <polygon className="media-selection" data-selected={selected} points={polygonPoints(asset.polygon)} />
+      </g>;
+    })}
+  </g>;
+}
+
+function ScenePlan({ sceneModel = scene, mode, onModeChange, selection, onSelect, showModeRail = true, compact = false }) {
+  const currentProjection = useMemo(() => projectScene2D(sceneModel), [sceneModel]);
+  const padding = compact ? 240 : 850;
+  const viewBox = `${currentProjection.viewBox.x - padding} ${currentProjection.viewBox.y - padding} ${currentProjection.viewBox.width + padding * 2.45} ${currentProjection.viewBox.height + padding * 2}`;
+  return <div className={`plan${compact ? ' plan--compact' : ''}`}>
+    <svg viewBox={viewBox} aria-label="整屋 CAD 与家具俯视图" role="group">
+      <defs>
+        <pattern id="floor-oak" width="1800" height="1800" patternUnits="userSpaceOnUse">
+          <image href="/assets/materials/floor-oak-light.webp" width="1800" height="1800" opacity="0.38" preserveAspectRatio="xMidYMid slice" />
+        </pattern>
+        <pattern id="floor-tile" width="1800" height="1800" patternUnits="userSpaceOnUse">
+          <image href="/assets/materials/floor-tile-warm.webp" width="1800" height="1800" opacity="0.48" preserveAspectRatio="xMidYMid slice" />
+        </pattern>
+        <pattern id="floor-walnut" width="1800" height="1800" patternUnits="userSpaceOnUse">
+          <rect width="1800" height="1800" fill="#5a3d30" />
+          <image href="/assets/materials/floor-oak-light.webp" width="1800" height="1800" opacity="0.2" preserveAspectRatio="xMidYMid slice" />
+        </pattern>
+      </defs>
+      <rect className="drawing-sheet" x={currentProjection.viewBox.x - padding} y={currentProjection.viewBox.y - padding} width={currentProjection.viewBox.width + padding * 2.45} height={currentProjection.viewBox.height + padding * 2} />
+      {mode === 'cad' && <CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} />}
+      {mode === 'furniture' && <><CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} showFurniture={false} showAnnotations={false} showDimensions={false} showTexture subtle /><MediaLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} /></>}
+      {mode === 'overlay' && <><CadLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} showFurniture={false} showDimensions={!compact} showTexture /><MediaLayer sceneModel={sceneModel} projection={currentProjection} selection={selection} onSelect={onSelect} /></>}
+    </svg>
+    {showModeRail && <nav className="mode-rail" aria-label="二维显示模式">
+      {modeOptions.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-label={label} title={label} aria-pressed={mode === id} onClick={() => onModeChange(id)}><Icon size={19} weight={mode === id ? 'bold' : 'regular'} aria-hidden="true" /><span className="mode-rail__tooltip" aria-hidden="true">{label}</span></button>)}
+    </nav>}
+    {!compact && <div className="plan__scale" aria-hidden="true"><span>1:50</span><span>单位：mm</span></div>}
+  </div>;
+}
+
+function ProjectPlanPreview({ mode = 'overlay', label, sceneModel = scene }) {
+  return <div className="project-plan-preview" inert>
+    <ScenePlan sceneModel={sceneModel} mode={mode} onModeChange={() => {}} selection={null} onSelect={() => {}} showModeRail={false} compact />
+    <span>{label}</span>
+  </div>;
+}
+
+function ProjectsPage() {
+  const dialogRef = useRef(null);
+  const [experienceProjects] = useState(() => { try { const value = JSON.parse(readLocalCache('opai.experience.projects.v1').value ?? '[]'); return Array.isArray(value) ? value.filter(project => /^exp-[a-f0-9-]{36}$/.test(project.id)) : []; } catch { return []; } });
+
+  const openProject = useCallback(() => {
+    const dialog = dialogRef.current;
+    if (!dialog?.open) dialog?.showModal();
+    window.history.replaceState({}, '', '/projects?project=demo');
+  }, []);
+
+  const closeProject = useCallback(() => {
+    dialogRef.current?.close();
+    window.history.replaceState({}, '', '/projects');
+  }, []);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('project') === 'demo') openProject();
+  }, [openProject]);
+
+  return <main className="experience-shell project-library editorial-library" data-page="projects">
+    <ExperienceNav projects />
+    <section className="project-library__content" aria-labelledby="projects-title">
+      <header className="project-library__heading">
+        <div><p className="experience-kicker">YOUR DESIGN COLLECTION / 我的设计</p><h1 id="projects-title">家的下一章，<br />从这里开始。</h1></div>
+        <p>继续打磨已有方案，<br />或带上一份户型，让 AI 陪你从头设计。</p>
+      </header>
+
+      <div className="project-library__grid">
+        {experienceProjects.map(project => <a key={project.id} className="project-tile project-tile--experience" href={`/project/demo?project=${encodeURIComponent(project.id)}&style=agent-canvas`}><div className="experience-project-thumb"><HouseLine size={56} weight="thin" /><span>我的生活空间</span></div><span className="project-tile__body"><span><small>我的独立项目</small><b>{project.name}</b></span><span className="project-status">{project.versionLabel ?? 'V1'}</span></span><span className="project-tile__meta"><span>{new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span><span>打开保存的方案与需求</span><ArrowRight size={17} /></span></a>)}
+        <button className="project-tile project-tile--demo" type="button" onClick={openProject}>
+          <ProjectPlanPreview label="示例住宅 · 装修布局" />
+          <span className="project-tile__body"><span><small>示例项目</small><b>城市三口之家</b></span><span className="project-status">方案讨论中</span></span>
+          <span className="project-tile__meta"><span>7 个空间</span><span>可编辑示例方案</span><ArrowRight size={17} aria-hidden="true" /></span>
+        </button>
+
+        <a className="project-tile project-tile--new" href="/projects/new/details/start">
+          <span className="project-tile__add"><Plus size={24} weight="regular" aria-hidden="true" /></span>
+          <span><b>设计一个自己的家</b><small>从可编辑参考户型和你的生活需要开始</small></span>
+          <span className="editorial-new-action">新建项目 <ArrowRight size={18} aria-hidden="true" /></span>
+        </a>
+      </div>
+      <aside className="editorial-library-note"><span>从空间出发，而不只是挑选风格。</span><p>提供户型与需求 → 查看 AI 方案 → 调整与确认</p></aside>
+    </section>
+
+    <dialog className="project-detail" ref={dialogRef} onClose={() => window.history.replaceState({}, '', '/projects')} onClick={(event) => { if (event.target === event.currentTarget) closeProject(); }}>
+      <div className="project-detail__sheet">
+        <header><div><p className="experience-kicker">示例项目</p><h2>城市三口之家</h2></div><button type="button" onClick={closeProject} aria-label="关闭项目详情"><X size={19} /></button></header>
+        <div className="project-detail__visuals">
+          <ProjectPlanPreview mode="cad" label="2D 户型图" />
+          <ProjectPlanPreview mode="overlay" label="装修预览" />
+        </div>
+        <dl className="project-detail__facts">
+          <div><dt>户型</dt><dd>三室两厅一厨一卫</dd></div>
+          <div><dt>建筑范围</dt><dd>11,000 × 8,000 mm</dd></div>
+          <div><dt>空间</dt><dd>{scene.rooms.length} 个</dd></div>
+          <div><dt>当前版本</dt><dd>以工作台保存结果为准</dd></div>
+          <div><dt>当前阶段</dt><dd>方案讨论</dd></div>
+        </dl>
+        <footer><span>Demo 数据 · 尚未接入欧派真实产品与报价</span><a className="project-detail__enter" href="/project/demo?legacy=1&style=agent-canvas">进入原项目 <ArrowRight size={16} aria-hidden="true" /></a></footer>
+      </div>
+    </dialog>
+  </main>;
+}
+
+const PROJECT_SETUP_KEY = 'oppein.project-setup.v1';
+const PROJECT_SETUP_PROCESS_KEY = 'oppein.project-setup.processed.v1';
+const PROJECT_GENERATION_KEY = 'oppein.project-generation.v1';
+const FIRST_PLAN_STORAGE_KEY = 'oppein.project-demo.first-plan.v1';
+const setupSteps = [
+  ['source', '房屋资料'],
+  ['floorplan', '确认户型'],
+  ['budget', '预算'],
+  ['household', '成员'],
+  ['style', '喜好'],
+  ['summary', '确认'],
+];
+const budgetOptions = ['20 万以内', '20–35 万', '35–50 万', '50 万以上', '暂时没有概念'];
+const memberOptions = [
+  ['self', '我自己'], ['partner', '伴侣'], ['child', '孩子'], ['parent', '父母'], ['pet', '宠物'],
+];
+const styleOptions = [
+  ['scandinavian', '自然浅木', '/assets/styles/scandinavian.jpg'],
+  ['quiet-luxury', '暖白克制', '/assets/styles/quiet-luxury.jpg'],
+  ['japandi', '安静留白', '/assets/styles/japandi.jpg'],
+  ['mid-century-modern', '复古木质', '/assets/styles/mid-century-modern.jpg'],
+  ['new-chinese', '东方秩序', '/assets/styles/new-chinese.jpg'],
+  ['wabi-sabi', '自然肌理', '/assets/styles/wabi-sabi.jpg'],
+];
+const setupTransitionCopy = {
+  floorplan: '正在读取户型资料',
+  budget: '正在保存户型确认',
+  household: '正在建立预算边界',
+  style: '正在整理家庭成员',
+  summary: '正在生成设置摘要',
+};
+
+function loadProjectSetup() {
+  if (window.location.pathname === '/projects/new/details/start') {
+    try {
+      window.localStorage.removeItem(PROJECT_SETUP_KEY);
+      window.sessionStorage.removeItem(PROJECT_SETUP_PROCESS_KEY);
+      window.sessionStorage.removeItem(PROJECT_GENERATION_KEY);
+    } catch { /* A fresh Demo flow must still open when storage is unavailable. */ }
+    return createProjectSetup();
+  }
+  try {
+    const saved = window.localStorage.getItem(PROJECT_SETUP_KEY);
+    return saved ? deserializeProjectSetup(saved) : createProjectSetup();
+  } catch {
+    window.localStorage.removeItem(PROJECT_SETUP_KEY);
+    return createProjectSetup();
+  }
+}
+
+function loadProcessedSetupTransitions() {
+  try {
+    const value = JSON.parse(window.sessionStorage.getItem(PROJECT_SETUP_PROCESS_KEY) ?? '{}');
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).filter(([key, fingerprint]) => key.includes('->') && typeof fingerprint === 'string'))
+      : {};
+  } catch { return {}; }
+}
+
+function ProjectSetupPage() {
+  const [context,setContext]=useState(()=>readSession(livingDraftKey)??'');
+  const begin=useCallback((includeContext)=>{
+    try{if(includeContext&&context.trim())window.sessionStorage.setItem(livingDraftKey,context.trim());
+      else window.sessionStorage.removeItem(livingDraftKey);}catch{/* Optional background must not block entry. */}
+    window.location.assign('/project/demo?style=agent-canvas');
+  },[context]);
+  return <main className="living-context" aria-labelledby="living-context-title">
+    <a href="/">返回首页</a><h1 id="living-context-title">先从你的生活开始</h1>
+    <p>一个人也能完成设计。预算、风格和家人意见，都可以聊到需要时再补充。</p>
+    <label htmlFor="living-context-input">居住背景（可跳过）</label>
+    <textarea id="living-context-input" rows={4} maxLength={1500} value={context} onChange={event=>setContext(event.target.value)}
+      placeholder="例如：我一个人住，偶尔在家工作，晚上想有个能放松的地方。" />
+    <p>填写内容只会带入对话输入框；你发送前，不会被当作已确认的设计条件。</p>
+    <div><button type="button" onClick={()=>begin(true)}>进入 AI 设计</button><button type="button" onClick={()=>begin(false)}>跳过，直接开始</button></div>
+    <p>先使用可编辑的演示户型，不冒充已识别你的真实房屋。</p>
+  </main>;
+}
+
+function DetailedProjectSetupPage() {
+  const [setup, setSetup] = useState(loadProjectSetup);
+  const [notice, setNotice] = useState('');
+  const [transition, setTransition] = useState('');
+  const [slideDirection, setSlideDirection] = useState('forward');
+  const transitionTimer = useRef(null);
+  const processedTransitions = useRef(loadProcessedSetupTransitions());
+  const stepIndex = setupSteps.findIndex(([id]) => id === setup.step);
+  const updateSetup = (patch) => setSetup((current) => normalizeProjectSetup({ ...current, ...patch, ready: false }));
+  const toggleMember = (member) => updateSetup({ members: setup.members.includes(member) ? setup.members.filter((id) => id !== member) : [...setup.members, member] });
+  const toggleStyle = (style) => updateSetup({ styles: setup.styles.includes(style) ? setup.styles.filter((id) => id !== style) : setup.styles.length < 3 ? [...setup.styles, style] : setup.styles });
+  const canContinue = setup.step === 'source' ? Boolean(setup.sourceType)
+    : setup.step === 'floorplan' ? setup.floorplanConfirmed
+      : setup.step === 'budget' ? Boolean(setup.budget)
+        : setup.step === 'household' ? setup.members.length > 0
+          : setup.step === 'style' ? setup.styles.length >= 2
+            : true;
+
+  useEffect(() => {
+    try { window.localStorage.setItem(PROJECT_SETUP_KEY, serializeProjectSetup(setup)); } catch { /* local resume is best effort */ }
+  }, [setup]);
+  useEffect(() => {
+    if (window.location.pathname === '/projects/new/details/start') window.history.replaceState({}, '', '/projects/new/details');
+  }, []);
+  useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
+
+  const moveStep = (offset) => {
+    const next = setupSteps[Math.max(0, Math.min(setupSteps.length - 1, stepIndex + offset))][0];
+    if (offset > 0) {
+      const edge = `${setup.step}->${next}`;
+      const fingerprint = projectSetupFingerprint(setup);
+      if (processedTransitions.current[edge] === fingerprint) {
+        setSlideDirection('forward');
+        updateSetup({ step: next });
+        setNotice('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      setTransition(setupTransitionCopy[next]);
+      transitionTimer.current = window.setTimeout(() => {
+        processedTransitions.current[edge] = fingerprint;
+        try { window.sessionStorage.setItem(PROJECT_SETUP_PROCESS_KEY, JSON.stringify(processedTransitions.current)); } catch { /* processing cache is best effort */ }
+        setSlideDirection('forward');
+        updateSetup({ step: next });
+        setTransition('');
+        setNotice('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 620);
+      return;
+    }
+    setSlideDirection('backward');
+    updateSetup({ step: next });
+    setNotice('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const finishSetup = () => {
+    const readySetup = normalizeProjectSetup({ ...setup, ready: true });
+    setSetup(readySetup);
+    try { window.localStorage.setItem(PROJECT_SETUP_KEY, serializeProjectSetup(readySetup)); } catch { /* local resume is best effort */ }
+    window.location.href = '/projects/new/generating';
+  };
+
+  return <main className="experience-shell project-setup" data-page="project-setup">
+    <ExperienceNav projects />
+    <section className="project-setup__shell" aria-labelledby="setup-title">
+      <a className="project-setup__exit" href="/projects"><ArrowLeft size={15} /> 返回我的设计</a>
+      <ol className="project-setup__progress" aria-label="新建项目进度">
+        {setupSteps.map(([id, label], index) => <li key={id} data-state={index < stepIndex ? 'done' : index === stepIndex ? 'current' : 'upcoming'}><span>{index < stepIndex ? <Check size={12} weight="bold" /> : index + 1}</span><b>{label}</b></li>)}
+      </ol>
+
+      <div className="project-setup__question" data-loading={Boolean(transition)} aria-busy={Boolean(transition)}>
+        <div className={`project-setup__step project-setup__step--${slideDirection}`} key={setup.step}>
+        {setup.step === 'source' && <>
+          <header><p className="experience-kicker">新建项目</p><h1 id="setup-title">先把你的家带进来</h1><p>选择一种房屋资料来源。装修偏好会在后面逐步设置。</p></header>
+          <div className="project-source-grid">
+            <label className="setup-choice setup-choice--source" data-selected={setup.sourceType === 'upload'}>
+              <FileArrowUp size={27} weight="light" /><b>上传户型图</b><span>开发商户型图、CAD 导出或量房图</span><small>JPG / PNG / PDF</small>
+              <input type="file" accept="image/png,image/jpeg,application/pdf" onChange={(event) => { const file = event.target.files?.[0]; if (file) updateSetup({ sourceType: 'upload', fileName: file.name }); }} />
+              <em>{setup.sourceType === 'upload' ? setup.fileName : '选择文件'}</em>
+            </label>
+            <button className="setup-choice setup-choice--source" type="button" disabled><FolderOpen size={27} weight="light" /><b>导入已有项目</b><span>等待企业项目接口接入</span><small>暂不可用</small></button>
+            <button className="setup-choice setup-choice--source" type="button" data-selected={setup.sourceType === 'demo'} onClick={() => updateSetup({ sourceType: 'demo', fileName: referenceHomeSource.title })}><HouseLine size={27} weight="light" /><b>使用 Demo 户型</b><span>使用后续 3D 工作台的同一套房屋</span><small>{referenceScene.rooms.length} 个空间</small></button>
+          </div>
+        </>}
+
+        {setup.step === 'floorplan' && <>
+          <header><p className="experience-kicker">确认户型</p><h1 id="setup-title">这份户型草稿可以继续吗？</h1><p>{setup.sourceType === 'upload' ? `已读取：${setup.fileName}` : `当前使用 ${referenceHomeSource.title}。`}</p></header>
+          <div className="floorplan-confirm">
+            <ProjectPlanPreview sceneModel={referenceScene} mode="overlay" label={setup.sourceType === 'upload' ? '演示识别草稿' : `${referenceHomeSource.title} · 3D 同源户型`} />
+            <fieldset><legend>房间分区和门窗关系是否基本正确？</legend>
+              {setup.sourceType === 'upload' && <p className="setup-truth-note">V1 暂未接入通用户型识别服务，这里使用 Demo 草稿验证确认流程，不宣称已准确识别你的文件。</p>}
+              <label><input type="radio" name="floorplan" checked={setup.floorplanConfirmed && setup.floorplanNote === '关系正确'} onChange={() => updateSetup({ floorplanConfirmed: true, floorplanNote: '关系正确' })} /><span><b>基本正确</b><small>可以继续设置需求</small></span></label>
+              <label><input type="radio" name="floorplan" checked={setup.floorplanConfirmed && setup.floorplanNote === '需要复核'} onChange={() => updateSetup({ floorplanConfirmed: true, floorplanNote: '需要复核' })} /><span><b>有一处需要复核</b><small>先记录，生成前由设计师确认</small></span></label>
+            </fieldset>
+          </div>
+        </>}
+
+        {setup.step === 'budget' && <>
+          <header><p className="experience-kicker">基础设置 · 1 / 3</p><h1 id="setup-title">这次装修准备投入多少？</h1><p>先选一个大致范围，后续方案不会把估算当成正式报价。</p></header>
+          <fieldset className="setup-option-grid"><legend className="sr-only">装修预算</legend>{budgetOptions.map((option) => <label className="setup-choice" key={option} data-selected={setup.budget === option}><input type="radio" name="budget" checked={setup.budget === option} onChange={() => updateSetup({ budget: option })} /><span>{option}</span></label>)}</fieldset>
+        </>}
+
+        {setup.step === 'household' && <>
+          <header><p className="experience-kicker">基础设置 · 2 / 3</p><h1 id="setup-title">谁会住在这里？</h1><p>可多选。只补充会影响空间安全与尺度的信息。</p></header>
+          <fieldset className="setup-option-grid setup-option-grid--members"><legend className="sr-only">家庭成员</legend>{memberOptions.map(([id, label]) => <label className="setup-choice" key={id} data-selected={setup.members.includes(id)}><input type="checkbox" checked={setup.members.includes(id)} onChange={() => toggleMember(id)} /><span>{label}</span></label>)}</fieldset>
+          <div className="member-details">
+            {setup.members.includes('child') && <label><span>孩子年龄</span><select value={setup.memberDetails.child ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, child: event.target.value } })}><option value="">暂不确定</option><option>幼儿</option><option>学龄</option><option>青少年</option></select></label>}
+            {setup.members.includes('parent') && <label><span>适老需求</span><select value={setup.memberDetails.parent ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, parent: event.target.value } })}><option value="">无特殊要求</option><option>需要无障碍照顾</option><option>需要夜间照明</option></select></label>}
+            {setup.members.includes('pet') && <label><span>宠物</span><select value={setup.memberDetails.pet ?? ''} onChange={(event) => updateSetup({ memberDetails: { ...setup.memberDetails, pet: event.target.value } })}><option value="">暂不确定</option><option>猫</option><option>狗</option><option>其他</option></select></label>}
+          </div>
+        </>}
+
+        {setup.step === 'style' && <>
+          <header><p className="experience-kicker">基础设置 · 3 / 3</p><h1 id="setup-title">你喜欢怎样的家？</h1><p>选择 2–3 张有感觉的空间，不需要先知道风格名称。</p></header>
+          <fieldset className="style-choice-grid"><legend className="sr-only">空间风格图片</legend>{styleOptions.map(([id, label, image]) => <label key={id} data-selected={setup.styles.includes(id)}><input type="checkbox" checked={setup.styles.includes(id)} onChange={() => toggleStyle(id)} /><img src={image} alt="" /><span>{label}</span>{setup.styles.includes(id) && <i><Check size={13} weight="bold" /></i>}</label>)}</fieldset>
+          <p className="style-choice-count">已选择 {setup.styles.length} / 3</p>
+        </>}
+
+        {setup.step === 'summary' && <>
+          <header><p className="experience-kicker">开始设计前</p><h1 id="setup-title">确认这次设计的基础信息</h1><p>这些信息会带入设计工作台，发送给 AI 前仍可调整。</p></header>
+          <dl className="setup-summary">
+            <div><dt>户型资料</dt><dd>{setup.fileName}<small>{setup.floorplanNote}</small></dd></div>
+            <div><dt>预算范围</dt><dd>{setup.budget}</dd></div>
+            <div><dt>家庭成员</dt><dd>{setup.members.map((id) => memberOptions.find(([value]) => value === id)?.[1]).join('、')}</dd></div>
+            <div><dt>空间喜好</dt><dd>{setup.styles.map((id) => styleOptions.find(([value]) => value === id)?.[1]).join('、')}</dd></div>
+          </dl>
+        </>}
+        </div>
+        {transition && <div className="project-setup__transition" role="status" aria-live="polite"><div><span aria-hidden="true" /><b>{transition}</b></div></div>}
+      </div>
+
+      <footer className="project-setup__actions">
+        {stepIndex > 0 ? <button type="button" onClick={() => moveStep(-1)}>上一步</button> : <a href="/projects">取消</a>}
+        {setup.step === 'summary'
+          ? <button className="project-setup__primary" type="button" onClick={finishSetup}>开始设计</button>
+          : <button className="project-setup__primary" type="button" disabled={!canContinue || Boolean(transition)} onClick={() => moveStep(1)}>{transition ? '处理中' : '继续'} {!transition && <ArrowRight size={15} />}</button>}
+      </footer>
+      {notice && <p className="project-setup__notice" role="status">{notice}</p>}
+    </section>
+  </main>;
+}
+
+function loadReadyProjectSetup() {
+  try {
+    const setup = deserializeProjectSetup(window.localStorage.getItem(PROJECT_SETUP_KEY));
+    return setup.ready ? setup : null;
+  } catch { return null; }
+}
+
+function ProjectGenerationPage() {
+  const setup = useMemo(loadReadyProjectSetup, []);
+  const [status, setStatus] = useState('running');
+  const [progress, setProgress] = useState(8);
+  const [result, setResult] = useState(null);
+  const runId = useRef(null);
+  const generationStartedAt = useRef(0);
+
+  const generate = useCallback(async (fresh = false) => {
+    if (!setup) return;
+    setStatus('running');
+    setResult(null);
+    setProgress(8);
+    generationStartedAt.current = Date.now();
+    try {
+      const stored = JSON.parse(window.sessionStorage.getItem(PROJECT_GENERATION_KEY) ?? 'null');
+      runId.current = !fresh && typeof stored?.eventId === 'string' ? stored.eventId : `setup-${globalThis.crypto?.randomUUID?.() ?? eventId('first-plan')}`;
+    } catch { runId.current = `setup-${eventId('first-plan')}`; }
+    try { window.sessionStorage.setItem(PROJECT_GENERATION_KEY, JSON.stringify({ eventId: runId.current })); } catch { /* idempotency cache is best effort */ }
+
+    try {
+      const project = await fetchEntryWithRetry('/api/experience/projects', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: AbortSignal.timeout(30_000),
+        body: JSON.stringify({ requestId: runId.current }),
+      });
+      if (!project.projectId || !project.accessToken || !project.versionHistory) throw Error('PROJECT_CREATE_INVALID');
+      persistExperienceToken(project.projectId, project.accessToken);
+      try {
+        const members = setup.members.map((id) => memberOptions.find(([value]) => value === id)?.[1]).filter(Boolean).join('、');
+        const styles = setup.styles.map((id) => styleOptions.find(([value]) => value === id)?.[1]).filter(Boolean).join('、');
+        window.sessionStorage.setItem(livingDraftKey, `居住成员：${members}；预算范围：${setup.budget}；喜欢的空间感觉：${styles}。请先结合当前户型，帮我从最影响日常生活的地方开始设计。`);
+      } catch { /* The setup remains saved even if the editable prompt draft cannot be written. */ }
+      const remaining = remainingGenerationDelay(generationStartedAt.current);
+      if (remaining > 0) await new Promise((resolve) => window.setTimeout(resolve, remaining));
+      setResult({ result: { plan: { title: '你的独立设计空间' } }, projectId: project.projectId });
+      setProgress(100);
+      setStatus('complete');
+      window.setTimeout(() => { window.location.href = `/project/demo?project=${encodeURIComponent(project.projectId)}&style=agent-canvas`; }, 1400);
+    } catch (error) {
+      setStatus('failed');
+      setResult({ error: error?.message ?? 'FIRST_PLAN_FAILED' });
+    }
+  }, [setup]);
+
+  useEffect(() => {
+    if (!setup) {
+      window.location.replace('/projects/new');
+      return undefined;
+    }
+    generate();
+    return undefined;
+  }, [generate, setup]);
+
+  useEffect(() => {
+    if (status !== 'running') return undefined;
+    const timer = window.setInterval(() => setProgress(generationProgressAt(Date.now() - generationStartedAt.current)), 100);
+    return () => window.clearInterval(timer);
+  }, [status]);
+
+  const live = status === 'running';
+  const stages = [['读取家庭与户型设置', 'done'], ['建立独立设计项目', live ? 'active' : status === 'complete' ? 'done' : 'waiting'], ['打开可编辑 3D 工作台', status === 'complete' ? 'done' : 'waiting']];
+
+  return <main className="experience-shell generation-page" data-page="project-generation">
+    <header className="generation-nav"><a className="experience-brand" href="/" aria-label="回到首页"><span><HouseLine size={20} /></span><strong>欧派共创空间</strong></a><a href="/projects/new">稍后回来</a></header>
+    <section className="generation-stage" aria-labelledby="generation-title">
+      <div className="generation-stage__visual">
+        <h1 className="sr-only" id="generation-title">正在准备你的设计空间</h1>
+        <video autoPlay loop muted playsInline preload="auto" poster="/assets/hero/villa-hero-placeholder.png" aria-label="住宅方案逐步建立动画">
+          <source src="/assets/hero/villa-plan-loading-loop.mp4" type="video/mp4" />
+        </video>
+        <div className="generation-progress" aria-label={`设计空间准备进度 ${progress}%`}><strong>{progress}%</strong><span><i style={{ width: `${progress}%` }} /></span><small>{status === 'complete' ? '空间已准备好，正在进入项目' : '正在读取设置并建立独立项目'}</small></div>
+      </div>
+      <aside className="generation-agent" aria-live="polite">
+        <header><span><Sparkle size={20} weight="fill" /></span><div><b>AI 设计助手</b><small>{live ? '正在工作' : status === 'complete' ? '方案已完成' : status === 'degraded' ? '设计服务暂不可用' : '生成暂停'}</small></div></header>
+        <ol>{stages.map(([label, stageState], index) => <li key={label} data-state={stageState}><span>{stageState === 'done' ? <Check size={12} weight="bold" /> : index + 1}</span><div><b>{label}</b><small>{stageState === 'done' ? '完成' : stageState === 'active' ? '进行中' : '等待中'}</small></div></li>)}</ol>
+        {status === 'complete' && <p className="generation-agent__message">《{result?.result?.plan?.title ?? '设计空间'}》已准备好，正在进入工作台。</p>}
+        {status === 'degraded' && <div className="generation-agent__recovery"><p>需求已保存，但设计服务本轮没有返回完整方案。你可以重试，或先进入项目继续沟通。</p><button type="button" onClick={() => generate(true)}>重试生成</button><a href="/project/demo?firstPlan=degraded">先进入项目</a></div>}
+        {status === 'failed' && <div className="generation-agent__recovery"><p>本轮没有生成方案，已确认的设置仍然保留。错误：{result?.error}</p><button type="button" onClick={() => generate(true)}>重新生成</button><a href="/projects/new">返回设置</a></div>}
+        <footer>当前步骤只建立独立项目并带入设置；设计修改会在工作台中由 AI 提议并经你确认。</footer>
+      </aside>
+    </section>
+  </main>;
+}
+
+function findEntity(sceneModel, selection) {
+  if (!selection) return null;
+  const collection = { room: sceneModel.rooms, object: sceneModel.objects, opening: sceneModel.openings, surface: sceneModel.surfaces }[selection.kind];
+  const entity = collection?.find((candidate) => candidate.id === selection.id);
+  return entity ? { kind: selection.kind, entity } : null;
+}
+
+function entityName(kind, entity) {
+  if (kind === 'room') return roomLabels[entity.id] ?? entity.name;
+  if (kind === 'object') return objectLabels[entity.id] ?? entity.name;
+  if (kind === 'surface') {
+    if (surfaceLabelOverrides[entity.id]) return surfaceLabelOverrides[entity.id];
+    if (entity.kind !== 'wall') return surfaceKindLabels[entity.kind] ?? entity.id;
+    const direction = Object.keys(wallDirectionLabels).find((value) => entity.id.includes(`-${value}`));
+    return direction ? wallDirectionLabels[direction] : '墙面';
+  }
+  return entity.kind ?? entity.id;
+}
+
+function Inspector({ sceneModel, selection, onNavigate, mode, workspaceMode, renderStats }) {
+  const selected = findEntity(sceneModel, selection);
+  return <aside className="panel inspector" aria-label="Canonical entity inspector">
+    <div className="panel__header"><div><p className="panel__kicker">Selection map</p><h2 className="panel__title">对象与房间</h2></div><span className="panel__meta">{workspaceMode === '3d' ? '实时 3D' : modeOptions.find((item) => item.id === mode)?.label}</span></div>
+    <div className="inspector__content">
+      {workspaceMode === '3d' && <dl className="render-stats" aria-label="3D rendering statistics"><div><dt>FPS</dt><dd>{renderStats.fps || '—'}</dd></div><div><dt>Draw calls</dt><dd>{renderStats.calls || '—'}</dd></div><div><dt>Triangles</dt><dd>{renderStats.triangles ? renderStats.triangles.toLocaleString() : '—'}</dd></div><div><dt>GLB</dt><dd>{renderStats.assets || sceneModel.objects.length}</dd></div></dl>}
+      <ul className="entity-list">{sceneModel.rooms.map((room) => {
+        const groups = Object.entries(objectLayerLabels)
+          .map(([layer, label]) => ({ layer, label, objects: sceneModel.objects.filter((object) => object.roomId === room.id && object.hierarchy.layer === layer) }))
+          .filter((group) => group.objects.length);
+        return <li className="entity-list__room" key={room.id}>
+          <button className="entity-list__room-button" type="button" aria-pressed={selection?.kind === 'room' && selection.id === room.id} onClick={() => onNavigate({ kind: 'room', id: room.id }, room.cameraPresetIds[0])}><span>{entityName('room', room)}</span><span className="entity-list__type">俯视</span></button>
+          {groups.map((group) => <section className="entity-list__group" key={group.layer} aria-label={group.label}>
+            <span>{group.label}</span>
+            <ul className="entity-list__objects">{group.objects.map((object) => {
+              const preset = objectNavigationPreset(sceneModel, object);
+              return <li key={object.id}><button type="button" aria-pressed={selection?.kind === 'object' && selection.id === object.id} onClick={() => onNavigate({ kind: 'object', id: object.id }, preset?.id)}><span>{entityName('object', object)}</span><span className="entity-list__type">{preset?.label ?? '选择'}</span></button></li>;
+            })}</ul>
+          </section>)}
+        </li>;
+      })}</ul>
+      {selected ? <dl className="inspector__details"><div className="inspector__row"><dt>类型</dt><dd>{entityKinds[selected.kind]}</dd></div>{Object.entries(selected.entity).map(([key, value]) => <div className="inspector__row" key={key}><dt>{key}</dt><dd>{typeof value === 'string' ? value : JSON.stringify(value)}</dd></div>)}</dl> : <div className="empty">点击房间或家具，检查它对应的唯一 scene ID。</div>}
+    </div>
+  </aside>;
+}
+
+function getRoomViewPresets(sceneModel, roomId) {
+  const room = sceneModel.rooms.find((candidate) => candidate.id === roomId);
+  return (room?.cameraPresetIds ?? [])
+    .map((id) => sceneModel.cameraPresets.find((preset) => preset.id === id))
+    .filter((preset) => preset && !preset.objectId);
+}
+
+function selectionFromId(sceneModel, id) {
+  if (typeof id !== 'string' || !id) return null;
+  for (const [kind, collection] of Object.entries({ room: sceneModel.rooms, surface: sceneModel.surfaces, opening: sceneModel.openings, object: sceneModel.objects })) {
+    if (collection.some((entity) => entity.id === id)) return { kind, id };
+  }
+  return null;
+}
+
+function usePathname() {
+  const currentRoute = () => (typeof window === 'undefined' ? '/project/demo' : `${window.location.pathname}${window.location.search}${window.location.hash}`);
+  const [pathname, setPathname] = useState(currentRoute);
+
+  useEffect(() => {
+    const handlePopState = () => setPathname(currentRoute());
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (nextPathname) => {
+    if (typeof window === 'undefined' || currentRoute() === nextPathname) return;
+    window.history.pushState({}, '', nextPathname);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    setPathname(nextPathname);
+  };
+
+  return [pathname, navigate];
+}
+
+function useWorkspaceTier() {
+  const computeTier = useCallback(() => {
+    if (typeof window === 'undefined') return 'full';
+    return resolveRenderProfile({
+      width: window.innerWidth,
+      coarsePointer: window.matchMedia?.('(pointer: coarse)').matches ?? false,
+      deviceMemory: navigator.deviceMemory,
+      hidden: document.visibilityState === 'hidden',
+    }).mode;
+  }, []);
+
+  const [tier, setTier] = useState(computeTier);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const update = () => setTier(computeTier());
+    update();
+    const mediaQueries = [window.matchMedia?.('(pointer: coarse)')].filter(Boolean);
+    for (const query of mediaQueries) {
+      query.addEventListener?.('change', update);
+    }
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    document.addEventListener('visibilitychange', update);
+    return () => {
+      for (const query of mediaQueries) {
+        query.removeEventListener?.('change', update);
+      }
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      document.removeEventListener('visibilitychange', update);
+    };
+  }, [computeTier]);
+
+  return tier;
+}
+
+function LabScenePage() {
+  const [mode, setMode] = useState('overlay');
+  const [workspaceMode, setWorkspaceMode] = useState('3d');
+  const [selection, setSelection] = useState({ kind: 'room', id: 'room-living-dining' });
+  const [activeRoomId, setActiveRoomId] = useState('room-living-dining');
+  const [viewRequest, setViewRequest] = useState(null);
+  const [renderStats, setRenderStats] = useState({ fps: 0, calls: 0, triangles: 0, assets: 0 });
+  const [copyStatus, setCopyStatus] = useState('复制 JSON');
+  const validation = useMemo(() => validateScene(scene), []);
+
+  useEffect(() => {
+    const clearSelection = (event) => { if (event.key === 'Escape') setSelection(null); };
+    window.addEventListener('keydown', clearSelection);
+    return () => window.removeEventListener('keydown', clearSelection);
+  }, []);
+
+  const copyJson = async () => {
+    try { await navigator.clipboard.writeText(serialized); setCopyStatus('已复制'); }
+    catch { setCopyStatus('复制失败'); }
+    window.setTimeout(() => setCopyStatus('复制 JSON'), 1200);
+  };
+
+  const selectEntity = (nextSelection) => {
+    setSelection(nextSelection);
+    const selected = findEntity(scene, nextSelection);
+    const roomId = selected?.kind === 'room' ? selected.entity.id : selected?.entity.roomId;
+    if (roomId) setActiveRoomId(roomId);
+  };
+
+  const navigateEntity = (nextSelection, presetId) => {
+    selectEntity(nextSelection);
+    if (workspaceMode === '3d' && presetId) {
+      setViewRequest((current) => ({ id: presetId, sequence: (current?.sequence ?? 0) + 1 }));
+    }
+  };
+
+  return <main className="lab">
+    <header className="lab__header"><div><p className="eyebrow">Gate 2 · same-source spatial proof</p><h1>2D 户型与真实 3D 同源场景</h1><p className="lab__lede">九件原创 GLB、墙体开洞、PBR 材质和可复现镜头全部读取 Gate 1 的同一份毫米级 scene。点击房间地面会先飞到三维俯视，再选入口、主功能面或自由视角。</p></div><span className={`status ${validation.ok ? '' : 'status--error'}`}>{validation.ok ? 'VALID SCENE' : `${validation.errors.length} ERRORS`}</span></header>
+    <div className="lab__workspace"><section className="panel plan-panel" aria-labelledby="plan-title"><div className="panel__header panel__header--plan"><div><p className="panel__kicker">Canonical · 11,000 × 8,000 mm</p><h2 className="panel__title" id="plan-title">{workspaceMode === '3d' ? '一层数字住宅' : '一层建筑平面'}</h2></div><div className="workspace-switch" aria-label="空间显示维度"><button type="button" aria-pressed={workspaceMode === '2d'} onClick={() => setWorkspaceMode('2d')}><MapTrifold size={16} />2D</button><button type="button" aria-pressed={workspaceMode === '3d'} onClick={() => setWorkspaceMode('3d')}><Cube size={16} />3D</button></div></div>{workspaceMode === '2d' ? <ScenePlan sceneModel={scene} mode={mode} onModeChange={setMode} selection={selection} onSelect={selectEntity} /> : <Suspense fallback={<div className="scene3d-loading">正在启动内部 3D 校验器…</div>}><Scene3D key="surface-occlusion-v1" scene={scene} selection={selection} onSelect={selectEntity} onExitTo2D={() => setWorkspaceMode('2d')} activeRoomId={activeRoomId} roomLabels={roomLabels} onStats={setRenderStats} viewRequest={viewRequest} /></Suspense>}</section><Inspector sceneModel={scene} selection={selection} onNavigate={navigateEntity} mode={mode} workspaceMode={workspaceMode} renderStats={renderStats} /></div>
+    <section className="evidence" aria-label="Scene validation evidence"><div className="panel evidence__summary"><p className="evidence__label">Validation evidence</p><dl className="evidence__facts"><dt>Scene</dt><dd>{scene.id}</dd><dt>Schema</dt><dd>v{scene.schemaVersion}</dd><dt>Rooms</dt><dd>{scene.rooms.length}</dd><dt>Objects / GLB</dt><dd>{scene.objects.length} / {scene.objects.length}</dd><dt>Camera presets</dt><dd>{scene.cameraPresets.length}</dd><dt>Round trip</dt><dd>{roundTripMatches ? 'byte-identical' : 'mismatch'}</dd></dl>{!validation.ok && <ul className="validation-list">{validation.errors.map((error) => <li key={`${error.code}-${error.path}`}>{error.path}: {error.message}</li>)}</ul>}</div><div className="panel evidence__json"><div className="evidence__json-header"><div><p className="evidence__label">Canonical JSON</p><span className="panel__meta">{serializedBytes.toLocaleString()} bytes · read only</span></div><button className="utility-button" type="button" onClick={copyJson}>{copyStatus}</button></div><textarea className="json" readOnly spellCheck="false" value={serialized} aria-label="Canonical scene JSON" /></div></section>
+  </main>;
+}
+
+const experienceTokenKey = (id) => `opai.experience.${id}.token`;
+let experienceBootstrap;
+let pendingCreationId;
+const pendingCreationKey='opai.experience.pending-create.v2';
+const livingDraftKey='opai.living-context.draft.v1';
+const readSession=key=>{try{return window.sessionStorage.getItem(key);}catch{return null;}};
+const readExperienceToken=id=>readLocalCache(experienceTokenKey(id)).value??readSession(experienceTokenKey(id));
+const persistExperienceToken=(id,token)=>{
+  try{window.localStorage.setItem(experienceTokenKey(id),token);return;}
+  catch{try{window.sessionStorage.setItem(experienceTokenKey(id),token);return;}catch{throw Error('浏览器存储被禁用，无法安全保存项目访问凭据。');}}
+};
+const creationRequestId=()=>{
+  if(!pendingCreationId){pendingCreationId=readSession(pendingCreationKey)??globalThis.crypto.randomUUID();
+    try{window.sessionStorage.setItem(pendingCreationKey,pendingCreationId);}catch{/* Memory keeps retries idempotent in this page. */}}
+  return pendingCreationId;
+};
+
+const rememberExperienceProject = (project, versionLabel) => {
+  try {
+    const previous = JSON.parse(readLocalCache('opai.experience.projects.v1').value ?? '[]');
+    const projects = Array.isArray(previous) ? previous.filter(item => item.id !== project.projectId) : [];
+    projects.unshift({ id: project.projectId, name: project.project?.name ?? '我的生活空间', versionLabel: versionLabel ?? 'V1', updatedAt: new Date().toISOString() });
+    window.localStorage.setItem('opai.experience.projects.v1', JSON.stringify(projects.slice(0, 40)));
+  } catch { /* Project access and server persistence work even when the optional local list is unavailable. */ }
+};
+
+async function loadExperienceProject() {
+  const requested = new URLSearchParams(window.location.search).get('project');
+  const token = requested ? readExperienceToken(requested) : null;
+  if (requested && !token) throw new Error('这个项目的访问凭据不在当前浏览器中，请回到原浏览器，或新建独立体验。');
+  let project;
+  try {
+    project = await fetchEntryWithRetry(requested ? `/api/experience/projects/${encodeURIComponent(requested)}` : '/api/experience/projects', requested
+      ? { headers: { authorization: `Bearer ${token}` } }
+      : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ requestId: creationRequestId() }) }, {requestedProject:Boolean(requested)});
+  } catch (error) {
+    throw new Error(experienceEntryFailureMessage(error, { requestedProject: Boolean(requested) }), { cause: error });
+  }
+  const accessToken = project.accessToken ?? token;
+  if (!project.projectId || !accessToken || !project.versionHistory) throw new Error('项目数据尚未准备好，请重试。');
+  persistExperienceToken(project.projectId,accessToken);
+  try { const history = JSON.parse(project.versionHistory); rememberExperienceProject(project, history.versions?.find(version => version.id === history.currentVersionId)?.label); } catch { /* Validated below when loading the scene. */ }
+  const url = new URL(window.location.href);
+  url.searchParams.set('project', project.projectId);
+  window.history.replaceState({}, '', url);
+  pendingCreationId=null;try{window.sessionStorage.removeItem(pendingCreationKey);}catch{/* Access token is already stored. */}
+  return { ...project, accessToken };
+}
+
+function ProjectDemoPage() {
+  const legacy = new URLSearchParams(window.location.search).has('legacy') || new URLSearchParams(window.location.search).get('recording') === '1';
+  const [project, setProject] = useState(null);
+  const [failure, setFailure] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const pendingWorkRef = useRef(false);
+  const lastProjectUrlRef = useRef(window.location.href);
+  useEffect(() => {
+    if (legacy) return undefined;
+    let alive = true;
+    const pending = experienceBootstrap ?? (experienceBootstrap = loadExperienceProject());
+    pending.then(value => { if (alive) { lastProjectUrlRef.current = window.location.href; setProject(value); } }).catch(error => { if (alive) setFailure(error.message); }).finally(() => { if (experienceBootstrap === pending) experienceBootstrap = null; });
+    return () => { alive = false; };
+  }, [legacy, attempt]);
+  useEffect(() => {
+    if (!project) return undefined;
+    const onProjectNavigation = () => {
+      const nextId = new URLSearchParams(window.location.search).get('project');
+      if (nextId === project.projectId) { lastProjectUrlRef.current = window.location.href; return; }
+      if (pendingWorkRef.current && !window.confirm('当前调整还没有保存。离开后将打开另一项目，是否继续？')) {
+        window.history.pushState({}, '', lastProjectUrlRef.current);
+        return;
+      }
+      setProject(null); setFailure(''); setAttempt(value => value + 1);
+    };
+    window.addEventListener('popstate', onProjectNavigation);
+    return () => window.removeEventListener('popstate', onProjectNavigation);
+  }, [project]);
+  if (legacy) return <ProjectWorkspace />;
+  if (project) return <ProjectWorkspace key={project.projectId} remoteProject={project} pendingWorkRef={pendingWorkRef} />;
+  return <main className="experience-project-loading"><HouseLine size={32} /><h1>{failure ? '暂时没有打开项目' : '正在准备你的空间'}</h1><p role="status">{failure || '为这次体验建立独立项目，读取你可以实际调整的房屋。'}</p>{failure && <div><button onClick={() => { setFailure(''); setAttempt(value => value + 1); }}>重试</button><a href="/project/demo?style=agent-canvas">新建独立体验</a></div>}</main>;
+}
+
+function ProjectWorkspace({ remoteProject = null, pendingWorkRef = null }) {
+  const [entryQuery] = useState(() => typeof window === 'undefined' ? '' : window.location.search);
+  const recordingMode = new URLSearchParams(entryQuery).get('recording') === '1';
+  const initialExperienceStyle = useMemo(() => resolveExperienceStyle(
+    entryQuery,
+    readLocalCache('oppein.experience-style').value,
+  ), []);
+  const [initialVersionProject] = useState(() => createInitialProjectSession(recordingMode, remoteProject));
+  const [projectRevision, setProjectRevision] = useState(remoteProject?.revision ?? 0);
+  const projectRevisionRef = useRef(projectRevision);
+  const [requirements, setRequirements] = useState(remoteProject?.pendingPreview?.proposedRequirements ?? remoteProject?.requirements ?? null);
+  const [evidenceConstraints, setEvidenceConstraints] = useState(remoteProject?.evidenceConstraints ?? []);
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const saveRequestRef = useRef(null);
+  const discussionAdoptionRef = useRef(null);
+  const outcomeCacheKey = remoteProject ? `opai.experience.${remoteProject.projectId}.outcome.v1` : null;
+  const [pendingDiscussionOutcome, setPendingDiscussionOutcome] = useState(() => {
+    try { return remoteProject ? JSON.parse(window.localStorage.getItem(`opai.experience.${remoteProject.projectId}.outcome.v1`) ?? 'null') : null; } catch { return null; }
+  });
+  const [outcomeBusy, setOutcomeBusy] = useState(false);
+  const outcomeRequestRef = useRef(false);
+  const experiencePath = remoteProject ? `/api/experience/projects/${encodeURIComponent(remoteProject.projectId)}` : null;
+  const projectHeaders = remoteProject ? { 'content-type': 'application/json', authorization: `Bearer ${remoteProject.accessToken}` } : { 'content-type': 'application/json' };
+  const applyProjectRevision = revision => { if (Number.isInteger(revision)) { projectRevisionRef.current = revision; setProjectRevision(revision); } };
+  const cacheRecoveryRef = useRef({});
+  const [sceneStore, setSceneStore] = useState(initialVersionProject.store);
+  const [versionHistory, setVersionHistory] = useState(initialVersionProject.history);
+  const [householdConsensus, setHouseholdConsensus] = useState(initialVersionProject.householdConsensus);
+  const [designBrief, setDesignBrief] = useState(initialVersionProject.designBrief);
+  const sceneStoreRef = useRef(sceneStore);
+  const versionHistoryRef = useRef(versionHistory);
+  sceneStoreRef.current = sceneStore;
+  versionHistoryRef.current = versionHistory;
+  const currentScene = sceneStore.currentScene;
+  const initialNavigation = useMemo(() => parseViewState(entryQuery, initialVersionProject.store.currentScene), []);
+  const [navigation, setNavigation] = useState(initialNavigation);
+  const experienceStyle = initialExperienceStyle;
+  const [viewSequence, setViewSequence] = useState(1);
+  const [displayViewId, setDisplayViewId] = useState(initialNavigation.viewId);
+  const [displayRoomId, setDisplayRoomId] = useState(initialNavigation.roomId);
+  const [displaySelectedId, setDisplaySelectedId] = useState(initialNavigation.selectedId);
+  const [editMode, setEditMode] = useState('move');
+  const [editFeedback, setEditFeedback] = useState({ tone: 'neutral', message: '选择家具后可查看；进入微调后再调整' });
+  const [pendingReview, setPendingReview] = useState(initialVersionProject.remotePreview ?? null);
+  const [previewDecisionBusy, setPreviewDecisionBusy] = useState(false);
+  const previewDecisionRef = useRef(null);
+  const viewerTier = useWorkspaceTier();
+  const [viewerExpanded, setViewerExpanded] = useState(viewerTier === 'full');
+  useEffect(() => { setViewerExpanded(viewerTier === 'full'); }, [viewerTier]);
+  const [handoffSync, setHandoffSync] = useState({ status: 'idle', message: '客户确认后可提交设计师复核。', reviewUrl: null, handoffUrl: null });
+  const [lastRejected, setLastRejected] = useState(null);
+  const [dimensionDraft, setDimensionDraft] = useState(null);
+  const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
+  const [compareFromVersionId, setCompareFromVersionId] = useState(initialVersionProject.history.versions[0].id);
+  const [sidecarMode, setSidecarMode] = useState('agent');
+  const interactionLayer = resolveInteractionLayer({ sidecarMode });
+  const [agentInput, setAgentInput] = useState(()=>{
+    if(!remoteProject || remoteProject.conversation?.length)return '';
+    const draft=readSession(livingDraftKey)??'';
+    try{window.sessionStorage.removeItem(livingDraftKey);}catch{/* Optional input draft only. */}
+    return draft.slice(0,1500);
+  });
+  const [agentBusy, setAgentBusy] = useState(false);
+  const [agentProgress, setAgentProgress] = useState('');
+  const agentRequestRef = useRef(null);
+  const [lastAgentFailure, setLastAgentFailure] = useState(null);
+  const [agentCallout, setAgentCallout] = useState(null);
+  const [agentCapability, setAgentCapability] = useState({ aily: 'checking', base: 'checking', provider: 'local' });
+  const [agentMessages, setAgentMessages] = useState(() => {
+    const messages = remoteProject?.conversation?.length ? remoteProject.conversation : [{
+      id: 'agent-welcome', role: 'assistant',
+      text: recordingMode
+        ? '当前为编排演示模式，指定场景按预设步骤执行，并非 AI 实时生成；不会覆盖你的正常项目。'
+        : initialVersionProject.restoration.versions === 'invalid'
+        ? '旧版本缓存暂时无法校验，当前显示演示场景而非你的保存版本；旧数据会保留用于恢复。'
+        : `已经读取这套房屋的 ${initialVersionProject.store.currentScene.rooms.length} 个空间。说说最近一次在家里觉得不舒服、或希望改变的时刻，我们从那里开始。`,
+      source: recordingMode ? 'demo-script' : 'local', tools: [],
+    }];
+    if (new URLSearchParams(entryQuery).get('firstPlan') === 'ready') {
+      try {
+        const body = JSON.parse(readLocalCache(FIRST_PLAN_STORAGE_KEY).value ?? 'null');
+        const plan = body?.result?.plan;
+        if (body?.status === 'ready' && typeof plan?.title === 'string' && typeof plan.designIntent === 'string') {
+          messages.push({ id: 'agent-first-plan', role: 'assistant', source: 'first-plan', tools: [],
+            text: `设计方向已生成：《${plan.title.slice(0, 100)}》。${plan.designIntent.slice(0, 240)}\n当前 3D 仍是可编辑的演示户型，并未自动生成你的真实户型几何；可继续明确家具和表面的调整。` });
+        }
+      } catch { /* An unreadable plan is not a generated result and stays untouched. */ }
+    }
+    return messages;
+  });
+  const [activeMemberId, setActiveMemberId] = useState(householdConsensus.members[0].id);
+  const [opinionStance, setOpinionStance] = useState('support');
+  const [opinionText, setOpinionText] = useState('');
+  const [consensusFeedback, setConsensusFeedback] = useState('三位成员依次表达；所有意见都写入同一共享版本。');
+  const agentMessageListRef = useRef(null);
+  const versionDrawerRef = useRef(null);
+  const versionDrawerActivatorRef = useRef(null);
+  const versionDrawerWasOpenRef = useRef(false);
+  const homePreset = currentScene.cameraPresets.find((preset) => preset.kind === 'whole_home');
+  const selection = selectionFromId(currentScene, navigation.selectedId) ?? (navigation.roomId ? { kind: 'room', id: navigation.roomId } : null);
+  const displaySelection = selectionFromId(currentScene, displaySelectedId) ?? (displayRoomId ? { kind: 'room', id: displayRoomId } : null);
+  const selectedEntity = findEntity(currentScene, selection);
+  const displaySelectedEntity = findEntity(currentScene, displaySelection);
+  const selectedObject = selectedEntity?.kind === 'object' ? selectedEntity.entity : null;
+  const selectedSurface = selectedEntity?.kind === 'surface' ? selectedEntity.entity : null;
+  const activeRoomId = navigation.roomId;
+  const activeRoomSurfaces = currentScene.surfaces
+    .filter((surface) => surface.roomId === activeRoomId)
+    .sort((left, right) => ['floor', 'ceiling', 'wall'].indexOf(left.kind) - ['floor', 'ceiling', 'wall'].indexOf(right.kind));
+  const currentRoom = currentScene.rooms.find((room) => room.id === displayRoomId) ?? null;
+  const currentRoomLabel = currentRoom ? (roomLabels[currentRoom.id] ?? currentRoom.name) : '整屋';
+  const designEvaluation = useMemo(() => evaluateDesignRules(currentScene), [currentScene]);
+  const versions = versionHistory.versions;
+  const currentVersion = versions.find((version) => version.id === versionHistory.currentVersionId) ?? versions.at(-1);
+  const hasUnsavedChanges = serializeScene(currentVersion.scene) !== serializeScene(currentScene);
+  if (pendingWorkRef) pendingWorkRef.current = hasUnsavedChanges || Boolean(pendingReview);
+  const workingVersion = hasUnsavedChanges
+    ? { ...currentVersion, id: 'working-copy', label: '未保存', scene: currentScene, commands: sceneStore.commands, cursor: sceneStore.cursor }
+    : currentVersion;
+  const compareFromVersion = versions.find((version) => version.id === compareFromVersionId) ?? versions[0];
+  const versionDiff = useMemo(
+    () => compareSceneVersions(compareFromVersion, workingVersion),
+    [compareFromVersion, workingVersion],
+  );
+  const currentVersionStatus = hasUnsavedChanges && versionHistory.confirmedVersionId
+    ? 'changed_after_confirm'
+    : currentVersion.status;
+  const canSubmitDesignerReview = currentVersion.status === 'customer_confirmed' && !hasUnsavedChanges && !pendingReview;
+  const activeMember = householdConsensus.members.find((member) => member.id === activeMemberId) ?? householdConsensus.members[0];
+  const opinionTarget = selectedObject
+    ? { type: 'object', id: selectedObject.id }
+    : currentRoom
+      ? { type: 'room', id: currentRoom.id }
+      : { type: 'version', id: currentVersion.id };
+  const opinionTargetLabel = opinionTarget.type === 'object'
+    ? entityName('object', selectedObject)
+    : opinionTarget.type === 'room'
+      ? currentRoomLabel
+      : currentVersion.label;
+  const householdConflicts = useMemo(() => detectHouseholdConflicts(householdConsensus), [householdConsensus]);
+  const activeConflict = householdConflicts.find((conflict) => conflict.versionId === currentVersion.id) ?? householdConflicts.at(-1) ?? null;
+  const conflictDirections = activeConflict
+    ? householdConsensus.directions.filter((direction) => direction.conflictId === activeConflict.id)
+    : [];
+  const conflictOpinions = activeConflict
+    ? householdConsensus.opinions.filter((opinion) => opinion.versionId === activeConflict.versionId
+      && opinion.target.type === activeConflict.target.type
+      && opinion.target.id === activeConflict.target.id)
+    : [];
+  const consensusDirectionOptions = useMemo(() => {
+    if (!activeConflict || activeConflict.target.type !== 'object' || householdConsensus.finalDecision) return [];
+    const object = currentScene.objects.find((candidate) => candidate.id === activeConflict.target.id);
+    if (!object?.capabilities?.movable) return [];
+    const candidates = [
+      { key: 'east', label: '向东', dx: 200, dz: 0 },
+      { key: 'north', label: '向北', dx: 0, dz: -200 },
+      { key: 'west', label: '向西', dx: -200, dz: 0 },
+      { key: 'south', label: '向南', dx: 0, dz: 200 },
+    ];
+    return candidates.flatMap((candidate) => {
+      const command = {
+        type: 'object.setTransform',
+        objectId: object.id,
+        transform: { x: object.transform.x + candidate.dx, z: object.transform.z + candidate.dz },
+      };
+      try {
+        const beforeRules = evaluateDesignRules(sceneStore.currentScene);
+        const preview = dispatchSceneCommand(sceneStore, command);
+        const rules = evaluateDesignRules(preview.currentScene);
+        if (newReviewChecks(beforeRules, rules, [object.id]).length) return [];
+        return [{
+          id: `direction-${activeConflict.id}-${candidate.key}`,
+          title: candidate.label,
+          summary: `${entityName('object', object)}${candidate.label}轻微调整 200 mm，保留当前尺寸与材质；没有新增规则提醒。`,
+          feasible: true,
+          command,
+        }];
+      } catch {
+        return [];
+      }
+    }).slice(0, 2).map((direction, index) => ({ ...direction, title: `位置方案 ${index ? 'B' : 'A'}` }));
+  }, [activeConflict, currentScene.objects, householdConsensus.finalDecision, sceneStore]);
+  const chosenDirection = householdConsensus.finalDecision
+    ? householdConsensus.directions.find((direction) => direction.id === householdConsensus.finalDecision.directionId) ?? null
+    : null;
+  const confirmedMemberIds = new Set(householdConsensus.confirmations
+    .filter((confirmation) => confirmation.versionId === householdConsensus.finalDecision?.versionId)
+    .map((confirmation) => confirmation.memberId));
+  const householdTargetName = (target) => {
+    if (target.type === 'version') return versions.find((version) => version.id === target.id)?.label ?? target.id;
+    if (target.type === 'room') {
+      const room = currentScene.rooms.find((candidate) => candidate.id === target.id);
+      return room ? (roomLabels[room.id] ?? room.name) : target.id;
+    }
+    const object = currentScene.objects.find((candidate) => candidate.id === target.id)
+      ?? versions.flatMap((version) => version.scene.objects).find((candidate) => candidate.id === target.id);
+    return object ? entityName('object', object) : target.id;
+  };
+  const currentViewLabel = displayViewId === 'free'
+    ? '自由视角'
+    : currentScene.cameraPresets.find((preset) => preset.id === displayViewId)?.label ?? '整屋';
+  const selectedLabel = displaySelectedEntity ? entityName(displaySelectedEntity.kind, displaySelectedEntity.entity) : '未选择对象';
+  const roomBrief = remoteProject && currentRoom ? {
+    kicker: currentRoom.name, title: '从真实空间里，找到适合你的调整',
+    summary: `当前房间约 ${polygonAreaM2(currentRoom.polygon.map(point => ({ x: point.x, y: point.z }))).toFixed(1)} m²，家具与门窗位置来自这份方案。先明确生活需要，再看每次调整的实际变化。`,
+    checks: ['门口保持通行', '调整可撤销'], shortcuts: currentScene.objects.filter(object => object.roomId === activeRoomId).map(object => ({ label: object.name, objectId: object.id })),
+  } : activeRoomId ? roomBriefs[activeRoomId] : null;
+  const agentHasConversation = agentMessages.some((message) => message.role === 'user');
+  const agentQuickPrompts = selectedSurface
+    ? selectedSurface.kind === 'wall'
+      ? ['这面墙改成暖灰', '这面墙改成浅橡木饰面', '检查当前房间规则']
+      : selectedSurface.kind === 'floor'
+        ? ['这个地面改成暖灰瓷砖', '这个地面改成浅橡木地板', '对比上一版变化']
+        : ['这个顶面改成暖灰', '这个顶面改成暖白', '对比上一版变化']
+    : activeRoomId === 'room-primary-bedroom'
+    ? selectedObject?.id === 'object-primary-bed'
+      ? ['床留下，帮我把主卧变暖一点', '看看床周围现在舒不舒服', '对比上一版变化']
+      : selectedObject?.id === 'object-primary-wardrobe'
+        ? ['衣柜留下，但别显得那么重', '看看衣柜前面现在顺不顺', '对比上一版变化']
+        : selectedObject?.id === 'object-primary-feature-wall'
+          ? ['床头这块想更温暖安静一点', '床头别太满，试个克制的方向', '对比上一版变化']
+        : ['主卧有点冷，想温暖安静一点', '床和衣柜都留下，先试试氛围', '对比上一版变化']
+    : activeRoomId === 'room-flex'
+      ? selectedObject?.id === 'object-flex-bed'
+        ? ['单人床向右移动20厘米', '检查单人床床侧净距', '对比上一版变化']
+        : selectedObject?.id === 'object-flex-desk'
+          ? ['书桌向左移动20厘米', '检查书桌周围规则', '对比上一版变化']
+          : ['检查儿童房当前规则', '单人床向右移动20厘米', '书桌向左移动20厘米']
+      : !agentHasConversation ? ['这个客厅让我不太想待', '我想改得更好看，但还说不清楚']
+      : [`${selectedObject?.capabilities?.movable ? entityName('object', selectedObject) : '沙发'}向右移动20厘米`, '检查当前规则', '对比上一版变化'];
+  const namedDiffs = useMemo(() => [
+    ...versionDiff.objectDiffs.map((diff) => ({
+      ...diff,
+      entityId: diff.objectId,
+      label: readableEntityName(currentScene.objects.some(o=>o.id===diff.objectId)?currentScene:compareFromVersion.scene,diff.objectId),
+    })),
+    ...versionDiff.surfaceDiffs.map((diff) => ({
+      ...diff,
+      entityId: diff.surfaceId,
+      label: readableEntityName(currentScene.surfaces.some(o=>o.id===diff.surfaceId)?currentScene:compareFromVersion.scene,diff.surfaceId,diff.roomId),
+    })),
+  ], [compareFromVersion.scene, currentScene, versionDiff.objectDiffs, versionDiff.surfaceDiffs]);
+  const versionComparison = useMemo(() => {
+    if (compareFromVersion.id === currentVersion.id) return null;
+    return {
+      label: compareFromVersion.label,
+      changeCount: namedDiffs.length,
+      impactLabel: versionStatusLabels[versionDiff.impact.status] ?? versionDiff.impact.status,
+      impactCount: versionDiff.impact.impacts.length,
+      unresolvedCount: versionDiff.impact.unresolved.length,
+    };
+  }, [compareFromVersion.id, currentVersion.id, namedDiffs.length, versionDiff.impact.impacts.length, versionDiff.impact.status, versionDiff.impact.unresolved.length]);
+  const viewRequest = useMemo(
+    () => ({
+      id: navigation.viewId,
+      sequence: viewSequence,
+      focusId: selectedObject?.capabilities?.movable ? selectedObject.id : null,
+    }),
+    [navigation.viewId, selectedObject?.capabilities?.movable, selectedObject?.id, viewSequence],
+  );
+  const openVersionDrawer = useCallback(() => {
+    versionDrawerActivatorRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // A fresh proposal is compared with its saved base, not an older timeline
+    // selection left over from a previous visit to this drawer.
+    if (pendingReview) setCompareFromVersionId(versionHistoryRef.current.currentVersionId);
+    setVersionDrawerOpen(true);
+  }, [pendingReview]);
+  const closeVersionDrawer = useCallback(() => {
+    setVersionDrawerOpen(false);
+  }, []);
+  const projectViewQuery = useCallback((viewState, sceneModel) => {
+    const query = new URLSearchParams(withExperienceStyle(serializeViewState(viewState, sceneModel), experienceStyle));
+    if (recordingMode) query.set('recording', '1');
+    if (remoteProject) query.set('project', remoteProject.projectId);
+    else if (new URLSearchParams(entryQuery).has('legacy')) query.set('legacy', '1');
+    const firstPlan = new URLSearchParams(entryQuery).get('firstPlan');
+    if (firstPlan === 'ready' || firstPlan === 'degraded') query.set('firstPlan', firstPlan);
+    return `?${query}`;
+  }, [experienceStyle, recordingMode, entryQuery, remoteProject]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const restored = parseViewState(window.location.search, sceneStoreRef.current.currentScene);
+      setNavigation(restored);
+      setViewSequence((value) => value + 1);
+    };
+    const canonicalQuery = projectViewQuery(initialNavigation, initialVersionProject.store.currentScene);
+    if (window.location.search !== canonicalQuery) {
+      window.history.replaceState({}, '', `${window.location.pathname}${canonicalQuery}`);
+    }
+    try { window.localStorage.setItem('oppein.experience-style', experienceStyle); } catch { /* Optional preference cache. */ }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [experienceStyle, initialNavigation, initialVersionProject, projectViewQuery]);
+
+  const commitNavigation = (nextState, { replace = false, moveCamera = true } = {}) => {
+    const sceneModel = sceneStoreRef.current.currentScene;
+    const safe = sanitizeViewState(nextState, sceneModel);
+    const query = projectViewQuery(safe, sceneModel);
+    const nextUrl = `${window.location.pathname}${query}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl || replace) {
+      window.history[replace ? 'replaceState' : 'pushState']({}, '', nextUrl);
+    }
+    setNavigation(safe);
+    setDisplayViewId(safe.viewId);
+    setDisplayRoomId(safe.roomId);
+    setDisplaySelectedId(safe.selectedId);
+    if (moveCamera) setViewSequence((value) => value + 1);
+  };
+
+  const jumpToHome = () => {
+    if (!homePreset) return;
+    commitNavigation({ roomId: null, viewId: homePreset.id, selectedId: null });
+  };
+
+  const jumpToRoom = (roomId, selectedId = roomId) => {
+    const room = currentScene.rooms.find((candidate) => candidate.id === roomId);
+    const preset = getRoomViewPresets(currentScene, roomId)[0];
+    if (!room || !preset) return;
+    commitNavigation({ roomId: room.id, viewId: preset.id, selectedId });
+  };
+
+  const jumpToRoomView = (presetId) => {
+    const preset = currentScene.cameraPresets.find((candidate) => candidate.id === presetId && candidate.roomId === activeRoomId);
+    if (!preset) return;
+    commitNavigation({ ...navigation, viewId: preset.id });
+  };
+
+  const jumpToObject = (object) => {
+    const preset = objectNavigationPreset(currentScene, object);
+    const fallback = getRoomViewPresets(currentScene, object.roomId)[0];
+    if (!preset && !fallback) return;
+    commitNavigation({
+      roomId: object.roomId,
+      viewId: preset?.id ?? fallback.id,
+      selectedId: object.id,
+    }, { replace: object.roomId === activeRoomId });
+  };
+
+  const selectEntity = (nextSelection) => {
+    const entity = findEntity(currentScene, nextSelection);
+    if (!entity) return;
+    if (entity.kind === 'object') {
+      jumpToObject(entity.entity);
+      return;
+    }
+    commitNavigation({
+      roomId: activeRoomId,
+      viewId: navigation.viewId,
+      selectedId: entity.entity.id,
+    }, { replace: true, moveCamera: false });
+  };
+
+  const navigateFromPlan = (nextSelection) => {
+    const entity = findEntity(currentScene, nextSelection);
+    if (!entity) return;
+    const roomId = entity.kind === 'room' ? entity.entity.id : entity.entity.roomId;
+    if (entity.kind === 'object') jumpToObject(entity.entity);
+    else if (roomId === activeRoomId) selectEntity(nextSelection);
+    else if (roomId) jumpToRoom(roomId, entity.entity.id);
+  };
+
+  const executeCommand = useCallback((command, successMessage = '修改已应用') => {
+    if (agentRequestRef.current || saveRequestRef.current) { setEditFeedback({ tone: 'warning', message: '当前正在处理设计或保存，请完成或取消后再调整。' }); return null; }
+    if (pendingReview) {
+      setEditFeedback({ tone: 'warning', message: '请先保留或撤销当前预览，再继续调整。' });
+      return null;
+    }
+    try {
+      const startCursor = sceneStoreRef.current.cursor;
+      const beforeEvaluation = evaluateDesignRules(sceneStoreRef.current.currentScene);
+      const nextStore = dispatchSceneCommand(sceneStoreRef.current, command);
+      assertRequirementConstraints(sceneStoreRef.current.currentScene, nextStore.currentScene, requirements);
+      assertEvidenceConstraints(sceneStoreRef.current.currentScene, nextStore.currentScene, evidenceConstraints, { projectId: remoteProject?.projectId, houseId: nextStore.currentScene.id });
+      const afterEvaluation = evaluateDesignRules(nextStore.currentScene);
+      const affectedObjectIds = [command.objectId, command.newObjectId];
+      const changedReviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, affectedObjectIds);
+      const reviewChecks = changedReviewChecks.length || !spatialReviewCommands.has(command.type)
+        ? changedReviewChecks
+        : reviewableChecksForObjects(afterEvaluation, affectedObjectIds);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setAgentCallout(null);
+      setLastRejected(null);
+      if (reviewChecks.length) {
+        setPendingReview({
+          checks: reviewChecks.slice(0, 3),
+          startCursor,
+          status: topRuleStatus(reviewChecks),
+        });
+        setEditFeedback({ tone: 'warning', message: '已生成待确认预览：有规范提醒，保留前请确认代价。' });
+      } else {
+        setPendingReview(null);
+        setEditFeedback({ tone: 'success', message: successMessage });
+      }
+      return nextStore;
+    } catch (error) {
+      const message = normalizeEditError(error);
+      setLastRejected({ message, source: 'demo' });
+      setEditFeedback({ tone: 'error', message: `未应用：${message}` });
+      return null;
+    }
+  }, [pendingReview, requirements, evidenceConstraints, remoteProject?.projectId]);
+
+  const undo = useCallback(() => {
+    if (agentRequestRef.current || saveRequestRef.current) return;
+    try {
+      const nextStore = undoSceneCommand(sceneStoreRef.current);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setAgentCallout(null);
+      setPendingReview(null);
+      setLastRejected(null);
+      setEditFeedback({ tone: 'success', message: '已撤销上一步' });
+    } catch {
+      setEditFeedback({ tone: 'error', message: '没有可撤销的修改' });
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    if (agentRequestRef.current || saveRequestRef.current) return;
+    try {
+      const nextStore = redoSceneCommand(sceneStoreRef.current);
+      sceneStoreRef.current = nextStore;
+      setSceneStore(nextStore);
+      setAgentCallout(null);
+      setPendingReview(null);
+      setLastRejected(null);
+      setEditFeedback({ tone: 'success', message: '已重做下一步' });
+    } catch {
+      setEditFeedback({ tone: 'error', message: '没有可重做的修改' });
+    }
+  }, []);
+
+  const moveSelected = useCallback((dx, dz) => {
+    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
+    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
+    if (!object?.capabilities?.movable) {
+      setEditFeedback({ tone: 'error', message: '该对象已锁定，不能移动' });
+      return;
+    }
+    executeCommand({ type: 'object.setTransform', objectId: object.id, transform: { x: object.transform.x + dx, z: object.transform.z + dz } }, '已移动 100 mm');
+  }, [executeCommand, navigation.selectedId]);
+
+  const rotateSelected = useCallback(() => {
+    const nextSelection = selectionFromId(sceneStoreRef.current.currentScene, navigation.selectedId);
+    const object = findEntity(sceneStoreRef.current.currentScene, nextSelection)?.entity;
+    if (!object?.capabilities?.rotatable) {
+      setEditFeedback({ tone: 'error', message: '该对象已锁定，不能旋转' });
+      return;
+    }
+    executeCommand({ type: 'object.setTransform', objectId: object.id, transform: { rotationY: object.transform.rotationY + Math.PI / 12 } }, '已旋转 15°');
+  }, [executeCommand, navigation.selectedId]);
+
+  const resizeSelected = () => {
+    if (!selectedObject?.capabilities?.parameterEditable || !dimensionDraft) return;
+    executeCommand({
+      type: 'object.setDimensions',
+      objectId: selectedObject.id,
+      dimensions: Object.fromEntries(Object.entries(dimensionDraft).map(([key, value]) => [key, Number(value)])),
+    }, '尺寸已更新');
+  };
+
+  const updateDimensionDraft = (key, value) => {
+    setDimensionDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const keepPendingReview = async () => {
+    if (!pendingReview || previewDecisionRef.current) return false;
+    if (remoteProject && pendingReview.previewId) {
+      const requestId = eventId('preview-keep');
+      previewDecisionRef.current = requestId;
+      setPreviewDecisionBusy(true);
+      try {
+        const response = await fetchJson(`${experiencePath}/previews/${encodeURIComponent(pendingReview.previewId)}/keep`, {
+          method: 'POST', headers: projectHeaders,
+          body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current }),
+        });
+        applyProjectRevision(response.revision);
+        if(response.requirements)setRequirements(response.requirements);
+        if(response.conversationDelta?.length)setAgentMessages(messages=>[...messages,...response.conversationDelta.filter(entry=>!messages.some(message=>message.id===entry.id))]);
+      } catch (error) {
+        setEditFeedback({ tone: 'error', message: `保留尚未同步，预览仍在：${error.message}` });
+        return false;
+      } finally {
+        previewDecisionRef.current = null;
+        setPreviewDecisionBusy(false);
+      }
+    }
+    if (pendingReview?.saveOnKeep) {
+      const beforeHistory = versionHistoryRef.current;
+      const nextHistory = saveSceneVersion(beforeHistory, sceneStoreRef.current, { source: pendingReview.versionSource ?? 'agent-local' });
+      versionHistoryRef.current = nextHistory;
+      setCompareFromVersionId(beforeHistory.currentVersionId);
+      setVersionHistory(nextHistory);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-saved-${nextHistory.currentVersionId}`,
+        role: 'assistant',
+        text: `当前 Agent 预览已保存为 ${nextHistory.versions.at(-1).label}。下一步可邀请家庭成员针对同一版本表达意见；我会保留分歧，不会替你们投票。`,
+        source: pendingReview.versionSource ?? 'agent-local',
+        tools: [],
+        nextAction: 'household',
+      }]);
+    }
+    setPendingReview(null);
+    setEditFeedback({ tone: 'success', message: '已保留这次调整。点击保存方案后，可重新打开继续。' });
+    return true;
+  };
+
+  const discardPendingReview = async () => {
+    if (!pendingReview || previewDecisionRef.current) return false;
+    if (remoteProject && pendingReview.previewId) {
+      const requestId = eventId('preview-discard');
+      previewDecisionRef.current = requestId;
+      setPreviewDecisionBusy(true);
+      try {
+        const response = await fetchJson(`${experiencePath}/previews/${encodeURIComponent(pendingReview.previewId)}/discard`, {
+          method: 'POST', headers: projectHeaders,
+          body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current }),
+        });
+        applyProjectRevision(response.revision);
+        if(response.requirements)setRequirements(response.requirements);
+        if(response.conversationDelta?.length)setAgentMessages(messages=>[...messages,...response.conversationDelta.filter(entry=>!messages.some(message=>message.id===entry.id))]);
+      } catch (error) {
+        setEditFeedback({ tone: 'error', message: `撤销尚未同步，预览仍在：${error.message}` });
+        return false;
+      } finally {
+        previewDecisionRef.current = null;
+        setPreviewDecisionBusy(false);
+      }
+    }
+    const nextStore = retractUnretainedPreview(sceneStoreRef.current, pendingReview);
+    sceneStoreRef.current = nextStore;
+    setSceneStore(nextStore);
+    setPendingReview(null);
+    setAgentCallout(null);
+    setLastRejected(null);
+    if (!selectionFromId(nextStore.currentScene, navigation.selectedId)) {
+      commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
+    }
+    setEditFeedback({ tone: 'success', message: '已撤销整次预览' });
+    return true;
+  };
+
+  const runAgentPrompt = async (rawInput) => {
+    const input = String(rawInput ?? '').trim();
+    if (!input || agentRequestRef.current || saveRequestRef.current) return;
+    if (pendingReview) {
+      if (!await discardPendingReview()) return;
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-review-${Date.now()}`,
+        role: 'assistant',
+        text: '已撤回刚才未保留的预览，再按你的补充继续。之前手动修改和已保留的调整不变。',
+        source: 'request-status',
+        tools: [],
+      }]);
+    }
+
+    const turnId = globalThis.crypto?.randomUUID?.() ?? `turn-${Date.now()}`;
+    const controller = new AbortController();
+    agentRequestRef.current = { id: turnId, controller };
+    const deadline = setTimeout(() => controller.abort(new Error('REQUEST_TIMEOUT')), 150_000);
+    setSidecarMode('agent');
+    setAgentInput('');
+    setAgentBusy(true);
+    setAgentCallout(null);
+    setLastAgentFailure(null);
+    setAgentMessages((messages) => [...messages, { id: `${turnId}-user`, role: 'user', text: input, source: 'resident', tools: [] }]);
+    const beforeStore = sceneStoreRef.current;
+    const beforeHistory = versionHistoryRef.current;
+
+    try {
+      let result;
+      let remotePreview = null;
+        const recordingScenario = recordingMode ? findRecordingScenario(input) : null;
+        if (recordingScenario) {
+          setAgentProgress('正在执行编排演示步骤…');
+          result = runRecordingScenario(beforeStore, input);
+        } else if (recordingMode && recordingSafePrompts.has(input)) {
+          result = await runAgentTurn({
+            store: beforeStore,
+            input,
+            selectedObjectId: navigation.selectedId,
+            versionHistory: beforeHistory,
+            designBrief,
+            activeRoomId,
+          });
+        } else {
+        setAgentProgress('正在请求设计服务并校验可执行调整…');
+        const serializedHistory = serializeVersionHistory(beforeHistory);
+        const response = await fetch(experiencePath ? `${experiencePath}/turn` : '/api/agent/turn', {
+          method: 'POST',
+          headers: {...projectHeaders,accept:'application/x-ndjson'},
+          signal: controller.signal,
+          body: JSON.stringify({
+            eventId: turnId,
+            requestId: turnId,
+            expectedRevision: projectRevisionRef.current,
+            projectId: remoteProject?.projectId ?? 'project-demo',
+            spaceId: activeRoomId ?? 'scene-demo-whole-home',
+            versionId: beforeHistory.currentVersionId,
+            input,
+            selectedObjectId: navigation.selectedId,
+            scene: serializeScene(beforeStore.currentScene),
+            designBrief,
+            ...(remoteProject || serializedHistory.length < 60_000 ? { versionHistory: serializedHistory } : {}),
+          }),
+        });
+        const body = await readTurnResponse(response,{signal:controller.signal,onProgress:event=>{
+          if(agentRequestRef.current?.id===turnId&&!controller.signal.aborted)setAgentProgress(PHASE_LABELS[event.phase]);
+        }});
+        if(controller.signal.aborted||agentRequestRef.current?.id!==turnId)return;
+        applyProjectRevision(body.revision);
+        if (body.requirements) setRequirements(body.requirements);
+        if (body.evidenceConstraints) setEvidenceConstraints(body.evidenceConstraints);
+        if (!Array.isArray(body.commands) || !body.trace) throw new Error('AGENT_BFF_INVALID');
+        remotePreview = body.preview ?? null;
+        let replayed = beforeStore;
+        for (const command of body.commands) replayed = dispatchSceneCommand(replayed, command);
+        result = { store: replayed, trace: body.trace };
+        }
+      if (controller.signal.aborted || agentRequestRef.current?.id !== turnId) return;
+      if (sceneStoreRef.current !== beforeStore || versionHistoryRef.current !== beforeHistory) throw new Error('SCENE_CHANGED_DURING_REQUEST');
+      const sceneChanged = serializeScene(result.store.currentScene) !== serializeScene(beforeStore.currentScene);
+      if (result.trace.designBrief) setDesignBrief(normalizeDesignBrief(result.trace.designBrief));
+      const successfulWrites = result.trace.steps.filter((step) => step.ok && agentWriteTools.has(step.tool));
+      let needsReview = false;
+
+      if (sceneChanged) {
+        const beforeEvaluation = evaluateDesignRules(beforeStore.currentScene);
+        const afterEvaluation = evaluateDesignRules(result.store.currentScene);
+        const affectedObjectIds = changedEntities(beforeStore.currentScene,result.store.currentScene).filter(item=>item.transform).map(item=>item.id);
+        const reviewChecks = newReviewChecks(beforeEvaluation, afterEvaluation, affectedObjectIds);
+        sceneStoreRef.current = result.store;
+        setSceneStore(result.store);
+        setLastRejected(null);
+
+        needsReview = true;
+        setPendingReview({
+          previewId: remotePreview?.id ?? null,
+          checks: reviewChecks.slice(0, 3),
+          saveOnKeep: false,
+          startCursor: beforeStore.cursor,
+          status: reviewChecks.length ? topRuleStatus(reviewChecks) : 'passed',
+          versionSource: result.trace.source === 'provider' ? 'agent-provider' : result.trace.source === 'demo-script' ? 'demo-script' : 'agent-local',
+        });
+        setEditFeedback({ tone: reviewChecks.length ? 'warning' : 'success', message: 'Agent 已生成可撤销预览；由你保留后才写入版本链。' });
+
+        const changedEntity = changedEntities(beforeStore.currentScene,result.store.currentScene)[0];
+        const modifiedRoomId = result.scenario?.roomId ?? affectedRoomIds(beforeStore.currentScene,result.store.currentScene)[0];
+        const modifiedRoom = result.store.currentScene.rooms.find((room) => room.id === modifiedRoomId);
+        if (modifiedRoom) {
+          const reason = result.scenario?.calloutReason
+            ?? String(result.trace.assistantReply ?? input).split(/[。！？!?]/)[0].slice(0, 48);
+          setAgentCallout({ roomId: modifiedRoom.id, roomLabel: roomLabels[modifiedRoom.id] ?? modifiedRoom.name, reason });
+          if (recordingMode || activeRoomId !== modifiedRoom.id) commitNavigation({ roomId: modifiedRoom.id, viewId: modifiedRoom.cameraPresetIds[0], selectedId: result.scenario?.selectedId ?? changedEntity?.id ?? modifiedRoom.id });
+        }
+
+        const deletedSelected = successfulWrites.some((step) => step.tool === 'delete_object' && step.args?.objectId === navigation.selectedId);
+        if (deletedSelected) commitNavigation({ ...navigation, selectedId: navigation.roomId }, { replace: true, moveCamera: false });
+      } else if (result.trace.rolledBack) {
+        setLastAgentFailure({input,reason:result.trace.terminationReason??'DESIGN_NOT_ACCEPTED'});
+        const failed = result.trace.steps.find((step) => !step.ok);
+        const message = normalizeEditError(new Error(failed?.error ?? '规则未通过'));
+        setLastRejected({ message, source: 'demo' });
+        setEditFeedback({ tone: 'error', message: `Agent 未写入：${message}` });
+      }
+
+      setAgentMessages((messages) => [...messages, {
+        id: `${turnId}-assistant`,
+        role: 'assistant',
+        text: agentReplyFromTrace(result.trace, { pending: needsReview }),
+        source: result.trace.source,
+        fallbackReason: result.trace.fallbackReason,
+        trace: result.trace,
+        tools: result.trace.toolCalls.map((call) => call.tool),
+        confirmationRequested: result.trace.steps.some((step) => step.ok && step.tool === 'request_confirmation'),
+      }]);
+    } catch (error) {
+      const cancelled = controller.signal.aborted && controller.signal.reason?.message !== 'REQUEST_TIMEOUT';
+      const reason = cancelled ? '已取消这次请求。' : error?.message === 'SCENE_CHANGED_DURING_REQUEST' ? '请求期间场景已改变，已丢弃过期结果。' : '这次设计请求未完成，可以重试。';
+      setLastAgentFailure(cancelled ? null : { input, reason: String(error?.message ?? 'REQUEST_FAILED') });
+      setAgentMessages((messages) => [...messages, {
+        id: `${turnId}-assistant`,
+        role: 'assistant',
+        text: `${reason} 房屋没有被修改。`,
+        source: 'request-status',
+        trace: error.trace,
+        tools: [],
+      }]);
+    } finally {
+      clearTimeout(deadline);
+      if (agentRequestRef.current?.id === turnId) agentRequestRef.current = null;
+      setAgentProgress('');
+      setAgentBusy(false);
+    }
+  };
+
+  const submitAgentPrompt = (event) => {
+    event.preventDefault();
+    runAgentPrompt(agentInput);
+  };
+
+  const syncDiscussionOutcome = async (outcome) => {
+    if (!outcome || outcomeRequestRef.current) return;
+    outcomeRequestRef.current = true;
+    setOutcomeBusy(true);
+    setPendingDiscussionOutcome(outcome);
+    // Persist only version/event IDs so a refresh can retry the same idempotent link.
+    try { window.localStorage.setItem(outcomeCacheKey, JSON.stringify(outcome)); } catch { /* The current page still offers retry. */ }
+    try {
+      await fetchJson(`${experiencePath}/discussions/${encodeURIComponent(outcome.discussionId)}/outcome`, { method: 'POST', headers: projectHeaders, body: JSON.stringify(outcome) });
+      discussionAdoptionRef.current = null;
+      setPendingDiscussionOutcome(null);
+      try { window.localStorage.removeItem(outcomeCacheKey); } catch { /* Safe idempotent replay if storage remains. */ }
+      setHandoffSync({ status: 'synced', message: '已将新版本关联回这次飞书讨论。', reviewUrl: null, handoffUrl: null });
+    } catch (error) {
+      setHandoffSync({ status: 'failed', message: `新版本已保存，讨论关联未完成：${error.message}`, reviewUrl: null, handoffUrl: null });
+    } finally { outcomeRequestRef.current = false; setOutcomeBusy(false); }
+  };
+
+  const saveCurrentVersion = async () => {
+    if (pendingReview || agentRequestRef.current || saveRequestRef.current) {
+      setEditFeedback({ tone: 'warning', message: '请先保留或撤销规范预览，再保存版本。' });
+      return;
+    }
+    const beforeHistory = versionHistoryRef.current;
+    const nextHistory = saveSceneVersion(beforeHistory, sceneStoreRef.current, { source: `resident:${activeMember.id}` });
+    if (nextHistory === beforeHistory && !remoteProject) {
+      setEditFeedback({ tone: 'neutral', message: `${currentVersion.label} 已包含当前场景，无需重复保存。` });
+      return;
+    }
+    if (remoteProject) {
+      const requestId = eventId('save');
+      saveRequestRef.current = requestId;
+      setSaveStatus('saving');
+      try {
+        const response = await fetchJson(`${experiencePath}/save`, { method: 'POST', headers: projectHeaders,
+          body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current, versionHistory: serializeVersionHistory(nextHistory), designBrief }) });
+        applyProjectRevision(response.revision);
+        if (response.requirements) setRequirements(response.requirements);
+        setSaveStatus('saved');
+        const adoption = discussionAdoptionRef.current;
+        if (adoption && nextHistory.currentVersionId !== adoption.baseVersionId) {
+          await syncDiscussionOutcome({ discussionId: adoption.discussionId, eventId: eventId('outcome'), baseVersionId: adoption.baseVersionId, outcomeVersionId: nextHistory.currentVersionId });
+        }
+      } catch (error) {
+        setSaveStatus('failed');
+        setEditFeedback({ tone: 'error', message: `保存未完成，当前调整仍保留在此页：${error.message}` });
+        return;
+      } finally { saveRequestRef.current = null; }
+    }
+    setCompareFromVersionId(currentVersion.id);
+    versionHistoryRef.current = nextHistory;
+    setVersionHistory(nextHistory);
+    const saved = nextHistory.versions.at(-1);
+    if (remoteProject) rememberExperienceProject(remoteProject, saved.label);
+    setEditFeedback({ tone: 'success', message: `${saved.label} 已保存；可与 ${currentVersion.label} 对比或回退。` });
+    setAgentMessages((messages) => [...messages, {
+      id: `manual-saved-${saved.id}`,
+      role: 'assistant',
+      text: `${saved.label} 已保存，可以重新打开继续。也可以邀请家人围绕这版方案表达意见。`,
+      source: 'local',
+      tools: [],
+      nextAction: 'household',
+    }]);
+  };
+
+  const confirmCurrentVersion = () => {
+    if (pendingReview || hasUnsavedChanges) {
+      setEditFeedback({ tone: 'warning', message: pendingReview ? '请先处理规范预览。' : '请先保存当前修改，再确认版本。' });
+      return;
+    }
+    const nextHistory = confirmSceneVersion(versionHistory, currentVersion.id);
+    setVersionHistory(nextHistory);
+    setCompareFromVersionId(currentVersion.id);
+    setEditFeedback({ tone: 'success', message: `${currentVersion.label} 已客户确认；后续保存会标记为确认后修改。` });
+    setHandoffSync({ status: 'idle', message: '已客户确认，可以提交设计师复核。', reviewUrl: null, handoffUrl: null });
+  };
+
+  const downloadExperienceHandoff = async (format = 'markdown') => {
+    if (!remoteProject || pendingReview || hasUnsavedChanges) return;
+    try {
+      const body = await fetchJson(`${experiencePath}/handoff`, { headers: projectHeaders });
+      const machineReadable = format === 'json';
+      const exportedVersionIndex = (body.versions ?? []).findIndex(version => version.id === body.versionId);
+      const exportedLabel = body.versionLabel ?? (exportedVersionIndex >= 0 ? `V${exportedVersionIndex + 1}` : body.versionId);
+      const content = machineReadable ? JSON.stringify(body, null, 2) : formatExperienceHandoff({ ...body, versionLabel: exportedLabel });
+      const url = URL.createObjectURL(new Blob([content], { type: machineReadable ? 'application/json' : 'text/markdown;charset=utf-8' }));
+      const link = document.createElement('a'); link.href = url; link.download = `OPAI-${exportedLabel}-需求与交接.${machineReadable ? 'json' : 'md'}`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setHandoffSync({ status: 'synced', message: '已导出当前保存版本的需求简报与交接记录。', reviewUrl: null, handoffUrl: null });
+    } catch (error) { setHandoffSync({ status: 'failed', message: `交接导出未完成：${error.message}`, reviewUrl: null, handoffUrl: null }); }
+  };
+
+  const submitDesignerReview = async () => {
+    if (!canSubmitDesignerReview) {
+      setHandoffSync({ status: 'failed', message: hasUnsavedChanges || pendingReview ? '请先保存修改并处理规则预览。' : '需要先完成客户确认。', reviewUrl: null, handoffUrl: null });
+      return;
+    }
+    const id = eventId('evt-handoff');
+    setHandoffSync({ status: 'pending', message: '正在提交复核快照…', reviewUrl: null, handoffUrl: null });
+    try {
+      const savedSnapshot = await fetchJson(`/api/projects/${PROJECT_ID}/snapshot`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          eventId: id,
+          versionHistory: serializeVersionHistory(versionHistoryRef.current),
+          householdConsensus: serializeHouseholdConsensus(householdConsensus),
+        }),
+      });
+      await fetchJson(`/api/versions/${currentVersion.id}/confirm`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ eventId: `${id}-confirm` }),
+      });
+      setHandoffSync({
+        status: 'synced',
+        message: savedSnapshot.feishuDelivery?.status === 'synced' ? '交接快照已保存，飞书留痕已核验。可打开复核页继续。' : '交接快照已保存；飞书在后台同步，可在复核页查看进度。',
+        reviewUrl: `/review/${PROJECT_ID}${withExperienceStyle(`?versionId=${encodeURIComponent(currentVersion.id)}`, experienceStyle)}`,
+        handoffUrl: `/handoff/${encodeURIComponent(currentVersion.id)}${experienceStyle ? `?style=${experienceStyle}` : ''}`,
+      });
+    } catch (error) {
+      setHandoffSync({ status: 'failed', message: error.message === 'VERSION_CONFLICT'
+        ? '本地与服务器版本不同，已保留本地修改且未覆盖服务器数据；请核对项目版本后重试。'
+        : `提交失败：${error.message}`, reviewUrl: null, handoffUrl: null });
+    }
+  };
+
+  const restoreComparedVersion = async () => {
+    if (hasUnsavedChanges || pendingReview || agentRequestRef.current || saveRequestRef.current) {
+      setEditFeedback({ tone: 'warning', message: hasUnsavedChanges ? '请先保存或撤销当前修改，再从旧版继续。' : '请先处理规范预览。' });
+      return;
+    }
+    const restored = restoreSceneVersion(versionHistory, compareFromVersion.id);
+    if (remoteProject) {
+      const requestId = eventId('restore');
+      saveRequestRef.current = requestId; setSaveStatus('saving');
+      try {
+        const response = await fetchJson(`${experiencePath}/save`, { method: 'POST', headers: projectHeaders, body: JSON.stringify({ requestId, expectedRevision: projectRevisionRef.current, versionHistory: serializeVersionHistory(restored.history), designBrief }) });
+        applyProjectRevision(response.revision); setSaveStatus('saved');
+        rememberExperienceProject(remoteProject, restored.history.versions.at(-1).label);
+      } catch (error) { setSaveStatus('failed'); setEditFeedback({ tone: 'error', message: `旧版尚未恢复：${error.message}。当前方案保持不变。` }); return; }
+      finally { saveRequestRef.current = null; }
+    }
+    sceneStoreRef.current = restored.store;
+    versionHistoryRef.current = restored.history;
+    setSceneStore(restored.store);
+    setVersionHistory(restored.history);
+    setPendingReview(null);
+    setLastRejected(null);
+    const restoredVersion = restored.history.versions.at(-1);
+    setEditFeedback({ tone: 'success', message: restoredVersion.id === compareFromVersion.id
+      ? `当前就是 ${compareFromVersion.label}。`
+      : `已从 ${compareFromVersion.label} 创建 ${restoredVersion.label}，原版本链保持不变。` });
+  };
+
+  const submitHouseholdOpinion = (event) => {
+    event.preventDefault();
+    const note = opinionText.trim();
+    if (!note) {
+      setConsensusFeedback('先写下这一位成员的真实理由。');
+      return;
+    }
+    if (hasUnsavedChanges || pendingReview) {
+      setConsensusFeedback(hasUnsavedChanges ? '先把当前修改保存为版本，再让意见绑定到它。' : '先处理当前规则预览。');
+      return;
+    }
+    try {
+      const next = addHouseholdOpinion(householdConsensus, {
+        memberId: activeMember.id,
+        stance: opinionStance,
+        target: opinionTarget,
+        versionId: currentVersion.id,
+        note,
+      });
+      const conflictCount = detectHouseholdConflicts(next).length;
+      setHouseholdConsensus(next);
+      setOpinionText('');
+      setConsensusFeedback(conflictCount > householdConflicts.length
+        ? '共识助手识别到同一对象上的相反立场，可以生成两套真实可行方向。'
+        : `${activeMember.name}的意见已绑定到 ${currentVersion.label} · ${opinionTargetLabel}。`);
+      if (conflictCount > householdConflicts.length) {
+        setAgentMessages((messages) => [...messages, {
+          id: `agent-conflict-${next.opinions.at(-1).id}`,
+          role: 'assistant',
+          text: `我识别到家庭成员对${opinionTargetLabel}存在相反立场。原始意见会保留；我只生成经过同一 scene 规则校验的少数方向，由家庭决定。`,
+          source: 'local',
+          tools: [],
+          nextAction: 'household',
+        }]);
+      }
+    } catch {
+      setConsensusFeedback('这条意见没有保存，请检查成员、对象和版本是否仍有效。');
+    }
+  };
+
+  const generateConsensusDirections = () => {
+    if (!activeConflict || consensusDirectionOptions.length < 2) {
+      setConsensusFeedback('当前目标无法生成两套无新增规则提醒的位移方向，请先选择可移动家具。');
+      return;
+    }
+    const next = setConflictDirections(householdConsensus, {
+      conflictId: activeConflict.id,
+      versionId: activeConflict.versionId,
+      directions: consensusDirectionOptions.map(({ command: _command, ...direction }) => direction),
+    });
+    setHouseholdConsensus(next);
+    setConsensusFeedback('已用同一 scene 校验两套方向；二者都没有新增规则提醒。');
+  };
+
+  const applyConsensusDirection = (direction) => {
+    if (hasUnsavedChanges || pendingReview || direction.versionId !== currentVersion.id) {
+      setConsensusFeedback('方案基准已经变化，请先保存或回到它对应的版本。');
+      return;
+    }
+    const option = consensusDirectionOptions.find((candidate) => candidate.id === direction.id);
+    if (!option) {
+      setConsensusFeedback('当前 scene 已变化，需要重新生成方向。');
+      return;
+    }
+    try {
+      const beforeHistory = versionHistoryRef.current;
+      const nextStore = dispatchSceneCommand(sceneStoreRef.current, option.command);
+      const nextHistory = saveSceneVersion(beforeHistory, nextStore, { source: `household:${activeMember.id}` });
+      if (nextHistory === beforeHistory) throw new Error('CONSENSUS_DIRECTION_NO_CHANGE');
+      const outcomeVersion = nextHistory.versions.at(-1);
+      const nextConsensus = chooseConsensusDirection(householdConsensus, {
+        directionId: direction.id,
+        versionId: outcomeVersion.id,
+        memberId: activeMember.id,
+      });
+      sceneStoreRef.current = nextStore;
+      versionHistoryRef.current = nextHistory;
+      setSceneStore(nextStore);
+      setVersionHistory(nextHistory);
+      setCompareFromVersionId(beforeHistory.currentVersionId);
+      setHouseholdConsensus(nextConsensus);
+      setConsensusFeedback(`${activeMember.name}选择了“${direction.title}”，已形成 ${outcomeVersion.label}；现在请三位成员分别确认。`);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-direction-${outcomeVersion.id}`,
+        role: 'assistant',
+        text: `“${direction.title}”已形成 ${outcomeVersion.label}。原分歧仍可追溯；现在需要三位成员分别确认，我不会代替任何人确认。`,
+        source: 'local',
+        tools: [],
+        nextAction: 'household',
+      }]);
+    } catch (error) {
+      setConsensusFeedback(`没有应用：${normalizeEditError(error)}`);
+    }
+  };
+
+  const confirmHouseholdDecision = () => {
+    const decision = householdConsensus.finalDecision;
+    if (!decision || decision.versionId !== currentVersion.id || hasUnsavedChanges || pendingReview) {
+      setConsensusFeedback('只能确认当前已保存、没有待处理预览的共同方向。');
+      return;
+    }
+    const nextConsensus = confirmConsensusVersion(householdConsensus, { memberId: activeMember.id, versionId: decision.versionId });
+    setHouseholdConsensus(nextConsensus);
+    if (nextConsensus.confirmations.length === nextConsensus.members.length) {
+      const nextHistory = confirmSceneVersion(versionHistoryRef.current, decision.versionId, { actor: 'household' });
+      versionHistoryRef.current = nextHistory;
+      setVersionHistory(nextHistory);
+      setConsensusFeedback(`${currentVersion.label} 已得到三位成员共同确认；每次确认都可追溯到成员和版本。`);
+      setAgentMessages((messages) => [...messages, {
+        id: `agent-household-confirmed-${decision.versionId}`,
+        role: 'assistant',
+        text: `${currentVersion.label} 已得到三位成员共同确认。下一步可查看版本影响并提交设计师复核；企业报价、BOM 与施工数据仍标记为 pending。`,
+        source: 'local',
+        tools: [],
+        nextAction: 'version',
+      }]);
+    } else {
+      setConsensusFeedback(`${activeMember.name}已确认；还差 ${nextConsensus.members.length - nextConsensus.confirmations.length} 位。`);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedObject) return;
+    if (editMode === 'move' && !selectedObject.capabilities.movable) setEditMode(selectedObject.capabilities.rotatable ? 'rotate' : null);
+    if (editMode === 'rotate' && !selectedObject.capabilities.rotatable) setEditMode(selectedObject.capabilities.movable ? 'move' : null);
+  }, [editMode, selectedObject]);
+
+  useEffect(() => {
+    setDimensionDraft(selectedObject ? { ...selectedObject.dimensions } : null);
+  }, [selectedObject?.id, selectedObject?.dimensions]);
+
+  useEffect(() => { setLastRejected(null); }, [navigation.selectedId]);
+
+  useEffect(() => {
+    if (!versions.some((version) => version.id === compareFromVersionId)) setCompareFromVersionId(versions[0].id);
+  }, [compareFromVersionId, versions]);
+
+  const persistSessionValue = useCallback((key, serializedValue, restorationKey) => {
+    // Rehearsal is deliberately isolated from the resident's saved project.
+    if (remoteProject || recordingMode || cacheRecoveryRef.current[key] === false) return;
+    try {
+      const original = initialVersionProject.cache[key];
+      if (!original.readable) throw new Error('CACHE_READ_UNAVAILABLE');
+      if (initialVersionProject.restoration[restorationKey] === 'invalid' && !cacheRecoveryRef.current[key]) {
+        const recoveryKey = `${key}.recovery.${Date.now()}.${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+        window.localStorage.setItem(recoveryKey, original.value);
+        if (window.localStorage.getItem(recoveryKey) !== original.value) throw new Error('CACHE_RECOVERY_FAILED');
+        cacheRecoveryRef.current[key] = true;
+      }
+      window.localStorage.setItem(key, serializedValue);
+    } catch {
+      cacheRecoveryRef.current[key] = false;
+      setEditFeedback({ tone: 'warning', message: '本地保存暂不可用，旧缓存未删除；当前修改仅保留在此页面，请暂勿刷新。' });
+    }
+  }, [recordingMode, initialVersionProject, remoteProject]);
+
+  useEffect(() => { persistSessionValue(VERSION_STORAGE_KEY, serializeVersionHistory(versionHistory), 'versions'); }, [versionHistory, persistSessionValue]);
+  useEffect(() => { persistSessionValue(CONSENSUS_STORAGE_KEY, serializeHouseholdConsensus(householdConsensus), 'household'); }, [householdConsensus, persistSessionValue]);
+  useEffect(() => { persistSessionValue(DESIGN_BRIEF_STORAGE_KEY, serializeDesignBrief(designBrief), 'designBrief'); }, [designBrief, persistSessionValue]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const healthTimeout = setTimeout(() => controller.abort(), 12000);
+    let alive = true;
+    fetch('/api/health', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('HEALTH_UNAVAILABLE');
+        return response.json();
+      })
+      .then((health) => { if (alive) setAgentCapability({
+        aily: health.aily?.status ?? health.aily ?? 'api_unavailable',
+        base: health.base?.status ?? health.base ?? 'api_unavailable',
+        provider: health.provider ?? 'local',
+      }); })
+      .catch((error) => {
+        if (alive) setAgentCapability({ aily: 'api_unavailable', base: 'api_unavailable', provider: 'local' });
+      }).finally(() => clearTimeout(healthTimeout));
+    return () => { alive = false; clearTimeout(healthTimeout); controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    const list = agentMessageListRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [agentBusy, agentMessages]);
+
+  useEffect(() => () => { agentRequestRef.current?.controller.abort(); }, []);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges && !pendingReview) return undefined;
+    const preventLostWork = event => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', preventLostWork);
+    return () => window.removeEventListener('beforeunload', preventLostWork);
+  }, [hasUnsavedChanges, pendingReview]);
+
+  useEffect(() => {
+    if (versionDrawerOpen) {
+      const drawer = versionDrawerRef.current;
+      const firstFocusable = drawer?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      (firstFocusable ?? drawer)?.focus?.();
+    } else if (versionDrawerWasOpenRef.current) {
+      versionDrawerActivatorRef.current?.focus?.();
+      versionDrawerActivatorRef.current = null;
+    }
+    versionDrawerWasOpenRef.current = versionDrawerOpen;
+  }, [versionDrawerOpen]);
+
+  useEffect(() => {
+    if (!versionDrawerOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeVersionDrawer();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const drawer = versionDrawerRef.current;
+      if (!drawer) return;
+      const focusables = [...drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.hasAttribute('disabled'));
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closeVersionDrawer, versionDrawerOpen]);
+
+  useEffect(() => {
+    const handleEditShortcut = (event) => {
+      if (versionDrawerOpen || interactionLayer === 'browse') return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+      const modifier = event.metaKey || event.ctrlKey;
+      if (modifier && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      const directions = { ArrowUp: [0, -100], ArrowDown: [0, 100], ArrowLeft: [-100, 0], ArrowRight: [100, 0] };
+      if (directions[event.key]) {
+        event.preventDefault();
+        moveSelected(...directions[event.key]);
+      }
+    };
+    window.addEventListener('keydown', handleEditShortcut);
+    return () => window.removeEventListener('keydown', handleEditShortcut);
+  }, [interactionLayer, moveSelected, redo, undo, versionDrawerOpen]);
+
+  return <main className="product-shell project-demo" data-experience-style={experienceStyle} data-room-id={displayRoomId ?? ''} data-selected-id={displaySelectedId ?? ''}>
+    <header className="product-hero">
+      <a className="product-brand" href="/" aria-label="回到项目入口">
+        <span className="product-brand__mark" aria-hidden="true"><HouseLine size={20} weight="regular" /></span>
+        <div>
+          <p className="eyebrow">欧派共创空间</p>
+          <h1>{remoteProject ? '我的生活空间' : '城市三口之家'}</h1>
+        </div>
+      </a>
+      <div className="product-breadcrumb" aria-live="polite"><span>整屋</span>{currentRoom && <><span aria-hidden="true">/</span><strong>{currentRoomLabel}</strong><span aria-hidden="true">/</span><span>{currentViewLabel}</span></>}</div>
+      <div className="product-hero__meta">
+        <button className="guidance-save" type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview) || agentBusy || saveStatus === 'saving'}><FloppyDisk size={15} />{saveStatus === 'saving' ? '正在保存…' : hasUnsavedChanges ? '保存方案' : `${currentVersion.label} · 已保存`}</button>
+        {activeRoomId && <button className="utility-button utility-button--strong" data-testid="return-home" type="button" onClick={jumpToHome}>返回整屋</button>}
+        <details className="project-tools-menu">
+          <summary>更多工具</summary>
+          <div onClick={event => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false; }}>
+            {remoteProject && <a href="/project/demo?style=agent-canvas">新建独立体验</a>}
+            {remoteProject && <a href="/project/demo?legacy=1&style=agent-canvas">打开原来的本地项目</a>}
+            <button data-testid="open-version-drawer" type="button" aria-label={`版本 ${currentVersion.label}${hasUnsavedChanges ? ' · 未保存' : ''}`} onClick={openVersionDrawer}><ClockCounterClockwise size={15} aria-hidden="true" />版本 {currentVersion.label}{hasUnsavedChanges ? ' · 未保存' : ''}</button>
+            {handoffSync.reviewUrl
+              ? <a href={handoffSync.reviewUrl} aria-label="设计师复核">设计师复核</a>
+              : <button type="button" aria-label="设计师复核" onClick={openVersionDrawer}>设计师复核</button>}
+            {handoffSync.handoffUrl
+              ? <a href={handoffSync.handoffUrl} aria-label="交接 JSON">交接 JSON</a>
+              : <button type="button" aria-label="交接 JSON" onClick={openVersionDrawer}>交接 JSON</button>}
+          </div>
+        </details>
+      </div>
+    </header>
+
+    <section className="product-grid">
+      <section className="panel project-stage" aria-labelledby="project-stage-title">
+        <div className="panel__header panel__header--project">
+          <div>
+            <p className="panel__kicker">空间方案</p>
+            <h2 className="panel__title" id="project-stage-title">{currentRoomLabel}</h2>
+          </div>
+          <div className="project-stage__summary studio-navigation">
+            <label><span className="sr-only">前往房间</span><select aria-label="前往房间" value={activeRoomId ?? ''} onChange={event => event.target.value ? jumpToRoom(event.target.value) : jumpToHome()}><option value="">整屋总览</option>{currentScene.rooms.map(room => <option key={room.id} value={room.id}>{roomLabels[room.id] ?? room.name}</option>)}</select></label>
+            {activeRoomId && <label><span className="sr-only">房间视角</span><select aria-label="房间视角" value={displayViewId} onChange={event => jumpToRoomView(event.target.value)}>{!getRoomViewPresets(currentScene, activeRoomId).some(preset => preset.id === displayViewId) && <option value={displayViewId}>{currentViewLabel}</option>}{getRoomViewPresets(currentScene, activeRoomId).map(preset => <option key={preset.id} value={preset.id}>{preset.label}</option>)}</select></label>}
+          </div>
+          <div className="project-stage__tier" data-tier={viewerTier} data-interaction={interactionLayer}>
+            <span>{interactionLayer === 'quick' ? '正在微调' : (viewerTier === 'full' ? '浏览方案' : '轻量浏览')}</span>
+            {viewerTier !== 'full' && !viewerExpanded && <button type="button" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>}
+          </div>
+        </div>
+        {viewerTier !== 'full' && !viewerExpanded
+          ? <div className="pascal-stage-light">
+            <p className="pascal-stage-light__kicker">轻量浏览模式</p>
+            <strong>{currentRoomLabel}</strong>
+            <span>当前设备先保留 2D 总览与 Agent 上下文，实时 3D 只在需要时加载。</span>
+            <div className="pascal-stage-light__actions">
+              <button type="button" className="utility-button utility-button--strong" onClick={() => setViewerExpanded(true)}>进入实时 3D</button>
+            </div>
+          </div>
+          : <Suspense fallback={<div className="pascal-stage-loading">正在启动实时装修空间…</div>}>
+            <PascalStage
+              scene={currentScene}
+              initialView={viewerExpanded ? '3d' : null}
+              selection={selection}
+              activeRoomId={activeRoomId}
+              viewRequest={viewRequest}
+              agentCallout={agentCallout}
+              onSelect={selectEntity}
+              onEditCommand={(command) => Boolean(executeCommand(command))}
+              interactionMode={interactionLayer}
+              loadingFallback={<>
+                <div><strong>实时 3D 正在载入</strong><span>同一个装修空间；默认浏览，进入微调后只开放家具移动、旋转和尺寸。</span></div>
+                <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
+              </>}
+            />
+          </Suspense>}
+      </section>
+
+      <aside className="project-sidebar" data-mode={sidecarMode}>
+        <nav className="project-sidebar__switch" aria-label="右侧工作区">
+          <strong><ChatCircleDots size={16} />{sidecarMode === 'agent' ? '设计助理' : sidecarMode === 'space' ? '空间微调' : '家庭意见'}</strong>
+          <details>
+            <summary>切换</summary>
+            <div>
+              <button type="button" aria-label="切换到设计助理" title="切换到设计助理" aria-pressed={sidecarMode === 'agent'} onClick={event => { setSidecarMode('agent'); event.currentTarget.closest('details').open = false; }}><ChatCircleDots size={15} aria-hidden="true" /><span>设计助理</span></button>
+              <button type="button" aria-label="切换到空间微调" title="切换到空间微调" aria-pressed={sidecarMode === 'space'} onClick={event => { setSidecarMode('space'); event.currentTarget.closest('details').open = false; }}><Cube size={15} aria-hidden="true" /><span>空间微调</span></button>
+              <button type="button" aria-label="切换到家庭意见" title="切换到家庭意见" aria-pressed={sidecarMode === 'household'} onClick={event => { setSidecarMode('household'); event.currentTarget.closest('details').open = false; }}><UsersThree size={15} aria-hidden="true" /><span>家庭意见</span></button>
+            </div>
+          </details>
+        </nav>
+        {sidecarMode === 'space' ? <>
+        <article className="panel project-panel project-panel--overview">
+          <div className="panel__header">
+            <div>
+              <p className="panel__kicker">2D 同步总览</p>
+              <h2 className="panel__title">当前户型与布置</h2>
+            </div>
+            <span className="panel__meta">点房间进入 · 点家具选择</span>
+          </div>
+          <div className="project-overview" data-testid="overview-2d">
+            <ScenePlan sceneModel={currentScene} mode="overlay" selection={selection} onSelect={navigateFromPlan} showModeRail={false} compact />
+          </div>
+        </article>
+
+        <article className="panel project-panel project-context" aria-label="当前位置摘要">
+          {roomBrief && <section className="project-room-brief" aria-label={roomBrief.kicker}>
+            <span>{roomBrief.kicker}</span><strong>{roomBrief.title}</strong><p>{roomBrief.summary}</p>
+            <div>{roomBrief.checks.map((check) => <small key={check}>{check}</small>)}</div>
+            {roomBrief.shortcuts && <div className="project-room-brief__shortcuts" aria-label="房间内快捷对象">
+              {roomBrief.shortcuts.map((shortcut) => {
+                const object = currentScene.objects.find((candidate) => candidate.id === shortcut.objectId);
+                return object ? <button key={shortcut.objectId} type="button" onClick={() => jumpToObject(object)}>{shortcut.label}</button> : null;
+              })}
+            </div>}
+          </section>}
+          <div className="project-context__lead"><span className="live-dot" /><div><span>当前位置</span><strong>{currentRoomLabel}</strong></div></div>
+          <dl className="project-context__facts"><div><dt>视角</dt><dd>{currentViewLabel}</dd></div><div><dt>选择</dt><dd>{selectedLabel}</dd></div></dl>
+          {activeRoomSurfaces.length > 0 && <section className="project-surfaces" aria-label="当前房间装修表面">
+            <div><span>装修表面</span><small>墙 · 地 · 顶同步更新</small></div>
+            <div>{activeRoomSurfaces.map((surface) => <button key={surface.id} type="button" aria-pressed={selectedSurface?.id === surface.id} onClick={() => selectEntity({ kind: 'surface', id: surface.id })}>
+              <span>{entityName('surface', surface)}</span><small>{materialLabels[surface.materialId] ?? surface.materialId}</small>
+            </button>)}</div>
+          </section>}
+          <div className="project-edit__history" aria-label="编辑历史">
+            <button type="button" onClick={undo} disabled={sceneStore.cursor === 0} title="撤销 (Cmd/Ctrl+Z)">撤销</button>
+            <button type="button" onClick={redo} disabled={sceneStore.cursor === sceneStore.commands.length} title="重做 (Shift+Cmd/Ctrl+Z)">重做</button>
+            <span className="project-edit__feedback" data-tone={editFeedback.tone} aria-live="polite">{editFeedback.message}</span>
+          </div>
+          {pendingReview && <div className="project-review" data-status={pendingReview.status} data-testid="pending-rule-review">
+            <div>
+              <strong>{reviewTitle(pendingReview.status)}</strong>
+              <span>source: demo · 仅为演示规则，真实落地需欧派/施工 API 复核</span>
+            </div>
+            <ul>
+              {pendingReview.checks.map((check) => <li key={ruleReviewKey(check)}><span>{check.message}</span>{check.suggestion && <small>可这样调整：{check.suggestion}</small>}</li>)}
+            </ul>
+            <div>
+              <button type="button" onClick={keepPendingReview} disabled={previewDecisionBusy}>{previewDecisionBusy ? '正在同步…' : '保留此预览'}</button>
+              <button type="button" onClick={discardPendingReview} disabled={previewDecisionBusy}>撤销预览</button>
+            </div>
+          </div>}
+          {selectedObject && <div className="project-object" data-testid="selected-object-details" data-layer="quick">
+            <div><span>{entityName('object', selectedObject)}</span><strong>当前家具</strong></div>
+            <p className="project-object__quick-note">在这里调整位置、方向和大小。需要换材质、增减家具或改动结构时，请交给设计助理。</p>
+            <div className="project-edit" aria-label={`${entityName('object', selectedObject)}编辑工具`}>
+              {(selectedObject.capabilities.movable || selectedObject.capabilities.rotatable) && <div className="project-edit__modes" aria-label="编辑模式">
+                {selectedObject.capabilities.movable && <button type="button" aria-pressed={editMode === 'move'} onClick={() => setEditMode('move')}>移动</button>}
+                {selectedObject.capabilities.rotatable && <button type="button" aria-pressed={editMode === 'rotate'} onClick={() => setEditMode('rotate')}>旋转</button>}
+              </div>}
+              {selectedObject.capabilities.movable && <div className="project-edit__nudge" aria-label="每次移动 100 毫米">
+                <button type="button" aria-label="向北移动 100 毫米" onClick={() => moveSelected(0, -100)}>北</button>
+                <button type="button" aria-label="向西移动 100 毫米" onClick={() => moveSelected(-100, 0)}>西</button>
+                <span>100 mm</span>
+                <button type="button" aria-label="向东移动 100 毫米" onClick={() => moveSelected(100, 0)}>东</button>
+                <button type="button" aria-label="向南移动 100 毫米" onClick={() => moveSelected(0, 100)}>南</button>
+              </div>}
+              {selectedObject.capabilities.rotatable && <button className="project-edit__rotate" type="button" onClick={rotateSelected}>顺时针 15°</button>}
+              {selectedObject.capabilities.parameterEditable && dimensionDraft && <form className="project-edit__dimensions" onSubmit={(event) => { event.preventDefault(); resizeSelected(); }}>
+                {Object.entries({ width: '宽', depth: '深', height: '高' }).map(([key, label]) => <label key={key}><span>{label}</span><input aria-label={`${label}度，毫米`} type="number" min="1" step="10" value={dimensionDraft[key]} onInput={(event) => updateDimensionDraft(key, event.currentTarget.value)} onChange={(event) => updateDimensionDraft(key, event.currentTarget.value)} /></label>)}
+                <button type="button" onClick={resizeSelected}>应用尺寸</button>
+              </form>}
+              {!selectedObject.capabilities.movable && !selectedObject.capabilities.rotatable && !selectedObject.capabilities.parameterEditable && <p className="project-edit__locked">这是固定构件，只能查看；请让 Agent 调整。</p>}
+            </div>
+          </div>}
+          {selectedSurface && <div className="project-object project-surface" data-testid="selected-surface-details">
+            <div><span>{selectedSurface.id}</span><strong>演示饰面</strong></div>
+            <dl>
+              <div><dt>类型</dt><dd>{surfaceKindLabels[selectedSurface.kind]}</dd></div>
+              <div><dt>房间</dt><dd>{roomLabels[selectedSurface.roomId] ?? selectedSurface.roomId}</dd></div>
+              <div><dt>当前饰面</dt><dd>{materialLabels[selectedSurface.materialId] ?? selectedSurface.materialId}</dd></div>
+              <div><dt>来源</dt><dd>source: {selectedSurface.source}</dd></div>
+            </dl>
+            <p className="project-object__quick-note">住户侧只查看装修表面；墙、地、顶方案由 Agent 生成并进入版本确认。</p>
+          </div>}
+          <div className="project-rules" aria-label="设计规则检查" data-layer="summary">
+            <div className="project-rules__header"><span>规则检查</span><strong data-status={lastRejected ? 'blocked' : designEvaluation.status}>{lastRejected ? '刚才已阻止' : (ruleStatusLabels[designEvaluation.status] ?? designEvaluation.status)}</strong></div>
+            <p className="project-rules__scope">{remoteProject ? '按参考户型与当前家具位置校验。局部尺寸为演示估算，实际装修仍需现场复核。' : '适用边界：当前合成演示户型 · source: demo；真实欧派 / 施工规范待企业 API 复核。'}</p>
+          </div>
+          <p>{displaySelectedEntity?.kind === 'object'
+            ? '已定位到所选家具。可以直接在三维画布中调整，也可以使用上方工具；不符合空间规则的修改不会保存。'
+            : displaySelectedEntity?.kind === 'surface'
+              ? '已选择真实装修表面；饰面修改会同步进入 2D、3D、版本与交接。'
+            : (displayRoomId ? '使用画布上方的视角菜单切换俯视、入口与主功能面，切换镜头不会取消家具选择。' : '从 3D 房间地面或右侧 2D 户型选择空间，镜头会先进入三维俯视。')}</p>
+        </article>
+        </> : sidecarMode === 'agent' ? <article className="panel agent-sidecar" data-testid="agent-sidecar">
+          <header className="agent-sidecar__header">
+            <div className="agent-sidecar__identity"><div><strong>设计笔记</strong><small>与 AI 推敲空间的每一处细节</small></div></div>
+            <div className="agent-sidecar__capability" data-status={agentCapability.provider === 'deepseek' || agentCapability.aily === 'ready' ? 'ready' : 'fallback'}><i />{agentCapability.provider === 'deepseek' ? 'DeepSeek' : agentCapability.aily === 'checking' ? '连接中' : agentCapability.aily === 'ready' ? '在线' : '演示'}</div>
+          </header>
+
+          <div className="agent-sidecar__scope">
+            <strong>{currentRoomLabel} · {selectedLabel}</strong>
+            <small>修改前自动检查空间规则</small>
+          </div>
+
+          <div className="agent-messages" ref={agentMessageListRef} aria-live="polite" aria-label="Agent 对话">
+            <RequirementSummary requirements={requirements} disabled={agentBusy} onCorrect={text => { setAgentInput(text); document.querySelector('.agent-composer textarea')?.focus(); }} />
+            {remoteProject && <ExperienceDocuments path={experiencePath} headers={projectHeaders} disabled={agentBusy || saveStatus === 'saving'} onConstraints={setEvidenceConstraints} />}
+            {agentMessages.map((message) => <article key={message.id} className="agent-message" data-role={message.role}>
+              <div className="agent-message__meta"><span>{message.role === 'user' ? '你的想法' : '设计助理'}</span>{message.role === 'assistant' && <small>{message.source === 'provider' || message.source === 'agent-provider' ? 'AI' : message.source === 'demo-script' ? '编排演示' : message.source === 'first-plan' ? '方案方向' : message.source === 'request-status' ? '请求状态' : '本地规则'}</small>}</div>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{message.role === 'user' ? formatResidentMessage(message.text) : message.text}</p>
+              {message.tools?.length > 0 && <div className="agent-message__tools">{[...new Set(message.tools)].map((tool) => <span key={tool}>{agentToolLabels[tool] ?? tool}</span>)}</div>}
+              <TurnProvenance trace={message.trace} />
+              {message.confirmationRequested && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本并由我确认</button>}
+              {message.nextAction === 'household' && <button className="agent-message__action" type="button" onClick={() => setSidecarMode('household')}>发起家庭讨论</button>}
+              {message.nextAction === 'version' && <button className="agent-message__action" type="button" onClick={openVersionDrawer}>查看版本与交接</button>}
+            </article>)}
+            {agentBusy && <article className="agent-message" data-role="assistant" data-busy="true"><div className="agent-message__meta"><span>设计助理</span></div><p><i className="agent-message__spinner" aria-hidden="true" />{agentProgress || '正在检查当前场景与空间规则…'}</p><button type="button" className="agent-message__action" onClick={() => agentRequestRef.current?.controller.abort()}>取消本次请求</button></article>}
+            {!agentBusy && lastAgentFailure && <div className="guidance-failure" role="status"><p>{/CONFLICT|STALE/.test(lastAgentFailure.reason) ? '项目已经有更新，先读取最新保存状态，再继续设计。当前页面的修改尚未被覆盖。' : '尚未生成新的修改，当前方案仍在。'}</p>{/CONFLICT|STALE/.test(lastAgentFailure.reason) ? <button onClick={() => window.location.reload()}>重新打开保存的方案</button> : <button onClick={() => runAgentPrompt(lastAgentFailure.input)}>重试这条需求</button>}<details><summary>查看原因</summary>{lastAgentFailure.reason}</details></div>}
+            {!agentBusy && !agentHasConversation && <div className="agent-starters" aria-label="可以这样开始">
+              {agentQuickPrompts.slice(0, 2).map((prompt) => <button key={prompt} type="button" onClick={() => runAgentPrompt(prompt)}>{prompt}</button>)}
+            </div>}
+          </div>
+
+          {pendingReview && <div className="agent-review" data-status={pendingReview.status}>
+            <strong>{reviewTitle(pendingReview.status)}</strong>
+            <p>{pendingReview.checks[0]?.message ?? '场景已按当前目标生成预览，尚未保存为新版本。'}</p>
+            {designBrief.softPreferences.includes('控制预算') && <small>预算已记录为偏好；当前只能验证设计变化，真实成本是否下降需等待欧派报价 API。</small>}
+            <div><button type="button" onClick={keepPendingReview} disabled={previewDecisionBusy}>{previewDecisionBusy ? '正在同步…' : '保留这次调整'}</button><button type="button" onClick={discardPendingReview} disabled={previewDecisionBusy}>撤销预览</button><button type="button" onClick={openVersionDrawer} disabled={previewDecisionBusy}>查看真实差异</button></div>
+          </div>}
+
+          <form className="agent-composer" onSubmit={submitAgentPrompt}>
+            <textarea rows="3" maxLength="4000" aria-label="告诉 Agent 你的设计需求" placeholder={pendingReview ? '直接说哪里不合适，未保留的预览会先撤回…' : `试试：${agentQuickPrompts[0]}`} value={agentInput} onChange={(event) => setAgentInput(event.currentTarget.value)} disabled={agentBusy || previewDecisionBusy} />
+            <button type="submit" aria-label="发送给 Agent" disabled={agentBusy || previewDecisionBusy || !agentInput.trim() || saveStatus === 'saving'}><PaperPlaneTilt size={17} aria-hidden="true" /></button>
+          </form>
+          {pendingDiscussionOutcome && <div className="guidance-outcome" role="status"><p>方案已保存；飞书讨论的新版本关联{outcomeBusy ? '正在同步…' : '尚未完成，不影响重新打开方案。'}</p><button type="button" disabled={outcomeBusy || agentBusy} onClick={() => syncDiscussionOutcome(pendingDiscussionOutcome)}>{outcomeBusy ? '正在关联…' : '重试关联飞书讨论'}</button></div>}
+          <footer className="agent-sidecar__footer">先预览，再由你保留和保存。家庭讨论随时可以稍后进行。</footer>
+        </article> : remoteProject ? <ExperienceDiscussion path={experiencePath} headers={projectHeaders} versionId={currentVersion.id} versionLabel={currentVersion.label} requirements={requirements} disabled={Boolean(pendingReview) || hasUnsavedChanges || agentBusy || saveStatus === 'saving'} onAdopt={async adoption => { discussionAdoptionRef.current = adoption; setSidecarMode('agent'); await runAgentPrompt(adoption.request); }} /> : <article className="panel household-sidecar" data-testid="household-sidecar">
+          <header className="household-sidecar__header">
+            <div><span><UsersThree size={17} aria-hidden="true" /></span><div><strong>家庭共识</strong><small>当前为 Demo 顺序切换，不是实时多人同步</small></div></div>
+            <em>同一版本</em>
+          </header>
+
+          <div className="household-members" role="tablist" aria-label="当前表达成员">
+            {householdConsensus.members.map((member) => <button key={member.id} type="button" role="tab" aria-selected={activeMember.id === member.id} onClick={() => setActiveMemberId(member.id)}>
+              <span>{member.name.slice(0, 1)}</span><strong>{member.name}</strong>
+            </button>)}
+          </div>
+
+          <section className="household-member-card" aria-label="当前成员偏好">
+            <div><span>当前身份</span><strong>{activeMember.name} · {memberRoleLabels[activeMember.role] ?? activeMember.role}</strong></div>
+            <p>{activeMember.preferences.map((preference) => `#${preference}`).join('  ')}</p>
+          </section>
+
+          <form className="household-opinion" onSubmit={submitHouseholdOpinion}>
+            <div className="household-opinion__target"><span>意见对象</span><strong>{opinionTargetLabel}</strong><small>{currentVersion.label}</small></div>
+            <div className="household-stances" aria-label="意见立场">
+              {Object.entries(opinionStanceLabels).map(([stance, label]) => <button key={stance} type="button" aria-pressed={opinionStance === stance} onClick={() => setOpinionStance(stance)}>{label}</button>)}
+            </div>
+            <textarea rows="3" maxLength="500" aria-label={`${activeMember.name}的意见`} placeholder="写清楚想要什么，以及为什么…" value={opinionText} onChange={(event) => setOpinionText(event.currentTarget.value)} />
+            <button type="submit" disabled={hasUnsavedChanges || Boolean(pendingReview) || !opinionText.trim()}>记录到共享版本</button>
+            <p aria-live="polite">{consensusFeedback}</p>
+          </form>
+
+          <section className="household-conflict" data-status={activeConflict ? 'conflict' : 'clear'}>
+            <div className="household-section-title"><span>共识助手</span><strong>{activeConflict ? '发现意见冲突' : '等待完整意见'}</strong></div>
+            {activeConflict ? <>
+              <p>{activeConflict.memberIds.length} 位成员对 {householdTargetName(activeConflict.target)} 存在支持与{activeConflict.severity === 'non_negotiable' ? '不可妥协' : '反对'}立场，基准为 {versions.find((version) => version.id === activeConflict.versionId)?.label ?? activeConflict.versionId}。</p>
+              <div className="household-conflict__voices">{conflictOpinions.map((opinion) => {
+                const member = householdConsensus.members.find((candidate) => candidate.id === opinion.memberId);
+                return <blockquote key={opinion.id}><strong>{member?.name ?? opinion.memberId} · {opinionStanceLabels[opinion.stance]}</strong><span>{opinion.note}</span></blockquote>;
+              })}</div>
+              {!householdConsensus.finalDecision && conflictDirections.length === 0 && <button className="household-primary" type="button" onClick={generateConsensusDirections}>生成两套可行方向</button>}
+              {!householdConsensus.finalDecision && conflictDirections.length > 0 && <div className="household-directions">
+                {conflictDirections.map((direction) => <article key={direction.id}><div><strong>{direction.title}</strong><span>已校验</span></div><p>{direction.summary}</p><button type="button" onClick={() => applyConsensusDirection(direction)}>应用并创建新版本</button></article>)}
+              </div>}
+              {householdConsensus.finalDecision && chosenDirection && <div className="household-decision">
+                <span>共同方向</span><strong>{chosenDirection.title}</strong><p>{chosenDirection.summary}</p>
+                <button type="button" onClick={openVersionDrawer}>查看真实差异与影响</button>
+              </div>}
+            </> : <p>{householdConsensus.opinions.length < 2 ? '请至少让两位成员针对同一对象表达立场。' : '已记录的意见没有形成同一对象上的相反立场。'}</p>}
+          </section>
+
+          {householdConsensus.finalDecision && <section className="household-confirmations" data-testid="household-confirmations">
+            <div className="household-section-title"><span>共同确认</span><strong>{confirmedMemberIds.size} / {householdConsensus.members.length}</strong></div>
+            <div>{householdConsensus.members.map((member) => <span key={member.id} data-confirmed={confirmedMemberIds.has(member.id)}>{confirmedMemberIds.has(member.id) ? <Check size={11} /> : null}{member.name}</span>)}</div>
+            <button className="household-primary" type="button" onClick={confirmHouseholdDecision} disabled={confirmedMemberIds.has(activeMember.id) || householdConsensus.finalDecision.versionId !== currentVersion.id}>{confirmedMemberIds.has(activeMember.id) ? `${activeMember.name}已确认` : `由${activeMember.name}确认当前方向`}</button>
+          </section>}
+
+          <section className="household-activity" aria-label="家庭活动记录">
+            <div className="household-section-title"><span>共享活动</span><strong>{householdConsensus.opinions.length} 条意见</strong></div>
+            <ol>{[...householdConsensus.opinions].reverse().slice(0, 6).map((opinion) => {
+              const member = householdConsensus.members.find((candidate) => candidate.id === opinion.memberId);
+              const version = versions.find((candidate) => candidate.id === opinion.versionId);
+              return <li key={opinion.id}><span>{member?.name ?? opinion.memberId} · {opinionStanceLabels[opinion.stance]}</span><p>{opinion.note}</p><small>{householdTargetName(opinion.target)} · {version?.label ?? opinion.versionId}</small></li>;
+            })}</ol>
+          </section>
+          <footer>所有意见都绑定当前版本；真实账号、通知与同时在线协作尚未接入。</footer>
+        </article>}
+      </aside>
+    </section>
+    {versionDrawerOpen && <div className="version-layer">
+      <button className="version-layer__scrim" type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer} />
+      <aside className="version-drawer" role="dialog" aria-modal="true" aria-labelledby="version-drawer-title" data-testid="version-impact-drawer" ref={versionDrawerRef} tabIndex={-1}>
+        <header className="version-drawer__header">
+          <div><p className="panel__kicker">每一次调整，都有迹可循</p><h2 id="version-drawer-title">版本与影响</h2></div>
+          <button type="button" aria-label="关闭版本与影响" onClick={closeVersionDrawer}><X size={18} /></button>
+        </header>
+
+        <section className="version-current" data-status={currentVersionStatus}>
+          <div><span>当前工作状态</span><strong>{currentVersion.label} · {versionStatusLabels[currentVersionStatus]}</strong></div>
+          <p>{hasUnsavedChanges ? '当前 2D / 3D 有尚未进入版本链的真实修改。' : `已保存 ${currentVersion.summary.commandCount} 条命令，快照可由 SceneCommand 完整重建。`}</p>
+          {saveStatus === 'failed' && <div className="guidance-failure" role="status"><p>保存还未完成，当前调整保留在本页。可以重试保存；如果另一会话已更新项目，请重新打开保存的方案。</p><button onClick={() => window.location.reload()}>重新打开保存的方案</button></div>}
+          <div className="version-current__actions">
+            <button type="button" onClick={saveCurrentVersion} disabled={!hasUnsavedChanges || Boolean(pendingReview)}><FloppyDisk size={15} />保存为 V{versions.length + 1}</button>
+            {remoteProject ? <><button type="button" onClick={() => { closeVersionDrawer(); setSidecarMode('household'); }} disabled={hasUnsavedChanges || Boolean(pendingReview)}><UsersThree size={15} />邀请家人讨论</button><button type="button" onClick={() => downloadExperienceHandoff()} disabled={hasUnsavedChanges || Boolean(pendingReview)}><FileArrowUp size={15} />导出可读需求简报</button><button type="button" onClick={() => downloadExperienceHandoff('json')} disabled={hasUnsavedChanges || Boolean(pendingReview)}>下载机器可读记录 JSON</button></> : <><button type="button" onClick={confirmCurrentVersion} disabled={hasUnsavedChanges || Boolean(pendingReview) || currentVersion.status === 'customer_confirmed'}><Check size={15} />客户确认</button><button type="button" onClick={submitDesignerReview} disabled={!canSubmitDesignerReview || handoffSync.status === 'pending'}><Check size={15} />提交复核并同步飞书</button></>}
+          </div>
+          <div className="handoff-submit" data-status={handoffSync.status} role="status">
+            <span>{handoffSync.message}</span>
+            {pendingDiscussionOutcome && <button type="button" disabled={outcomeBusy} onClick={() => syncDiscussionOutcome(pendingDiscussionOutcome)}>{outcomeBusy ? '正在关联…' : '重试关联飞书讨论'}</button>}
+            {handoffSync.reviewUrl && <a href={handoffSync.reviewUrl}>打开复核页</a>}
+            {handoffSync.handoffUrl && <a href={handoffSync.handoffUrl}>打开交接单</a>}
+          </div>
+        </section>
+
+        <section className="version-section" aria-labelledby="version-timeline-title">
+          <div className="version-section__title"><div><span>版本时间线</span><strong id="version-timeline-title">{versions.length} 个可重建节点</strong></div><small>{remoteProject ? `项目记录 · ${projectRevision}` : '本地缓存'}</small></div>
+          <div className="version-timeline" aria-label="设计版本">
+            {[...versions].reverse().map((version) => <button key={version.id} type="button" aria-pressed={compareFromVersion.id === version.id} data-status={version.status} onClick={() => setCompareFromVersionId(version.id)}>
+              <span className="version-timeline__rail" aria-hidden="true" />
+              <span className="version-timeline__body"><strong>{version.label}</strong><small>{versionStatusLabels[version.status]} · {version.source}</small></span>
+              <time dateTime={version.createdAt}>{new Date(version.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</time>
+            </button>)}
+          </div>
+        </section>
+
+        <section className="version-section version-compare" aria-labelledby="version-compare-title">
+          <div className="version-section__title">
+            <div><span>真实差异</span><strong id="version-compare-title">{compareFromVersion.label} → {hasUnsavedChanges ? '未保存场景' : currentVersion.label}</strong></div>
+            <label>基准<select value={compareFromVersion.id} onChange={(event) => setCompareFromVersionId(event.currentTarget.value)}>{versions.map((version) => <option key={version.id} value={version.id}>{version.label}</option>)}</select></label>
+          </div>
+          <ul className="version-diff" aria-label="版本差异">
+            {namedDiffs.length
+              ? namedDiffs.map((diff, index) => <li key={`${diff.kind}-${diff.entityId}-${index}`}><span>{diffKindLabels[diff.kind]}</span><div><p>{diff.label}</p><p className="version-diff__values">{describeWorkbenchDiff(diff, compareFromVersion.scene.materials, currentScene.materials)}</p></div></li>)
+              : <li><span>无变化</span><p>基准版与当前场景完全一致</p></li>}
+          </ul>
+          <dl className="version-impact" aria-label="影响摘要">
+            <div><dt>规则状态</dt><dd>{ruleStatusLabels[versionDiff.impact.status] ?? versionDiff.impact.status}</dd></div>
+            <div><dt>对象差异</dt><dd>{versionDiff.objectDiffs.length}</dd></div>
+            <div><dt>表面差异</dt><dd>{versionDiff.surfaceDiffs.length}</dd></div>
+            <div><dt>规则变化</dt><dd>{versionDiff.ruleDiffs.length}</dd></div>
+            <div><dt>未决项</dt><dd>{versionDiff.impact.unresolved.length}</dd></div>
+          </dl>
+          {versionDiff.impact.impacts.length > 0 && <div className="version-impact-details" aria-label="可计算影响明细">
+            {versionDiff.impact.impacts.slice(0, 4).map((impact) => impact.kind === 'clearance'
+              ? <p key={impact.clearanceZoneId}><strong>{impact.label}</strong><span>{impact.beforeAvailableMm} → {impact.afterAvailableMm} mm</span><small>保护区占用 · demo</small></p>
+              : <p key={impact.kind}><strong>柜体收纳估算</strong><span>{impact.beforeM3} → {impact.afterM3} m³</span><small>按外包围盒 · source: {impact.source}</small></p>)}
+          </div>}
+          {versionDiff.impact.unresolved.length > 0 && <div className="version-unresolved"><strong>仍不能确定</strong>{versionDiff.impact.unresolved.slice(0, 3).map((item) => <p key={`${item.code}-${item.objectId ?? ''}`}>{item.reason}<small>source: {item.source ?? 'estimate'}</small></p>)}</div>}
+          <button className="version-restore" type="button" onClick={restoreComparedVersion} disabled={compareFromVersion.id === currentVersion.id || hasUnsavedChanges || Boolean(pendingReview)}><ClockCounterClockwise size={15} />以 {compareFromVersion.label} 继续，创建新版本</button>
+        </section>
+      </aside>
+    </div>}
+  </main>;
+}
+
+const latestLocalProject = () => {
+  const { history, householdConsensus } = createInitialProjectSession(false);
+  return { history, consensus: householdConsensus };
+};
+
+const routeSlug = (pathname, section) => {
+  const cleanPathname = pathname.split('?')[0].split('#')[0];
+  const parts = cleanPathname.split('/').filter(Boolean);
+  return parts[0] === section ? parts[1] ?? null : null;
+};
+
+function useExportPayload(versionId) {
+  const [{ history, consensus }] = useState(latestLocalProject);
+  const fallback = useMemo(() => ({
+    packet: buildHandoffPacket(history, consensus),
+    review: buildDesignerReview(history, consensus),
+    reviewDecision: null,
+    consensusSummary: null,
+    source: 'local',
+  }), [consensus, history]);
+  const [state, setState] = useState({ status: 'loading', data: fallback, error: null });
+
+  useEffect(() => {
+    let alive = true;
+    const query = versionId ? `?versionId=${encodeURIComponent(versionId)}` : '';
+    let timer;
+    const load = () => fetchJson(`/api/projects/${PROJECT_ID}/export${query}`)
+      .then((data) => {
+        if (!alive) return;
+        setState({ status: 'ready', data: { ...data, source: 'server' }, error: null });
+        if (data.consensusSummary?.status === 'pending') timer = window.setTimeout(load, 2000);
+      })
+      .catch((error) => { if (alive) setState({ status: 'fallback', data: fallback, error: error.message }); });
+    load();
+    return () => { alive = false; window.clearTimeout(timer); };
+  }, [fallback, versionId]);
+
+  return state;
+}
+
+function DesignerReviewPage() {
+  const [pathname, navigate] = usePathname();
+  const versionId = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('versionId');
+  const experienceStyle = normalizeExperienceStyle(new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('style'));
+  const exportState = useExportPayload(versionId);
+  const packet = exportState.data.packet;
+  const review = exportState.data.review;
+  const consensusSummary = exportState.data.consensusSummary;
+  const [decision, setDecision] = useState(exportState.data.reviewDecision?.decision ?? 'pending');
+  const [notes, setNotes] = useState('');
+  const [submitState, setSubmitState] = useState({ status: 'idle', message: '', handoffUrl: null });
+  const projectId = routeSlug(pathname, 'review') ?? 'project-demo';
+  const issueCount = (review.ruleIssues?.length ?? 0) + (review.unresolved?.length ?? 0);
+  const displayedReviewStatus = decision === 'approved'
+    ? 'designer_verified'
+    : decision === 'returned'
+      ? 'designer_returned'
+      : review.status;
+  useEffect(() => {
+    if (exportState.data.reviewDecision?.decision) setDecision(exportState.data.reviewDecision.decision);
+  }, [exportState.data.reviewDecision?.decision]);
+  const submitReview = async (nextDecision) => {
+    if (!packet?.version?.id) return;
+    setSubmitState({ status: 'pending', message: '正在写入复核决定…', handoffUrl: null });
+    try {
+      const result = await fetchJson(`/api/versions/${packet.version.id}/review`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ decision: nextDecision, notes }),
+      });
+      setDecision(nextDecision);
+      setSubmitState({
+        status: 'synced',
+        message: nextDecision === 'approved' ? '已批准，可进入交接单。' : '已退回客户工作台修改。',
+        handoffUrl: experienceStyle && result.handoffUrl && !result.handoffUrl.includes('style=')
+          ? `${result.handoffUrl}${result.handoffUrl.includes('?') ? '&' : '?'}style=${experienceStyle}`
+          : result.handoffUrl,
+      });
+    } catch (error) {
+      setSubmitState({ status: 'failed', message: `复核失败：${error.message}`, handoffUrl: null });
+    }
+  };
+
+  return <main className="handoff-shell">
+    <header className="handoff-hero">
+      <div><p className="eyebrow">Design Review</p><h1>设计师复核</h1><p>把已确认的想法交给专业判断。查看方案变化、空间提醒与待确认事项，再留下你的复核意见。</p></div>
+      <div className="handoff-actions">
+        <button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回客户工作台</button>
+        <button className="utility-button" type="button" onClick={() => navigate(`/handoff/${review.currentVersionId}${experienceStyle ? `?style=${experienceStyle}` : ''}`)}>查看交接单</button>
+      </div>
+    </header>
+    {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业复核服务尚未连接。</p>}
+    <FeishuDelivery versionId={packet.version.id} enabled={exportState.data.source === 'server'} />
+
+    <section className="handoff-grid">
+      <article className="panel handoff-card">
+        <span>项目 / 版本</span><strong>{review.projectId} · {review.currentVersionLabel}</strong>
+        <dl><div><dt>状态</dt><dd>{versionStatusLabels[displayedReviewStatus] ?? displayedReviewStatus}</dd></div><div><dt>规则</dt><dd>{ruleStatusLabels[review.ruleStatus] ?? review.ruleStatus}</dd></div><div><dt>待处理</dt><dd>{issueCount}</dd></div></dl>
+      </article>
+      <article className="panel handoff-card">
+        <span>服务状态</span><strong>{exportState.status === 'loading' ? '正在读取服务状态…' : `${capabilityLabel(review.capability.aily, 'Aily')} / ${capabilityLabel(review.capability.base, '飞书留痕')}`}</strong>
+        <p>以当前连接状态为准。欧派生产、报价与物料清单服务尚未接入。</p>
+      </article>
+      <article className="panel handoff-card">
+        <span>飞书共识秘书</span><strong>{consensusSummary?.status === 'ready' ? '摘要已生成' : consensusSummary?.status === 'pending' ? '正在整理' : consensusSummary?.status === 'failed' ? '暂未生成' : '等待提交'}</strong>
+        <p>{consensusSummary?.summary ?? (consensusSummary?.status === 'failed' ? '交接快照已保存，Aily 摘要失败不影响复核。' : '只读汇总家庭意见、版本差异与待确认项。')}</p>
+        {consensusSummary?.questions?.[0] && <small>待确认：{consensusSummary.questions[0]}</small>}
+      </article>
+      <article className="panel handoff-card">
+        <span>设计师决定</span><strong>{decision === 'approved' ? '已批准' : decision === 'returned' ? '已退回' : '待复核'}</strong>
+        <textarea rows="3" maxLength="1000" aria-label="复核备注" placeholder="复核备注，选填" value={notes} onChange={(event) => setNotes(event.currentTarget.value)} />
+        {decision === 'pending'
+          ? <div className="handoff-actions"><button type="button" onClick={() => submitReview('approved')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>批准进入交接</button><button type="button" onClick={() => submitReview('returned')} disabled={submitState.status === 'pending' || exportState.data.source !== 'server'}>退回修改</button></div>
+          : <p className="handoff-notice" data-status="synced">复核决定已写入版本链；如需改变结论，请回到客户工作台创建新版本。</p>}
+        {submitState.message && <p className="handoff-notice" data-status={submitState.status}>{submitState.message}{submitState.handoffUrl && <> <button type="button" onClick={() => navigate(submitState.handoffUrl)}>打开交接单</button></>}</p>}
+      </article>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>真实差异</span><strong>{review.objectDiffs.length + (review.surfaceDiffs?.length ?? 0)} 项变化</strong></div>
+      <ul>{review.objectDiffs.length || review.surfaceDiffs?.length
+        ? <>{review.objectDiffs.map((diff, index) => <li key={`${diff.objectId}-${diff.kind}-${index}`}><b>{diffKindLabels[diff.kind] ?? diff.kind}</b><span>{objectLabels[diff.objectId] ?? diff.objectId}</span></li>)}{(review.surfaceDiffs ?? []).map((diff, index) => <li key={`${diff.surfaceId}-${diff.kind}-${index}`}><b>饰面</b><span>{diff.surfaceId}</span></li>)}</>
+        : <li>当前版本与基准版本无对象或表面差异。</li>}</ul>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>规则与未决项</span><strong>{issueCount ? '需说明边界' : '可批准'}</strong></div>
+      <ul>{[...(review.ruleIssues ?? []), ...(review.unresolved ?? [])].map((item, index) => <li key={`${item.code}-${index}`}><b>{item.status ?? '未决'}</b><span>{item.message ?? item.reason}</span><small>source: {item.source ?? 'estimate'}</small></li>)}</ul>
+    </section>
+  </main>;
+}
+
+function HandoffPage() {
+  const [pathname, navigate] = usePathname();
+  const [copyStatus, setCopyStatus] = useState('复制 JSON');
+  const requestedVersionId = routeSlug(pathname, 'handoff');
+  const experienceStyle = normalizeExperienceStyle(new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('style'));
+  const exportState = useExportPayload(requestedVersionId);
+  const packet = exportState.data.packet;
+  const serializedPacket = useMemo(() => JSON.stringify(packet, null, 2), [packet]);
+  const copyPacket = async () => {
+    try { await navigator.clipboard.writeText(serializedPacket); setCopyStatus('已复制'); }
+    catch { setCopyStatus('复制失败'); }
+    window.setTimeout(() => setCopyStatus('复制 JSON'), 1200);
+  };
+  const downloadPacket = () => {
+    const blob = new Blob([serializedPacket], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${packet.version.id}-handoff.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return <main className="handoff-shell">
+    <header className="handoff-hero">
+      <div><p className="eyebrow">Design Handoff</p><h1>共识交接单</h1><p>整理确认版本与尚待解决的问题，方便下一位协作者接手。产品、报价与生产数据仍待接入。</p></div>
+      <div className="handoff-actions"><button className="utility-button" type="button" onClick={() => navigate(`/review/project-demo${withExperienceStyle(`?versionId=${encodeURIComponent(packet.version.id)}`, experienceStyle)}`)}>设计师复核</button><button className="utility-button" type="button" onClick={() => navigate(experienceStyleHref(experienceStyle, '/project/demo'))}>返回工作台</button></div>
+    </header>
+    {exportState.status === 'loading' && <p className="handoff-notice">正在读取服务器交接快照…</p>}
+    {exportState.status === 'fallback' && <p className="handoff-notice">当前为本地演示数据模式；企业交接服务尚未连接。</p>}
+    <FeishuDelivery versionId={packet.version.id} enabled={exportState.data.source === 'server'} />
+
+    <section className="handoff-grid">
+      <article className="panel handoff-card"><span>版本</span><strong>{packet.version.label}</strong><p>{versionStatusLabels[packet.version.status] ?? packet.version.status} · source: {packet.version.source}</p></article>
+      <article className="panel handoff-card"><span>家具与构件 / 装修表面</span><strong>{packet.confirmedObjects.length} / {packet.confirmedSurfaces?.length ?? 0}</strong><p>当前为演示与估算数据，来源标记已保留；不代表真实产品选型。</p></article>
+      <article className="panel handoff-card"><span>未决</span><strong>{packet.unresolved.length}</strong><p>{downstreamValueLabels[packet.downstreamPlaceholders.pricing] ?? packet.downstreamPlaceholders.pricing}</p></article>
+    </section>
+
+    <section className="panel handoff-section">
+      <div className="handoff-section__title"><span>后续衔接</span><strong>等待企业数据</strong></div>
+      <ul>{Object.entries(packet.downstreamPlaceholders).map(([key, value]) => <li key={key}><b>{downstreamLabels[key] ?? key}</b><span>{downstreamValueLabels[value] ?? value}</span></li>)}</ul>
+    </section>
+
+    <details className="panel handoff-json">
+      <summary><span><b>开发接口 JSON</b><small>{serializedPacket.length.toLocaleString()} bytes · 可复制或下载</small></span><span>展开原始数据</span></summary>
+      <div className="evidence__json-header"><div><p className="evidence__label">Consensus JSON</p><span className="panel__meta">机器可读 · source 字段已保留</span></div><div className="handoff-actions"><button className="utility-button" type="button" onClick={copyPacket}>{copyStatus}</button><button className="utility-button" type="button" onClick={downloadPacket}>下载 JSON</button></div></div>
+      <textarea className="json" readOnly spellCheck="false" value={serializedPacket} aria-label="共识交接 JSON" />
+    </details>
+  </main>;
+}
+
+export default function App() {
+  const [pathname, navigate] = usePathname();
+  const isProd = import.meta.env.PROD;
+  const isLabRoute = pathname.startsWith('/lab/scene');
+  const page = pathname === '/project/reference-home'
+    ? <Suspense fallback={<p>正在准备参考户型…</p>}><ReferenceHomePage /></Suspense>
+    : pathname === '/' || pathname === '/index.html'
+    ? <ExperienceLandingPage />
+    : pathname === '/projects/new/generating'
+      ? <ProjectGenerationPage />
+    : pathname === '/projects/new/details' || pathname === '/projects/new/details/start'
+      ? <DetailedProjectSetupPage />
+    : pathname === '/projects/new'
+      ? <ProjectSetupPage />
+    : pathname.startsWith('/projects')
+      ? <ProjectsPage />
+    : pathname === '/directions'
+      ? <ExperienceDirectionsPage />
+      : pathname.startsWith('/project/demo')
+        ? <ProjectDemoPage />
+    : pathname.startsWith('/review/')
+      ? <DesignerReviewPage />
+      : pathname.startsWith('/handoff/')
+        ? <HandoffPage />
+        : isLabRoute && !isProd
+          ? <LabScenePage />
+          : <ProjectDemoPage />;
+
+  useEffect(() => {
+    if (isProd && isLabRoute) navigate('/project/demo');
+  }, [isLabRoute, isProd, navigate]);
+
+  useEffect(() => {
+    const title = pathname.startsWith('/review/')
+      ? '设计师复核 · OPAI AI 家居设计'
+      : pathname.startsWith('/handoff/')
+        ? '需求交接单 · OPAI AI 家居设计'
+        : pathname.startsWith('/projects')
+          ? '我的设计 · 欧派共创空间'
+        : pathname === '/directions'
+          ? '设计方向 · OPAI AI 家居设计'
+          : pathname === '/' || pathname === '/index.html'
+            ? '从生活需要开始 · OPAI AI 家居设计'
+            : pathname.startsWith('/project/demo')
+          ? '我的生活空间 · OPAI AI 家居设计'
+          : pathname.startsWith('/lab/scene')
+            ? 'OPAI AI 家居设计 · 内部技术页'
+            : 'OPAI AI 家居设计';
+    document.title = title;
+  }, [pathname]);
+
+  return page;
+}

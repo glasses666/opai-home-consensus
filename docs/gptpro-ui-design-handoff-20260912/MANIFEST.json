@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-11T18:58:51.504Z",
+  "sourceRevision": "328a6d56fb0e64fb58aeddca0ee3b5b032c30ae0",
+  "sourceState": "current_worktree_snapshot_with_uncommitted_user_changes",
+  "purpose": "GPTPro UI research and at least six coded family-opinion design proposals",
+  "fileCount": 73,
+  "totalBytes": 4575514,
+  "excluded": [
+    "3D room and furniture implementations",
+    "3D model and texture assets",
+    "scene geometry data",
+    "large video assets",
+    ".env files and credentials",
+    "backend implementation",
+    "real customer data"
+  ],
+  "files": [
+    {
+      "path": "00-START-HERE.md",
+      "bytes": 3046,
+      "sha256": "f3d43f62516835945b4d0b2dd529e3b5e9944bf830656dcecf72f4cfa8f448c1"
+    },
+    {
+      "path": "CURRENT-UX-PROBLEM.md",
+      "bytes": 4688,
+      "sha256": "04db30b541cb50e1f000ea718ee4cbabec80a52fa1f638364efaab3071bab4bd"
+    },
+    {
+      "path": "DESIGN-CONTRACT.md",
+      "bytes": 4533,
+      "sha256": "38131508dfb3adf896c0f1fc2308037e51a61cdc841223ea8b7f7cab4bc497cc"
+    },
+    {
+      "path": "FILE-MAP.md",
+      "bytes": 3206,
+      "sha256": "668bff8bdb123132297ace36bab5c9745ed597050d96c96c1c080c6bfda5fdb1"
+    },
+    {
+      "path": "GPTPRO-PROMPT.md",
+      "bytes": 4833,
+      "sha256": "8132b3e57f125c0a803c72072a6b0a2a158fc279134498afdd814eee11144bf1"
+    },
+    {
+      "path": "PACKAGE-QA.md",
+      "bytes": 1291,
+      "sha256": "fee5fb671c2285215ef179647c649fd21fb8391a28add6656e4e612e8bf89e95"
+    },
+    {
+      "path": "REFERENCE-SEEDS.md",
+      "bytes": 3345,
+      "sha256": "148173a8b95cee6c781516469ee680e413c1a97b300a606e078fb917d48024b4"
+    },
+    {
+      "path": "SIX-DIRECTION-BRIEF.md",
+      "bytes": 2626,
+      "sha256": "5be2a830cd30433efc9e451d017458bb5a73921471153e4ceda4bd4d1fe50d24"
+    },
+    {
+      "path": "evidence/README.md",
+      "bytes": 1576,
+      "sha256": "47da5a1270fbb45e5b682bfab67d24d060b2293efdd9c602a3bb8646545f09d0"
+    },
+    {
+      "path": "evidence/current/editor-desktop-20260908.png",
+      "bytes": 855902,
+      "sha256": "e1d010d874e0798a3637e55e715fac6b817e2b2493e6fda9476a07e6e7fa3f48"
+    },
+    {
+      "path": "evidence/current/editor-mobile-20260908.png",
+      "bytes": 173342,
+      "sha256": "fe4f4491c86e5678181bea1c5c4cbb9888d66baeb47169eeb369546699c032d8"
+    },
+    {
+      "path": "evidence/current/home-mobile-20260908.png",
+      "bytes": 114147,
+      "sha256": "d3199cdeace68a41fd8e0cb5a3b56541e0919aea3fa0b468353d5dd65de700e0"
+    },
+    {
+      "path": "evidence/historical/gate12-handoff.png",
+      "bytes": 149321,
+      "sha256": "ff43ca81d25c08600799aaa2ea51d4aa3ea210467d2957061469b2b612cc446f"
+    },
+    {
+      "path": "evidence/historical/gate12-review-approved.png",
+      "bytes": 156585,
+      "sha256": "4bdeb0c6bc1ad1e4e98f6294268b93041bdbbb3cbf00278e506a46c09a50cfa7"
+    },
+    {
+      "path": "evidence/historical/gate12-review-ready.png",
+      "bytes": 156585,
+      "sha256": "4bdeb0c6bc1ad1e4e98f6294268b93041bdbbb3cbf00278e506a46c09a50cfa7"
+    },
+    {
+      "path": "evidence/historical/gate23-busy-family.png",
+      "bytes": 569125,
+      "sha256": "231ae8cee0080206d328d800d28314c66ee27519994196df9ee86c4412a6fb0c"
+    },
+    {
+      "path": "evidence/historical/gate9-conflict.png",
+      "bytes": 449536,
+      "sha256": "237845c1f5777c2488ed14712a6619f32385460b8237412741e116e218eded65"
+    },
+    {
+      "path": "evidence/historical/gate9-consensus-confirmed.png",
+      "bytes": 450704,
+      "sha256": "d00db9bebfa2dffebb7371fbc6e71224b1b1961c502621923ac4939bc0f1e3d7"
+    },
+    {
+      "path": "evidence/historical/gate9-directions.png",
+      "bytes": 451556,
+      "sha256": "68ccd4f39cefef4c4a3ee9170666cfc956e81b91a78d3af2afa0f1f37a205e57"
+    },
+    {
+      "path": "evidence/historical/gate9-household-start.png",
+      "bytes": 439433,
+      "sha256": "ecfd01d607d2147d17dd465202eae9c13186aeef1a5cabc6edb415c8e964b134"
+    },
+    {
+      "path": "fixtures/family-discussion-states.json",
+      "bytes": 5521,
+      "sha256": "a549ba7395e94931d854c45281c608e5ac186efafe528bc6a63b6d6d8b0d082f"
+    },
+    {
+      "path": "source/app/index.html",
+      "bytes": 540,
+      "sha256": "1e2bc425ef817a8c1e6f09e012ce58a54b7a48764b43c45499cb58d07b349fbb"
+    },
+    {
+      "path": "source/app/package.json",
+      "bytes": 3138,
+      "sha256": "56608908d499c895c8c694db5ad7325c04c3b615534e3d84e13cc0a56f6c272e"
+    },
+    {
+      "path": "source/app/src/AmbientHouse.jsx",
+      "bytes": 2969,
+      "sha256": "47705a8217de219a964680c42d28bbf0d6af8bf2c2d02f645960fc653656dffb"
+    },
+    {
+      "path": "source/app/src/App.jsx",
+      "bytes": 189208,
+      "sha256": "5ef49a6cf0b1178f7c85fb62bc53a76254e44da954cc2a2d17fd18f368c1d650"
+    },
+    {
+      "path": "source/app/src/DesignDirections.jsx",
+      "bytes": 5817,
+      "sha256": "065d5ebc5558ae6c6577a13ab3d63507014b30d1594bbc17bd59b8f71acfd1f1"
+    },
+    {
+      "path": "source/app/src/ExperienceDiscussion.jsx",
+      "bytes": 16753,
+      "sha256": "44e51551ca79813230bd43ca5237db0a84dbc601444053abed5e56e74c603e1c"
+    },
+    {
+      "path": "source/app/src/ExperienceDocuments.jsx",
+      "bytes": 6743,
+      "sha256": "ce0ebc5fd2a455343c555f362e18c8657d49c359e8e66065192e10f84dae7fa3"
+    },
+    {
+      "path": "source/app/src/FeishuDelivery.jsx",
+      "bytes": 3457,
+      "sha256": "81f1ba681a2b8340f777ba2b10af431d714abe3fc19e9edde8a39bf50c3333a6"
+    },
+    {
+      "path": "source/app/src/GuidancePanels.jsx",
+      "bytes": 3590,
+      "sha256": "8edd800b4b871d7abbbca4d7a5e45744e98cef5f2cc6284e4ee5b2b9f3c169cb"
+    },
+    {
+      "path": "source/app/src/HomePreview.jsx",
+      "bytes": 6671,
+      "sha256": "8f54bcc8a0cd9f37c47e20c9050d7aaec631fd2fca3cd7f3cf600c3c65400607"
+    },
+    {
+      "path": "source/app/src/ReferenceHomePage.jsx",
+      "bytes": 5323,
+      "sha256": "ccc03246598b8c7f6ad0b7dd1626c9996893c959392009215ccef29c89f8af74"
+    },
+    {
+      "path": "source/app/src/RoomletStoryMedia.jsx",
+      "bytes": 3332,
+      "sha256": "5b2652df3a2fde637e2f4bc8e6dae979dac5055df984cbcff6de68b31893713c"
+    },
+    {
+      "path": "source/app/src/WorkbenchApp.jsx",
+      "bytes": 275,
+      "sha256": "814a157eaffaf374c88223233a7b73a6fa1082518d4d57bbfbdfe2217be10e55"
+    },
+    {
+      "path": "source/app/src/conversation-presentation.js",
+      "bytes": 2620,
+      "sha256": "b5c6517ae154eb7d4a342bf38c7c552984d91717c05838b79a56fd48181af270"
+    },
+    {
+      "path": "source/app/src/domain/design-brief.js",
+      "bytes": 4046,
+      "sha256": "9d6549fc723898bb85a0f532322331a6b7c6841a588ef45219bcd1bdccc88c62"
+    },
+    {
+      "path": "source/app/src/domain/design-version.js",
+      "bytes": 12964,
+      "sha256": "977ffb77c7bf5563186a60500c50f85d1bded2bbd9f3448abe2fcfcd077c4217"
+    },
+    {
+      "path": "source/app/src/domain/entity-labels.js",
+      "bytes": 3088,
+      "sha256": "722298feeb6bdd1b9957dd72ee5cd5aa9b634c406fe3298f6d3868ceb56fe93b"
+    },
+    {
+      "path": "source/app/src/domain/experience-entry.js",
+      "bytes": 1180,
+      "sha256": "2471c7df5a5c80d19fc82fc5f09c32ec2d36fd6bc0b75526f72b388a86c7898b"
+    },
+    {
+      "path": "source/app/src/domain/experience-style.js",
+      "bytes": 2717,
+      "sha256": "385bddbba23e78556b0e724f2a519130fa8113c408f6a6f1d6eecf9c52283c6e"
+    },
+    {
+      "path": "source/app/src/domain/handoff.js",
+      "bytes": 5534,
+      "sha256": "db0224adac8fccf7048e157783cd3e8f6ddae72bf59257fbd75006c22cf8b7d4"
+    },
+    {
+      "path": "source/app/src/domain/household-consensus.js",
+      "bytes": 11389,
+      "sha256": "c44cbe1419d91183bb1d31ac7daa79924e5525d55cc5e8da5c484d796454caa1"
+    },
+    {
+      "path": "source/app/src/domain/project-setup.js",
+      "bytes": 2756,
+      "sha256": "a3fd4db52bb66a2ad2b8f6c4e2729f153d982d7c6e0fe9b030fe1dbe2b7f3e5b"
+    },
+    {
+      "path": "source/app/src/entry.css",
+      "bytes": 338,
+      "sha256": "f142cea86bf57f75bb5258e9ad7ed0c05152b104b3dfdec47c0ac48367501ebe"
+    },
+    {
+      "path": "source/app/src/experience-client.js",
+      "bytes": 4431,
+      "sha256": "f4e199b7fdc1430a6b4158de05b904f80fa79d6519d55c7a7ba6f150e26d1b79"
+    },
+    {
+      "path": "source/app/src/experience-handoff.js",
+      "bytes": 10043,
+      "sha256": "b9537c34214d39240909f94e7b7b386ad98d4625adad1118a2fecb6cf15c2699"
+    },
+    {
+      "path": "source/app/src/experience-motion.css",
+      "bytes": 1537,
+      "sha256": "ce2f555e66538e00903b272584d502b92f7fd24bbb389d9bc20546e71edebff0"
+    },
+    {
+      "path": "source/app/src/home-glass.css",
+      "bytes": 4742,
+      "sha256": "f0ddb171ed8c26180ba947f143da9899eca4fdf367dd24a1c9b5627b76e1738d"
+    },
+    {
+      "path": "source/app/src/home-preview.css",
+      "bytes": 7281,
+      "sha256": "5c9d08c532ae5874e6174045d346180e102d1fcbd1d0f7847f8c9af916bf161e"
+    },
+    {
+      "path": "source/app/src/main.jsx",
+      "bytes": 1183,
+      "sha256": "c999d64a610f2c1f79c085dbef217fe816787a3f63270d0e6320aa5805e1eb0f"
+    },
+    {
+      "path": "source/app/src/project-editorial.css",
+      "bytes": 4006,
+      "sha256": "113604104e92692f7940cf9eef7b215f15d2f2d5b35a3735efcf5b47dd87a898"
+    },
+    {
+      "path": "source/app/src/reference-home.css",
+      "bytes": 2207,
+      "sha256": "91fb469b1c0a5f3678c4ac200e814494f29ca5978a6421179ef8357fe89b82c4"
+    },
+    {
+      "path": "source/app/src/review-editorial.css",
+      "bytes": 8749,
+      "sha256": "bad47602fda8410ce28f29d0b208d62acaf2479ad2b4ed44819f0c55f3ed4a70"
+    },
+    {
+      "path": "source/app/src/roomlet-story.css",
+      "bytes": 1157,
+      "sha256": "cd542a6f9a779a30730594b224ffd990a54eb4574c67b9f8a2e4d9391f93449e"
+    },
+    {
+      "path": "source/app/src/setup-editorial.css",
+      "bytes": 7378,
+      "sha256": "65a134691a09d8ba40ec9267c1ddae45845fb0dfef128f78afb1bb2266d80be9"
+    },
+    {
+      "path": "source/app/src/studio-details.css",
+      "bytes": 7253,
+      "sha256": "596138ac170f95b31dcddec97ba38e8396718c538ece293f9714984cf4b2b359"
+    },
+    {
+      "path": "source/app/src/styles.css",
+      "bytes": 100007,
+      "sha256": "73076443d9c5db8c8f7fd791ecc118789d0364def375a8e2d749375985ee1488"
+    },
+    {
+      "path": "source/app/src/workbench-diff.js",
+      "bytes": 1080,
+      "sha256": "7a386259d9a6f84476ef46f67e27d51ab082be23429eb5aa9c1ac8d160a03d8a"
+    },
+    {
+      "path": "source/app/src/workbench-editorial.css",
+      "bytes": 4121,
+      "sha256": "69bb776b867dfc391487d4f60158216e6112effeffde492fa092bc9275aa4319"
+    },
+    {
+      "path": "source/app/src/workbench-guidance.css",
+      "bytes": 8030,
+      "sha256": "6765c4850ce282cac80e888babbafbaffab9ed0d583c2598c8e14983470e8523"
+    },
+    {
+      "path": "source/app/src/workbench-session.js",
+      "bytes": 482,
+      "sha256": "4c490ab8762f42cc28ccb4bb61eb0882e8d2ed1057c967a66f4b1bec7f7f4ae1"
+    },
+    {
+      "path": "source/app/src/workbench-studio.css",
+      "bytes": 4004,
+      "sha256": "c8048ecc86f6c10d7a17553672730f3dd6d3745916f4ec309a669daadc67a1e3"
+    },
+    {
+      "path": "source/app/tests/consensus-secretary.test.mjs",
+      "bytes": 9861,
+      "sha256": "d2e74161ead24258523f2e28fdecf0dd07c356c86456c7014bc9b71fc2aa5c15"
+    },
+    {
+      "path": "source/app/tests/demo-entry-flow.test.mjs",
+      "bytes": 2696,
+      "sha256": "08f8b057480974c75ee4f76a2145063e14de6653414c035ba42529adcfcda4af"
+    },
+    {
+      "path": "source/app/tests/discussion-ui-state.test.mjs",
+      "bytes": 4972,
+      "sha256": "e28977930cc6124f5233d4d607ce77dfe76fb86f55f0ca203f526a5363f1fb9f"
+    },
+    {
+      "path": "source/app/tests/experience-handoff.test.mjs",
+      "bytes": 4582,
+      "sha256": "ba1f44d4c6e6fa9a1fab55cda54368cc11308e6587bdaf25bce3e3545e7031e4"
+    },
+    {
+      "path": "source/app/tests/experience-product.test.mjs",
+      "bytes": 20080,
+      "sha256": "0fbc9c25cc81ef4e32a7b2fff4e5b9ee6ecd8e0438083ad8a3cc6542a3fbb1dd"
+    },
+    {
+      "path": "source/app/tests/family-discussion.test.mjs",
+      "bytes": 45376,
+      "sha256": "1323339f52a1d5fcaaa4b626315c91bc294e5b6c42b9b07fd858610c17ab68af"
+    },
+    {
+      "path": "source/app/tests/gate24-experience-style.test.mjs",
+      "bytes": 1104,
+      "sha256": "3dd45f70a6c29bb92533ff86976deefc743b5bd0385cf4cb2d6519eb6a9acd3d"
+    },
+    {
+      "path": "source/app/tests/handoff.test.mjs",
+      "bytes": 3772,
+      "sha256": "9b786355054143a36e56ad4438a47a451010f0825b5e610c36164a5dd1057e02"
+    },
+    {
+      "path": "source/app/tests/household-consensus.test.mjs",
+      "bytes": 7346,
+      "sha256": "04dd989c71e5558f61f27c99d22162bbfa809027447ac30847d2d1a191c035a4"
+    },
+    {
+      "path": "source/app/tests/workbench-preview.test.mjs",
+      "bytes": 1425,
+      "sha256": "be2b01d088b5af49482c8b9d5164ec7c31ea34a30f059504640e68c49631f8f0"
+    },
+    {
+      "path": "source/app/vite.config.mjs",
+      "bytes": 1260,
+      "sha256": "cf7d502f28844322272fac692e2c2e141a87663f64c6ce05f936b9ec9c58538b"
+    }
+  ]
+}

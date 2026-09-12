@@ -1,0 +1,3057 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-09T13:06:39.806Z",
+  "environment": "isolated-local-candidate",
+  "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+  "houseId": "scene-reference-xiyue-c",
+  "revision": 7,
+  "currentVersionId": "version-620ce189",
+  "workspace": {
+    "head": "7a120e9d9ec3d811a10219355a9b709a70a904e0",
+    "files": {
+      "server/experience-runtime.mjs": "bcb0cf27bb7acab621408978c25f8439a5a1c6e76edf8e80ab157c1700189d99",
+      "server/experience-routes.mjs": "ebc0e884ea7ba05f9b114bc7d85c0cdf9517b1278325d99136fffbfa12fa8440",
+      "server/experience-store.mjs": "69edf0b1f2f017501d05b12e51bbe534726e75c00031731dc5eaceaef6ffa925",
+      "server/house-knowledge.mjs": "1070e300b505321e6e37abf05b3e0b6cf08a6a63cbbabe0850b5e8a83cc16860",
+      "server/family-discussion.mjs": "56b6ee8b17b43bf2dfc9e370d0e4ad754cd1b443999418e5820491be665b279a",
+      "server/deepseek.mjs": "037ec849f32f15c3037af74ad3832f91ef6cec708c171c6a4557f98e04f22890",
+      "src/agent/dialogue.js": "1344aa6e5df9183ff76c755e3ac1ceba6e5bc64fddabfbbf12d46a246837ed8b",
+      "src/agent/evidence.js": "d41735b74ba9d6ca22466aa5ce04bfa4c3c550d2c608ae04790daab8ca616a80",
+      "src/App.jsx": "5ec4664f86107d2cabad3d7d62e8f0755a130d94e90adf42d77ed1304410a5bf",
+      "src/ExperienceDiscussion.jsx": "f00a8f9f75e09cd0aee601c5aca077be97f060c71d3fbc4003e30ff6b0f75507",
+      "src/ExperienceDocuments.jsx": "ce0ebc5fd2a455343c555f362e18c8657d49c359e8e66065192e10f84dae7fa3",
+      "src/PascalStage.jsx": "b6e34270bd734745ee68278e27ce90d9749ce07e8de30326b75ec0d5c547cca4",
+      "src/pascal/studio-finish.js": "2facc59e1be5c8fedf432ae7ffbe45a9a255f5e2f2b8c55fd49999c4460b1f8d",
+      "src/domain/reference-home.js": "532185880f8bb0feb5b739deee3a8201c5fc24af81b33bf73d481647b434d661",
+      "src/domain/scene.js": "35860e4ee8f23871c5a3ff8517dbb3c4a7a2f48e7dd81892f39bbbccf2d286ec"
+    },
+    "hashMeaning": "Files at export time; use the accompanying ledger to identify which interactions ran before a change."
+  },
+  "requirements": {
+    "utterances": [
+      {
+        "id": "59db38cc-5b76-4624-afc4-a122a8377924",
+        "text": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。"
+      },
+      {
+        "id": "53567e0b-a89f-40c8-8bd2-182195a34871",
+        "text": "资料已经更新了，请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙，其他保持原样。"
+      },
+      {
+        "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "text": "我确认刚保存的第三修订，请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙。其他家具和位置保持原样，不新增。"
+      },
+      {
+        "id": "3225ee48-4082-46c0-8f01-adb7758b04b0",
+        "text": "如果我现在想把电视墙换回灰米微水泥，会不会和刚确认的第三修订资料冲突？不要直接改，先告诉我需要确认哪一件事。"
+      }
+    ],
+    "hypotheses": [],
+    "confirmed": [
+      {
+        "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-confirmed-0",
+        "text": "电视墙使用浅橡木墙板",
+        "quote": "请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙",
+        "objectIds": [
+          "surface-wall-reference-11"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "status": "user_stated"
+      }
+    ],
+    "hardConstraints": [
+      {
+        "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-0",
+        "text": "其他家具和位置保持原样",
+        "quote": "其他家具和位置保持原样",
+        "objectIds": [
+          "object-child-wardrobe",
+          "object-coffee-table",
+          "object-dining-chair-n",
+          "object-dining-chair-s",
+          "object-dining-table",
+          "object-flex-bed",
+          "object-flex-desk",
+          "object-guest-bed",
+          "object-guest-wardrobe",
+          "object-kitchen-counter",
+          "object-primary-bed",
+          "object-primary-wardrobe",
+          "object-sofa",
+          "object-tv-console"
+        ],
+        "kind": "lock_transform",
+        "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "status": "user_stated"
+      },
+      {
+        "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-1",
+        "text": "其他家具和位置保持原样",
+        "quote": "其他家具和位置保持原样",
+        "objectIds": [
+          "object-child-wardrobe",
+          "object-coffee-table",
+          "object-dining-chair-n",
+          "object-dining-chair-s",
+          "object-dining-table",
+          "object-flex-bed",
+          "object-flex-desk",
+          "object-guest-bed",
+          "object-guest-wardrobe",
+          "object-kitchen-counter",
+          "object-primary-bed",
+          "object-primary-wardrobe",
+          "object-sofa",
+          "object-tv-console"
+        ],
+        "kind": "lock_material",
+        "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "status": "user_stated"
+      },
+      {
+        "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-2",
+        "text": "不新增",
+        "quote": "不新增",
+        "objectIds": [],
+        "kind": "no_new_objects",
+        "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "status": "user_stated"
+      }
+    ],
+    "preferences": [],
+    "rejected": [
+      {
+        "id": "59db38cc-5b76-4624-afc4-a122a8377924-confirmed-0",
+        "text": "电视墙使用浅橡木墙板",
+        "quote": "撤掉之前的浅橡木目标，只按新资料调整电视墙",
+        "objectIds": [
+          "surface-wall-reference-11"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      },
+      {
+        "id": "53567e0b-a89f-40c8-8bd2-182195a34871-confirmed-0",
+        "text": "电视墙使用灰米微水泥",
+        "quote": "请取消之前灰米微水泥的选择",
+        "objectIds": [
+          "surface-wall-reference-11"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      }
+    ],
+    "unresolved": []
+  },
+  "versions": [
+    {
+      "id": "version-demo-initial",
+      "parentVersionId": null,
+      "createdAt": "2026-09-09T12:26:07.146Z",
+      "summary": {
+        "snapshotHash": "4cb51feb",
+        "snapshotBytes": 49539,
+        "commandHash": "741638a5",
+        "commandCount": 0,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-802c99d7",
+      "parentVersionId": "version-demo-initial",
+      "createdAt": "2026-09-09T12:39:04.837Z",
+      "summary": {
+        "snapshotHash": "998adfa0",
+        "snapshotBytes": 49538,
+        "commandHash": "48bb0670",
+        "commandCount": 1,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-oak-panel"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-3abd8bc3",
+      "parentVersionId": "version-802c99d7",
+      "createdAt": "2026-09-09T12:43:37.930Z",
+      "summary": {
+        "snapshotHash": "d56e62d1",
+        "snapshotBytes": 49535,
+        "commandHash": "ec74cede",
+        "commandCount": 2,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-greige"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-620ce189",
+      "parentVersionId": "version-3abd8bc3",
+      "createdAt": "2026-09-09T12:54:44.973Z",
+      "summary": {
+        "snapshotHash": "998adfa0",
+        "snapshotBytes": 49538,
+        "commandHash": "bd89d085",
+        "commandCount": 3,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-oak-panel"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "requestId": "59db38cc-5b76-4624-afc4-a122a8377924",
+      "input": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。",
+      "assistantReply": "好的，我根据你保存的电视墙材料资料，把客厅电视背景墙（surface-wall-reference-11）调整为浅橡木墙板（mat-wall-oak-panel），其他保持不变。",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 2920,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "1d838d08-e754-47fa-83a7-2469556215c1",
+        "usage": {
+          "prompt_tokens": 10486,
+          "completion_tokens": 345,
+          "total_tokens": 10831,
+          "prompt_tokens_details": {
+            "cached_tokens": 768
+          },
+          "prompt_cache_hit_tokens": 768,
+          "prompt_cache_miss_tokens": 9718
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "1d838d08-e754-47fa-83a7-2469556215c1",
+            "usage": {
+              "prompt_tokens": 10486,
+              "completion_tokens": 345,
+              "total_tokens": 10831,
+              "prompt_tokens_details": {
+                "cached_tokens": 768
+              },
+              "prompt_cache_hit_tokens": 768,
+              "prompt_cache_miss_tokens": 9718
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 2916,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          },
+          "ok": true,
+          "candidate": 1,
+          "disposition": "previewed",
+          "result": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementText": "电视墙使用浅橡木墙板",
+          "fact": "资料明确指定电视背景墙 surface-wall-reference-11 使用浅橡木墙板 mat-wall-oak-panel，且不使用灰米微水泥。",
+          "objectIds": [
+            "surface-wall-reference-11"
+          ],
+          "tradeoff": "仅改变电视墙材质，不影响其他对象。",
+          "sourceIds": [
+            "chunk-bd6d6e5626095672064f7713"
+          ]
+        }
+      ],
+      "retrieval": {
+        "status": "ready",
+        "query": "请按我刚保存的电视墙材料资料,做一个小调整给我看看,其他都先保持。",
+        "scope": {
+          "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 3,
+        "results": [
+          {
+            "chunkId": "chunk-bd6d6e5626095672064f7713",
+            "text": "这是一份当前项目的隔离验收资料,不代表企业施工规范。客厅电视背景墙 surface-wall-reference-11 应使用浅橡木墙板 mat-wall-oak-panel,不使用灰米微水泥 mat-wall-greige。仅改变电视墙材质;沙发保持位置,不新增家具。",
+            "score": 16,
+            "matchedTerms": [
+              "电视墙",
+              "视墙材",
+              "电视",
+              "视墙",
+              "墙材",
+              "资料",
+              "保持"
+            ],
+            "location": {
+              "lineStart": 1,
+              "lineEnd": 1
+            },
+            "scope": {
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "text",
+              "location": null,
+              "updatedAt": "2026-09-09T12:35:22.982Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "d447dd75be2d33e49b160062a35ef220a3ec8a1e2074f83b6838aee86859b342",
+              "revision": 1
+            },
+            "contentRole": "untrusted_reference"
+          }
+        ],
+        "evidenceConstraints": [],
+        "sources": [
+          {
+            "id": "doc-afdd3af875898ad6fb95",
+            "title": "隔离验收 · 电视墙材料确认",
+            "url": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+            "location": null,
+            "scope": "房屋 scene-reference-xiyue-c",
+            "updatedAt": "2026-09-09T12:35:22.982Z",
+            "trust": "user_confirmed"
+          }
+        ],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924",
+            "text": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "59db38cc-5b76-4624-afc4-a122a8377924",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [],
+        "preferences": [],
+        "rejected": [],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+      "input": "资料已经更新了，请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙，其他保持原样。",
+      "assistantReply": "好的，已按第二修订将电视墙改为灰米微水泥，其他保持不变。",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 4947,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "628474d4-b551-4b30-a59a-f8dc4a939da3",
+        "usage": {
+          "prompt_tokens": 11071,
+          "completion_tokens": 304,
+          "total_tokens": 11375,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 9535
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "7d1dcf39-beac-48df-9ec6-2b18d9c94e60",
+            "usage": {
+              "prompt_tokens": 10747,
+              "completion_tokens": 422,
+              "total_tokens": 11169,
+              "prompt_tokens_details": {
+                "cached_tokens": 1536
+              },
+              "prompt_cache_hit_tokens": 1536,
+              "prompt_cache_miss_tokens": 9211
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 2602,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "628474d4-b551-4b30-a59a-f8dc4a939da3",
+            "usage": {
+              "prompt_tokens": 11071,
+              "completion_tokens": 304,
+              "total_tokens": 11375,
+              "prompt_tokens_details": {
+                "cached_tokens": 1536
+              },
+              "prompt_cache_hit_tokens": 1536,
+              "prompt_cache_miss_tokens": 9535
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 4945,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          },
+          "ok": true,
+          "candidate": 2,
+          "disposition": "previewed",
+          "result": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementText": "电视墙使用灰米微水泥",
+          "fact": "第二修订资料指定电视墙使用灰米微水泥，不再使用浅橡木墙板。",
+          "objectIds": [
+            "surface-wall-reference-11"
+          ],
+          "tradeoff": "仅调整电视墙材质，其他保持不变。",
+          "sourceIds": [
+            "chunk-edf0aaa0587704767d60065e"
+          ]
+        }
+      ],
+      "retrieval": {
+        "status": "ready",
+        "query": "资料已经更新了,请以第二修订为准,撤掉之前的浅橡木目标,只按新资料调整电视墙,其他保持原样。",
+        "scope": {
+          "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 4,
+        "results": [
+          {
+            "chunkId": "chunk-edf0aaa0587704767d60065e",
+            "text": "修订2,取代之前的材料确认。本项目客厅电视背景墙 surface-wall-reference-11 现在改用灰米微水泥 mat-wall-greige,不再使用浅橡木墙板 mat-wall-oak-panel。其他家具和墙面保持不变。这是隔离验收资料,不代表企业规范。",
+            "score": 24,
+            "matchedTerms": [
+              "之前的",
+              "浅橡木",
+              "资料",
+              "修订",
+              "之前",
+              "前的",
+              "浅橡",
+              "橡木",
+              "电视",
+              "其他"
+            ],
+            "location": {
+              "lineStart": 1,
+              "lineEnd": 1
+            },
+            "scope": {
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "text",
+              "location": null,
+              "updatedAt": "2026-09-09T12:40:54.184Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "858c41ba666d9c32add0f0c6d9adfcde5f81a3ad77badf42d57db54268b411dc",
+              "revision": 2
+            },
+            "contentRole": "untrusted_reference"
+          }
+        ],
+        "evidenceConstraints": [],
+        "sources": [
+          {
+            "id": "doc-afdd3af875898ad6fb95",
+            "title": "隔离验收 · 电视墙材料确认",
+            "url": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+            "location": null,
+            "scope": "房屋 scene-reference-xiyue-c",
+            "updatedAt": "2026-09-09T12:40:54.184Z",
+            "trust": "user_confirmed"
+          }
+        ],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924",
+            "text": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。"
+          },
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "text": "资料已经更新了，请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙，其他保持原样。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871-confirmed-0",
+            "text": "电视墙使用灰米微水泥",
+            "quote": "请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "撤掉之前的浅橡木目标，只按新资料调整电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+      "input": "我确认刚保存的第三修订，请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙。其他家具和位置保持原样，不新增。",
+      "assistantReply": "好的，我按第三修订将电视墙改为浅橡木墙板，其他家具和位置保持不变，也不新增。",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 11778,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "3c802bad-2ba5-40b5-a279-620680c24a28",
+        "usage": {
+          "prompt_tokens": 13162,
+          "completion_tokens": 669,
+          "total_tokens": 13831,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 11498
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "5dad2466-407d-48b5-ac75-b1955f7cea06",
+            "usage": {
+              "prompt_tokens": 11868,
+              "completion_tokens": 686,
+              "total_tokens": 12554,
+              "prompt_tokens_details": {
+                "cached_tokens": 1664
+              },
+              "prompt_cache_hit_tokens": 1664,
+              "prompt_cache_miss_tokens": 10204
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3998,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "2497155b-031c-49c6-9699-b9033766d66b",
+            "usage": {
+              "prompt_tokens": 12015,
+              "completion_tokens": 725,
+              "total_tokens": 12740,
+              "prompt_tokens_details": {
+                "cached_tokens": 11776
+              },
+              "prompt_cache_hit_tokens": 11776,
+              "prompt_cache_miss_tokens": 239
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 7655,
+          "action": "preview"
+        },
+        {
+          "attempt": 3,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "3c802bad-2ba5-40b5-a279-620680c24a28",
+            "usage": {
+              "prompt_tokens": 13162,
+              "completion_tokens": 669,
+              "total_tokens": 13831,
+              "prompt_tokens_details": {
+                "cached_tokens": 1664
+              },
+              "prompt_cache_hit_tokens": 1664,
+              "prompt_cache_miss_tokens": 11498
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 11775,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          },
+          "ok": true,
+          "candidate": 3,
+          "disposition": "previewed",
+          "result": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-oak-panel"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-confirmed-0",
+          "requirementText": "电视墙使用浅橡木墙板",
+          "fact": "用户确认第三修订，取消灰米微水泥，按材料规则重做电视墙；检索资料明确电视墙只允许浅橡木墙板，禁止灰米微水泥。",
+          "objectIds": [
+            "surface-wall-reference-11"
+          ],
+          "tradeoff": "仅修改电视墙材质，其他家具和位置保持不变，不新增。",
+          "sourceIds": [
+            "doc-afdd3af875898ad6fb95"
+          ]
+        }
+      ],
+      "retrieval": {
+        "status": "ready",
+        "query": "我确认刚保存的第三修订,请取消之前灰米微水泥的选择,按现在的材料规则重做电视墙。其他家具和位置保持原样,不新增。",
+        "scope": {
+          "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 5,
+        "results": [
+          {
+            "chunkId": "chunk-5eb084a8c524f25fdd00737a",
+            "text": "$.notes: 修订3:用户确认电视背景墙只允许浅橡木墙板,禁止灰米微水泥。其他对象不动,不新增。仅本隔离项目资料,非企业规范。",
+            "score": 76.3614,
+            "matchedTerms": [
+              "灰米微",
+              "米微水",
+              "微水泥",
+              "不新增",
+              "确认",
+              "修订",
+              "灰米",
+              "米微",
+              "微水",
+              "水泥"
+            ],
+            "location": {
+              "jsonPath": "$.notes"
+            },
+            "scope": {
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "untrusted_reference"
+          }
+        ],
+        "evidenceConstraints": [
+          {
+            "logicalId": "constraint-1",
+            "type": "material",
+            "targetId": "surface-wall-reference-11",
+            "allowedMaterialIds": [
+              "mat-wall-oak-panel"
+            ],
+            "forbiddenMaterialIds": [
+              "mat-wall-greige"
+            ],
+            "evidenceConstraintId": "constraint-76085f10227069b5a45d7aff",
+            "binding": {
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "documentRevision": 3,
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "indexRevision": 5,
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "sourceId": "doc-afdd3af875898ad6fb95",
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "confirmed_typed_constraint",
+            "mayAuthorizeTools": false
+          },
+          {
+            "logicalId": "constraint-2",
+            "type": "no_new_objects",
+            "targetId": "scene-reference-xiyue-c",
+            "evidenceConstraintId": "constraint-a6e394582f05b22b25914370",
+            "binding": {
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "documentRevision": 3,
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "indexRevision": 5,
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "sourceId": "doc-afdd3af875898ad6fb95",
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "confirmed_typed_constraint",
+            "mayAuthorizeTools": false
+          }
+        ],
+        "sources": [
+          {
+            "id": "doc-afdd3af875898ad6fb95",
+            "title": "隔离验收 · 电视墙材料确认",
+            "url": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+            "location": null,
+            "scope": "房屋 scene-reference-xiyue-c",
+            "updatedAt": "2026-09-09T12:49:39.433Z",
+            "trust": "user_confirmed"
+          }
+        ],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924",
+            "text": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。"
+          },
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "text": "资料已经更新了，请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙，其他保持原样。"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "text": "我确认刚保存的第三修订，请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙。其他家具和位置保持原样，不新增。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-0",
+            "text": "其他家具和位置保持原样",
+            "quote": "其他家具和位置保持原样",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-1",
+            "text": "其他家具和位置保持原样",
+            "quote": "其他家具和位置保持原样",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_material",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-2",
+            "text": "不新增",
+            "quote": "不新增",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "撤掉之前的浅橡木目标，只按新资料调整电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871-confirmed-0",
+            "text": "电视墙使用灰米微水泥",
+            "quote": "请取消之前灰米微水泥的选择",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "3225ee48-4082-46c0-8f01-adb7758b04b0",
+      "input": "如果我现在想把电视墙换回灰米微水泥，会不会和刚确认的第三修订资料冲突？不要直接改，先告诉我需要确认哪一件事。",
+      "assistantReply": "是否要撤销第三修订中关于电视墙材料的限制，改为允许灰米微水泥？",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 2030,
+      "terminationReason": "clarify",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "8a65d872-0e7a-4598-806c-31a964e241da",
+        "usage": {
+          "prompt_tokens": 12673,
+          "completion_tokens": 260,
+          "total_tokens": 12933,
+          "prompt_tokens_details": {
+            "cached_tokens": 1792
+          },
+          "prompt_cache_hit_tokens": 1792,
+          "prompt_cache_miss_tokens": 10881
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "8a65d872-0e7a-4598-806c-31a964e241da",
+            "usage": {
+              "prompt_tokens": 12673,
+              "completion_tokens": 260,
+              "total_tokens": 12933,
+              "prompt_tokens_details": {
+                "cached_tokens": 1792
+              },
+              "prompt_cache_hit_tokens": 1792,
+              "prompt_cache_miss_tokens": 10881
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 2030,
+          "action": "clarify"
+        }
+      ],
+      "toolCalls": [],
+      "steps": [],
+      "validationFeedback": [],
+      "reasons": [],
+      "retrieval": {
+        "status": "ready",
+        "query": "如果我现在想把电视墙换回灰米微水泥,会不会和刚确认的第三修订资料冲突?不要直接改,先告诉我需要确认哪一件事。",
+        "scope": {
+          "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 5,
+        "results": [
+          {
+            "chunkId": "chunk-5eb084a8c524f25fdd00737a",
+            "text": "$.notes: 修订3:用户确认电视背景墙只允许浅橡木墙板,禁止灰米微水泥。其他对象不动,不新增。仅本隔离项目资料,非企业规范。",
+            "score": 59.6574,
+            "matchedTerms": [
+              "灰米微",
+              "米微水",
+              "微水泥",
+              "电视",
+              "灰米",
+              "米微",
+              "微水",
+              "水泥",
+              "确认",
+              "修订"
+            ],
+            "location": {
+              "jsonPath": "$.notes"
+            },
+            "scope": {
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "untrusted_reference"
+          }
+        ],
+        "evidenceConstraints": [
+          {
+            "logicalId": "constraint-1",
+            "type": "material",
+            "targetId": "surface-wall-reference-11",
+            "allowedMaterialIds": [
+              "mat-wall-oak-panel"
+            ],
+            "forbiddenMaterialIds": [
+              "mat-wall-greige"
+            ],
+            "evidenceConstraintId": "constraint-76085f10227069b5a45d7aff",
+            "binding": {
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "documentRevision": 3,
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "indexRevision": 5,
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "sourceId": "doc-afdd3af875898ad6fb95",
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "confirmed_typed_constraint",
+            "mayAuthorizeTools": false
+          },
+          {
+            "logicalId": "constraint-2",
+            "type": "no_new_objects",
+            "targetId": "scene-reference-xiyue-c",
+            "evidenceConstraintId": "constraint-a6e394582f05b22b25914370",
+            "binding": {
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "documentRevision": 3,
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "indexRevision": 5,
+              "projectId": "exp-62b3ae63-24ab-4499-8239-3a896af969f6",
+              "houseId": "scene-reference-xiyue-c",
+              "scopeLevel": "house"
+            },
+            "sourceId": "doc-afdd3af875898ad6fb95",
+            "source": {
+              "id": "doc-afdd3af875898ad6fb95",
+              "documentId": "doc-afdd3af875898ad6fb95",
+              "title": "隔离验收 · 电视墙材料确认",
+              "uri": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+              "kind": "json",
+              "location": null,
+              "updatedAt": "2026-09-09T12:49:39.433Z",
+              "trust": "user_confirmed",
+              "status": "current",
+              "authorization": "user_provided",
+              "contentSha256": "b554824d3ec753509fdf3d93a240893d12082a9103a1fd8c0d92f9e39750bcf6",
+              "revision": 3
+            },
+            "contentRole": "confirmed_typed_constraint",
+            "mayAuthorizeTools": false
+          }
+        ],
+        "sources": [
+          {
+            "id": "doc-afdd3af875898ad6fb95",
+            "title": "隔离验收 · 电视墙材料确认",
+            "url": "resident://7b350394-8b0c-4221-a4c2-29a7e8c41842",
+            "location": null,
+            "scope": "房屋 scene-reference-xiyue-c",
+            "updatedAt": "2026-09-09T12:49:39.433Z",
+            "trust": "user_confirmed"
+          }
+        ],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924",
+            "text": "请按我刚保存的电视墙材料资料，做一个小调整给我看看，其他都先保持。"
+          },
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "text": "资料已经更新了，请以第二修订为准，撤掉之前的浅橡木目标，只按新资料调整电视墙，其他保持原样。"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "text": "我确认刚保存的第三修订，请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙。其他家具和位置保持原样，不新增。"
+          },
+          {
+            "id": "3225ee48-4082-46c0-8f01-adb7758b04b0",
+            "text": "如果我现在想把电视墙换回灰米微水泥，会不会和刚确认的第三修订资料冲突？不要直接改，先告诉我需要确认哪一件事。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "请取消之前灰米微水泥的选择，按现在的材料规则重做电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-0",
+            "text": "其他家具和位置保持原样",
+            "quote": "其他家具和位置保持原样",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-1",
+            "text": "其他家具和位置保持原样",
+            "quote": "其他家具和位置保持原样",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_material",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          },
+          {
+            "id": "96261161-cdb1-41fc-8d98-4e73dbebc9ef-hardConstraints-2",
+            "text": "不新增",
+            "quote": "不新增",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "59db38cc-5b76-4624-afc4-a122a8377924-confirmed-0",
+            "text": "电视墙使用浅橡木墙板",
+            "quote": "撤掉之前的浅橡木目标，只按新资料调整电视墙",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "53567e0b-a89f-40c8-8bd2-182195a34871",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "53567e0b-a89f-40c8-8bd2-182195a34871-confirmed-0",
+            "text": "电视墙使用灰米微水泥",
+            "quote": "请取消之前灰米微水泥的选择",
+            "objectIds": [
+              "surface-wall-reference-11"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "96261161-cdb1-41fc-8d98-4e73dbebc9ef",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    }
+  ],
+  "discussions": [],
+  "familyEvents": [],
+  "boundaries": [
+    "Synthetic acceptance inputs, not customer data",
+    "No production publish or group messages",
+    "Export is not by itself a visual acceptance assertion"
+  ]
+}

@@ -1,0 +1,31 @@
+.ha-story-panel .ha-roomlet-media {
+  position:relative;
+  align-self:center;
+  width:100%;
+  height:auto;
+  aspect-ratio:1;
+  background:transparent;
+  isolation:isolate;
+}
+.ha-story-panel .ha-roomlet-media img,
+.ha-story-panel .ha-roomlet-media canvas {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transform:none;
+}
+.ha-roomlet-media canvas { position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .65s ease; }
+.ha-roomlet-media img { transition:opacity .65s ease; }
+.ha-roomlet-media.is-ready canvas { opacity:1; }
+.ha-roomlet-media.is-ready img { opacity:0; }
+.ha-roomlet-retry {
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  padding:5px 10px;border:1px solid #939d8c;background:#353d32;color:#eeeade;
+  font:inherit;font-size:11px;cursor:pointer;
+}
+.ha-roomlet-retry:focus-visible { outline:2px solid #dbc79f;outline-offset:4px; }
+.ha-story-panel .ha-roomlet-media figcaption {
+  left:0;right:0;bottom:0;text-align:center;color:#b1b8ab;text-shadow:none;font-size:10px;
+}
+@media(prefers-reduced-motion:reduce) { .ha-roomlet-media canvas,.ha-roomlet-media img { transition:none; } }

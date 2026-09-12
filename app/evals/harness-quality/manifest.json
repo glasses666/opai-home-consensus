@@ -1,0 +1,7 @@
+{
+  "policy": "Freeze before live evaluation. Never overwrite first results. Do not use holdout failures to tune and still report them as untouched holdout. No claim of third-party independent curation.",
+  "files": {
+    "development.json": "50a6094983a2feecaa59204e0c391f1914d2a1635f00132fbc45c626eed88523",
+    "holdout.json": "f5343371a7bd6893d6cbe78616712860d36109b9457ac67e251df3546ce867a1"
+  }
+}

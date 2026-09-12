@@ -1,88 +1,86 @@
-# 欧派 AI 家庭共创设计器
+# OPAI「我的生活空间」
 
-本仓库正在按照串行 Gate 从零重建。产品目标是让家庭在一套真实、可编辑、受规则约束的住宅模型中与 AI 共同设计并形成可交接的共识。
+OPAI 让用户用日常语言表达居住需求，由设计 Agent 在同一套可编辑 3D 住宅中生成受规则约束、可撤销、可保存的方案；个人方案保存后，家人再围绕同一版本留下意见。
 
 ## 当前状态
 
-- Gate 0 已于 2026-08-08 通过。
-- 旧六空间 / 静态效果图 / 方块 3D 原型已移出工作区，不再作为实现基线。
-- Gate 1 已于 2026-08-08 验收：七空间 canonical scene、不可变命令入口、CAD-first 建筑平面和三个 2D 显示模式已锁定。
-- Gate 2 已于 2026-08-09 验收并以 `080a3b2` 提交：`/lab/scene` 已有同源实时 3D、原创 GLB、整屋 / 房间镜头和真实对象点选。
-- 夜间后端包 N1、N2 已完成：命令事务、Agent Harness、真实 Aily / Base、15 项合成装修组件目录与 Prompt 安全边界已通过验证。
-- Gate 3 已实现并以 `da9c94b` 保存待验收快照；提交只保存状态，不代表用户验收，也没有进入 Gate 4。
-- 后端 B1–B4 已实现、验证并提交：JSON 项目 / 版本持久化、24 案例 Agent 评测、确定性规则与影响、JSON / CSV 企业目录导入适配器。
-- Gate 10B–18 已建立同源装修场景、固定组件、性能降级、复核与交接地基。Gate 19–24 已把产品层级校正为 Agent-first，完成五类黑盒住户复测，并用同一业务内核交付四套可切换体验方向。
+项目处于 `SCOPE LOCKED / REHEARSING`：Demo 视频完成前只排练演示流程，修复阻断、明显画面错误、误导文案和现有能力的不稳定复现；不新增发行版功能。
 
-## 项目入口
+当前事实请只读：
 
-- [实施计划](./PLAN.md)
-- [Gate 0 产品合同](./GATE-0-PRODUCT-CONTRACT.md)
-- [Gate 1 审阅包](./GATE-1-REVIEW.md)
-- [Gate 2 审阅包](./GATE-2-REVIEW.md)
-- [夜间后端包 N1 审阅](./BACKEND-N1-REVIEW.md)
-- [夜间后端包 N2 审阅](./BACKEND-N2-REVIEW.md)
-- [后端 B1–B4 审阅](./BACKEND-B1-B4-REVIEW.md)
-- [历史飞书能力证据](./FEISHU_EVIDENCE.md)
-- [Gate 10B 审阅包](./GATE-10B-REVIEW.md)
-- [Gate 11 审阅包](./GATE-11-REVIEW.md)
-- [Gate 12 审阅包](./GATE-12-REVIEW.md)
-- [Gate 16 审阅包](./GATE-16-REVIEW.md)
-- [Gate 17 审阅包](./GATE-17-REVIEW.md)
-- [Gate 18 审阅包](./GATE-18-REVIEW.md)
-- [Gate 19 审阅包](./GATE-19-REVIEW.md)
-- [Gate 20 审阅包](./GATE-20-REVIEW.md)
-- [Gate 21 审阅包](./GATE-21-REVIEW.md)
-- [Gate 22 审阅包](./GATE-22-REVIEW.md)
-- [Gate 23 审阅包](./GATE-23-REVIEW.md)
-- [Gate 24 审阅包](./GATE-24-REVIEW.md)
-- [Gate 25 CLI 审阅包](./GATE-25-REVIEW.md)
-- [5 分钟演示脚本](./DEMO-SCRIPT.md)
-- [设计 QA](./design-qa.md)
+- [答辩接手入口](./docs/defense-handoff-20260912/00-START-HERE.md)
+- [2026-09-12 当前事实总表](./docs/defense-handoff-20260912/CURRENT-FACTS.md)
+- [Demo 录像流程](./docs/defense-handoff-20260912/DEMO-FLOW.md)
+- [唯一实施计划](./PLAN.md)
+- [产品合同](./GATE-0-PRODUCT-CONTRACT.md)
 
-## 本地审阅
+2026-09-12 当前验证结果：
+
+- `npm test`：509 项，505 通过，4 失败，0 跳过；
+- `npm run build`：通过，存在大 chunk 警告；
+- 本地工作台与实时 3D 可打开，家庭意见侧栏已集成；
+- 当前健康检查显示 `provider=local`，Aily/Base 授权失败；本次交接没有新的真实 DeepSeek、Aily 或 Base 写入。
+
+旧 README、旧讲稿或带日期的研究包中的测试数和运行状态都不再代表当前版本。
+
+## 本地运行
+
+普通本地后端使用 `8791`：
 
 ```bash
 cd app
 npm install
+npm run server
 npm run dev -- --port 5173
 ```
 
-导航首页为 `http://127.0.0.1:5173/`，四方向比较页为 `/directions`，主工作台为 `/project/demo`；设计师复核页为 `/review/project-demo`，交接页为 `/handoff/version-demo-initial`。`/lab/scene` 继续作为 Gate 1 / 2 技术验证页。验证命令为 `npm test`、`npm run test:backend`、`npm run eval:agent` 和 `npm run build`。
-
-当前验证基线：183 项全量测试、81 项后端专项测试、28 案例 Agent 评测全部通过；住户前端保留 Pascal 开源 2D / 3D 编辑器地基，但手动权限只有移动、旋转与宽深高。当前 3D 是原创、同源、可编辑的风格化实时渲染，不声称已达到客户级写实视觉。
-
-无渲染房屋 CLI：
+隔离 Demo 候选使用 `8794` 与 `5180`：
 
 ```bash
 cd app
-npm run home -- init
-npm run home -- tree --room room-living-dining
-npm run home -- edit object-sofa move --dx 100
-npm run home -- agent '把沙发向右移动20厘米'
-npm run home -- apply latest
-npm run home -- diff v0001 v0002
+npm run experience -- --existing-opai-provider
 ```
 
-CLI 默认写入被 Git 忽略的 `app/.data/house-cli/`，使用同一 canonical scene、SceneCommand、规则和 Agent Harness，不加载网页或 3D 编辑器。显式增加 `--aily` 才调用真实 Aily；默认只产生 pending proposal，只有 `apply` 或 `--apply` 才创建下一版本。
-
-后端能力门与 Agent Harness：
+另一个终端：
 
 ```bash
 cd app
-npm run server
-npm run test:backend
-npm run eval:agent
+npm run dev:experience
 ```
 
-CLI 服务默认将本地演示项目写入 `app/.data/project-demo.json`；可用 `PROJECT_STORE_PATH` 指定其他单进程 JSON store。`npm run eval:agent:live` 会调用真实 Aily，仅作为独立补充证据。
+入口为 `http://127.0.0.1:5180/`。若真实 provider 不可用，页面必须如实显示降级状态，不能把 local planner 冒充成 DeepSeek 或 Aily。
 
-团队智能体优先读取 `AILY_AGENT_ID`；只有旧 Aily 应用时可使用 `AILY_APP_ID`。本机 `app/.env.local` 已配置已发布的项目智能体且被 Git 忽略；两者都不存在时会确定性降级到本地 planner，`/api/health` 不会误报为 Live Aily。
+验证：
 
-2026-08-12 的 CLI 实测已完成一次真实 Aily 工具回合；这是当前 provider 证据，不代表网页、Base 或企业接口永久可用。任何实时失败仍由 Harness 降级到本地 planner。真实欧派 SKU、报价、BOM、工期、施工与生产 API 继续保持 `pending` 适配边界。
+```bash
+cd app
+npm test
+npm run build
+```
 
-## Git 规则
+## 产品边界
 
-- 当前交付分支为 `codex/pascal-frontend`；本地保存，不创建 remote。
-- 不创建 remote、不 push、不部署，除非用户另行授权。
-- 每个 Gate 单独实现、验证、审阅；用户验收后才进入下一 Gate。
-- 旧 V1 的可恢复副本位于系统废纸篓，不允许直接复制回新实现。
+- canonical scene 是户型、房间、表面、门窗、家具、材质、规则、版本和镜头的唯一事实源。
+- 实时 3D 是主要浏览与编辑界面；2D 是同源只读俯视总览。
+- 手动和 Agent 修改共用 `SceneCommand` 与确定性规则。
+- 家庭意见是个人方案保存后的后段：原始意见、AI 整理和用户暂选不混为一层。
+- 当前通用 Agent 未开放任意家具新增/删除、参考图复刻布局或门窗移动。
+- 录制模式有一个标为“编排演示”的固定加椅子场景；它不能被表述成开放域家具生成能力。
+- 没有当前端到端证据证明已接通欧派 SKU、报价、BOM、工期、施工或生产系统。
+
+## 交接与历史材料
+
+- [当前材料地图](./docs/defense-handoff-20260912/MATERIALS-MAP.md)
+- [给撰稿 Agent 的提示词](./docs/defense-handoff-20260912/AGENT-PROMPT.md)
+- [2026-08-16 方案研究档案](./submission/research-2026-08-16/README.md)
+- [2026-09-07 路演材料](./submission/roadshow-2026-09-07/README.md)
+- [2026-09-07 老师材料包](./submission/teacher-package-2026-09-07-v2/README.md)
+- [家庭意见 UI 六方向研究](./docs/gptpro-ui-design-handoff-20260912/00-START-HERE.md)
+
+完整大文件包放在 [GitHub Release `handoff-2026-09-12`](https://github.com/glasses666/opai-home-consensus/releases/tag/handoff-2026-09-12)，普通 Git 只保存去重后的可审阅内容。
+
+## 分支纪律
+
+- 当前交接分支用于把本地 Demo 状态和资料交给下一位接手者，不代表已合并 `main`、发布生产或冻结最终 Demo。
+- Demo 视频完成前，发行版的通用对象增删、样板布局和门窗编辑不得反向污染录制快照。
+- 任何真实 provider、企业数据或公网可用性声明，都需要新的端到端证据。

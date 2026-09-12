@@ -1,0 +1,1127 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-09T16:12:14.159Z",
+  "environment": "isolated-local-candidate",
+  "projectId": "exp-2a4ae921-8c8d-452d-be3d-3ca8e300f2fe",
+  "houseId": "scene-reference-xiyue-c",
+  "revision": 2,
+  "currentVersionId": "version-4ae9aee7",
+  "workspace": {
+    "head": "fc4a676ddd8c1c96df2175be39510abac7099c4f",
+    "files": {
+      "server/experience-runtime.mjs": "bcb0cf27bb7acab621408978c25f8439a5a1c6e76edf8e80ab157c1700189d99",
+      "server/experience-routes.mjs": "541b237b349a4e17d1c161ad1d35be127a3d3f9a4b2070164b46313e92cf5e35",
+      "server/experience-store.mjs": "7721471dff5cd274f435b8a4d3807b69bbcec9dc7aa219f2f0e0df02e298425f",
+      "server/house-knowledge.mjs": "1070e300b505321e6e37abf05b3e0b6cf08a6a63cbbabe0850b5e8a83cc16860",
+      "server/family-discussion.mjs": "f4750e9d9c840e1d0604cfbdeb6b5fb3e6cd2d07119846825f5a63f123c77020",
+      "server/feishu.mjs": "3552d5de14931bfb2d6af8d074b2b082c78d4d794e8022617a63e30824eb019d",
+      "server/consensus-secretary.mjs": "5dd1337c712b694e9ca8156f3924fd87690bc104bdbe6dbde0f62b593b7a9786",
+      "server/deepseek.mjs": "037ec849f32f15c3037af74ad3832f91ef6cec708c171c6a4557f98e04f22890",
+      "src/agent/dialogue.js": "70619c96a43d8191de63ece6db435f2bbbb9c0b850d23cc63c24a5a8a77eda47",
+      "src/agent/harness.js": "a65fe3fcdbf1c202ff21a580b749c89ad5dadaaf46e627f6a9c797fd2f1f0d5e",
+      "src/agent/evidence.js": "d41735b74ba9d6ca22466aa5ce04bfa4c3c550d2c608ae04790daab8ca616a80",
+      "src/App.jsx": "7871060df06178873eb6720bc6538713d2e9e2085e69def955923e01120ff1c9",
+      "src/ExperienceDiscussion.jsx": "44e51551ca79813230bd43ca5237db0a84dbc601444053abed5e56e74c603e1c",
+      "src/ExperienceDocuments.jsx": "ce0ebc5fd2a455343c555f362e18c8657d49c359e8e66065192e10f84dae7fa3",
+      "src/PascalStage.jsx": "b6e34270bd734745ee68278e27ce90d9749ce07e8de30326b75ec0d5c547cca4",
+      "src/conversation-presentation.js": "b5c6517ae154eb7d4a342bf38c7c552984d91717c05838b79a56fd48181af270",
+      "src/experience-handoff.js": "b9537c34214d39240909f94e7b7b386ad98d4625adad1118a2fecb6cf15c2699",
+      "src/pascal/studio-finish.js": "2facc59e1be5c8fedf432ae7ffbe45a9a255f5e2f2b8c55fd49999c4460b1f8d",
+      "src/domain/reference-home.js": "532185880f8bb0feb5b739deee3a8201c5fc24af81b33bf73d481647b434d661",
+      "src/domain/scene.js": "35860e4ee8f23871c5a3ff8517dbb3c4a7a2f48e7dd81892f39bbbccf2d286ec"
+    },
+    "hashMeaning": "Files at export time; use the accompanying ledger to identify which interactions ran before a change."
+  },
+  "requirements": {
+    "utterances": [
+      {
+        "id": "5412d0db-016b-4d07-8fd3-b9b99a12d76e",
+        "text": "把全屋地板改成深棕色"
+      }
+    ],
+    "hypotheses": [],
+    "confirmed": [
+      {
+        "id": "5412d0db-016b-4d07-8fd3-b9b99a12d76e-confirmed-explicit-material",
+        "text": "把全屋地板改成深棕色",
+        "quote": "把全屋地板改成深棕色",
+        "objectIds": [
+          "surface-floor-balcony",
+          "surface-floor-bathroom",
+          "surface-floor-ensuite",
+          "surface-floor-flex",
+          "surface-floor-guest",
+          "surface-floor-hall",
+          "surface-floor-kitchen",
+          "surface-floor-living-dining",
+          "surface-floor-primary-bedroom"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "5412d0db-016b-4d07-8fd3-b9b99a12d76e",
+        "status": "user_stated",
+        "intentSignature": "mat-floor-dark-walnut:surface-floor-balcony,surface-floor-bathroom,surface-floor-ensuite,surface-floor-flex,surface-floor-guest,surface-floor-hall,surface-floor-kitchen,surface-floor-living-dining,surface-floor-primary-bedroom"
+      }
+    ],
+    "hardConstraints": [],
+    "preferences": [],
+    "rejected": [],
+    "unresolved": []
+  },
+  "versions": [
+    {
+      "id": "version-demo-initial",
+      "parentVersionId": null,
+      "createdAt": "2026-09-09T16:05:42.227Z",
+      "summary": {
+        "snapshotHash": "c117ffcc",
+        "snapshotBytes": 49671,
+        "commandHash": "741638a5",
+        "commandCount": 0,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-4ae9aee7",
+      "parentVersionId": "version-demo-initial",
+      "createdAt": "2026-09-09T16:07:35.752Z",
+      "summary": {
+        "snapshotHash": "671a40fa",
+        "snapshotBytes": 49689,
+        "commandHash": "cebfe76b",
+        "commandCount": 9,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-dark-walnut"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "requestId": "5412d0db-016b-4d07-8fd3-b9b99a12d76e",
+      "input": "把全屋地板改成深棕色",
+      "assistantReply": "好的，我会把全屋地板（包括阳台、卫生间、厨房等所有房间）统一换成深棕色胡桃木地板。这个改动会覆盖现有的浅橡木地板和暖灰瓷砖，形成整体统一的深色基调。请注意，卫生间和厨房原本是瓷砖，换成木地板后防潮性会下降，日常使用可能需要更注意。我先在副本上预览效果，你可以随时撤销。",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 3786,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "cb086648-2bad-4b72-a407-baddf2891e39",
+        "usage": {
+          "prompt_tokens": 11208,
+          "completion_tokens": 564,
+          "total_tokens": 11772,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 11208
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "cb086648-2bad-4b72-a407-baddf2891e39",
+            "usage": {
+              "prompt_tokens": 11208,
+              "completion_tokens": 564,
+              "total_tokens": 11772,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 11208
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3762,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_surface_group_material",
+          "args": {
+            "surfaceIds": [
+              "surface-floor-balcony",
+              "surface-floor-bathroom",
+              "surface-floor-ensuite",
+              "surface-floor-flex",
+              "surface-floor-guest",
+              "surface-floor-hall",
+              "surface-floor-kitchen",
+              "surface-floor-living-dining",
+              "surface-floor-primary-bedroom"
+            ],
+            "materialId": "mat-floor-dark-walnut"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_surface_group_material",
+          "args": {
+            "surfaceIds": [
+              "surface-floor-balcony",
+              "surface-floor-bathroom",
+              "surface-floor-ensuite",
+              "surface-floor-flex",
+              "surface-floor-guest",
+              "surface-floor-hall",
+              "surface-floor-kitchen",
+              "surface-floor-living-dining",
+              "surface-floor-primary-bedroom"
+            ],
+            "materialId": "mat-floor-dark-walnut"
+          },
+          "ok": true,
+          "candidate": 1,
+          "disposition": "previewed",
+          "result": {
+            "surfaceIds": [
+              "surface-floor-balcony",
+              "surface-floor-bathroom",
+              "surface-floor-ensuite",
+              "surface-floor-flex",
+              "surface-floor-guest",
+              "surface-floor-hall",
+              "surface-floor-kitchen",
+              "surface-floor-living-dining",
+              "surface-floor-primary-bedroom"
+            ],
+            "materialId": "mat-floor-dark-walnut",
+            "changedSurfaceCount": 9
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 9
+          }
+        }
+      ],
+      "validationFeedback": [],
+      "reasons": [
+        {
+          "requirementId": "5412d0db-016b-4d07-8fd3-b9b99a12d76e-confirmed-explicit-material",
+          "requirementText": "把全屋地板改成深棕色",
+          "fact": "用户明确要求全屋地板改为深棕色，且当前材质库中存在深棕色胡桃木地板 mat-floor-dark-walnut，适用于所有地板表面。",
+          "objectIds": [
+            "surface-floor-balcony",
+            "surface-floor-bathroom",
+            "surface-floor-ensuite",
+            "surface-floor-flex",
+            "surface-floor-guest",
+            "surface-floor-hall",
+            "surface-floor-kitchen",
+            "surface-floor-living-dining",
+            "surface-floor-primary-bedroom"
+          ],
+          "tradeoff": "卫生间和厨房原为瓷砖，改为木地板后防潮性能下降，需注意日常防水。",
+          "sourceIds": []
+        }
+      ],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "把全屋地板改成深棕色",
+        "scope": {
+          "projectId": "exp-2a4ae921-8c8d-452d-be3d-3ca8e300f2fe",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 5,
+        "results": [],
+        "evidenceConstraints": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 2,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "5412d0db-016b-4d07-8fd3-b9b99a12d76e",
+            "text": "把全屋地板改成深棕色"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "5412d0db-016b-4d07-8fd3-b9b99a12d76e-confirmed-explicit-material",
+            "text": "把全屋地板改成深棕色",
+            "quote": "把全屋地板改成深棕色",
+            "objectIds": [
+              "surface-floor-balcony",
+              "surface-floor-bathroom",
+              "surface-floor-ensuite",
+              "surface-floor-flex",
+              "surface-floor-guest",
+              "surface-floor-hall",
+              "surface-floor-kitchen",
+              "surface-floor-living-dining",
+              "surface-floor-primary-bedroom"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "5412d0db-016b-4d07-8fd3-b9b99a12d76e",
+            "status": "user_stated",
+            "intentSignature": "mat-floor-dark-walnut:surface-floor-balcony,surface-floor-bathroom,surface-floor-ensuite,surface-floor-flex,surface-floor-guest,surface-floor-hall,surface-floor-kitchen,surface-floor-living-dining,surface-floor-primary-bedroom"
+          }
+        ],
+        "hardConstraints": [],
+        "preferences": [],
+        "rejected": [],
+        "unresolved": []
+      }
+    }
+  ],
+  "discussions": [],
+  "familyEvents": [],
+  "boundaries": [
+    "Synthetic acceptance inputs, not customer data",
+    "No production publish or group messages",
+    "Export is not by itself a visual acceptance assertion"
+  ]
+}

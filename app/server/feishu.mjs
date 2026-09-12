@@ -366,3 +366,216 @@ export async function syncActivity(event, {
     recordUrl: safeBaseUrl(env.FEISHU_BASE_URL),
   };
 }
+
+function familyBaseConfig(env = process.env) {
+  const baseToken = env.FEISHU_FAMILY_BASE_TOKEN;
+  const tableId = env.FEISHU_FAMILY_TABLE_ID;
+  if (!/^[A-Za-z0-9]{8,128}$/.test(baseToken ?? '') || !/^tbl[A-Za-z0-9]{4,128}$/.test(tableId ?? '')) {
+    throw new Error('FEISHU_FAMILY_BASE_NOT_CONFIGURED');
+  }
+  return { baseToken, tableId, baseUrl: safeBaseUrl(env.FEISHU_FAMILY_BASE_URL) };
+}
+
+const familySearchArgs = ({ baseToken, tableId }, eventId) => [
+  'base', '+record-search',
+  '--base-token', baseToken,
+  '--table-id', tableId,
+  '--keyword', eventId,
+  '--search-field', 'Event ID',
+  '--field-id', 'Event ID',
+  '--limit', '2',
+  '--format', 'json',
+  '--as', 'user',
+];
+
+const familyBaseEntry = ({ tableId, baseUrl }, { recordId = null, eventId = null } = {}) => ({
+  kind: 'base_root',
+  openUrl: baseUrl,
+  isDirect: false,
+  accessStatus: 'unverified',
+  tableId,
+  recordId,
+  lookup: eventId ? { field: 'Event ID', value: eventId } : null,
+});
+
+function safeRecordShareUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password
+      && /(^|\.)(feishu\.cn|larksuite\.com|larkoffice\.com)$/.test(url.hostname)
+      && /^\/record\/[a-zA-Z0-9]+\/?$/.test(url.pathname) ? url.href : null;
+  } catch { return null; }
+}
+
+async function familyRecordEntry(config, { recordId, eventId, run }) {
+  const fallback = familyBaseEntry(config, { recordId, eventId });
+  try {
+    const envelope = await run([
+      'base', '+record-share-link-create',
+      '--base-token', config.baseToken,
+      '--table-id', config.tableId,
+      '--record-ids', recordId,
+      '--as', 'user', '--json',
+    ]);
+    const openUrl = safeRecordShareUrl(dataOf(envelope).record_share_links?.[recordId]);
+    return openUrl ? {
+      ...fallback,
+      kind: 'record',
+      openUrl,
+      isDirect: true,
+      // The read-only command creates a locator; it does not grant another
+      // person permission to open it.
+      accessStatus: 'unverified',
+    } : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const fieldName = (field) => firstString(field?.name, field?.field_name);
+const fieldType = (field) => firstString(field?.type, field?.type_name);
+
+function platformProvenance(schemaFields, values) {
+  const updatedByField = schemaFields.find((field) => fieldType(field) === 'updated_by');
+  const updatedAtField = schemaFields.find((field) => fieldType(field) === 'updated_at');
+  const actorValue = updatedByField ? values[fieldName(updatedByField)] : null;
+  const actorCandidate = Array.isArray(actorValue) ? actorValue[0] : actorValue;
+  const recordLastEditor = actorCandidate && typeof actorCandidate === 'object'
+    && typeof actorCandidate.id === 'string' && actorCandidate.id.trim()
+    && typeof actorCandidate.name === 'string' && actorCandidate.name.trim()
+    ? { id: actorCandidate.id.trim().slice(0, 256), name: actorCandidate.name.trim().slice(0, 80) }
+    : null;
+  const editedValue = updatedAtField ? values[fieldName(updatedAtField)] : null;
+  const recordLastEditedAt = typeof editedValue === 'string' || typeof editedValue === 'number'
+    ? String(editedValue)
+    : null;
+  return {
+    // `updated_by` is record-level audit metadata. It does not prove who
+    // authored the opinion field, because service-side slot updates also
+    // change the record's last editor.
+    recordLastEditor,
+    recordLastEditedAt,
+    identityStatus: recordLastEditor ? 'verified_record_editor' : 'unverified',
+  };
+}
+
+export function getFamilyBaseLocation({ env = process.env } = {}) {
+  const { tableId, baseUrl } = familyBaseConfig(env);
+  return {
+    tableId,
+    baseUrl,
+    entry: familyBaseEntry({ tableId, baseUrl }),
+  };
+}
+
+export async function syncFamilyActivity(event, {
+  run = runLarkCli,
+  env = process.env,
+} = {}) {
+  if (!event?.eventId || !event?.projectId || !event?.versionId || !event?.trace?.discussionId) {
+    throw new Error('FAMILY_ACTIVITY_EVENT_INVALID');
+  }
+  const config = familyBaseConfig(env);
+  const searchArgs = familySearchArgs(config, event.eventId);
+  const existing = dataOf(await run(searchArgs)).record_id_list ?? [];
+  if (existing.length > 1) throw new Error('FAMILY_BASE_EVENT_DUPLICATE');
+  const recordId = existing[0] ?? null;
+  const result = event.result ?? {};
+  const fields = {
+    'Event ID': event.eventId,
+    'Project ID': event.projectId,
+    'Discussion ID': event.trace.discussionId,
+    'Version ID': event.versionId,
+    '事件类型': event.type ?? 'family_discussion_event',
+    '成员称呼': result.participantLabel ?? result.opinionSource?.memberLabel ?? '',
+    'Source JSON': JSON.stringify(result.opinionSource ?? result.source ?? {}),
+    'Result JSON': JSON.stringify(result),
+    '同步状态': 'synced',
+  };
+  // A slot's opinion becomes human-owned after creation. Retrying sync must not
+  // overwrite a family member's edit with the original placeholder.
+  if (event.type === 'family_opinion_slot' && !recordId) fields['意见'] = event.input ?? '';
+  if (event.type === 'family_opinion_received') fields['意见'] = event.input ?? '';
+  const args = [
+    'base', '+record-upsert',
+    '--base-token', config.baseToken,
+    '--table-id', config.tableId,
+    '--json', JSON.stringify(fields),
+    '--as', 'user', '--format', 'json',
+  ];
+  if (recordId) args.push('--record-id', recordId);
+  await run(args);
+  const readBackIds = dataOf(await run(searchArgs)).record_id_list ?? [];
+  const verifiedRecordId = recordId ?? readBackIds[0] ?? null;
+  if (!verifiedRecordId || !readBackIds.includes(verifiedRecordId)) throw new Error('FAMILY_BASE_READ_BACK_MISMATCH');
+  const entry = event.type === 'family_opinion_slot'
+    ? await familyRecordEntry(config, { recordId: verifiedRecordId, eventId: event.eventId, run })
+    : familyBaseEntry(config, { recordId: verifiedRecordId, eventId: event.eventId });
+  lastBaseSuccessAt = new Date().toISOString();
+  return {
+    eventId: event.eventId,
+    recordId: verifiedRecordId,
+    recordUrl: entry.openUrl,
+    entry,
+    verifiedAt: lastBaseSuccessAt,
+  };
+}
+
+export async function readFamilyActivityRecord(recordId, {
+  run = runLarkCli,
+  env = process.env,
+} = {}) {
+  if (!/^[A-Za-z0-9_-]{4,256}$/.test(recordId ?? '')) throw new Error('FAMILY_BASE_RECORD_ID_INVALID');
+  const config = familyBaseConfig(env);
+  const envelope = await run([
+    'base', '+record-get',
+    '--base-token', config.baseToken,
+    '--table-id', config.tableId,
+    '--record-id', recordId,
+    '--as', 'user', '--format', 'json',
+  ]);
+  const data = dataOf(envelope);
+  const record = data.record ?? data;
+  const fields = Array.isArray(data.fields) && Array.isArray(data.data?.[0])
+    ? Object.fromEntries(data.fields.map((field, index) => [field, data.data[0][index]]))
+    : record.fields ?? {};
+  let schemaFields = [];
+  try {
+    const schema = dataOf(await run([
+      'base', '+field-list',
+      '--base-token', config.baseToken,
+      '--table-id', config.tableId,
+      '--as', 'user', '--json',
+    ]));
+    schemaFields = Array.isArray(schema.fields) ? schema.fields : [];
+  } catch { /* Missing schema evidence degrades identity to unverified. */ }
+  const provenance = platformProvenance(schemaFields, fields);
+  const resolvedRecordId = firstString(record.record_id, record.id, data.record_id_list?.[0], recordId);
+  const entry = await familyRecordEntry(config, {
+    recordId: resolvedRecordId,
+    eventId: fields['Event ID'] ?? null,
+    run,
+  });
+  return {
+    recordId: resolvedRecordId,
+    eventId: fields['Event ID'] ?? null,
+    projectId: fields['Project ID'] ?? null,
+    discussionId: fields['Discussion ID'] ?? null,
+    versionId: fields['Version ID'] ?? null,
+    eventType: fields['事件类型'] ?? null,
+    // This is an invitation/row label chosen by the project user. It is not
+    // proof of who edited the Base record.
+    invitedLabel: fields['成员称呼'] ?? null,
+    memberLabel: fields['成员称呼'] ?? null,
+    opinion: fields['意见'] ?? null,
+    // The current CLI output exposes these as table fields. Until field
+    // metadata proves they are platform-owned system fields, they remain
+    // untrusted compatibility data and must never become an authenticated
+    // author in the product.
+    updatedBy: fields['更新人'] ?? null,
+    updatedAt: fields['更新时间'] ?? null,
+    ...provenance,
+    recordUrl: entry.openUrl,
+    entry,
+  };
+}

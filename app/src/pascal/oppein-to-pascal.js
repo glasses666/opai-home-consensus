@@ -1,5 +1,6 @@
 import { isFabPresentation, studioAssetSource } from './studio-assets.js';
 import { furniturePreviewSource } from './furniture-preview.js';
+import { wallFinishSlots, wallFaceSemantics } from '../domain/wall-finishes.js';
 const SCALE = 0.001;
 const LEVEL_ID = 'level_oppein_demo';
 
@@ -180,12 +181,8 @@ export function projectOppeinSceneToPascal(scene) {
         end: point(surface.edge.end),
         thickness: m(surface.thickness ?? 120),
         height: m(surface.height ?? 2800),
-        frontSide: 'unknown',
-        backSide: 'unknown',
-        slots: {
-          interior: toSceneMaterialRef(surface.materialId),
-          exterior: toSceneMaterialRef('mat-wall-warm-white'),
-        },
+        ...wallFaceSemantics(scene,surface),
+        slots: Object.fromEntries(Object.entries(wallFinishSlots(scene,surface)).map(([side,materialId])=>[side,toSceneMaterialRef(materialId)])),
         children,
       };
     } else {

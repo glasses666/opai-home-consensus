@@ -58,6 +58,15 @@ const styleSurfaceFinishes = {
   'wabi-sabi': { livingWall: 'mat-wall-greige', primaryWall: 'mat-wall-greige', flexWall: 'mat-wall-greige', livingFloor: 'mat-floor-tile-warm' },
 };
 
+export const DEMO_DARK_WALNUT_FLOOR_MATERIAL = {
+  id: 'mat-floor-dark-walnut',
+  name: '深棕胡桃木地板',
+  kind: 'wood',
+  appliesTo: ['floor'],
+  source: 'demo',
+  color: '#5a3d30',
+};
+
 const chair = ({ id, externalId, name, category, roomId, preferredCameraPresetId, dimensions, x, z, rotationY, materialId }) => ({
   id,
   externalId,
@@ -434,6 +443,7 @@ export function createDemoScene(styleId = 'scandinavian') {
       { id: 'mat-flex-accent-fabric', name: '雾绿成长织物', kind: 'fabric', appliesTo: ['object'], source: 'demo', color: palette.flexAccent },
       { id: 'mat-floor-light-oak', name: '浅橡木地板', kind: 'wood', appliesTo: ['floor'], source: 'demo', color: palette.oak },
       { id: 'mat-floor-tile-warm', name: '暖灰哑光砖', kind: 'porcelain-tile', appliesTo: ['floor'], source: 'demo', color: '#ddd4c5' },
+      { ...DEMO_DARK_WALNUT_FLOOR_MATERIAL },
       { id: 'mat-oak-veneer', name: '浅橡木饰面', kind: 'wood', appliesTo: ['object'], source: 'demo', color: palette.oak },
       { id: 'mat-object-warm-white', name: '暖白家具饰面', kind: 'painted-wood', appliesTo: ['object'], source: 'demo', color: palette.white },
       { id: 'mat-wall-greige', name: '暖灰微水泥墙面', kind: 'microcement', appliesTo: ['wall'], source: 'demo', color: palette.greige },

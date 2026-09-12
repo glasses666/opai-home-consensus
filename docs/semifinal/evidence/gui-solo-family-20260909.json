@@ -1,0 +1,3626 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-09T13:06:39.614Z",
+  "environment": "isolated-local-candidate",
+  "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+  "houseId": "scene-reference-xiyue-c",
+  "revision": 8,
+  "currentVersionId": "version-eb72aea3",
+  "workspace": {
+    "head": "7a120e9d9ec3d811a10219355a9b709a70a904e0",
+    "files": {
+      "server/experience-runtime.mjs": "bcb0cf27bb7acab621408978c25f8439a5a1c6e76edf8e80ab157c1700189d99",
+      "server/experience-routes.mjs": "ebc0e884ea7ba05f9b114bc7d85c0cdf9517b1278325d99136fffbfa12fa8440",
+      "server/experience-store.mjs": "69edf0b1f2f017501d05b12e51bbe534726e75c00031731dc5eaceaef6ffa925",
+      "server/house-knowledge.mjs": "1070e300b505321e6e37abf05b3e0b6cf08a6a63cbbabe0850b5e8a83cc16860",
+      "server/family-discussion.mjs": "56b6ee8b17b43bf2dfc9e370d0e4ad754cd1b443999418e5820491be665b279a",
+      "server/deepseek.mjs": "037ec849f32f15c3037af74ad3832f91ef6cec708c171c6a4557f98e04f22890",
+      "src/agent/dialogue.js": "1344aa6e5df9183ff76c755e3ac1ceba6e5bc64fddabfbbf12d46a246837ed8b",
+      "src/agent/evidence.js": "d41735b74ba9d6ca22466aa5ce04bfa4c3c550d2c608ae04790daab8ca616a80",
+      "src/App.jsx": "5ec4664f86107d2cabad3d7d62e8f0755a130d94e90adf42d77ed1304410a5bf",
+      "src/ExperienceDiscussion.jsx": "f00a8f9f75e09cd0aee601c5aca077be97f060c71d3fbc4003e30ff6b0f75507",
+      "src/ExperienceDocuments.jsx": "ce0ebc5fd2a455343c555f362e18c8657d49c359e8e66065192e10f84dae7fa3",
+      "src/PascalStage.jsx": "b6e34270bd734745ee68278e27ce90d9749ce07e8de30326b75ec0d5c547cca4",
+      "src/pascal/studio-finish.js": "2facc59e1be5c8fedf432ae7ffbe45a9a255f5e2f2b8c55fd49999c4460b1f8d",
+      "src/domain/reference-home.js": "532185880f8bb0feb5b739deee3a8201c5fc24af81b33bf73d481647b434d661",
+      "src/domain/scene.js": "35860e4ee8f23871c5a3ff8517dbb3c4a7a2f48e7dd81892f39bbbccf2d286ec"
+    },
+    "hashMeaning": "Files at export time; use the accompanying ledger to identify which interactions ran before a change."
+  },
+  "requirements": {
+    "utterances": [
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+        "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+      },
+      {
+        "id": "056872e3-896f-4720-b529-938f91b6ced4",
+        "text": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。"
+      },
+      {
+        "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+        "text": "刚才的需求摘要还写着阅读，请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色，墙面不要改。家具仍然不移动、不新增。"
+      },
+      {
+        "id": "a258a434-41cd-4984-8691-74484d0f8b6e",
+        "text": "请继续刚才我选中的讨论意向：沙发改为炭灰色，替代原来的亚麻浅色；所有家具位置不变，不新增，墙面保持不变。只预览，不要替我保存。"
+      }
+    ],
+    "hypotheses": [],
+    "confirmed": [
+      {
+        "id": "a258a434-41cd-4984-8691-74484d0f8b6e-confirmed-0",
+        "text": "把沙发换成炭灰色",
+        "quote": "沙发改为炭灰色，替代原来的亚麻浅色",
+        "objectIds": [
+          "object-sofa"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+        "status": "user_stated"
+      }
+    ],
+    "hardConstraints": [
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+        "text": "不要移动家具",
+        "quote": "先别移动家具",
+        "objectIds": [
+          "object-child-wardrobe",
+          "object-coffee-table",
+          "object-dining-chair-n",
+          "object-dining-chair-s",
+          "object-dining-table",
+          "object-flex-bed",
+          "object-flex-desk",
+          "object-guest-bed",
+          "object-guest-wardrobe",
+          "object-kitchen-counter",
+          "object-primary-bed",
+          "object-primary-wardrobe",
+          "object-sofa",
+          "object-tv-console"
+        ],
+        "kind": "lock_transform",
+        "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+        "status": "user_stated"
+      },
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+        "text": "不要新增东西",
+        "quote": "也不要新增东西",
+        "objectIds": [],
+        "kind": "no_new_objects",
+        "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+        "status": "user_stated"
+      },
+      {
+        "id": "a258a434-41cd-4984-8691-74484d0f8b6e-hardConstraints-2",
+        "text": "墙面保持不变",
+        "quote": "墙面保持不变",
+        "objectIds": [
+          "surface-wall-reference-11",
+          "surface-wall-reference-28",
+          "surface-wall-reference-8",
+          "surface-wall-reference-5",
+          "surface-wall-reference-6",
+          "surface-wall-reference-10",
+          "surface-wall-reference-23",
+          "surface-wall-reference-29",
+          "surface-wall-reference-30",
+          "surface-wall-reference-26",
+          "surface-wall-reference-27",
+          "surface-wall-reference-12",
+          "surface-wall-reference-18",
+          "surface-wall-reference-17",
+          "surface-wall-reference-25",
+          "surface-wall-reference-22",
+          "surface-wall-reference-24",
+          "surface-wall-reference-16",
+          "surface-wall-reference-19",
+          "surface-wall-reference-21",
+          "surface-wall-reference-20",
+          "surface-wall-reference-15",
+          "surface-wall-reference-2",
+          "surface-wall-reference-9",
+          "surface-wall-reference-1",
+          "surface-wall-reference-3",
+          "surface-wall-reference-13",
+          "surface-wall-reference-14",
+          "surface-wall-reference-4",
+          "surface-wall-reference-7",
+          "surface-wall-reference-0"
+        ],
+        "kind": "lock_material",
+        "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+        "status": "user_stated"
+      }
+    ],
+    "preferences": [],
+    "rejected": [
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+        "text": "希望尝试柔和一点的颜色",
+        "quote": "只是想把沙发换成亚麻浅色",
+        "objectIds": [
+          "object-sofa"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "056872e3-896f-4720-b529-938f91b6ced4",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      },
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+        "text": "周末想在客厅安静看书",
+        "quote": "请把它从当前设计目标里去掉",
+        "objectIds": [
+          "object-sofa"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      },
+      {
+        "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+        "text": "客厅现在看起来有点冷冰冰的",
+        "quote": "请把它从当前设计目标里去掉",
+        "objectIds": [
+          "object-sofa"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      },
+      {
+        "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b-confirmed-0",
+        "text": "把沙发换成亚麻浅色",
+        "quote": "沙发改为炭灰色，替代原来的亚麻浅色",
+        "objectIds": [
+          "object-sofa"
+        ],
+        "kind": "preference",
+        "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+        "status": "user_stated",
+        "reason": "被用户的新选择取代"
+      }
+    ],
+    "unresolved": []
+  },
+  "versions": [
+    {
+      "id": "version-demo-initial",
+      "parentVersionId": null,
+      "createdAt": "2026-09-09T11:55:38.764Z",
+      "summary": {
+        "snapshotHash": "4cb51feb",
+        "snapshotBytes": 49539,
+        "commandHash": "741638a5",
+        "commandCount": 0,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-007552bb",
+      "parentVersionId": "version-demo-initial",
+      "createdAt": "2026-09-09T12:00:13.426Z",
+      "summary": {
+        "snapshotHash": "e038e90f",
+        "snapshotBytes": 49530,
+        "commandHash": "7fe5b8c4",
+        "commandCount": 2,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-clay",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-greige"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-df74d690",
+      "parentVersionId": "version-007552bb",
+      "createdAt": "2026-09-09T12:22:20.275Z",
+      "summary": {
+        "snapshotHash": "22e15f3a",
+        "snapshotBytes": 49531,
+        "commandHash": "865225bc",
+        "commandCount": 3,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-linen",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-greige"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    },
+    {
+      "id": "version-eb72aea3",
+      "parentVersionId": "version-df74d690",
+      "createdAt": "2026-09-09T12:56:41.546Z",
+      "summary": {
+        "snapshotHash": "4d614b61",
+        "snapshotBytes": 49534,
+        "commandHash": "2879fb49",
+        "commandCount": 4,
+        "objectCount": 14
+      },
+      "objects": [
+        {
+          "id": "object-child-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 0,
+            "x": 5540,
+            "y": 0,
+            "z": 3135
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-coffee-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 1830,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 550,
+            "height": 430,
+            "width": 800
+          }
+        },
+        {
+          "id": "object-dining-chair-n",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 4520
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-chair-s",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 1800,
+            "y": 0,
+            "z": 5750
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 820,
+            "width": 420
+          }
+        },
+        {
+          "id": "object-dining-table",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 0,
+            "x": 2100,
+            "y": 0,
+            "z": 5100
+          },
+          "dimensions": {
+            "depth": 700,
+            "height": 740,
+            "width": 1100
+          }
+        },
+        {
+          "id": "object-flex-bed",
+          "materialId": "mat-flex-accent-fabric",
+          "transform": {
+            "rotationY": 0,
+            "x": 5850,
+            "y": 0,
+            "z": 4375
+          },
+          "dimensions": {
+            "depth": 1950,
+            "height": 900,
+            "width": 1200
+          }
+        },
+        {
+          "id": "object-flex-desk",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3950,
+            "y": 0,
+            "z": 4900
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 740,
+            "width": 950
+          }
+        },
+        {
+          "id": "object-guest-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -3.141592653589793,
+            "x": 5750,
+            "y": 0,
+            "z": 1000
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1350
+          }
+        },
+        {
+          "id": "object-guest-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 3.141592653589793,
+            "x": 5540,
+            "y": 0,
+            "z": 2565
+          },
+          "dimensions": {
+            "depth": 430,
+            "height": 2400,
+            "width": 1900
+          }
+        },
+        {
+          "id": "object-kitchen-counter",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 360,
+            "y": 0,
+            "z": 1600
+          },
+          "dimensions": {
+            "depth": 650,
+            "height": 900,
+            "width": 3000
+          }
+        },
+        {
+          "id": "object-primary-bed",
+          "materialId": "mat-fabric-warm-gray",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 5500,
+            "y": 0,
+            "z": 7750
+          },
+          "dimensions": {
+            "depth": 1900,
+            "height": 1050,
+            "width": 1500
+          }
+        },
+        {
+          "id": "object-primary-wardrobe",
+          "materialId": "mat-object-warm-white",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 3750,
+            "y": 0,
+            "z": 9450
+          },
+          "dimensions": {
+            "depth": 500,
+            "height": 2400,
+            "width": 1800
+          }
+        },
+        {
+          "id": "object-sofa",
+          "materialId": "mat-fabric-charcoal",
+          "transform": {
+            "rotationY": 1.5707963267948966,
+            "x": 620,
+            "y": 0,
+            "z": 7700
+          },
+          "dimensions": {
+            "depth": 850,
+            "height": 820,
+            "width": 2100
+          }
+        },
+        {
+          "id": "object-tv-console",
+          "materialId": "mat-oak-veneer",
+          "transform": {
+            "rotationY": -1.5707963267948966,
+            "x": 3080,
+            "y": 0,
+            "z": 7900
+          },
+          "dimensions": {
+            "depth": 450,
+            "height": 520,
+            "width": 2200
+          }
+        }
+      ],
+      "surfaces": [
+        {
+          "id": "surface-ceiling-balcony",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-bathroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-ensuite",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-flex",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-guest",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-hall",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-kitchen",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-living-dining",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-ceiling-primary-bedroom",
+          "materialId": "mat-ceiling-warm-white"
+        },
+        {
+          "id": "surface-floor-balcony",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-bathroom",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-ensuite",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-flex",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-guest",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-hall",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-kitchen",
+          "materialId": "mat-floor-tile-warm"
+        },
+        {
+          "id": "surface-floor-living-dining",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-floor-primary-bedroom",
+          "materialId": "mat-floor-light-oak"
+        },
+        {
+          "id": "surface-wall-reference-0",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-1",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-10",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-11",
+          "materialId": "mat-wall-greige"
+        },
+        {
+          "id": "surface-wall-reference-12",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-13",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-14",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-15",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-16",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-17",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-18",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-19",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-2",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-20",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-21",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-22",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-23",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-24",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-25",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-26",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-27",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-28",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-29",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-3",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-30",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-4",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-5",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-6",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-7",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-8",
+          "materialId": "mat-wall-warm-white"
+        },
+        {
+          "id": "surface-wall-reference-9",
+          "materialId": "mat-wall-warm-white"
+        }
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "requestId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+      "input": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？",
+      "assistantReply": "好的，先不动家具也不新增东西。客厅里沙发和墙面是暖白/暖灰，想柔和一点的话，可以把沙发换成陶土色织物，再把沙发后的墙面换成暖灰微水泥，这样会暖和一些。我先在副本里试一下，你看效果如何？",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 3891,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "db78679f-eb71-4c23-8721-b7e47b1a23d0",
+        "usage": {
+          "prompt_tokens": 9671,
+          "completion_tokens": 533,
+          "total_tokens": 10204,
+          "prompt_tokens_details": {
+            "cached_tokens": 1152
+          },
+          "prompt_cache_hit_tokens": 1152,
+          "prompt_cache_miss_tokens": 8519
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "db78679f-eb71-4c23-8721-b7e47b1a23d0",
+            "usage": {
+              "prompt_tokens": 9671,
+              "completion_tokens": 533,
+              "total_tokens": 10204,
+              "prompt_tokens_details": {
+                "cached_tokens": 1152
+              },
+              "prompt_cache_hit_tokens": 1152,
+              "prompt_cache_miss_tokens": 8519
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3886,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-clay"
+          }
+        },
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-clay"
+          },
+          "ok": true,
+          "candidate": 1,
+          "disposition": "previewed",
+          "result": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-clay"
+          }
+        },
+        {
+          "tool": "set_surface_material",
+          "args": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          },
+          "ok": true,
+          "candidate": 1,
+          "disposition": "previewed",
+          "result": {
+            "surfaceId": "surface-wall-reference-11",
+            "materialId": "mat-wall-greige"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 2
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementId": null,
+          "requirementText": "客厅看起来冷冰冰，希望柔和颜色",
+          "fact": "沙发当前为暖灰织物，墙面为暖白哑光，整体偏冷",
+          "objectIds": [
+            "object-sofa",
+            "surface-wall-reference-11"
+          ],
+          "tradeoff": "将沙发改为陶土色织物、沙发背景墙改为暖灰微水泥，增加暖意，不移动家具、不新增物品",
+          "sourceIds": []
+        }
+      ],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "周末想在客厅安静看书,现在看起来有点冷冰冰的。先别移动家具,也不要新增东西,能试个柔和一点的颜色吗?",
+        "scope": {
+          "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 2,
+        "results": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+            "text": "周末想在客厅安静看书",
+            "quote": "周末想在客厅安静看书",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+            "text": "客厅现在看起来有点冷冰冰的",
+            "quote": "现在看起来有点冷冰冰的",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+            "text": "不要移动家具",
+            "quote": "先别移动家具",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+            "text": "不要新增东西",
+            "quote": "也不要新增东西",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+            "text": "希望尝试柔和一点的颜色",
+            "quote": "能试个柔和一点的颜色吗？",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "rejected": [],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "056872e3-896f-4720-b529-938f91b6ced4",
+      "input": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。",
+      "assistantReply": "好的，我们不再围绕阅读设计，只把沙发换成亚麻浅色，墙面保持现状。之前不移动和不新增的要求都保留。我先在副本里把沙发材质改为暖亚麻织物，你看效果如何？",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 5521,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "3ae2dbb0-3272-46c1-92f5-bde558569cea",
+        "usage": {
+          "prompt_tokens": 10987,
+          "completion_tokens": 474,
+          "total_tokens": 11461,
+          "prompt_tokens_details": {
+            "cached_tokens": 10624
+          },
+          "prompt_cache_hit_tokens": 10624,
+          "prompt_cache_miss_tokens": 363
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "23bcea42-7e45-4232-9c7d-d56a17573bab",
+            "usage": {
+              "prompt_tokens": 10668,
+              "completion_tokens": 267,
+              "total_tokens": 10935,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 10668
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 2413,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "3ae2dbb0-3272-46c1-92f5-bde558569cea",
+            "usage": {
+              "prompt_tokens": 10987,
+              "completion_tokens": 474,
+              "total_tokens": 11461,
+              "prompt_tokens_details": {
+                "cached_tokens": 10624
+              },
+              "prompt_cache_hit_tokens": 10624,
+              "prompt_cache_miss_tokens": 363
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 5518,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          },
+          "ok": true,
+          "candidate": 2,
+          "disposition": "previewed",
+          "result": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementId": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+          "requirementText": "希望尝试柔和一点的颜色",
+          "fact": "用户明确要求将沙发换成亚麻浅色，且保留不移动和不新增的硬约束。",
+          "objectIds": [
+            "object-sofa"
+          ],
+          "tradeoff": "仅改变沙发材质，不影响其他对象和墙面。",
+          "sourceIds": []
+        }
+      ],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "我改变主意了,不用围绕阅读设计,只是想把沙发换成亚麻浅色,墙面保持现在这样。之前不移动和不新增的要求都保留。",
+        "scope": {
+          "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 2,
+        "results": [],
+        "evidenceConstraints": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+          },
+          {
+            "id": "056872e3-896f-4720-b529-938f91b6ced4",
+            "text": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+            "text": "周末想在客厅安静看书",
+            "quote": "周末想在客厅安静看书",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+            "text": "客厅现在看起来有点冷冰冰的",
+            "quote": "现在看起来有点冷冰冰的",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+            "text": "不要移动家具",
+            "quote": "先别移动家具",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+            "text": "不要新增东西",
+            "quote": "也不要新增东西",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+            "text": "希望尝试柔和一点的颜色",
+            "quote": "只是想把沙发换成亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "056872e3-896f-4720-b529-938f91b6ced4",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+      "input": "刚才的需求摘要还写着阅读，请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色，墙面不要改。家具仍然不移动、不新增。",
+      "assistantReply": "好的，已把“阅读”从设计目标中去掉，只保留沙发换亚麻浅色，墙面不动，家具不移动、不新增。我先在副本里把沙发材质改为暖亚麻织物，你看效果如何？",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 6152,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "3ba04416-2cdf-49d5-89e2-cd6654d1756a",
+        "usage": {
+          "prompt_tokens": 11064,
+          "completion_tokens": 433,
+          "total_tokens": 11497,
+          "prompt_tokens_details": {
+            "cached_tokens": 10880
+          },
+          "prompt_cache_hit_tokens": 10880,
+          "prompt_cache_miss_tokens": 184
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "0d275acd-dc5d-4ba7-a2dd-a4461c986ba5",
+            "usage": {
+              "prompt_tokens": 10930,
+              "completion_tokens": 418,
+              "total_tokens": 11348,
+              "prompt_tokens_details": {
+                "cached_tokens": 640
+              },
+              "prompt_cache_hit_tokens": 640,
+              "prompt_cache_miss_tokens": 10290
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3142,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "3ba04416-2cdf-49d5-89e2-cd6654d1756a",
+            "usage": {
+              "prompt_tokens": 11064,
+              "completion_tokens": 433,
+              "total_tokens": 11497,
+              "prompt_tokens_details": {
+                "cached_tokens": 10880
+              },
+              "prompt_cache_hit_tokens": 10880,
+              "prompt_cache_miss_tokens": 184
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 6148,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          },
+          "ok": true,
+          "candidate": 2,
+          "disposition": "previewed",
+          "result": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-linen"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "reasons": [
+        {
+          "requirementText": "把沙发换成亚麻浅色",
+          "fact": "沙发当前材质为陶土织物，目标材质暖亚麻织物可用且适用于沙发",
+          "objectIds": [
+            "object-sofa"
+          ],
+          "tradeoff": "仅改变沙发材质，不影响墙面和家具位置",
+          "sourceIds": []
+        }
+      ],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "刚才的需求摘要还写着阅读,请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色,墙面不要改。家具仍然不移动、不新增。",
+        "scope": {
+          "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 2,
+        "results": [],
+        "evidenceConstraints": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 1,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+          },
+          {
+            "id": "056872e3-896f-4720-b529-938f91b6ced4",
+            "text": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。"
+          },
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "text": "刚才的需求摘要还写着阅读，请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色，墙面不要改。家具仍然不移动、不新增。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b-confirmed-0",
+            "text": "把沙发换成亚麻浅色",
+            "quote": "我现在只想沙发是亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+            "text": "不要移动家具",
+            "quote": "先别移动家具",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+            "text": "不要新增东西",
+            "quote": "也不要新增东西",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+            "text": "希望尝试柔和一点的颜色",
+            "quote": "只是想把沙发换成亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "056872e3-896f-4720-b529-938f91b6ced4",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+            "text": "周末想在客厅安静看书",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+            "text": "客厅现在看起来有点冷冰冰的",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "dfd26a88-73a7-42bc-b6fa-b0aa54368722",
+      "input": "这是用户对家庭讨论的明确采纳，基于已保存版本 version-df74d690。\n已表达意向：沙发颜色再偏炭灰一点\n已表达意向：不动家具，不新增\n已表达意向：墙面保持不变\n请重新读取当前房屋事实与已确认硬约束，生成可撤销的受约束调整预览；若版本已变更或信息不足，不要执行，明确请求用户确认。",
+      "assistantReply": "这次还没找到满足条件的合法调整，房间没有改变。可以缩小到一个对象或补充最想改变的使用感受。",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 16528,
+      "terminationReason": "REQUIREMENT_REVIEW_REQUIRED",
+      "rolledBack": true,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "16c24a93-4f6c-4f46-a80f-3ec677d6bc99",
+        "usage": {
+          "prompt_tokens": 12182,
+          "completion_tokens": 750,
+          "total_tokens": 12932,
+          "prompt_tokens_details": {
+            "cached_tokens": 11776
+          },
+          "prompt_cache_hit_tokens": 11776,
+          "prompt_cache_miss_tokens": 406
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "48044241-d5ad-45d4-b818-cef92f3a2b5e",
+            "usage": {
+              "prompt_tokens": 11477,
+              "completion_tokens": 689,
+              "total_tokens": 12166,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 11477
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3958,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "49664d50-47b6-4d7a-baa1-c4afff0405ba",
+            "usage": {
+              "prompt_tokens": 11619,
+              "completion_tokens": 725,
+              "total_tokens": 12344,
+              "prompt_tokens_details": {
+                "cached_tokens": 11392
+              },
+              "prompt_cache_hit_tokens": 11392,
+              "prompt_cache_miss_tokens": 227
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 7595,
+          "action": "preview"
+        },
+        {
+          "attempt": 3,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "4c42eb9c-8f14-4c2d-badb-843bcb9163d1",
+            "usage": {
+              "prompt_tokens": 11792,
+              "completion_tokens": 137,
+              "total_tokens": 11929,
+              "prompt_tokens_details": {
+                "cached_tokens": 11520
+              },
+              "prompt_cache_hit_tokens": 11520,
+              "prompt_cache_miss_tokens": 272
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 9046,
+          "action": "clarify"
+        },
+        {
+          "attempt": 4,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "61727a8e-7620-4b6f-ad86-97933e3eabea",
+            "usage": {
+              "prompt_tokens": 11922,
+              "completion_tokens": 133,
+              "total_tokens": 12055,
+              "prompt_tokens_details": {
+                "cached_tokens": 11520
+              },
+              "prompt_cache_hit_tokens": 11520,
+              "prompt_cache_miss_tokens": 402
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 10681,
+          "action": "clarify"
+        },
+        {
+          "attempt": 5,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "450de10a-4741-4eed-a9f7-5129de265ef1",
+            "usage": {
+              "prompt_tokens": 12052,
+              "completion_tokens": 134,
+              "total_tokens": 12186,
+              "prompt_tokens_details": {
+                "cached_tokens": 11648
+              },
+              "prompt_cache_hit_tokens": 11648,
+              "prompt_cache_miss_tokens": 404
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 12201,
+          "action": "clarify"
+        },
+        {
+          "attempt": 6,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "16c24a93-4f6c-4f46-a80f-3ec677d6bc99",
+            "usage": {
+              "prompt_tokens": 12182,
+              "completion_tokens": 750,
+              "total_tokens": 12932,
+              "prompt_tokens_details": {
+                "cached_tokens": 11776
+              },
+              "prompt_cache_hit_tokens": 11776,
+              "prompt_cache_miss_tokens": 406
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 16527,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [],
+      "steps": [],
+      "reasons": [],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "这是用户对家庭讨论的明确采纳,基于已保存版本 version-df74d690。\n已表达意向:沙发颜色再偏炭灰一点\n已表达意向:不动家具,不新增\n已表达意向:墙面保持不变\n请重新读取当前房屋事实与已确认硬约束,生成可撤销的受约束调整预览;若版本已变更或信息不足,不要执行,明确请求用户确认。",
+        "scope": {
+          "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 4,
+        "results": [],
+        "evidenceConstraints": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 2,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+          },
+          {
+            "id": "056872e3-896f-4720-b529-938f91b6ced4",
+            "text": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。"
+          },
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "text": "刚才的需求摘要还写着阅读，请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色，墙面不要改。家具仍然不移动、不新增。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b-confirmed-0",
+            "text": "把沙发换成亚麻浅色",
+            "quote": "我现在只想沙发是亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+            "text": "不要移动家具",
+            "quote": "先别移动家具",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+            "text": "不要新增东西",
+            "quote": "也不要新增东西",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+            "text": "希望尝试柔和一点的颜色",
+            "quote": "只是想把沙发换成亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "056872e3-896f-4720-b529-938f91b6ced4",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+            "text": "周末想在客厅安静看书",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+            "text": "客厅现在看起来有点冷冰冰的",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    },
+    {
+      "requestId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+      "input": "请继续刚才我选中的讨论意向：沙发改为炭灰色，替代原来的亚麻浅色；所有家具位置不变，不新增，墙面保持不变。只预览，不要替我保存。",
+      "assistantReply": "好的，只预览沙发改为炭灰色，不移动、不新增、墙面不变。我先在副本中把沙发材质改为炭灰织物，你看效果如何？",
+      "source": "provider",
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "elapsedMs": 8005,
+      "terminationReason": "legal_preview",
+      "rolledBack": false,
+      "providerTrace": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "requestedModel": "deepseek-v4-flash",
+        "endpoint": "https://api.deepseek.com",
+        "requestId": "da70e68b-1529-4bea-9793-09cf01734ae0",
+        "usage": {
+          "prompt_tokens": 11863,
+          "completion_tokens": 1010,
+          "total_tokens": 12873,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "prompt_cache_hit_tokens": 512,
+          "prompt_cache_miss_tokens": 11351
+        },
+        "parameters": {
+          "thinking": "disabled",
+          "temperature": 0.1,
+          "maxTokens": 3500,
+          "responseFormat": "json_object"
+        }
+      },
+      "modelRequests": [
+        {
+          "attempt": 1,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "0c01504a-9e9f-4ced-8b5d-13c6ffeea1c2",
+            "usage": {
+              "prompt_tokens": 11656,
+              "completion_tokens": 427,
+              "total_tokens": 12083,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              },
+              "prompt_cache_hit_tokens": 0,
+              "prompt_cache_miss_tokens": 11656
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 3030,
+          "action": "preview"
+        },
+        {
+          "attempt": 2,
+          "providerTrace": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "requestedModel": "deepseek-v4-flash",
+            "endpoint": "https://api.deepseek.com",
+            "requestId": "da70e68b-1529-4bea-9793-09cf01734ae0",
+            "usage": {
+              "prompt_tokens": 11863,
+              "completion_tokens": 1010,
+              "total_tokens": 12873,
+              "prompt_tokens_details": {
+                "cached_tokens": 512
+              },
+              "prompt_cache_hit_tokens": 512,
+              "prompt_cache_miss_tokens": 11351
+            },
+            "parameters": {
+              "thinking": "disabled",
+              "temperature": 0.1,
+              "maxTokens": 3500,
+              "responseFormat": "json_object"
+            }
+          },
+          "elapsedMs": 8000,
+          "action": "preview"
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-charcoal"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "tool": "set_object_material",
+          "args": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-charcoal"
+          },
+          "ok": true,
+          "candidate": 2,
+          "disposition": "previewed",
+          "result": {
+            "objectId": "object-sofa",
+            "materialId": "mat-fabric-charcoal"
+          }
+        },
+        {
+          "tool": "validate_candidate",
+          "ok": true,
+          "result": {
+            "atomic": true,
+            "commands": 1
+          }
+        }
+      ],
+      "validationFeedback": [
+        {
+          "tool": "validate_requirements",
+          "error": "EXPLICIT_CONSTRAINT_MISSING:lock_material: preserve the user's explicit restriction using its actual semantic kind, not no_new_objects as a substitute for no movement"
+        }
+      ],
+      "reasons": [
+        {
+          "requirementId": "a258a434-41cd-4984-8691-74484d0f8b6e-confirmed-0",
+          "requirementText": "把沙发换成炭灰色",
+          "fact": "沙发当前材质为暖亚麻织物，目录中存在炭灰织物材质。",
+          "objectIds": [
+            "object-sofa"
+          ],
+          "tradeoff": "仅改变沙发材质，不影响其他对象和墙面。",
+          "sourceIds": []
+        }
+      ],
+      "retrieval": {
+        "status": "no_documents",
+        "query": "请继续刚才我选中的讨论意向:沙发改为炭灰色,替代原来的亚麻浅色;所有家具位置不变,不新增,墙面保持不变。只预览,不要替我保存。",
+        "scope": {
+          "projectId": "exp-94bcdc7c-be05-4bc3-ba22-64f31ed6698f",
+          "houseId": "scene-reference-xiyue-c"
+        },
+        "indexRevision": 5,
+        "results": [],
+        "evidenceConstraints": [],
+        "sources": [],
+        "exclusions": {
+          "differentProject": 2,
+          "differentHouse": 0,
+          "notCurrent": 0,
+          "trustFiltered": 0
+        }
+      },
+      "requirements": {
+        "utterances": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "text": "周末想在客厅安静看书，现在看起来有点冷冰冰的。先别移动家具，也不要新增东西，能试个柔和一点的颜色吗？"
+          },
+          {
+            "id": "056872e3-896f-4720-b529-938f91b6ced4",
+            "text": "我改变主意了，不用围绕阅读设计，只是想把沙发换成亚麻浅色，墙面保持现在这样。之前不移动和不新增的要求都保留。"
+          },
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "text": "刚才的需求摘要还写着阅读，请把它从当前设计目标里去掉。我现在只想沙发是亚麻浅色，墙面不要改。家具仍然不移动、不新增。"
+          },
+          {
+            "id": "a258a434-41cd-4984-8691-74484d0f8b6e",
+            "text": "请继续刚才我选中的讨论意向：沙发改为炭灰色，替代原来的亚麻浅色；所有家具位置不变，不新增，墙面保持不变。只预览，不要替我保存。"
+          }
+        ],
+        "hypotheses": [],
+        "confirmed": [
+          {
+            "id": "a258a434-41cd-4984-8691-74484d0f8b6e-confirmed-0",
+            "text": "把沙发换成炭灰色",
+            "quote": "沙发改为炭灰色，替代原来的亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+            "status": "user_stated"
+          }
+        ],
+        "hardConstraints": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-0",
+            "text": "不要移动家具",
+            "quote": "先别移动家具",
+            "objectIds": [
+              "object-child-wardrobe",
+              "object-coffee-table",
+              "object-dining-chair-n",
+              "object-dining-chair-s",
+              "object-dining-table",
+              "object-flex-bed",
+              "object-flex-desk",
+              "object-guest-bed",
+              "object-guest-wardrobe",
+              "object-kitchen-counter",
+              "object-primary-bed",
+              "object-primary-wardrobe",
+              "object-sofa",
+              "object-tv-console"
+            ],
+            "kind": "lock_transform",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-hardConstraints-1",
+            "text": "不要新增东西",
+            "quote": "也不要新增东西",
+            "objectIds": [],
+            "kind": "no_new_objects",
+            "sourceTurnId": "ee77da92-5b7d-470b-b7b1-b187b858a282",
+            "status": "user_stated"
+          },
+          {
+            "id": "a258a434-41cd-4984-8691-74484d0f8b6e-hardConstraints-2",
+            "text": "墙面保持不变",
+            "quote": "墙面保持不变",
+            "objectIds": [
+              "surface-wall-reference-11",
+              "surface-wall-reference-28",
+              "surface-wall-reference-8",
+              "surface-wall-reference-5",
+              "surface-wall-reference-6",
+              "surface-wall-reference-10",
+              "surface-wall-reference-23",
+              "surface-wall-reference-29",
+              "surface-wall-reference-30",
+              "surface-wall-reference-26",
+              "surface-wall-reference-27",
+              "surface-wall-reference-12",
+              "surface-wall-reference-18",
+              "surface-wall-reference-17",
+              "surface-wall-reference-25",
+              "surface-wall-reference-22",
+              "surface-wall-reference-24",
+              "surface-wall-reference-16",
+              "surface-wall-reference-19",
+              "surface-wall-reference-21",
+              "surface-wall-reference-20",
+              "surface-wall-reference-15",
+              "surface-wall-reference-2",
+              "surface-wall-reference-9",
+              "surface-wall-reference-1",
+              "surface-wall-reference-3",
+              "surface-wall-reference-13",
+              "surface-wall-reference-14",
+              "surface-wall-reference-4",
+              "surface-wall-reference-7",
+              "surface-wall-reference-0"
+            ],
+            "kind": "lock_material",
+            "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+            "status": "user_stated"
+          }
+        ],
+        "preferences": [],
+        "rejected": [
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-preferences-0",
+            "text": "希望尝试柔和一点的颜色",
+            "quote": "只是想把沙发换成亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "056872e3-896f-4720-b529-938f91b6ced4",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-0",
+            "text": "周末想在客厅安静看书",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ee77da92-5b7d-470b-b7b1-b187b858a282-confirmed-1",
+            "text": "客厅现在看起来有点冷冰冰的",
+            "quote": "请把它从当前设计目标里去掉",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          },
+          {
+            "id": "ed2d6a1b-9142-4dbf-b09c-b2457f4f5f0b-confirmed-0",
+            "text": "把沙发换成亚麻浅色",
+            "quote": "沙发改为炭灰色，替代原来的亚麻浅色",
+            "objectIds": [
+              "object-sofa"
+            ],
+            "kind": "preference",
+            "sourceTurnId": "a258a434-41cd-4984-8691-74484d0f8b6e",
+            "status": "user_stated",
+            "reason": "被用户的新选择取代"
+          }
+        ],
+        "unresolved": []
+      }
+    }
+  ],
+  "discussions": [
+    {
+      "id": "discussion-d6a0d08d90674b65",
+      "baseVersionId": "version-df74d690",
+      "status": "applied",
+      "opinions": [
+        {
+          "id": "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b",
+          "versionId": "version-df74d690",
+          "source": {
+            "kind": "product_form",
+            "sourceId": "current-resident",
+            "memberLabel": "我"
+          },
+          "text": "这是单人隔离验收意见，不代表其他家人：我希望沙发再偏炭灰一点；不要移动家具，不新增，墙面保持不变。",
+          "fingerprint": "f958aee68c953e59082394d6a0686f49076ed21b29690f76a54906540a0e9ec8",
+          "createdAt": "2026-09-09T12:24:39.407Z"
+        }
+      ],
+      "summary": {
+        "status": "ready",
+        "provider": "aily",
+        "providerTrace": {
+          "provider": "aily_team",
+          "chatId": "7683515148640537587"
+        },
+        "summary": "收到1条意见：沙发颜色希望更偏炭灰；不动家具、不新增、墙面不变。",
+        "summaryOrigin": "aily",
+        "intents": [
+          {
+            "text": "沙发颜色再偏炭灰一点",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "text": "不动家具，不新增",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "text": "墙面保持不变",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          }
+        ],
+        "agreed": [],
+        "conflicts": [],
+        "questions": [],
+        "inputFingerprint": "00b20220ee84a90958797172c204c2e00c9000d96a510cd0b7f34ec48f2d5f8a",
+        "sourceOpinionIds": [
+          "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+        ],
+        "items": [
+          {
+            "id": "intents-1-b6bc91bf",
+            "group": "intents",
+            "text": "沙发颜色再偏炭灰一点",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-2-6c61ca4f",
+            "group": "intents",
+            "text": "不动家具，不新增",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-3-84963cec",
+            "group": "intents",
+            "text": "墙面保持不变",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          }
+        ],
+        "summarizedAt": "2026-09-09T12:45:46.735Z"
+      },
+      "summaryAttempts": [
+        {
+          "eventId": "28d2bf82-2ca3-4697-8c6d-86aa53a19f88",
+          "status": "ready",
+          "provider": "aily",
+          "attemptedAt": "2026-09-09T12:26:25.541Z"
+        },
+        {
+          "eventId": "03aadce3-feec-488d-bfc6-c80babb50d28",
+          "status": "ready",
+          "provider": "aily",
+          "attemptedAt": "2026-09-09T12:45:46.735Z"
+        }
+      ],
+      "adoption": {
+        "eventId": "fcc9ef1b-0590-4372-9dab-566adae136d0",
+        "baseVersionId": "version-df74d690",
+        "selectedItemIds": [
+          "intents-1-b6bc91bf",
+          "intents-2-6c61ca4f",
+          "intents-3-84963cec"
+        ],
+        "selectedItems": [
+          {
+            "id": "intents-1-b6bc91bf",
+            "group": "intents",
+            "text": "沙发颜色再偏炭灰一点",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-2-6c61ca4f",
+            "group": "intents",
+            "text": "不动家具，不新增",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-3-84963cec",
+            "group": "intents",
+            "text": "墙面保持不变",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          }
+        ],
+        "adjustmentRequest": "这是用户对家庭讨论的明确采纳，基于已保存版本 version-df74d690。\n已表达意向：沙发颜色再偏炭灰一点\n已表达意向：不动家具，不新增\n已表达意向：墙面保持不变\n请重新读取当前房屋事实与已确认硬约束，生成可撤销的受约束调整预览；若版本已变更或信息不足，不要执行，明确请求用户确认。",
+        "adoptedBy": "project_user",
+        "adoptedAt": "2026-09-09T12:48:05.029Z"
+      },
+      "outcomeVersionId": "version-eb72aea3"
+    }
+  ],
+  "familyEvents": [
+    {
+      "eventId": "3a2a19a3-a2a2-405c-b03c-b25b8e4987f8",
+      "type": "family_discussion_created",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ1qkxAROt",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:22:43.525Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "creationFingerprint": "4eb23c409ccac0f26e4d6f9e25004118d9a2811ae7566d839db5d42e5d18b337",
+        "participantCount": 1
+      }
+    },
+    {
+      "eventId": "3a2a19a3-a2a2-405c-b03c-b25b8e4987f8:slot:1",
+      "type": "family_opinion_slot",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ1qVXjMIz",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:22:45.767Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "participantLabel": "隔离验收本人",
+        "slotIndex": 0
+      }
+    },
+    {
+      "eventId": "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b",
+      "type": "family_opinion_received",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ1V7h55w1",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:24:41.950Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "opinionId": "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b",
+        "opinionSource": {
+          "kind": "product_form",
+          "sourceId": "current-resident",
+          "memberLabel": "我"
+        }
+      }
+    },
+    {
+      "eventId": "28d2bf82-2ca3-4697-8c6d-86aa53a19f88",
+      "type": "family_summary_ready",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ2mI1xxM1",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:26:27.792Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "inputFingerprint": "00b20220ee84a90958797172c204c2e00c9000d96a510cd0b7f34ec48f2d5f8a",
+        "sourceOpinionIds": [
+          "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+        ],
+        "summary": "当前版本为家庭讨论基础版本，已收到1条意见：单人隔离验收，希望沙发偏炭灰色，不移动家具，不新增，墙面保持不变。",
+        "items": [
+          {
+            "id": "questions-1-17332cad",
+            "group": "questions",
+            "text": "其他家庭成员对沙发颜色有何偏好？"
+          },
+          {
+            "id": "questions-2-924c6906",
+            "group": "questions",
+            "text": "是否需要统一墙面颜色修改意见？"
+          }
+        ],
+        "providerTrace": {
+          "provider": "aily_team",
+          "chatId": "7683510052087499705"
+        }
+      }
+    },
+    {
+      "eventId": "03aadce3-feec-488d-bfc6-c80babb50d28",
+      "type": "family_summary_ready",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ7eSHCvnz",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:45:49.486Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "inputFingerprint": "00b20220ee84a90958797172c204c2e00c9000d96a510cd0b7f34ec48f2d5f8a",
+        "sourceOpinionIds": [
+          "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+        ],
+        "summary": "收到1条意见：沙发颜色希望更偏炭灰；不动家具、不新增、墙面不变。",
+        "items": [
+          {
+            "id": "intents-1-b6bc91bf",
+            "group": "intents",
+            "text": "沙发颜色再偏炭灰一点",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-2-6c61ca4f",
+            "group": "intents",
+            "text": "不动家具，不新增",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-3-84963cec",
+            "group": "intents",
+            "text": "墙面保持不变",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          }
+        ],
+        "providerTrace": {
+          "provider": "aily_team",
+          "chatId": "7683515148640537587"
+        }
+      }
+    },
+    {
+      "eventId": "fcc9ef1b-0590-4372-9dab-566adae136d0",
+      "type": "family_decision_adopted",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ7OMNIlTK",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:48:07.511Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "adoptionFingerprint": "a146c5ee9c74492a756447e40e524b053862f8c7d5e385c6f0c691e44a486e5f",
+        "eventId": "fcc9ef1b-0590-4372-9dab-566adae136d0",
+        "baseVersionId": "version-df74d690",
+        "selectedItemIds": [
+          "intents-1-b6bc91bf",
+          "intents-2-6c61ca4f",
+          "intents-3-84963cec"
+        ],
+        "selectedItems": [
+          {
+            "id": "intents-1-b6bc91bf",
+            "group": "intents",
+            "text": "沙发颜色再偏炭灰一点",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-2-6c61ca4f",
+            "group": "intents",
+            "text": "不动家具，不新增",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          },
+          {
+            "id": "intents-3-84963cec",
+            "group": "intents",
+            "text": "墙面保持不变",
+            "sourceOpinionIds": [
+              "9b5ee50f-2955-4401-a3f3-4bcf8ea57c7b"
+            ],
+            "origin": "aily"
+          }
+        ],
+        "adjustmentRequest": "这是用户对家庭讨论的明确采纳，基于已保存版本 version-df74d690。\n已表达意向：沙发颜色再偏炭灰一点\n已表达意向：不动家具，不新增\n已表达意向：墙面保持不变\n请重新读取当前房屋事实与已确认硬约束，生成可撤销的受约束调整预览；若版本已变更或信息不足，不要执行，明确请求用户确认。",
+        "adoptedBy": "project_user",
+        "adoptedAt": "2026-09-09T12:48:05.029Z"
+      }
+    },
+    {
+      "eventId": "outcome-mtu3rfix-fi3wn3",
+      "type": "family_adjustment_version_linked",
+      "sync": {
+        "status": "synced",
+        "recordId": "recvuJ9Ze919rj",
+        "recordUrl": "https://larkcommunity.feishu.cn/base/QrAEbOpSAaXBpasZegpc8sDwnDg",
+        "verifiedAt": "2026-09-09T12:56:44.261Z"
+      },
+      "result": {
+        "discussionId": "discussion-d6a0d08d90674b65",
+        "outcomeFingerprint": "4822e278f996a9b8ed56d546fa50d74ccb5cbd32811044dc929322f93897ec48",
+        "currentVersionId": "version-eb72aea3"
+      }
+    }
+  ],
+  "boundaries": [
+    "Synthetic acceptance inputs, not customer data",
+    "No production publish or group messages",
+    "Export is not by itself a visual acceptance assertion"
+  ]
+}

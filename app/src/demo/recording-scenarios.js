@@ -44,9 +44,15 @@ export const recordingScenarios = [
       { type: 'material.add', material: finalMaterial('mat-flex-accent-fabric') },
       { type: 'object.setTransform', objectId: 'object-flex-bed', transform: { x: 7700, z: 1400, rotationY: 0 } },
       { type: 'object.setMaterial', objectId: 'object-flex-bed', materialId: 'mat-flex-accent-fabric' },
-      { type: 'object.setTransform', objectId: 'object-flex-desk', transform: { x: 10650, z: 1600, rotationY: Math.PI / 2 } },
+      { type: 'object.setTransform', objectId: 'object-flex-desk', transform: { x: 10650, z: 2450, rotationY: Math.PI / 2 } },
       { type: 'object.setModelAsset', objectId: 'object-flex-floating-shelf', model3D: { src: '/assets/models/floating-shelf.glb' }, dimensions: { width: 1000, depth: 260, height: 720 }, transform: { x: 10350, y: 1350, z: 150, rotationY: 0 } },
-      { type: 'object.add', object: finalObject('object-flex-chair') },
+      {
+        type: 'object.add',
+        object: {
+          ...finalObject('object-flex-chair'),
+          transform: { x: 10100, y: 0, z: 2760, rotationY: Math.PI / 2 },
+        },
+      },
     ],
   },
   {

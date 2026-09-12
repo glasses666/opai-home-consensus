@@ -93,8 +93,28 @@ export function pointInPolygon(point, polygon) {
  * @returns {boolean}
  */
 export function polygonInsidePolygon(inner, outer) {
-  // ponytail: vertex containment covers this Gate's rectilinear fixture; add edge-crossing checks before concave plan imports.
-  return inner.every((point) => pointInPolygon(point, outer));
+  if (!inner.every(point=>pointInPolygon(point,outer))) return false;
+  // Vertices inside a concave room do not imply the edges stay inside.
+  return polygonEdges(inner).every(edge=>{
+    const dx=edge.end.x-edge.start.x,dz=edge.end.z-edge.start.z,l=dx*dx+dz*dz;
+    if(!l)return true;
+    const cuts=[0,1];
+    for(const boundary of polygonEdges(outer)){
+      const bx=boundary.end.x-boundary.start.x,bz=boundary.end.z-boundary.start.z;
+      const qx=boundary.start.x-edge.start.x,qz=boundary.start.z-edge.start.z,cross=dx*bz-dz*bx;
+      if(Math.abs(cross)>EPSILON){
+        const t=(qx*bz-qz*bx)/cross,u=(qx*dz-qz*dx)/cross;
+        if(t>0&&t<1&&u>=-EPSILON&&u<=1+EPSILON)cuts.push(t);
+      }else if(Math.abs(qx*dz-qz*dx)<=EPSILON){
+        for(const p of [boundary.start,boundary.end]){
+          const t=((p.x-edge.start.x)*dx+(p.z-edge.start.z)*dz)/l;if(t>0&&t<1)cuts.push(t);
+        }
+      }
+    }
+    cuts.sort((a,b)=>a-b);
+    return cuts.slice(1).every((end,i)=>{const t=(cuts[i]+end)/2;
+      return pointInPolygon({x:edge.start.x+t*dx,z:edge.start.z+t*dz},outer);});
+  });
 }
 
 /**

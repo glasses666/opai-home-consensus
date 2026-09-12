@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+
+# Raw third-party page captures are retained locally for source checking but
+# are not redistributed in the public repository.
+supplement/assets/

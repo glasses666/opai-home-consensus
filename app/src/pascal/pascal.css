@@ -309,3 +309,6 @@
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 12px 32px rgba(53, 45, 36, 0.12);
 }
+
+.pascal-sync-failure {position:absolute;inset:5rem 1rem auto;z-index:50;padding:1rem;background:#fff8ed;color:#493726;border:1px solid #b99263;border-radius:12px;box-shadow:0 4px 22px #0002;}
+.pascal-sync-failure button {min-height:44px;padding:.6rem 1rem;border:1px solid currentColor;background:white;border-radius:8px;cursor:pointer;}

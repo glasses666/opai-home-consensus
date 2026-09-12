@@ -1,0 +1,74 @@
+/* Host integration: only the family sidecar changes. The existing scene stays mounted. */
+.product-shell .family-entry{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 13px;border:1px solid #a8af9c;border-radius:3px;background:#f5f4ed;color:#334331;font:500 12px/1.5 "PingFang SC","Microsoft YaHei",sans-serif;cursor:pointer}
+.product-shell .family-entry[aria-expanded=true]{border-color:#394536;background:#e8ece0}
+.product-shell .family-entry:focus-visible{outline:3px solid #9e4935;outline-offset:3px}
+.product-shell[data-family-open=true] .project-sidebar{grid-template-rows:auto minmax(0,1fr)}
+.product-shell .project-sidebar>.fd-workspace{height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;overscroll-behavior:contain;scroll-padding-top:30px;scroll-padding-bottom:145px}
+.product-shell .project-sidebar .fd-header h2{font-size:25px}
+.product-shell .project-sidebar .fd{min-width:0}
+@media(min-width:841px){
+ .product-shell .project-sidebar>.fd-workspace{padding:20px 24px 0;background:#f7f6f0}
+ .product-shell .project-sidebar .fd-header{padding-bottom:11px;align-items:flex-end}
+ .product-shell .project-sidebar .fd-header h2{font-size:23px;margin-top:2px;letter-spacing:.01em}
+ .product-shell .project-sidebar .fd-header .fd-byline{display:none}
+ .product-shell .project-sidebar .fd-header>.fd-btn{min-height:34px;padding:6px 8px;font-size:11px!important}
+ .product-shell .project-sidebar .fd-version-lock{border-top:0;padding:8px 0 10px;color:#777b70}
+ .product-shell .project-sidebar .fd-version-lock strong{font-size:15px}
+ .product-shell .project-sidebar .fd-role-legend{display:none}
+ .product-shell .project-sidebar .fd-tabs{flex:0 0 auto;margin:0;gap:23px}
+ .product-shell .project-sidebar .fd-tabs button{min-height:41px;padding:7px 0;font-size:12px}
+ .product-shell .project-sidebar>.fd-workspace>[role=tabpanel]{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding:10px 5px 10px 0}
+ .product-shell .project-sidebar .fd-summary-heading{padding:0 0 7px}
+ .product-shell .project-sidebar .fd-summary-heading .fd-byline,
+ .product-shell .project-sidebar .fd-summary-heading p{display:none}
+ .product-shell .project-sidebar .fd-summary-heading h3{font-size:17px;margin:0}
+ .product-shell .project-sidebar .fd-resummarize{position:absolute;right:5px;top:3px;min-height:28px;padding:3px 7px;border-color:transparent;font-size:10px!important}
+ .product-shell .project-sidebar .fd-summary-item{border:0;border-top:1px solid #dad9cf;border-radius:0;background:transparent;margin:0;padding:8px 2px 7px}
+ .product-shell .project-sidebar .fd-summary-item.is-selected{background:#eef0e8;border-top-color:#b8beaf;margin-left:-8px;margin-right:-2px;padding-left:8px;padding-right:8px}
+ .product-shell .project-sidebar .fd-summary-item__top{margin-bottom:2px}
+ .product-shell .project-sidebar .fd-kind{font-size:10px}
+ .product-shell .project-sidebar .fd-checkline{font-size:13px;line-height:1.5;gap:8px}
+ .product-shell .project-sidebar .fd-checkline input{width:15px;height:15px;flex-basis:15px;margin-top:2px}
+ .product-shell .project-sidebar .fd-summary-item__bottom{margin-top:1px}
+ .product-shell .project-sidebar .fd-summary-item__bottom>small{display:none}
+ .product-shell .project-sidebar .fd-source-button{min-height:27px;padding:2px 0;text-decoration:none;color:#68725f!important;font-size:10px!important}
+ .product-shell .project-sidebar .fd-inline-warning{font-size:10px!important;margin-top:0!important}
+ .product-shell .project-sidebar .fd-raw{padding:8px 0}
+ .product-shell .project-sidebar .fd-raw__by{gap:9px}
+ .product-shell .project-sidebar .fd-ref{width:20px;font-size:14px}
+ .product-shell .project-sidebar .fd-raw strong{font-size:12px}
+ .product-shell .project-sidebar .fd-raw small{font-size:10px;line-height:1.45}
+ .product-shell .project-sidebar .fd-raw blockquote{font-size:13px;line-height:1.6;margin:5px 0 0 29px}
+ .product-shell .project-sidebar .fd-collection .fd-provenance{display:none}
+ .product-shell .project-sidebar .fd-access{position:relative;padding:0 112px 7px 0;margin:0 0 4px;min-height:38px}
+ .product-shell .project-sidebar .fd-access h3{font:500 15px/1.5 "Songti SC","Noto Serif CJK SC",serif}
+ .product-shell .project-sidebar .fd-access .fd-between>span{font-size:10px}
+ .product-shell .project-sidebar .fd-access>p{font-size:11px;line-height:1.45;margin:3px 0}
+ .product-shell .project-sidebar .fd-access>.fd-external{min-height:24px;font-size:11px}
+ .product-shell .project-sidebar .fd-access>details,
+ .product-shell .project-sidebar .fd-access>.fd-truth{display:none}
+ .product-shell .project-sidebar .fd-access>.fd-btn{position:absolute;right:0;top:0;min-height:34px;padding:6px 9px;font-size:11px!important}
+ .product-shell .project-sidebar .fd-section-heading{padding-bottom:6px}
+ .product-shell .project-sidebar .fd-section-heading h3{font-size:17px}
+ .product-shell .project-sidebar .fd-collection{min-height:100%;display:flex;flex-direction:column}
+ .product-shell .project-sidebar .fd-opinion-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 8px;align-items:end;padding:12px 0 2px;margin-top:auto;border-top:1px solid #dad9cf}
+ .product-shell .project-sidebar .fd-opinion-form label{grid-column:1 / -1;font-size:12px}
+ .product-shell .project-sidebar .fd-opinion-form textarea{grid-column:1 / -1;min-height:70px;height:70px;margin:0;padding:9px 10px;font-size:12px;line-height:1.55;resize:none;background:#fbfaf5}
+ .product-shell .project-sidebar .fd-opinion-form>.fd-btn{grid-column:2;grid-row:3;min-height:34px;padding:6px 11px;font-size:11px!important}
+ .product-shell .project-sidebar .fd-opinion-form>small,
+ .product-shell .project-sidebar .fd-collection>.fd-organize{display:none}
+ .product-shell .project-sidebar .fd-handoff{position:relative;flex:0 0 auto;bottom:auto;justify-content:flex-end;margin:0 -24px;padding:12px 24px;background:#f7f6f0;box-shadow:none;border-top:1px solid #cfd1c5}
+ .product-shell .project-sidebar .fd-handoff>.fd-btn{min-height:38px;padding:8px 13px}
+}
+@media(max-width:840px){
+ .product-shell[data-family-open=true]{height:100dvh;min-height:0;overflow:hidden;padding:12px 14px 0}
+ .product-shell[data-family-open=true] .product-hero{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 10px}
+ .product-shell[data-family-open=true] .product-breadcrumb{display:none}
+ .product-shell[data-family-open=true] .product-hero__meta{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+ .product-shell[data-family-open=true] .product-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);min-height:0;gap:0}
+ /* Presentation only; no component is unmounted and no renderer props are changed. */
+ .product-shell[data-family-open=true] .product-grid>.project-stage{display:none}
+ .product-shell[data-family-open=true] .project-sidebar{height:100%;min-height:0;overflow:hidden;grid-template-rows:auto minmax(0,1fr)}
+ .product-shell .project-sidebar .fd-header h2{font-size:23px}
+ .product-shell .family-entry{font-size:12px;padding:8px 10px}
+}

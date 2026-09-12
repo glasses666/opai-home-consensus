@@ -1,0 +1,24 @@
+{
+  "source": "User-reviewed saved project V10, exp-f0f287e2-8cf7-410f-beb2-a5094d37bf81",
+  "sceneId": "scene-reference-xiyue-c",
+  "commandCursor": 0,
+  "note": "Promoted as the clean initial baseline on 2026-09-11 after the user's final manual adjustments.",
+  "transforms": {
+    "object-child-wardrobe": {"rotationY":1.5707963267948966,"x":3685,"y":0,"z":4950},
+    "object-coffee-table": {"rotationY":-1.5707963267948966,"x":1830,"y":0,"z":7750},
+    "object-dining-chair-n": {"rotationY":-1.5707963267948966,"x":1800,"y":0,"z":4520},
+    "object-dining-chair-s": {"rotationY":1.5707963267948966,"x":1800,"y":0,"z":5750},
+    "object-dining-table": {"rotationY":0,"x":2100,"y":0,"z":5100},
+    "object-flex-bed": {"rotationY":-1.5707963267948966,"x":5500,"y":0,"z":4500},
+    "object-flex-chair": {"rotationY":0,"x":5650,"y":0,"z":3375},
+    "object-flex-desk": {"rotationY":-1.5707963267948966,"x":6300,"y":0,"z":3375},
+    "object-guest-bed": {"rotationY":-3.141592653589793,"x":5750,"y":0,"z":1400},
+    "object-guest-bedside": {"rotationY":0,"x":6200,"y":0,"z":210},
+    "object-guest-wardrobe": {"rotationY":3.141592653589793,"x":5540,"y":0,"z":2565},
+    "object-kitchen-counter": {"rotationY":1.5707963267948966,"x":360,"y":0,"z":1600},
+    "object-primary-bed": {"rotationY":-1.5707963267948966,"x":5500,"y":0,"z":7750},
+    "object-primary-wardrobe": {"rotationY":1.5707963267948966,"x":3750,"y":0,"z":9450},
+    "object-sofa": {"rotationY":1.5707963267948966,"x":620,"y":0,"z":7700},
+    "object-tv-console": {"rotationY":-1.5707963267948966,"x":3080,"y":0,"z":7900}
+  }
+}

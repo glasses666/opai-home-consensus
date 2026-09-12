@@ -1,0 +1,137 @@
+/* The editorial shell stops at the viewer boundary: no canvas geometry,
+   viewport sizes, commands, or semantic warning states are changed here. */
+.product-shell.project-demo,
+.handoff-shell {
+  --paper: #f5f1e9;
+  --ink: #353d32;
+  --muted: #716e65;
+  --line: #ded8cd;
+  --accent: #a45038;
+  --display-font: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  background: #f5f1e9;
+  color: #353d32;
+}
+
+.project-demo .product-brand h1,
+.project-demo .panel__title,
+.project-demo .version-drawer__header h2,
+.handoff-shell .handoff-hero h1,
+.handoff-shell .handoff-section__title strong {
+  font-family: var(--display-font);
+  font-weight: 500;
+}
+
+.project-demo .product-brand__mark {
+  border-color: #d8d0c3;
+  border-radius: 3px;
+  background: #fbf9f4;
+  color: #a45038;
+}
+
+.project-demo :is(.eyebrow, .panel__kicker) { color: #a45038; }
+.project-demo .product-breadcrumb { background: #fbf9f4; border-radius: 3px; }
+.project-demo :is(.panel, .project-sidebar__switch) {
+  border-color: #ded8cd;
+  border-radius: 5px;
+  background-color: #fffdf8;
+  box-shadow: none;
+}
+
+.project-demo :is(.panel__header--project, .agent-sidecar__header, .household-sidecar__header) {
+  border-bottom-color: #ded8cd;
+  background: #fffdf8;
+}
+
+.project-demo :is(.utility-button, .project-tools-menu summary, .agent-message__action, .agent-starters button) {
+  border-radius: 3px;
+  border-color: #d4c9b9;
+  background: #fffdf8;
+  color: #53564b;
+  box-shadow: none;
+}
+
+.project-demo :is(.project-tools-menu[open] summary, .agent-message__meta span) { color: #a45038; }
+.project-demo :is(.project-tools-menu > div, .project-sidebar__switch details > div) {
+  border-radius: 5px;
+  border-color: #ded8cd;
+  box-shadow: 0 10px 24px rgb(53 61 50 / 10%);
+}
+.project-demo .project-sidebar__switch button[aria-pressed="true"] {
+  color: #353d32;
+  background: #eaece4;
+  box-shadow: none;
+}
+.project-demo .agent-sidecar__identity > span {
+  border-radius: 4px;
+  border-color: #d9c6b7;
+  background: #f3e8dd;
+  color: #a45038;
+}
+.project-demo .agent-sidecar__scope { background: #f5f1e9; }
+.project-demo .agent-message { border-radius: 3px; border-color: #e2dcd2; }
+.project-demo .agent-message[data-role="user"] {
+  border-color: #ddcebe;
+  border-radius: 3px;
+  background: #efe6da;
+}
+.project-demo .agent-message__tools span { background: #eeeae2; color: #635e53; }
+.project-demo .agent-composer textarea {
+  border-radius: 5px;
+  border-color: #cfc7b9;
+  background: #fffdf8;
+}
+.project-demo .agent-composer textarea:focus {
+  border-color: #a45038;
+  box-shadow: 0 0 0 3px rgb(164 80 56 / 10%);
+}
+.project-demo :is(.agent-composer button, .project-stage__tier button) {
+  border-radius: 4px;
+  border-color: #a45038;
+  background: #a45038;
+  color: #fffdf8;
+}
+.project-demo .version-drawer {
+  border-radius: 6px;
+  background: #f5f1e9;
+  border-color: #d8d0c3;
+}
+.project-demo .version-drawer__header { background: #f5f1e9; }
+
+/* Review / handoff are document surfaces, not another dashboard theme. */
+.handoff-shell .handoff-hero {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #d8d0c3;
+}
+.handoff-shell :is(.handoff-card, .handoff-section, .handoff-json) {
+  border-radius: 4px;
+  border-color: #ded8cd;
+  background: #fffdf8;
+  box-shadow: none;
+}
+.handoff-shell :is(.handoff-card > span, .handoff-section__title span, .handoff-section li b) {
+  color: #a45038;
+}
+.handoff-shell .handoff-actions button {
+  border: 1px solid #d4c9b9;
+  border-radius: 3px;
+  padding: 10px 14px;
+  background: #fffdf8;
+  color: #353d32;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.handoff-shell .handoff-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.handoff-shell .handoff-json .json { background: #f5f1e9; color: #353d32; }
+
+.project-demo :is(button, a, summary, input, textarea, select):focus-visible,
+.handoff-shell :is(button, a, summary, input, textarea, select):focus-visible {
+  outline: 2px solid #a45038;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .handoff-shell .handoff-hero { padding-bottom: 18px; }
+  .handoff-shell .handoff-actions button { padding: 9px 11px; }
+}

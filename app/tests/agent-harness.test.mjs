@@ -5,6 +5,7 @@ import { runAgentTurn } from '../src/agent/harness.js';
 import { createDemoScene } from '../src/domain/demo-scene.js';
 import { createVersionHistory, saveSceneVersion } from '../src/domain/design-version.js';
 import { createSceneStore, dispatchSceneCommand, serializeScene } from '../src/domain/scene.js';
+import { surfaceBelongsToRoom, surfaceMaterialForRoom } from '../src/domain/wall-finishes.js';
 
 const freshStore = () => createSceneStore(createDemoScene());
 const objectById = (store, id) => store.currentScene.objects.find((object) => object.id === id);
@@ -70,13 +71,15 @@ test('explicit surface room overrides a stale selection in both execution and pr
   assert.equal(surfaceById(result.store, 'surface-floor-flex').materialId, flexMaterial);
 });
 
-test('surface kind overrides selection without applying wall materials to a floor', async () => {
+test('an explicitly named room overrides a stale floor selection and applies every visible wall face', async () => {
   const before = freshStore();
+  const floorMaterial = surfaceById(before, 'surface-floor-living-dining').materialId;
   const result = await runAgentTurn({ store: before, selectedObjectId: 'surface-floor-living-dining', input: '把客厅墙面换成暖白色' });
-  assert.equal(result.store.commands.length, 0);
-  assert.equal(result.trace.mode, 'clarify');
-  assert.equal(result.trace.toolCalls[0].tool, 'request_clarification');
-  assert.equal(serializeScene(result.store.currentScene), serializeScene(before.currentScene));
+  const walls = result.store.currentScene.surfaces.filter(surface => surface.kind === 'wall'
+    && surfaceBelongsToRoom(result.store.currentScene, surface, 'room-living-dining'));
+  assert.equal(result.store.commands.length, walls.length);
+  assert.equal(walls.every(surface => surfaceMaterialForRoom(result.store.currentScene, surface, 'room-living-dining') === 'mat-wall-warm-white'), true);
+  assert.equal(surfaceById(result.store, 'surface-floor-living-dining').materialId, floorMaterial);
 });
 
 test('provider failure falls back once to deterministic local parsing', async () => {

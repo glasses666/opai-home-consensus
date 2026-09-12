@@ -955,7 +955,7 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
 .household-opinion textarea { font-size: 11px; }
 
 /* Keep the business sidecar readable beside the dense embedded editor. */
-.product-grid .project-sidebar :where(p, span, small, button, input, textarea, label, dt, dd, li) {
+.product-grid .project-sidebar :where(p, span, small, button, input, textarea, label, dt, dd, li):not(.fd *) {
   font-size: 11px;
 }
 
@@ -1002,3 +1002,13 @@ h1 { margin: 0; font-size: clamp(32px, 3vw, 48px); font-weight: 540; letter-spac
   .plan__scale { right: 18px; bottom: 18px; }
   .evidence { grid-template-columns: 1fr; }
 }
+
+/* Optional solo-first living context, separate from the legacy detailed questionnaire. */
+.living-context{max-width:640px;margin:8vh auto;padding:24px;color:#252525;line-height:1.7}
+.living-context h1{font-size:clamp(26px,5vw,36px);line-height:1.2;margin:32px 0 18px}
+.living-context label{display:block;margin-top:28px;font-weight:600}
+.living-context textarea{box-sizing:border-box;width:100%;max-width:100%;padding:14px;border:1px solid #aaa;border-radius:8px;font:inherit;resize:vertical}
+.living-context>div{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.living-context button{min-height:44px;padding:10px 18px;background:#292622;color:white;border:0;border-radius:7px;font:inherit;cursor:pointer}
+.living-context button+button{background:#eee9e2;color:#292622}
+.living-context :is(button,textarea,a):focus-visible{outline:3px solid #8b4d34;outline-offset:3px}

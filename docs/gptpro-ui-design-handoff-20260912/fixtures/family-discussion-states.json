@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "purpose": "UI-only fixture data for six design proposals",
+    "truthStatus": "synthetic_fixture_not_live",
+    "versionLabel": "V3",
+    "roomContext": "主卧",
+    "generatedAt": "2026-09-12T00:00:00+08:00"
+  },
+  "states": {
+    "empty": {
+      "discussion": null,
+      "disabled": false,
+      "participantLabels": ["伴侣", "父母"]
+    },
+    "disabledByUnsavedPreview": {
+      "discussion": null,
+      "disabled": true,
+      "reason": "请先保留或撤销预览，并保存当前调整，再开始讨论。"
+    },
+    "collecting": {
+      "discussion": {
+        "id": "discussion-fixture-v3",
+        "baseVersionId": "version-fixture-v3",
+        "status": "collecting",
+        "formUrl": "https://example.invalid/fixture-not-a-live-link",
+        "opinionSlots": [
+          {
+            "id": "slot-partner",
+            "participantLabel": "伴侣",
+            "eventId": "fixture-event-partner",
+            "entry": { "accessStatus": "unverified", "isDirect": false, "lookup": { "value": "FIXTURE-PARTNER" } }
+          },
+          {
+            "id": "slot-parent",
+            "participantLabel": "父母",
+            "eventId": "fixture-event-parent",
+            "entry": { "accessStatus": "unverified", "isDirect": false, "lookup": { "value": "FIXTURE-PARENT" } }
+          }
+        ],
+        "opinions": []
+      }
+    },
+    "opinionsReceived": {
+      "discussion": {
+        "id": "discussion-fixture-v3",
+        "baseVersionId": "version-fixture-v3",
+        "status": "collecting",
+        "opinions": [
+          {
+            "id": "opinion-partner-1",
+            "text": "我希望保留床边的阅读灯，晚上不想只开顶灯。",
+            "createdAt": "2026-09-12T20:10:00+08:00",
+            "source": {
+              "kind": "feishu_base",
+              "sourceId": "fixture-row-1",
+              "invitedLabel": "伴侣",
+              "identityStatus": "unverified"
+            }
+          },
+          {
+            "id": "opinion-parent-1",
+            "text": "床边通道希望再宽一点，夜里走动不要碰到床头柜。",
+            "createdAt": "2026-09-12T20:22:00+08:00",
+            "source": {
+              "kind": "feishu_base",
+              "sourceId": "fixture-row-2",
+              "invitedLabel": "父母",
+              "identityStatus": "unverified"
+            }
+          },
+          {
+            "id": "opinion-owner-1",
+            "text": "床和衣柜要保留，颜色可以调整。",
+            "createdAt": "2026-09-12T20:30:00+08:00",
+            "source": {
+              "kind": "product_form",
+              "sourceId": "current-resident",
+              "memberLabel": "我",
+              "identityStatus": "current_user"
+            }
+          }
+        ]
+      }
+    },
+    "summaryReady": {
+      "discussionId": "discussion-fixture-v3",
+      "summary": {
+        "status": "ready",
+        "provider": "aily",
+        "summaryOrigin": "aily_record_comparison",
+        "comparisonBasis": "aily_record_comparison",
+        "summary": "大家都希望卧室夜间更好用；主要差异是保留床边家具与扩大通道之间的取舍。",
+        "items": [
+          {
+            "id": "summary-agreed-1",
+            "group": "agreed",
+            "origin": "aily_record_comparison",
+            "text": "优先改善夜间使用体验。",
+            "sourceOpinionIds": ["opinion-partner-1", "opinion-parent-1"]
+          },
+          {
+            "id": "summary-conflict-1",
+            "group": "conflicts",
+            "origin": "aily_record_comparison",
+            "text": "保留床边阅读配置与扩大床边通道需要一起权衡。",
+            "sourceOpinionIds": ["opinion-partner-1", "opinion-parent-1"]
+          },
+          {
+            "id": "summary-intent-1",
+            "group": "intents",
+            "origin": "source_opinion",
+            "text": "床与衣柜必须保留，颜色可以调整。",
+            "sourceOpinionIds": ["opinion-owner-1"]
+          },
+          {
+            "id": "summary-question-1",
+            "group": "questions",
+            "origin": "aily_record_comparison",
+            "text": "是否接受更窄的床头柜来换取通道宽度？",
+            "sourceOpinionIds": ["opinion-partner-1", "opinion-parent-1"]
+          },
+          {
+            "id": "summary-missing-source",
+            "group": "questions",
+            "origin": "aily_record_comparison",
+            "text": "此项用于展示来源缺失时必须禁用。",
+            "sourceOpinionIds": ["opinion-does-not-exist"]
+          }
+        ]
+      }
+    },
+    "syncFailure": {
+      "status": "failed",
+      "code": "FEISHU_AUTH_EXPIRED",
+      "message": "暂时无法读取飞书最新意见。当前方案和已收到的意见仍然保留。",
+      "recoveryAction": "完成登录后重试同步"
+    },
+    "staleVersion": {
+      "discussionId": "discussion-fixture-v3",
+      "baseVersionLabel": "V3",
+      "currentVersionLabel": "V4",
+      "status": "stale",
+      "message": "这组意见属于 V3，不会自动套用到 V4。",
+      "actions": ["查看 V3 意见", "为 V4 发起新讨论"]
+    },
+    "adoptionSent": {
+      "discussionId": "discussion-fixture-v3",
+      "baseVersionLabel": "V3",
+      "selectedItemIds": ["summary-intent-1", "summary-question-1"],
+      "status": "sent_to_design_assistant",
+      "message": "已交给设计助理生成可撤销预览；尚未保存为新版本。"
+    }
+  }
+}
+

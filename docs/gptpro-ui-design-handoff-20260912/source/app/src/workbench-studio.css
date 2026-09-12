@@ -1,0 +1,44 @@
+/* A quiet working surface, not a stack of chat cards. */
+.product-shell.project-demo { background:#eeece6; }
+.project-demo .product-hero { border-bottom:1px solid #d9d7cf; padding-bottom:14px; }
+.project-demo .product-brand h1 { font-size:20px; }
+.project-demo .product-brand__mark { border:0; background:transparent; }
+.project-demo .product-grid > .project-stage { border:0; border-radius:0; background:#eeece6; }
+.project-demo .panel__header--project { background:transparent; border:0; padding:16px 12px; }
+.project-demo .panel__header--project .panel__kicker { font-size:9px; letter-spacing:.1em; color:#7b7d72; }
+.project-demo .panel__header--project .panel__title { font-size:23px; }
+.project-demo .project-sidebar { gap:0; border-left:1px solid #d4d3c9; background:#f9f8f3; }
+.project-demo .project-sidebar__switch { border:0; border-bottom:1px solid #deded5; border-radius:0; background:transparent; padding:8px 20px; min-height:48px; }
+.project-demo .project-sidebar[data-mode='agent'] .agent-sidecar { border:0; border-radius:0; background:transparent; }
+.project-demo .agent-sidecar__header { padding:26px 22px 20px; background:transparent; border:0; align-items:flex-start; }
+.project-demo .agent-sidecar__identity strong { font-family:'Songti SC','STSong',serif; font-size:27px; font-weight:400; }
+.project-demo .agent-sidecar__identity small { font-size:11px; color:#777b6e; margin-top:9px; }
+.project-demo .agent-sidecar__capability { margin-top:7px; font-size:10px; }
+.project-demo .agent-sidecar__capability i { box-shadow:none; width:5px; height:5px; }
+.project-demo .agent-sidecar__scope { background:transparent; margin:0 22px; padding:14px 0; border-top:1px solid #dfdfd4; border-bottom:1px solid #dfdfd4; gap:7px; }
+.project-demo .agent-sidecar__scope strong { font-size:12px; font-weight:500; }
+.project-demo .agent-sidecar__scope small { font-family:inherit; font-size:10px; color:#7b7d73; }
+.project-demo .agent-messages { padding:24px 22px 18px; gap:24px; }
+.project-demo .agent-message { max-width:100%; width:100%; padding:0; border:0; border-radius:0; background:transparent; gap:10px; }
+.project-demo .agent-message__meta span { color:#8b7760; font-family:inherit; font-size:10px; font-weight:500; letter-spacing:.06em; }
+.project-demo .agent-message p { font-size:13px; line-height:1.95; color:#444a3e; overflow-wrap:anywhere; }
+.project-demo .agent-message[data-role='user'] { background:#eeefe6; padding:14px 16px; border:0; border-radius:2px; }
+.project-demo .agent-starters { display:grid; gap:0; padding-top:26px; }
+.project-demo .agent-starters button { min-height:42px; padding:10px 0; border:0; border-bottom:1px solid #ddded2; border-radius:0; background:transparent; text-align:left; font-size:11px; font-weight:400; line-height:1.5; }
+.project-demo .agent-starters button::after { content:'↗'; float:right; margin-left:8px; color:#8d795e; }
+.project-demo .agent-starters button:hover { color:#a45038; background:#f0f0e8; }
+.project-demo .agent-composer { margin:0 18px 12px; }
+.project-demo .agent-composer textarea { min-height:104px; border:1px solid #cbcebe; border-radius:2px; background:#fffef9; padding:14px 46px 14px 14px; font-size:12px; line-height:1.7; }
+.project-demo .agent-composer button { background:#394536; border-color:#394536; border-radius:2px; }
+.project-demo .agent-sidecar__footer { padding:0 22px 18px; color:#777c6e; font-size:10px; }
+.project-demo .agent-review { margin:0 18px 14px; border-radius:2px; padding:14px; }
+.project-demo .agent-review p { font-size:12px; line-height:1.7; }
+.project-demo .agent-review strong { font-size:12px; }
+.project-demo .agent-review button { min-height:36px; font-size:11px; border-radius:2px; }
+@media(min-width:960px) {
+  .product-shell.project-demo .product-grid { grid-template-columns:minmax(0,1fr) 330px; gap:22px; }
+}
+@media(max-width:600px) {
+  .project-demo .project-sidebar { border-left:0; border-top:1px solid #d4d3c9; }
+  .project-demo .agent-sidecar__header { padding-top:18px; }
+}

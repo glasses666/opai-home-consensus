@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "independent-held-out-free-expression-gui",
+  "generatedAt": "2026-09-09T20:59:44+08:00",
+  "verdict": "pass_latest_guard_with_retained_failures",
+  "summary": "Two independent fresh projects proved that live DeepSeek can ask targeted questions, avoid psychological overreach, persist exact user quotes, and produce real-scene material previews. Earlier failures remain in the denominator: an older runtime misclassified an explicit do-not-move constraint, and the first semantic-guard repair rejected a valid correction after six provider attempts. A final authorized rerun against the next current runtime repaired that exact path and produced a legal linen-sofa preview with one object material diff, zero surface or rule diffs, and all requested locks retained.",
+  "scope": {
+    "frontend": "http://127.0.0.1:5184/project/demo?style=agent-canvas",
+    "backend": "http://127.0.0.1:8794",
+    "guiSurface": "Codex computer-use hidden in-app-browser tabs",
+    "tabs": [
+      {
+        "tabId": 1,
+        "visible": false,
+        "projectId": "exp-8b0ff1ed-0644-403e-8126-b8b5b5a409a2"
+      },
+      {
+        "tabId": 2,
+        "visible": false,
+        "projectId": "exp-5ba6de51-8022-41c1-8bf9-b9e5898226c3"
+      }
+    ],
+    "frontmostWindowChanged": false,
+    "browserWideViewportOverride": false,
+    "liveProvider": "deepseek",
+    "liveModel": "deepseek-v4-flash",
+    "modelParametersObserved": {
+      "thinking": "disabled",
+      "temperature": 0.1,
+      "maxTokens": 3500,
+      "responseFormat": "json_object"
+    },
+    "turnBudget": {
+      "initialAuthorizedTurns": 4,
+      "additionalAuthorizedRepairTurns": 2,
+      "userTurnsExecuted": 6,
+      "providerRequestsExecuted": 12,
+      "note": "The fifth user turn triggered six provider attempts; the sixth used two attempts with a new validation observation between them. Provider-attempt amplification is reported separately from user-visible turns."
+    }
+  },
+  "sourceAndRuntime": {
+    "gitHead": "7a120e9d9ec3d811a10219355a9b709a70a904e0",
+    "gitState": "dirty shared worktree; evidence is bound to file hashes, not HEAD alone",
+    "firstFourTurns": {
+      "nodePid": 62528,
+      "startedAt": "2026-09-09T20:19:23+08:00",
+      "validity": "stale_for_later_semantic_guards",
+      "reason": "dialogue/evidence/routes sources changed after this process start; these four turns remain useful behavioral evidence but do not validate later guard edits"
+    },
+    "fifthTurn": {
+      "nodePid": 70325,
+      "startedAt": "2026-09-09T20:47:29+08:00",
+      "bind": "127.0.0.1:8794",
+      "validity": "current_for_listed_hashes",
+      "note": "A separate unrelated Python listener also existed on the Tailnet address 100.87.39.52:8794; this test used the Node listener on localhost only."
+    },
+    "hashesAtFifthTurn": {
+      "app/server/experience-routes.mjs": "ebc0e884ea7ba05f9b114bc7d85c0cdf9517b1278325d99136fffbfa12fa8440",
+      "app/src/agent/dialogue.js": "3fd6fb21e9cd21d9c963b3e7fc365be7f5ed7840856f7e5945bce2bdcbc0c5d2",
+      "app/src/agent/evidence.js": "d41735b74ba9d6ca22466aa5ce04bfa4c3c550d2c608ae04790daab8ca616a80",
+      "app/server/deepseek.mjs": "037ec849f32f15c3037af74ad3832f91ef6cec708c171c6a4557f98e04f22890"
+    },
+    "sixthTurn": {
+      "nodePid": 72101,
+      "startedAt": "2026-09-09T20:54:58+08:00",
+      "bind": "127.0.0.1:8794",
+      "validity": "current_for_listed_hashes",
+      "note": "The independently observed listener PID is 72101. PID 32797 mentioned in coordination was the computer-use node_repl process, not the experience backend."
+    },
+    "hashesAtSixthTurn": {
+      "app/server/experience-routes.mjs": "ebc0e884ea7ba05f9b114bc7d85c0cdf9517b1278325d99136fffbfa12fa8440",
+      "app/src/agent/dialogue.js": "1344aa6e5df9183ff76c755e3ac1ceba6e5bc64fddabfbbf12d46a246837ed8b",
+      "app/src/agent/evidence.js": "d41735b74ba9d6ca22466aa5ce04bfa4c3c550d2c608ae04790daab8ca616a80",
+      "app/server/deepseek.mjs": "037ec849f32f15c3037af74ad3832f91ef6cec708c171c6a4557f98e04f22890"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "held-out-hospitality",
+      "projectId": "exp-8b0ff1ed-0644-403e-8126-b8b5b5a409a2",
+      "intent": "A non-professional social-use complaint followed by concrete seating context and two hard constraints.",
+      "turns": [
+        {
+          "input": "周末朋友来家里时，我总觉得大家坐下以后各聊各的。",
+          "productRequestId": "faf32b40-4ecf-4a33-9647-5084521d7bbc",
+          "providerRequestIds": [
+            "38777827-74de-42f5-85d0-1cbaa5109833"
+          ],
+          "elapsedMs": 1969,
+          "mode": "clarify",
+          "terminationReason": "clarify",
+          "reply": "大家坐下后，是各自坐在沙发上、餐椅上，还是有人会坐到别处？",
+          "providerUsage": {
+            "promptTokens": 10035,
+            "completionTokens": 163,
+            "totalTokens": 10198
+          },
+          "observed": [
+            "One targeted question about where people currently sit.",
+            "No personality or psychological diagnosis.",
+            "No scene mutation."
+          ],
+          "result": "pass"
+        },
+        {
+          "input": "通常两个人挤在沙发上，另一个人得搬餐椅过来。我想让大家自然围着茶几坐，别新增家具，工作桌也必须保留。",
+          "productRequestId": "1d7a3b95-a821-4574-8949-da8242c1e5e5",
+          "providerRequestIds": [
+            "7c393dec-1446-4a02-b534-9838ea7ffca3"
+          ],
+          "elapsedMs": 2509,
+          "mode": "clarify",
+          "terminationReason": "clarify",
+          "reply": "当您说“大家自然围着茶几坐”时，是希望朋友们坐在沙发上、餐椅上，还是也考虑坐在地毯或坐垫上？另外，您提到“工作桌也必须保留”，是指儿童房里的那张书桌吗？",
+          "providerUsage": {
+            "promptTokens": 10158,
+            "completionTokens": 376,
+            "totalTokens": 10534
+          },
+          "persistedRequirements": {
+            "confirmed": [
+              {
+                "text": "希望朋友们能自然围着茶几坐",
+                "quote": "我想让大家自然围着茶几坐",
+                "kind": "preference",
+                "objectIds": [
+                  "object-coffee-table",
+                  "object-sofa",
+                  "object-dining-chair-n",
+                  "object-dining-chair-s"
+                ]
+              }
+            ],
+            "hardConstraints": [
+              {
+                "text": "不新增家具",
+                "quote": "别新增家具",
+                "kind": "no_new_objects",
+                "objectIds": []
+              },
+              {
+                "text": "工作桌必须保留",
+                "quote": "工作桌也必须保留",
+                "kind": "preserve_object",
+                "objectIds": [
+                  "object-flex-desk"
+                ]
+              }
+            ]
+          },
+          "result": "partial_fail",
+          "failure": "The reply asks two separate questions in one turn (seating mode and desk identity), violating the one-important-question interaction target."
+        }
+      ],
+      "dimensionEvaluation": {
+        "requirementFit": "pass",
+        "hardConstraintCapture": "pass_for_the_two_explicit_constraints_seen",
+        "noPsychologicalForcing": "pass",
+        "executability": "pass_safe_clarification_no_mutation",
+        "sourceSupport": "honest_no_documents; project and house scope recorded; no unsupported factual benefit claimed"
+      },
+      "scenarioVerdict": "partial_fail"
+    },
+    {
+      "id": "held-out-pure-aesthetic-correction",
+      "projectId": "exp-5ba6de51-8022-41c1-8bf9-b9e5898226c3",
+      "intent": "A pure-aesthetic complaint that explicitly rejects psychological analysis, followed by a material preview and a correction that supersedes the old color while locking every transform and all other furniture materials.",
+      "turns": [
+        {
+          "input": "客厅看起来太像样板间了，我想要一点有记忆点的感觉，但别往我的性格或心理上分析。",
+          "productRequestId": "2ef4e252-d190-49e0-aef2-20b228231009",
+          "providerRequestIds": [
+            "82cff775-bd72-46ce-9f50-138962b6ae4d"
+          ],
+          "elapsedMs": 2202,
+          "mode": "clarify",
+          "terminationReason": "clarify",
+          "reply": "你更想通过改变家具材质（如沙发面料）还是墙面材质（如电视墙）来增加记忆点？",
+          "providerUsage": {
+            "promptTokens": 10052,
+            "completionTokens": 156,
+            "totalTokens": 10208
+          },
+          "observed": [
+            "One high-discrimination aesthetic question.",
+            "The assistant accepted the no-psychology boundary.",
+            "No scene mutation."
+          ],
+          "result": "pass"
+        },
+        {
+          "input": "不是墙面，我就想把沙发从这种安全灰换成有点陶土感的暖色。其他家具和所有位置都别动，先让我看看，不喜欢我再撤销。",
+          "productRequestId": "cf7a5e8c-6ec0-41f4-8b68-6de0cf9c0554",
+          "providerRequestIds": [
+            "737c77de-3e15-4e85-8f0d-cbadc4ef43c5"
+          ],
+          "elapsedMs": 2690,
+          "mode": "execute",
+          "terminationReason": "legal_preview",
+          "reply": "好的，只把沙发换成陶土色织物，其他家具和位置都不动。我先给你预览一下。",
+          "providerUsage": {
+            "promptTokens": 10188,
+            "completionTokens": 379,
+            "totalTokens": 10567
+          },
+          "toolEvidence": [
+            {
+              "tool": "set_object_material",
+              "objectId": "object-sofa",
+              "materialId": "mat-fabric-clay",
+              "ok": true
+            },
+            {
+              "tool": "validate_candidate",
+              "atomic": true,
+              "commands": 1,
+              "ok": true
+            }
+          ],
+          "guiEvidence": [
+            "Real 3D preview remained loaded.",
+            "UI showed one object diff, zero surface diffs, V1 to unsaved preview, and keep/undo/real-difference controls."
+          ],
+          "result": "fail_constraint_semantics_on_stale_runtime",
+          "failure": "The exact quote 'other furniture and every position must not move' was persisted as no_new_objects with no object IDs. That kind cannot enforce transform or material locks, even though this single preview happened to change only the sofa material."
+        },
+        {
+          "input": "我上一句的意思不是‘不新增家具’，而是除沙发以外，所有现有家具的材质和位置都必须保持不变，沙发的位置也不能动。现在我觉得陶土色太重了，把沙发改成亚麻米白，先预览。",
+          "productRequestId": "9eff7a8b-2359-44dc-972e-2aadf9a1bad6",
+          "providerRequestIds": [
+            "5293256b-bcb9-4405-8c9b-12a7a7256f87",
+            "d7bd4859-6563-4dbd-8911-eb053d298278",
+            "d6b15f9b-4a59-4158-8661-282882f03dcf",
+            "e3717ded-af8d-44d2-aebc-f709117b1e53",
+            "685bada2-f7ee-4471-a308-e077daf36672",
+            "d7d85105-5313-49fb-bddf-725db7baa4e4"
+          ],
+          "elapsedMs": 22649,
+          "mode": "failed",
+          "terminationReason": "HARD_CONSTRAINT_KIND_REQUIRED:9eff7a8b-2359-44dc-972e-2aadf9a1bad6-hardConstraints-1:除沙发以外，所有现有家具的材质和位置都必须保持不变",
+          "reply": "这次还没找到满足条件的合法调整，房间没有改变。可以缩小到一个对象或补充最想改变的使用感受。",
+          "providerAttempts": 6,
+          "providerUsageTotals": {
+            "promptTokens": 68250,
+            "completionTokens": 4266,
+            "totalTokens": 72516
+          },
+          "stateSafety": {
+            "rolledBack": true,
+            "toolCalls": 0,
+            "sceneChanged": false,
+            "previousUnsavedPreviewRetractedBeforeRequest": true
+          },
+          "requirementStateObserved": {
+            "newConfirmed": "把沙发改成亚麻米白",
+            "oldClayPreferenceMovedToRejected": true,
+            "otherFurnitureLockMaterialPresent": true,
+            "otherFurnitureLockTransformPresent": true,
+            "sofaLockTransformPresent": true,
+            "duplicateHumanVisibleConstraintTextCount": 2
+          },
+          "result": "fail_safe_but_not_executable",
+          "failure": "The latest guard rejected the valid correction even though the final requirement state contained separate lock_material and lock_transform entries for the same exact quote plus a sofa lock_transform entry. The validator appears to require each individual requirement ID to cover both semantics instead of aggregating the two same-quote entries. Six provider retries did not add a new observation and still ended without the requested preview.",
+          "timingNote": "The computer-use wait condition timed out at 115 seconds while the page still displayed its busy state, but a later state read showed the response. Server trace elapsedMs was 22649. This is recorded as a GUI wait-observation mismatch, not a 115-second provider latency."
+        },
+        {
+          "input": "刚才没有生成预览。还是按这个意思：除沙发外，所有现有家具的材质和位置保持不变，沙发位置也不能动；只把沙发改成亚麻米白，先让我看看。",
+          "productRequestId": "6046975e-4a97-4f9b-92d0-9ae401e2f254",
+          "providerRequestIds": [
+            "62c81f67-f877-4cc1-8317-cd78bfd8e1e2",
+            "2eeb7512-0e1e-4677-b206-7c1b71c34b81"
+          ],
+          "elapsedMs": 5505,
+          "mode": "execute",
+          "terminationReason": "legal_preview",
+          "reply": "好的，这次只把沙发换成亚麻米白，其他家具的材质和位置都不动。我先预览给你看。",
+          "providerAttempts": 2,
+          "providerUsageTotals": {
+            "promptTokens": 23464,
+            "completionTokens": 758,
+            "totalTokens": 24222
+          },
+          "validationFeedback": [
+            {
+              "attempt": 1,
+              "error": "CURRENT_NEED_REQUIRED",
+              "instruction": "Confirm the current-turn goal using the user's exact words before proposing actions."
+            }
+          ],
+          "toolEvidence": [
+            {
+              "tool": "set_object_material",
+              "objectId": "object-sofa",
+              "materialId": "mat-fabric-linen",
+              "ok": true
+            },
+            {
+              "tool": "validate_candidate",
+              "atomic": true,
+              "commands": 1,
+              "ok": true
+            }
+          ],
+          "requirementStateObserved": {
+            "newConfirmedExactQuote": "只把沙发改成亚麻米白",
+            "oldClayPreferenceRemainsRejected": true,
+            "otherFurnitureLockMaterialPresent": true,
+            "otherFurnitureLockTransformPresent": true,
+            "sofaLockTransformPresent": true
+          },
+          "guiDiffEvidence": {
+            "version": "V1 to unsaved scene",
+            "ruleStatus": "pass",
+            "diffRows": [
+              "material: sofa"
+            ],
+            "objectDiffCount": 1,
+            "surfaceDiffCount": 0,
+            "ruleDiffCount": 0,
+            "controlsPresent": [
+              "keep adjustment",
+              "undo preview",
+              "view actual diff"
+            ]
+          },
+          "retrieval": {
+            "status": "no_documents",
+            "projectId": "exp-5ba6de51-8022-41c1-8bf9-b9e5898226c3",
+            "houseId": "scene-reference-xiyue-c",
+            "indexRevision": 5,
+            "sourceIds": []
+          },
+          "result": "pass",
+          "note": "The deterministic validator returned a concrete new observation after attempt one; attempt two corrected it and produced the requested legal preview."
+        }
+      ],
+      "dimensionEvaluation": {
+        "requirementFit": "pass_on_latest_runtime; targeted clarification and final linen correction were both realized",
+        "hardConstraintCapture": "pass_on_latest_runtime_with_retained_prior_failures; other furniture material and transform locks plus the sofa transform lock were present and the preview diff was only the sofa material",
+        "noPsychologicalForcing": "pass",
+        "executability": "pass_on_latest_runtime; corrected preview was atomic and GUI-visible with one real object diff",
+        "sourceSupport": "honest no_documents; preview reason used current scene material facts only and sourceIds was empty; no external-document claim was made"
+      },
+      "scenarioVerdict": "pass_latest_runtime_with_retained_failures"
+    }
+  ],
+  "failureLedger": [
+    {
+      "id": "FREE-QUESTION-COUNT-001",
+      "runtime": "stale_first_four_turn_runtime",
+      "severity": "medium",
+      "status": "retained",
+      "description": "One assistant reply combined two questions instead of resolving one important ambiguity."
+    },
+    {
+      "id": "FREE-HARD-KIND-001",
+      "runtime": "stale_first_four_turn_runtime",
+      "severity": "high",
+      "status": "retained",
+      "description": "Explicit transform/material locks were recorded as no_new_objects."
+    },
+    {
+      "id": "FREE-GUARD-AGGREGATION-001",
+      "runtime": "current_fifth_turn_runtime",
+      "severity": "high",
+      "status": "fixed_and_independently_verified_by_sixth_turn",
+      "description": "Valid same-quote lock_material plus lock_transform repair was rejected after six provider attempts; the next current runtime accepted the same natural-language semantics and produced the requested isolated sofa-material preview."
+    },
+    {
+      "id": "FREE-RETRY-BUDGET-001",
+      "runtime": "current_fifth_turn_runtime",
+      "severity": "medium",
+      "status": "improved_and_independently_verified_by_sixth_turn",
+      "description": "The failed correction triggered six provider calls and 72,516 total tokens. The next runtime used two attempts with a concrete new validation observation and succeeded in 5.505 seconds; the original amplification remains in the denominator."
+    },
+    {
+      "id": "FREE-CUA-WAIT-OBSERVATION-001",
+      "runtime": "current_fifth_turn_runtime",
+      "severity": "low",
+      "status": "needs_diagnosis",
+      "description": "The hidden GUI wait predicate remained busy for 115 seconds although the server trace later showed a 22.649-second completed response; browser console contained no matching error."
+    }
+  ],
+  "claimsNotMade": [
+    "This run does not claim arbitrary Chinese semantic coverage.",
+    "This run does not claim document-grounded RAG behavior because both fresh projects returned no_documents.",
+    "This run does not claim save/reopen or family/Aily behavior; those were outside this final free-expression check and have separate evidence.",
+    "A visible canvas or HTTP 200 was not used as a pass criterion.",
+    "The stale-runtime failures were not removed after later code changes."
+  ],
+  "recommendedReleaseCondition": "The critical same-quote multi-kind correction path is independently verified on the latest runtime. Before a broad free-expression release claim, independently rerun the one-question validator on a fresh ambiguity and add a document-backed held-out scenario; this evidence intentionally covers no-document scene-fact behavior only."
+}
