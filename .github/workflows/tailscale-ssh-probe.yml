@@ -1,0 +1,56 @@
+name: Tailscale SSH probe
+
+on:
+  push:
+    branches:
+      - chatgpt/tailscale-ssh-probe
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check Tailscale credential inputs
+        id: creds
+        shell: bash
+        env:
+          TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUDIENCE: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          if [[ -n "$TS_OAUTH_CLIENT_ID" && -n "$TS_AUDIENCE" ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "Tailscale OIDC inputs are present."
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "Tailscale OIDC inputs are missing: expected TS_OAUTH_CLIENT_ID and TS_AUDIENCE."
+          fi
+
+      - name: Join tailnet with GitHub OIDC
+        if: steps.creds.outputs.present == 'true'
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Probe Tailscale reachability
+        if: steps.creds.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -x
+          tailscale status
+          tailscale ping --c 2 iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Probe Tailscale SSH as root
+        if: steps.creds.outputs.present == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -x
+          tailscale ssh root@iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net 'printf "TAILSSH_OK\\n"; id; systemctl is-active opai nginx tailscaled'
