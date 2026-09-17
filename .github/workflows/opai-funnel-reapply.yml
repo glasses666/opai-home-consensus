@@ -1,0 +1,45 @@
+name: OPAI Funnel Reapply
+
+on:
+  push:
+    branches:
+      - chatgpt/opai-guardian-test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Reapply Funnel mapping without restarting services
+        shell: bash
+        run: |
+          set -euo pipefail
+          tailscale ssh root@iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net 'set -e; echo BEFORE; tailscale funnel status; tailscale funnel --bg http://127.0.0.1:8080 >/dev/null; sleep 3; echo AFTER; tailscale funnel status'
+
+      - name: Verify Funnel and Cloudflare public TLS
+        shell: bash
+        run: |
+          set +e
+          for url in \
+            https://iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net/ \
+            https://iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net/api/health \
+            https://opai.glasser.top/ \
+            https://opai.glasser.top/api/health
+          do
+            echo "=== $url ==="
+            curl -sS -o /tmp/body -w 'http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 15 "$url" || true
+            head -c 220 /tmp/body 2>/dev/null | tr '\n' ' '; echo
+          done
