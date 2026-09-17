@@ -1,0 +1,48 @@
+name: OPAI Funnel Ingress Diagnose
+
+on:
+  push:
+    branches:
+      - chatgpt/opai-ingress-diagnose
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Public Funnel probe before tailnet
+        shell: bash
+        run: |
+          set +e
+          date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+          curl -sS -o /dev/null -w 'funnel http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 12 https://iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net/ || true
+          curl -sS -o /dev/null -w 'opai http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 12 https://opai.glasser.top/ || true
+
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Read sanitized ingress capability diagnostics
+        shell: bash
+        run: |
+          set +e
+          tailscale ssh root@iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net 'bash -s' <<'REMOTE'
+          set +e
+          echo '=== version ==='
+          tailscale version | head -n 3
+          echo '=== safe self capability subset ==='
+          tailscale status --json 2>/dev/null | jq '{BackendState,Self:{DNSName:.Self.DNSName,Online:.Self.Online,Capabilities:((.Self.Capabilities // []) | map(select(test("funnel|ingress|https";"i")))),CapMap:((.Self.CapMap // {}) | with_entries(select(.key|test("funnel|ingress|https";"i"))))}}' || true
+          echo '=== recent ingress/funnel diagnostics ==='
+          journalctl -u tailscaled --since '-4 min' --no-pager -o cat 2>/dev/null | grep -Ei 'peerapi.*ingress|ingress.*(denied|cap|error)|no ingress cap|funnel' | tail -n 80 || true
+          echo '=== current funnel status ==='
+          tailscale funnel status || true
+          REMOTE
