@@ -1,0 +1,60 @@
+name: OPAI Edge Diagnose
+
+on:
+  push:
+    branches:
+      - chatgpt/opai-guardian-test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Public-side diagnostics before tailnet
+        shell: bash
+        run: |
+          set +e
+          echo '=== DNS opai.glasser.top ==='
+          getent ahosts opai.glasser.top | head -n 10 || true
+          echo '=== Public custom domain ==='
+          curl -sS -o /dev/null -D - --connect-timeout 5 --max-time 12 https://opai.glasser.top/ | sed -n '1,20p'
+          echo '=== Public health status ==='
+          curl -sS -o /tmp/health.out -w 'http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 12 https://opai.glasser.top/api/health || true
+          head -c 240 /tmp/health.out 2>/dev/null | tr '\n' ' '; echo
+          echo '=== Funnel hostname from public Internet ==='
+          curl -sS -o /dev/null -w 'root http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 12 https://iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net/ || true
+          curl -sS -o /tmp/funnel-health.out -w 'health http=%{http_code} remote=%{remote_ip} tls=%{ssl_verify_result}\n' --connect-timeout 5 --max-time 12 https://iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net/api/health || true
+          head -c 240 /tmp/funnel-health.out 2>/dev/null | tr '\n' ' '; echo
+
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Remote-side diagnostics
+        shell: bash
+        run: |
+          set +e
+          tailscale ssh root@iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net 'bash -s' <<'REMOTE'
+          set +e
+          echo '=== services ==='
+          systemctl is-active opai nginx tailscaled
+          echo '=== localhost ==='
+          curl -sS -o /dev/null -w '8791 health http=%{http_code}\n' --connect-timeout 3 --max-time 7 http://127.0.0.1:8791/api/health
+          curl -sS -o /dev/null -w '8080 root http=%{http_code}\n' --connect-timeout 3 --max-time 7 http://127.0.0.1:8080/
+          echo '=== funnel status ==='
+          tailscale funnel status || true
+          echo '=== tailscaled recent funnel/tls errors ==='
+          journalctl -u tailscaled -n 120 --no-pager -o cat 2>/dev/null | grep -Ei 'funnel|serve|cert|tls|https|error' | tail -n 60 || true
+          echo '=== feishu auth safe state ==='
+          systemctl show opai-feishu-auth.service -p Result -p ExecMainStatus -p ExecMainExitTimestamp --no-pager
+          journalctl -u opai-feishu-auth.service -n 80 --no-pager -o cat 2>/dev/null | grep -E '^\{"service":"opai-feishu-auth"' | tail -n 1 || true
+          REMOTE
