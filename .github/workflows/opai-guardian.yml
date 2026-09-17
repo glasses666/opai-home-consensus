@@ -1,0 +1,65 @@
+name: OPAI Guardian
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/opai-guardian.yml'
+      - 'ops/opai-guardian.sh'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: opai-guardian-production
+  cancel-in-progress: false
+
+jobs:
+  guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Run bounded OPAI guardian
+        shell: bash
+        env:
+          PUBLIC_BASE: https://opai.glasser.top
+          TARGET: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+          REPORT_PATH: guardian-report.json
+        run: bash ops/opai-guardian.sh
+
+      - name: Write safe run summary
+        if: always() && hashFiles('guardian-report.json') != ''
+        shell: bash
+        run: |
+          {
+            echo '## OPAI Guardian'
+            echo
+            echo '```json'
+            jq '{time,classification,monitorNetwork,initial,remote,final,feishuAuth,repairs}' guardian-report.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload sanitized guardian report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opai-guardian-report
+          path: guardian-report.json
+          if-no-files-found: warn
+          retention-days: 7
