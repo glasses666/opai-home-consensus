@@ -1,0 +1,44 @@
+name: OPAI Guardian Test
+
+on:
+  push:
+    branches:
+      - chatgpt/opai-guardian-test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  guardian:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Run bounded OPAI guardian
+        shell: bash
+        env:
+          PUBLIC_BASE: https://opai.glasser.top
+          TARGET: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+          REPORT_PATH: guardian-report.json
+        run: bash ops/opai-guardian.sh
+
+      - name: Upload sanitized guardian report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opai-guardian-report
+          path: guardian-report.json
+          if-no-files-found: warn
+          retention-days: 7
