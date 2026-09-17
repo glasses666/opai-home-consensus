@@ -1,0 +1,29 @@
+name: OPAI Feishu Auth Help
+
+on:
+  push:
+    branches:
+      - chatgpt/opai-guardian-test
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  help:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Read safe lark-cli auth help
+        shell: bash
+        run: |
+          tailscale ssh root@iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net 'sudo -u opai env HOME=/opt/opai/home PATH=/usr/local/node-v20.18.0-linux-x64/bin:/usr/local/bin:/usr/bin:/bin lark-cli auth --help 2>&1 | sed -n "1,120p"; echo "--- login help ---"; sudo -u opai env HOME=/opt/opai/home PATH=/usr/local/node-v20.18.0-linux-x64/bin:/usr/local/bin:/usr/bin:/bin lark-cli auth login --help 2>&1 | sed -n "1,160p"'
