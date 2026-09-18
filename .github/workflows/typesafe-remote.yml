@@ -1,0 +1,48 @@
+name: TypeSafe Remote Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/typesafe-remote.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Join tailnet with GitHub OIDC
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
+
+      - name: Probe remote development environment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          TARGET='iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net'
+          timeout 45s tailscale ssh "root@$TARGET" 'bash -s' <<'REMOTE'
+          set -Eeuo pipefail
+          echo "remote_host=$(hostname)"
+          echo "opai_workdir=$(systemctl show opai -p WorkingDirectory --value 2>/dev/null || true)"
+          echo "opai_exec=$(systemctl show opai -p ExecStart --value 2>/dev/null | sed -E "s/([A-Za-z0-9_]*KEY|TOKEN|SECRET|PASSWORD)=[^ ;]+/\1=[REDACTED]/g" || true)"
+          echo "node=$(node --version 2>/dev/null || echo missing)"
+          echo "npm=$(npm --version 2>/dev/null || echo missing)"
+          echo "npx=$(npx --version 2>/dev/null || echo missing)"
+          echo "codex=$(command -v codex || echo missing)"
+          echo "claude=$(command -v claude || echo missing)"
+          wd="$(systemctl show opai -p WorkingDirectory --value 2>/dev/null || true)"
+          if [ -n "$wd" ] && [ -d "$wd" ]; then
+            cd "$wd"
+            echo "workdir_pwd=$(pwd)"
+            echo "workdir_git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo none)"
+            echo "workdir_package_json=$([ -f package.json ] && echo yes || echo no)"
+          fi
+          REMOTE
