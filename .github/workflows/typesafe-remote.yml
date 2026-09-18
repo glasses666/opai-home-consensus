@@ -1,4 +1,4 @@
-name: TypeSafe Remote Install
+name: TypeSafe Remote Verify
 
 on:
   push:
@@ -11,9 +11,9 @@ permissions:
   id-token: write
 
 jobs:
-  install:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     steps:
       - name: Join tailnet with GitHub OIDC
         uses: tailscale/github-action@v4
@@ -23,23 +23,33 @@ jobs:
           tags: tag:ci
           ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
 
-      - name: Install TypeSafe skill project-locally for Codex
+      - name: Verify TypeSafe skill and service health
         shell: bash
         run: |
           set -Eeuo pipefail
           TARGET='iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net'
-          timeout 120s tailscale ssh "root@$TARGET" 'bash -s' <<'REMOTE'
+          timeout 90s tailscale ssh "root@$TARGET" 'bash -s' <<'REMOTE'
           set -Eeuo pipefail
           APP='/opt/opai/current/app'
-          test -d "$APP"
-          test -f "$APP/package.json"
-          cd "$APP"
-          export DISABLE_TELEMETRY=1
-          npx -y skills add typesafe-ai/skills --skill typesafe-ai -a codex -y
-          test -f .agents/skills/typesafe-ai/SKILL.md
-          grep -q '^name: typesafe-ai$' .agents/skills/typesafe-ai/SKILL.md
-          echo "installed_path=$(readlink -f .agents/skills/typesafe-ai/SKILL.md)"
-          echo "installed_name=$(sed -n 's/^name: //p' .agents/skills/typesafe-ai/SKILL.md | head -n1)"
-          echo "installed_sha256=$(sha256sum .agents/skills/typesafe-ai/SKILL.md | awk '{print $1}')"
-          echo "skill_link=$(ls -ld .agents/skills/typesafe-ai)"
+          SKILL="$APP/.agents/skills/typesafe-ai/SKILL.md"
+          test -f "$SKILL"
+          grep -q '^name: typesafe-ai$' "$SKILL"
+          echo "installed_path=$SKILL"
+          echo "installed_sha256=$(sha256sum "$SKILL" | awk '{print $1}')"
+          echo "installed_description=$(awk '/^description: >/{getline; gsub(/^  /,""); print; exit}' "$SKILL")"
+          echo "opai=$(systemctl is-active opai)"
+          echo "nginx=$(systemctl is-active nginx)"
+          echo "tailscaled=$(systemctl is-active tailscaled)"
+          curl -fsS --connect-timeout 3 --max-time 7 http://127.0.0.1:8791/api/health >/dev/null
+          curl -fsS --connect-timeout 3 --max-time 7 http://127.0.0.1:8080/ >/dev/null
+          echo "local_health=ok"
+
+          DOCS=/tmp/typesafe-llms.txt
+          if curl -fsSL --connect-timeout 5 --max-time 20 https://docs.typesafe.ai/llms.txt -o "$DOCS"; then
+            echo "live_docs=reachable"
+            echo "live_docs_lines=$(wc -l < "$DOCS")"
+            grep -E -m 8 'JavaScript|API|Choice|Noul|Score|System One' "$DOCS" || true
+          else
+            echo "live_docs=unreachable"
+          fi
           REMOTE
