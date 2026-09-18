@@ -1,4 +1,4 @@
-name: TypeSafe Remote Probe
+name: TypeSafe Remote Install
 
 on:
   push:
@@ -11,9 +11,9 @@ permissions:
   id-token: write
 
 jobs:
-  probe:
+  install:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Join tailnet with GitHub OIDC
         uses: tailscale/github-action@v4
@@ -23,26 +23,23 @@ jobs:
           tags: tag:ci
           ping: iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net
 
-      - name: Probe remote development environment
+      - name: Install TypeSafe skill project-locally for Codex
         shell: bash
         run: |
           set -Eeuo pipefail
           TARGET='iz7xv8p0i0u9iehe5j6jgvz.tail0efbb0.ts.net'
-          timeout 45s tailscale ssh "root@$TARGET" 'bash -s' <<'REMOTE'
+          timeout 120s tailscale ssh "root@$TARGET" 'bash -s' <<'REMOTE'
           set -Eeuo pipefail
-          echo "remote_host=$(hostname)"
-          echo "opai_workdir=$(systemctl show opai -p WorkingDirectory --value 2>/dev/null || true)"
-          echo "opai_exec=$(systemctl show opai -p ExecStart --value 2>/dev/null | sed -E "s/([A-Za-z0-9_]*KEY|TOKEN|SECRET|PASSWORD)=[^ ;]+/\1=[REDACTED]/g" || true)"
-          echo "node=$(node --version 2>/dev/null || echo missing)"
-          echo "npm=$(npm --version 2>/dev/null || echo missing)"
-          echo "npx=$(npx --version 2>/dev/null || echo missing)"
-          echo "codex=$(command -v codex || echo missing)"
-          echo "claude=$(command -v claude || echo missing)"
-          wd="$(systemctl show opai -p WorkingDirectory --value 2>/dev/null || true)"
-          if [ -n "$wd" ] && [ -d "$wd" ]; then
-            cd "$wd"
-            echo "workdir_pwd=$(pwd)"
-            echo "workdir_git_root=$(git rev-parse --show-toplevel 2>/dev/null || echo none)"
-            echo "workdir_package_json=$([ -f package.json ] && echo yes || echo no)"
-          fi
+          APP='/opt/opai/current/app'
+          test -d "$APP"
+          test -f "$APP/package.json"
+          cd "$APP"
+          export DISABLE_TELEMETRY=1
+          npx -y skills add typesafe-ai/skills --skill typesafe-ai -a codex -y
+          test -f .agents/skills/typesafe-ai/SKILL.md
+          grep -q '^name: typesafe-ai$' .agents/skills/typesafe-ai/SKILL.md
+          echo "installed_path=$(readlink -f .agents/skills/typesafe-ai/SKILL.md)"
+          echo "installed_name=$(sed -n 's/^name: //p' .agents/skills/typesafe-ai/SKILL.md | head -n1)"
+          echo "installed_sha256=$(sha256sum .agents/skills/typesafe-ai/SKILL.md | awk '{print $1}')"
+          echo "skill_link=$(ls -ld .agents/skills/typesafe-ai)"
           REMOTE
